@@ -3,7 +3,11 @@ import { AppShell } from '@/components/app-shell'
 import { RequireAuth } from '@/components/require-auth'
 import { BasecampPage } from '@/routes/basecamp'
 import { LoginPage } from '@/routes/login'
-import { PlaceholderAppPage } from '@/routes/placeholder-app'
+import { SendibodPage } from '@/routes/sendibod'
+import { SogurPage } from '@/routes/sogur'
+import { AudrPage } from '@/routes/audr'
+import { OrdstirrPage } from '@/routes/ordstirr'
+import { DagatalPage } from '@/routes/dagatal'
 
 export function App() {
   return (
@@ -13,12 +17,12 @@ export function App() {
         <Route element={<AppShell />}>
           <Route path="/" element={<Navigate to="/basecamp" replace />} />
           <Route path="/basecamp" element={<BasecampPage />} />
-          <Route path="/audr" element={<PlaceholderAppPage nameKey="provisions" />} />
-          <Route path="/dagatal" element={<PlaceholderAppPage nameKey="calendar" />} />
-          <Route path="/ordstirr" element={<PlaceholderAppPage nameKey="resume" />} />
-          <Route path="/sogur" element={<PlaceholderAppPage nameKey="notes" />} />
-          <Route path="/stjornur" element={<PlaceholderAppPage nameKey="starfield" />} />
-          <Route path="/sendibod" element={<PlaceholderAppPage nameKey="messages" />} />
+          <Route path="/audr" element={<AudrPage />} />
+          <Route path="/dagatal" element={<DagatalPage />} />
+          <Route path="/ordstirr" element={<OrdstirrPage />} />
+          <Route path="/sogur" element={<SogurPage />} />
+          <Route path="/stjornur" element={<Navigate to="/basecamp" replace />} />
+          <Route path="/sendibod" element={<SendibodPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/basecamp" replace />} />

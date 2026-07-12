@@ -38,7 +38,11 @@ export async function cairnFetch<T>(path: string, init?: RequestInit): Promise<T
   }
 
   if (response.status === 204) return undefined as T
-  return (await response.json()) as T
+  const json = (await response.json()) as T | { data: T }
+  if (json != null && typeof json === 'object' && 'data' in (json as object)) {
+    return (json as { data: T }).data
+  }
+  return json as T
 }
 
 export async function fetchCairnHealth(): Promise<{ ok: boolean; status: number }> {

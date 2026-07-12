@@ -10,8 +10,10 @@ export type AuthUser = {
   email: string
 }
 
-const userPoolId = import.meta.env.VITE_COGNITO_USER_POOL_ID?.trim() ?? ''
-const clientId = import.meta.env.VITE_COGNITO_CLIENT_ID?.trim() ?? ''
+import { COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID } from '@/lib/config'
+
+const userPoolId = COGNITO_USER_POOL_ID
+const clientId = COGNITO_CLIENT_ID
 
 export function isCognitoConfigured(): boolean {
   return Boolean(userPoolId && clientId)

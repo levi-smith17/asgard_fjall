@@ -1,0 +1,420 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import {
+  CairnCatalogInspector,
+  type CairnCatalogTab,
+} from '@/components/cairn/cairn-catalog-inspector'
+import { StudioLayout } from '@/components/core/layout/studio-layout'
+import { RailCatalogSkeleton, TableSkeleton } from '@/components/core/ui/studio-skeletons'
+import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
+import { useDebounce } from '@/hooks/use-debounce'
+import {
+  fetchCairnBurnPage,
+  fetchCairnMarkers,
+  fetchCairnProvisionsSummary,
+  fetchCairnSupplylinesFiltered,
+  fetchCairnTrails,
+} from '@/lib/cairn-api'
+import { daysUntilRenewal } from '@/lib/cairn-supplyline-renewal'
+import { toMarkerView, toTrailView } from '@/lib/cairn-format'
+import { monthYearLabel, shiftMonth } from '@/lib/audr-format'
+import { totalEffectiveSkattUtilization } from '@/lib/audr-skatt-idunn'
+import { useTerms } from '@/hooks/use-terminology'
+import { AudrContextBar } from './audr-context-bar'
+import { AudrIdunnRail } from './audr-idunn-rail'
+import { AudrSurtrCanvas } from './audr-surtr-canvas'
+import { AudrInspector } from './audr-inspector'
+import type { AudrSelection } from './audr-types'
+
+type CatalogState = {
+  tab: CairnCatalogTab
+  selectedId: string | null
+  markerPath: string[]
+  markerParent: string | null
+}
+
+export function AudrPageSkeleton() {
+  const terms = useTerms()
+  return (
+    <StudioLayout
+      railLabel={terms.subscriptions}
+      contextBar={
+        <div className="shrink-0 border-b border-border px-4 py-3 sm:px-6">
+          <div className="h-5 w-24 animate-pulse rounded bg-muted" />
+          <div className="mt-2 h-3 w-48 animate-pulse rounded bg-muted" />
+        </div>
+      }
+      rail={<RailCatalogSkeleton rows={7} titleWidth="w-16" />}
+      canvas={<TableSkeleton rows={10} columns={4} />}
+      inspectorState="hint"
+      inspectorHint={`Select ${terms.expenses.toLowerCase()}, ${terms.subscriptions.toLowerCase()}, or ${terms.budgets.toLowerCase()} to inspect`}
+    />
+  )
+}
+
+export function AudrClient() {
+  const terms = useTerms()
+  const queryClient = useQueryClient()
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['audr'] })
+  const [inspectorPinned, setInspectorPinned] = useInspectorPinned()
+
+  const now = new Date()
+  const [month, setMonth] = useState(now.getMonth() + 1)
+  const [year, setYear] = useState(now.getFullYear())
+  const [search, setSearch] = useState('')
+  const [markerFilter, setMarkerFilter] = useState('all')
+  const [idunnActiveFilter, setIdunnActiveFilter] = useState('true')
+  const debouncedSearch = useDebounce(search, 300)
+  const surtrFiltersActive = search !== '' || markerFilter !== 'all'
+  const idunnFiltersActive = idunnActiveFilter !== 'true'
+
+  const [selection, setSelection] = useState<AudrSelection | null>(null)
+  const [catalog, setCatalog] = useState<CatalogState | null>(null)
+  const [burnPage, setBurnPage] = useState(1)
+
+  const markersQuery = useQuery({
+    queryKey: ['cairn-markers'],
+    queryFn: fetchCairnMarkers,
+  })
+
+  const trailsQuery = useQuery({
+    queryKey: ['cairn-trails'],
+    queryFn: fetchCairnTrails,
+  })
+
+  const summaryQuery = useQuery({
+    queryKey: ['audr', 'summary', month, year],
+    queryFn: () => fetchCairnProvisionsSummary(month, year),
+    placeholderData: keepPreviousData,
+  })
+
+  const burnQuery = useQuery({
+    queryKey: ['audr', 'burn', month, year, burnPage, debouncedSearch, markerFilter],
+    queryFn: () =>
+      fetchCairnBurnPage({
+        month,
+        year,
+        page: burnPage,
+        search: debouncedSearch || undefined,
+        markerId: markerFilter !== 'all' ? markerFilter : undefined,
+      }),
+    placeholderData: keepPreviousData,
+  })
+
+  const supplylinesQuery = useQuery({
+    queryKey: ['audr', 'supplylines', idunnActiveFilter],
+    queryFn: () =>
+      fetchCairnSupplylinesFiltered({
+        active: idunnActiveFilter !== 'all' ? idunnActiveFilter : undefined,
+      }),
+    placeholderData: keepPreviousData,
+  })
+
+  const skattSupplylinesQuery = useQuery({
+    queryKey: ['audr', 'supplylines-skatt'],
+    queryFn: () => fetchCairnSupplylinesFiltered({ active: 'true' }),
+    placeholderData: keepPreviousData,
+  })
+
+  useEffect(() => {
+    setBurnPage(1)
+  }, [month, year, debouncedSearch, markerFilter])
+
+  const markers = useMemo(
+    () => (markersQuery.data ?? []).map(toMarkerView).sort((a, b) => a.name.localeCompare(b.name)),
+    [markersQuery.data],
+  )
+  const trails = useMemo(
+    () => (trailsQuery.data ?? []).map(toTrailView).sort((a, b) => a.name.localeCompare(b.name)),
+    [trailsQuery.data],
+  )
+  const audrMarkers = useMemo(
+    () =>
+      markers.map((m) => ({
+        id: m.id,
+        name: m.name,
+        color: m.color,
+        icon: m.icon ?? null,
+      })),
+    [markers],
+  )
+
+  const summary = summaryQuery.data?.summary
+  const cacheUtilization = summaryQuery.data?.cacheUtilization ?? []
+  const burnItems = burnQuery.data?.burn ?? []
+  const burnTotal = burnQuery.data?.total ?? 0
+  const burnPageSize = burnQuery.data?.pageSize ?? 20
+  const supplylines = useMemo(
+    () =>
+      [...(supplylinesQuery.data ?? [])].sort((left, right) =>
+        left.name.localeCompare(right.name, undefined, { sensitivity: 'base' }),
+      ),
+    [supplylinesQuery.data],
+  )
+  const skattSupplylines = skattSupplylinesQuery.data ?? []
+
+  const cacheByMarkerId = useMemo(
+    () => new Map(cacheUtilization.map((c) => [c.markerId, c])),
+    [cacheUtilization],
+  )
+
+  const targetMarkerIds = useMemo(
+    () => new Set(cacheUtilization.map((c) => c.markerId)),
+    [cacheUtilization],
+  )
+
+  const upcomingRenewals = useMemo(
+    () =>
+      supplylines
+        .filter((s) => s.active)
+        .filter((s) => {
+          const days = daysUntilRenewal(s.nextRenewal, s.billingCycle)
+          return days >= 0 && days <= 7
+        }).length,
+    [supplylines],
+  )
+
+  const skattUtilizationPct = useMemo(
+    () => totalEffectiveSkattUtilization(cacheUtilization, skattSupplylines),
+    [cacheUtilization, skattSupplylines],
+  )
+
+  const monthName = monthYearLabel(month, year)
+
+  const prevMonth = () => {
+    const prev = shiftMonth(month, year, -1)
+    setMonth(prev.month)
+    setYear(prev.year)
+  }
+  const nextMonth = () => {
+    const next = shiftMonth(month, year, 1)
+    setMonth(next.month)
+    setYear(next.year)
+  }
+
+  const clearSelection = useCallback(() => setSelection(null), [])
+  const clearCatalog = useCallback(() => setCatalog(null), [])
+
+  const openCatalog = useCallback(() => {
+    setSelection(null)
+    setCatalog({ tab: 'greinar', selectedId: null, markerPath: [], markerParent: null })
+  }, [])
+
+  const selectEntity = useCallback((next: AudrSelection) => {
+    setCatalog(null)
+    setSelection(next)
+  }, [])
+
+  const inspectorOpen = inspectorPinned || selection != null || catalog != null
+  const inspectorState = inspectorOpen ? 'open' : 'hint'
+
+  const selectedBurn =
+    selection?.kind === 'burn' ? burnItems.find((b) => b.id === selection.id) : undefined
+  const selectedSupplyline =
+    selection?.kind === 'supplyline'
+      ? supplylines.find((s) => s.id === selection.id)
+      : undefined
+  const selectedCache =
+    selection?.kind === 'cache'
+      ? cacheUtilization.find((c) => c.id === selection.id)
+      : selection?.kind === 'cache-marker'
+        ? cacheByMarkerId.get(selection.markerId)
+        : undefined
+
+  const selectedSkattMarkerId = selectedCache?.markerId ?? null
+
+  const skattBurnsQuery = useQuery({
+    queryKey: ['audr', 'burn', month, year, 'skatt-inspector', selectedSkattMarkerId],
+    queryFn: () =>
+      fetchCairnBurnPage({
+        month,
+        year,
+        page: 1,
+        markerId: selectedSkattMarkerId!,
+      }),
+    enabled: Boolean(selectedSkattMarkerId),
+    placeholderData: keepPreviousData,
+  })
+
+  const skattMarkerBurns = useMemo(
+    () =>
+      [...(skattBurnsQuery.data?.burn ?? [])].sort(
+        (left, right) => new Date(right.date).getTime() - new Date(left.date).getTime(),
+      ),
+    [skattBurnsQuery.data?.burn],
+  )
+
+  const handleCanvasPointerDown = useCallback(
+    (event: React.PointerEvent) => {
+      if (inspectorPinned || (selection == null && catalog == null)) return
+      const target = event.target as HTMLElement
+      if (target.closest('[data-inspectable]')) return
+      clearSelection()
+      clearCatalog()
+    },
+    [inspectorPinned, selection, catalog, clearSelection, clearCatalog],
+  )
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && !inspectorPinned && (selection || catalog)) {
+        clearSelection()
+        clearCatalog()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [inspectorPinned, selection, catalog, clearSelection, clearCatalog])
+
+  const isLoading =
+    markersQuery.isLoading ||
+    summaryQuery.isLoading ||
+    burnQuery.isLoading ||
+    supplylinesQuery.isLoading
+
+  if (isLoading && !summaryQuery.data) {
+    return <AudrPageSkeleton />
+  }
+
+  const selectedBurnId = selection?.kind === 'burn' ? selection.id : null
+  const selectedSupplylineId = selection?.kind === 'supplyline' ? selection.id : null
+
+  return (
+    <StudioLayout
+      railLabel={terms.subscriptions}
+      contextBar={
+        <AudrContextBar
+          monthName={monthName}
+          summary={summary}
+          upcomingRenewals={upcomingRenewals}
+          skattUtilizationPct={skattUtilizationPct}
+          inspectorPinned={inspectorPinned}
+          onInspectorPinnedChange={setInspectorPinned}
+          onAddBurn={() => selectEntity({ kind: 'new-burn' })}
+        />
+      }
+      rail={
+        supplylinesQuery.isFetching && supplylines.length === 0 ? (
+          <RailCatalogSkeleton rows={7} titleWidth="w-16" />
+        ) : (
+          <AudrIdunnRail
+            supplylines={supplylines}
+            selectedId={selectedSupplylineId}
+            activeFilter={idunnActiveFilter}
+            onActiveFilterChange={setIdunnActiveFilter}
+            filtersActive={idunnFiltersActive}
+            onClearFilters={() => setIdunnActiveFilter('true')}
+            onSelect={(id) => selectEntity({ kind: 'supplyline', id })}
+            onAdd={() => selectEntity({ kind: 'new-supplyline' })}
+            onOpenCatalog={openCatalog}
+            onRefresh={refresh}
+          />
+        )
+      }
+      canvas={
+        <div className="flex h-full min-h-0 flex-col" onPointerDown={handleCanvasPointerDown}>
+          <AudrSurtrCanvas
+            monthName={monthName}
+            onPrevMonth={prevMonth}
+            onNextMonth={nextMonth}
+            search={search}
+            onSearchChange={setSearch}
+            markerFilter={markerFilter}
+            onMarkerFilterChange={setMarkerFilter}
+            markers={audrMarkers}
+            filtersActive={surtrFiltersActive}
+            onClearFilters={() => {
+              setSearch('')
+              setMarkerFilter('all')
+            }}
+            onBringSkatt={() => selectEntity({ kind: 'skatt-carry' })}
+            burns={burnItems}
+            cacheUtilization={cacheUtilization}
+            supplylines={skattSupplylines}
+            burnsLoading={burnQuery.isFetching}
+            selectedBurnId={selectedBurnId}
+            onSelectBurn={(id) => selectEntity({ kind: 'burn', id })}
+            onSelectCache={(id) => selectEntity({ kind: 'cache', id })}
+            onSelectCacheMarker={(markerId) =>
+              selectEntity(
+                cacheByMarkerId.has(markerId)
+                  ? { kind: 'cache', id: cacheByMarkerId.get(markerId)!.id }
+                  : { kind: 'cache-marker', markerId },
+              )
+            }
+            onAddBurn={(markerId) => selectEntity({ kind: 'new-burn', markerId })}
+            burnPage={burnPage}
+            burnTotal={burnTotal}
+            burnPageSize={burnPageSize}
+            onBurnPageChange={setBurnPage}
+            burnPageLoading={burnQuery.isFetching}
+          />
+        </div>
+      }
+      inspectorState={inspectorState}
+      inspectorHint={
+        catalog
+          ? `${terms.greinar} & ${terms.runir}`
+          : `Select ${terms.expenses.toLowerCase()}, ${terms.subscriptions.toLowerCase()}, or ${terms.budgets.toLowerCase()} to inspect`
+      }
+      inspector={
+        catalog ? (
+          <CairnCatalogInspector
+            activeTab={catalog.tab}
+            onTabChange={(tab) =>
+              setCatalog({ tab, selectedId: null, markerPath: [], markerParent: null })
+            }
+            trails={trails}
+            markers={markers}
+            selectedId={catalog.selectedId}
+            markerPath={catalog.markerPath}
+            markerParent={catalog.markerParent}
+            onSelectId={(id) => setCatalog((current) => (current ? { ...current, selectedId: id } : current))}
+            onMarkerPathChange={(path) =>
+              setCatalog((current) =>
+                current ? { ...current, markerPath: path, selectedId: null } : current,
+              )
+            }
+            onMarkerParentChange={(parent) =>
+              setCatalog((current) => (current ? { ...current, markerParent: parent } : current))
+            }
+            onClearSelection={() =>
+              setCatalog((current) =>
+                current ? { ...current, selectedId: null, markerParent: null } : current,
+              )
+            }
+          />
+        ) : selection ? (
+          <AudrInspector
+            selection={selection}
+            markers={audrMarkers}
+            month={month}
+            year={year}
+            burn={selectedBurn}
+            supplyline={selectedSupplyline}
+            cache={selectedCache}
+            skattSupplylines={skattSupplylines}
+            skattMarkerBurns={skattMarkerBurns}
+            targetMarkerIds={targetMarkerIds}
+            onSaved={() => {
+              refresh()
+              if (
+                selection.kind === 'new-burn' ||
+                selection.kind === 'new-supplyline' ||
+                selection.kind === 'new-cache' ||
+                selection.kind === 'cache-marker'
+              ) {
+                clearSelection()
+              }
+            }}
+            onDeleted={() => {
+              refresh()
+              clearSelection()
+            }}
+            onCancel={clearSelection}
+          />
+        ) : null
+      }
+    />
+  )
+}
