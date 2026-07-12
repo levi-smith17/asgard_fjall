@@ -5,3 +5,4 @@ variable "owner" { type = string }
 variable "project_name" { type = string }
 variable "web_bucket_arn" { type = string }
 variable "cloudfront_distribution_arn" { type = string }
+variable "terraform_state_bucket" { type = string }

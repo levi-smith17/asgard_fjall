@@ -3,6 +3,18 @@ variable "aws_region" {
   default = "us-east-2"
 }
 
+variable "aws_profile" {
+  description = "AWS CLI profile for Asgard account (CloudFront, S3, IAM)."
+  type        = string
+  default     = "asgard"
+}
+
+variable "dns_aws_profile" {
+  description = "AWS CLI profile that owns the public levismith.us hosted zone."
+  type        = string
+  default     = "cairn-prod"
+}
+
 variable "project_name" {
   type    = string
   default = "asgard-fjall"
@@ -38,4 +50,9 @@ variable "hosted_zone_name" {
 variable "github_repo" {
   type    = string
   default = "levi-smith17/asgard_fjall"
+}
+
+variable "terraform_state_bucket" {
+  type    = string
+  default = "asgard-terraform-state-910896517350"
 }

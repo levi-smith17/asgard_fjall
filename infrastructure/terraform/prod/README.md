@@ -1,29 +1,32 @@
 # Asgard Fjall prod Terraform
 
-Creates:
+## Accounts
 
-- ACM cert (us-east-1) for `asgard.levismith.us`
-- Private S3 + CloudFront SPA
-- Route53 A/AAAA alias → CloudFront
-- GitHub Actions OIDC deploy role
+| Resource | AWS account / profile |
+|----------|------------------------|
+| S3, CloudFront, ACM, GitHub OIDC role | **asgard** (`910896517350`) |
+| Route53 `levismith.us` (ACM DNS + A/AAAA) | **cairn-prod** (zone owner) |
+| State | `s3://asgard-terraform-state-910896517350/asgard-fjall/prod/terraform.tfstate` |
 
-## Prerequisites
-
-1. AWS account that owns public hosted zone `levismith.us`
-2. Existing GitHub OIDC provider in that account (`token.actions.githubusercontent.com`) — Cairn prod already has this
-3. S3 state bucket `asgard-fjall-terraform-state` (create once), or edit `providers.tf` backend
-
-## Apply
+## Bootstrap (once, local)
 
 ```bash
 cd infrastructure/terraform/prod
-terraform init
-terraform plan -var-file=prod.tfvars
-terraform apply -var-file=prod.tfvars
+AWS_PROFILE=asgard terraform init
+AWS_PROFILE=asgard terraform apply -var-file=prod.tfvars
 ```
 
-Copy outputs into GitHub Actions secrets/vars:
+Profiles in `prod.tfvars` must resolve (`asgard` + `cairn-prod`).
 
-- `AWS_ROLE_ARN` ← `github_actions_role_arn`
-- `WEB_BUCKET` ← `web_bucket_name`
-- `CLOUDFRONT_DISTRIBUTION_ID` ← `cloudfront_distribution_id`
+## CI
+
+- **Web deploy** on every `main` push (OIDC → Asgard role → S3 sync + CF invalidate).
+- **Terraform** is optional in CI for Asgard-account resources; DNS still needs `cairn-prod` credentials (or a cross-account assume role). Prefer applying DNS/infra locally until that role exists.
+
+After apply, set GitHub Environment `prod`:
+
+| Kind | Name | Value |
+|------|------|--------|
+| Secret | `AWS_ROLE_ARN` | `github_actions_role_arn` output |
+| Variable | `WEB_BUCKET` | `web_bucket_name` |
+| Variable | `CLOUDFRONT_DISTRIBUTION_ID` | `cloudfront_distribution_id` |

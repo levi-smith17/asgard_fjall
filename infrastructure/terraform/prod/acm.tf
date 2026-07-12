@@ -16,6 +16,8 @@ resource "aws_acm_certificate" "cloudfront" {
 }
 
 resource "aws_route53_record" "acm_validation" {
+  provider = aws.dns
+
   for_each = {
     for dvo in aws_acm_certificate.cloudfront.domain_validation_options : dvo.domain_name => {
       name  = dvo.resource_record_name

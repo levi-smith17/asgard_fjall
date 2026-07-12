@@ -8,19 +8,30 @@ terraform {
     }
   }
 
-  # Create / point this bucket before first apply if needed.
+  # Reuse the existing Asgard account state bucket.
   backend "s3" {
-    bucket = "asgard-fjall-terraform-state"
-    key    = "prod/terraform.tfstate"
-    region = "us-east-2"
+    bucket  = "asgard-terraform-state-910896517350"
+    key     = "asgard-fjall/prod/terraform.tfstate"
+    region  = "us-east-2"
+    profile = "asgard"
   }
 }
 
+# Compute / CloudFront / IAM live in the Asgard account.
 provider "aws" {
-  region = var.aws_region
+  region  = var.aws_region
+  profile = var.aws_profile
 }
 
 provider "aws" {
-  alias  = "us_east_1"
-  region = "us-east-1"
+  alias   = "us_east_1"
+  region  = "us-east-1"
+  profile = var.aws_profile
+}
+
+# Public DNS for levismith.us lives in cairn-prod — ACM validation + alias only.
+provider "aws" {
+  alias   = "dns"
+  region  = var.aws_region
+  profile = var.dns_aws_profile
 }

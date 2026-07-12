@@ -1,11 +1,13 @@
 data "aws_route53_zone" "public" {
-  name = var.hosted_zone_name
+  provider = aws.dns
+  name     = var.hosted_zone_name
 }
 
 resource "aws_route53_record" "web_a" {
-  zone_id = data.aws_route53_zone.public.zone_id
-  name    = var.domain
-  type    = "A"
+  provider = aws.dns
+  zone_id  = data.aws_route53_zone.public.zone_id
+  name     = var.domain
+  type     = "A"
 
   alias {
     name                   = module.cloudfront.cloudfront_domain_name
@@ -15,9 +17,10 @@ resource "aws_route53_record" "web_a" {
 }
 
 resource "aws_route53_record" "web_aaaa" {
-  zone_id = data.aws_route53_zone.public.zone_id
-  name    = var.domain
-  type    = "AAAA"
+  provider = aws.dns
+  zone_id  = data.aws_route53_zone.public.zone_id
+  name     = var.domain
+  type     = "AAAA"
 
   alias {
     name                   = module.cloudfront.cloudfront_domain_name

@@ -1,5 +1,15 @@
-data "aws_iam_openid_connect_provider" "github" {
-  url = "https://token.actions.githubusercontent.com"
+# Create OIDC provider in the Asgard account (does not exist yet).
+resource "aws_iam_openid_connect_provider" "github" {
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+  url             = "https://token.actions.githubusercontent.com"
+
+  tags = {
+    environment = var.environment
+    managed_by  = var.managed_by
+    owner       = var.owner
+    project     = var.project_name
+  }
 }
 
 data "aws_caller_identity" "current" {}
@@ -13,7 +23,7 @@ resource "aws_iam_role" "github_actions" {
       {
         Effect = "Allow"
         Principal = {
-          Federated = data.aws_iam_openid_connect_provider.github.arn
+          Federated = aws_iam_openid_connect_provider.github.arn
         }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
@@ -21,7 +31,10 @@ resource "aws_iam_role" "github_actions" {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
           }
           StringLike = {
-            "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:*"
+            "token.actions.githubusercontent.com:sub" = [
+              "repo:${var.github_repo}:ref:refs/heads/main",
+              "repo:${var.github_repo}:environment:prod",
+            ]
           }
         }
       }
@@ -62,6 +75,20 @@ resource "aws_iam_role_policy" "deploy_web" {
         Effect   = "Allow"
         Action   = ["cloudfront:CreateInvalidation", "cloudfront:GetInvalidation", "cloudfront:GetDistribution"]
         Resource = [var.cloudfront_distribution_arn]
+      },
+      {
+        Sid    = "TerraformState"
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "arn:aws:s3:::${var.terraform_state_bucket}",
+          "arn:aws:s3:::${var.terraform_state_bucket}/*"
+        ]
       }
     ]
   })

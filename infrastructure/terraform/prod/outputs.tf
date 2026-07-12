@@ -17,3 +17,11 @@ output "github_actions_role_arn" {
 output "public_url" {
   value = "https://${var.domain}"
 }
+
+output "github_actions_setup" {
+  value = {
+    secret_AWS_ROLE_ARN             = module.github_oidc.role_arn
+    var_WEB_BUCKET                  = module.cloudfront.bucket_name
+    var_CLOUDFRONT_DISTRIBUTION_ID  = module.cloudfront.cloudfront_distribution_id
+  }
+}
