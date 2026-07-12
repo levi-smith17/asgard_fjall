@@ -11,12 +11,12 @@ export function App() {
       <Route element={<AppShell />}>
         <Route path="/" element={<Navigate to="/basecamp" replace />} />
         <Route path="/basecamp" element={<BasecampPage />} />
-        <Route path="/audr" element={<PlaceholderAppPage name="Audr" />} />
-        <Route path="/dagatal" element={<PlaceholderAppPage name="Dagatal" />} />
-        <Route path="/ordstirr" element={<PlaceholderAppPage name="Ordstirr" />} />
-        <Route path="/sogur" element={<PlaceholderAppPage name="Sogur" />} />
-        <Route path="/stjornur" element={<PlaceholderAppPage name="Stjornur" />} />
-        <Route path="/sendibod" element={<PlaceholderAppPage name="Sendibod" />} />
+        <Route path="/audr" element={<PlaceholderAppPage nameKey="provisions" />} />
+        <Route path="/dagatal" element={<PlaceholderAppPage nameKey="calendar" />} />
+        <Route path="/ordstirr" element={<PlaceholderAppPage nameKey="resume" />} />
+        <Route path="/sogur" element={<PlaceholderAppPage nameKey="notes" />} />
+        <Route path="/stjornur" element={<PlaceholderAppPage nameKey="starfield" />} />
+        <Route path="/sendibod" element={<PlaceholderAppPage nameKey="messages" />} />
       </Route>
       <Route path="*" element={<Navigate to="/basecamp" replace />} />
     </Routes>

@@ -8,9 +8,9 @@ export function LoginPage() {
         <p className="mt-3 text-sm uppercase tracking-[0.22em] text-[var(--muted-foreground)]">Fjall</p>
       </div>
       <p className="max-w-md text-center text-sm text-[var(--muted-foreground)]">
-        Passkey login (single-user). Session cookie <code>{SESSION_COOKIE_NAME}</code>, RP ID{' '}
-        <code>{WEBAUTHN_RP_ID}</code>. Wire WebAuthn against a small auth surface or Cairn-hosted
-        challenge next — no RealmOps API.
+        Passkey gate (single-user). Session cookie <code>{SESSION_COOKIE_NAME}</code> must be
+        host-only (no <code>Domain=</code>). RP ID <code>{WEBAUTHN_RP_ID}</code>. Wire WebAuthn next;
+        Cairn API auth is separate (Cognito bearer or thin BFF).
       </p>
       <button
         type="button"

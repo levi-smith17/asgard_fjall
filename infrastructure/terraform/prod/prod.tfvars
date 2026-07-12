@@ -1,0 +1,6 @@
+domain           = "asgard.levismith.us"
+hosted_zone_name = "levismith.us"
+github_repo      = "levi-smith17/asgard_fjall"
+aws_region       = "us-east-2"
+project_name     = "asgard-fjall"
+environment      = "prod"

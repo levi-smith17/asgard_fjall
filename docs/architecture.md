@@ -1,21 +1,28 @@
-# Asgard Fjall — short architecture
+# Asgard Fjall — architecture
 
-See the canonical brief in private Asgard: `docs/asgard-fjall.md`.
+Repo: `levi-smith17/asgard_fjall`
 
 ## Locked decisions
 
 | Area | Choice |
 |------|--------|
-| URL | Public `asgard.levismith.us` → Fjall; LAN DNS → private Asgard |
-| Backdoor | `ops.asgard.levismith.us` (local A only, LE DNS-01, never public A) |
-| API | Cairn only |
-| Auth | Passkeys; `fjall_session`; RP ID `asgard.levismith.us` (shared with private, workable) |
-| Calendar | Cairn Itinerary |
-| CI | `main` only; observed from private Asgard Skidbladnir |
-| Out | All RealmOps surfaces |
+| URL | Public `asgard.levismith.us` → Fjall CloudFront (Terraform) |
+| LAN | Pi-hole `asgard.levismith.us` → private Asgard |
+| Backdoor | `ops.asgard.levismith.us` |
+| API data | Cairn only (`VITE_CAIRN_API_URL`) |
+| Gate auth | Passkeys; `fjall_session`; RP ID `asgard.levismith.us` |
+| Cairn auth | Cognito bearer in browser (preferred) **or** thin BFF later |
+| CI | `main` only |
 
-## App shell
+## Cairn CORS / auth (owner: cairn-summit Terraform)
 
-- Product subtitle: **Fjall**
-- Term toggle (Asgard / Cairn / Standard) like private Asgard
-- Studio layout patterns (rail / context bar / canvas / mobile)
+Add `https://asgard.levismith.us` to:
+
+- API Gateway `allowed_origins`
+- S3 media `allowed_origins`
+
+And configure Cognito callbacks for that origin (unless using a BFF with the server API token).
+
+## Cookies
+
+Never set `Domain=asgard.levismith.us`. Host-only `fjall_session` only.
