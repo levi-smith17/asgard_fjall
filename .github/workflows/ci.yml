@@ -31,7 +31,9 @@ jobs:
           retention-days: 1
 
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.WEB_BUCKET != ''
+    # Environment vars/secrets (WEB_BUCKET, AWS_ROLE_ARN, …) are only available
+    # after `environment: prod` is applied — do not gate this job on vars.* here.
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
     environment: prod
