@@ -1,0 +1,19 @@
+@import 'tailwindcss';
+
+:root {
+  --background: #0f1419;
+  --foreground: #e8eef4;
+  --muted: #1a222c;
+  --muted-foreground: #8b9aab;
+  --primary: #c4a35a;
+  --border: #2a3542;
+  --sidebar: #0c1015;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+}

@@ -1,0 +1,16 @@
+{
+  "name": "asgard-fjall",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @asgard-fjall/web dev",
+    "build": "pnpm --filter @asgard-fjall/web build",
+    "lint": "pnpm --filter @asgard-fjall/web lint",
+    "test": "pnpm --filter @asgard-fjall/web test"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=22"
+  }
+}
