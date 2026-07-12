@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import { Valknut, ValknutSpin } from '@/components/core/icons/valknut'
 import { useAuth } from '@/hooks/use-auth'
 import { SESSION_COOKIE_NAME, WEBAUTHN_RP_ID } from '@/lib/config'
 
@@ -13,7 +14,8 @@ export function LoginPage() {
 
   if (auth.loading) {
     return (
-      <div className="flex min-h-full items-center justify-center text-sm text-[var(--muted-foreground)]">
+      <div className="flex min-h-full flex-col items-center justify-center gap-3 text-sm text-[var(--muted-foreground)]">
+        <ValknutSpin className="h-5 w-5" aria-hidden />
         Checking session…
       </div>
     )
@@ -72,8 +74,9 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={pending}
-            className="w-full rounded-md bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--background)] disabled:opacity-60"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--background)] disabled:opacity-60"
           >
+            {pending ? <ValknutSpin className="h-4 w-4" aria-hidden /> : <Valknut className="h-4 w-4" aria-hidden />}
             {pending ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
