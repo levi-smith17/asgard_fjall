@@ -31,30 +31,41 @@ jobs:
           retention-days: 1
 
   deploy:
-    # Environment vars/secrets (WEB_BUCKET, AWS_ROLE_ARN, …) are only available
-    # after `environment: prod` is applied — do not gate this job on vars.* here.
+    # Environment vars/secrets are only available after `environment: prod` is applied.
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
     environment: prod
+    env:
+      # Prefer variables; fall back to secrets (either placement works).
+      WEB_BUCKET: ${{ vars.WEB_BUCKET || secrets.WEB_BUCKET }}
+      CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID || secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: web-dist
           path: dist
+      - name: Verify deploy config
+        run: |
+          if [ -z "$WEB_BUCKET" ] || [ -z "$CLOUDFRONT_DISTRIBUTION_ID" ] || [ -z "$AWS_ROLE_ARN" ]; then
+            echo "Missing WEB_BUCKET, CLOUDFRONT_DISTRIBUTION_ID, or AWS_ROLE_ARN on Environment prod"
+            exit 1
+          fi
+          echo "Deploying to s3://$WEB_BUCKET (CF $CLOUDFRONT_DISTRIBUTION_ID)"
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: us-east-2
       - name: Sync to S3
         run: |
-          aws s3 sync dist/ "s3://${{ vars.WEB_BUCKET }}/" --delete \
+          aws s3 sync dist/ "s3://${WEB_BUCKET}/" --delete \
             --cache-control "public,max-age=31536000,immutable" \
             --exclude "index.html"
-          aws s3 cp dist/index.html "s3://${{ vars.WEB_BUCKET }}/index.html" \
+          aws s3 cp dist/index.html "s3://${WEB_BUCKET}/index.html" \
             --cache-control "public,max-age=60,must-revalidate"
       - name: Invalidate CloudFront
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --distribution-id "${CLOUDFRONT_DISTRIBUTION_ID}" \
             --paths "/*"
