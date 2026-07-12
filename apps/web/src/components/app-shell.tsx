@@ -1,9 +1,11 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { useAuth } from '@/hooks/use-auth'
 import { useTerminology } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
 
 export function AppShell() {
   const { terms, style, setStyle } = useTerminology()
+  const auth = useAuth()
 
   const nav = [
     { to: '/basecamp', label: terms.basecamp },
@@ -44,19 +46,30 @@ export function AppShell() {
             </NavLink>
           ))}
         </nav>
-        <div className="border-t border-[var(--border)] p-3">
-          <label className="block text-[10px] uppercase tracking-wider text-[var(--muted-foreground)]">
-            Terms
-          </label>
-          <select
-            className="mt-1 w-full rounded-md border border-[var(--border)] bg-[var(--muted)] px-2 py-1.5 text-xs"
-            value={style}
-            onChange={(e) => setStyle(e.target.value as typeof style)}
-          >
-            <option value="ASGARD">Asgard</option>
-            <option value="CAIRN">Cairn</option>
-            <option value="STANDARD">Standard</option>
-          </select>
+        <div className="space-y-3 border-t border-[var(--border)] p-3">
+          <div>
+            <label className="block text-[10px] uppercase tracking-wider text-[var(--muted-foreground)]">
+              Terms
+            </label>
+            <select
+              className="mt-1 w-full rounded-md border border-[var(--border)] bg-[var(--muted)] px-2 py-1.5 text-xs"
+              value={style}
+              onChange={(e) => setStyle(e.target.value as typeof style)}
+            >
+              <option value="ASGARD">Asgard</option>
+              <option value="CAIRN">Cairn</option>
+              <option value="STANDARD">Standard</option>
+            </select>
+          </div>
+          {auth.user ? (
+            <button
+              type="button"
+              onClick={() => auth.signOut()}
+              className="w-full rounded-md border border-[var(--border)] px-2 py-1.5 text-left text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            >
+              Sign out ({auth.user.email})
+            </button>
+          ) : null}
         </div>
       </aside>
       <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">

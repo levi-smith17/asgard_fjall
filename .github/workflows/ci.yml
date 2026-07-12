@@ -31,7 +31,7 @@ jobs:
           retention-days: 1
 
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.WEB_BUCKET != ''
     needs: build
     runs-on: ubuntu-latest
     environment: prod
