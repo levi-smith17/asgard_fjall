@@ -38,7 +38,12 @@ export async function cairnFetch<T>(path: string, init?: RequestInit): Promise<T
   }
 
   if (response.status === 204) return undefined as T
-  const json = (await response.json()) as T | { data: T }
+
+  // Cairn often returns empty bodies on writes (even with 200).
+  const text = await response.text().catch(() => '')
+  if (!text.trim()) return undefined as T
+
+  const json = JSON.parse(text) as T | { data: T }
   if (json != null && typeof json === 'object' && 'data' in (json as object)) {
     return (json as { data: T }).data
   }

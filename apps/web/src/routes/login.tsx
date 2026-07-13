@@ -22,7 +22,7 @@ export function LoginPage() {
   }
 
   if (auth.user) {
-    return <Navigate to="/basecamp" replace />
+    return <Navigate to="/hlidskjalf" replace />
   }
 
   async function onSubmit(event: React.FormEvent) {
@@ -31,7 +31,7 @@ export function LoginPage() {
     setPending(true)
     try {
       await auth.signIn(email.trim(), password)
-      navigate('/basecamp', { replace: true })
+      navigate('/hlidskjalf', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign-in failed')
     } finally {
@@ -89,7 +89,7 @@ export function LoginPage() {
           <button
             type="button"
             className="rounded-md border border-border px-5 py-2.5 text-sm"
-            onClick={() => navigate('/basecamp')}
+            onClick={() => navigate('/hlidskjalf')}
           >
             Continue without Cognito
           </button>

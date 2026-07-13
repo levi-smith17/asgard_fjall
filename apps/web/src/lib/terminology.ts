@@ -3,7 +3,7 @@ export type TerminologyStyle = 'ASGARD' | 'CAIRN' | 'STANDARD'
 export type Terms = {
   productName: string
   productSubtitle: string
-  basecamp: string
+  dashboard: string
   provisions: string
   calendar: string
   messages: string
@@ -12,6 +12,10 @@ export type Terms = {
   notesSingular: string
   starfield: string
   settings: string
+  account: string
+  privacy: string
+  /** Cairn catalog write-through cache (not Audr budgets, not Dagatal). */
+  cache: string
   // Audr (provisions) item types
   expenses: string
   expenseSingular: string
@@ -49,15 +53,18 @@ export type Terms = {
 const ASGARD: Terms = {
   productName: 'Asgard',
   productSubtitle: 'Fjall',
-  basecamp: 'Basecamp',
+  dashboard: 'Hlidskjalf',
   provisions: 'Audr',
   calendar: 'Dagatal',
   messages: 'Sendibod',
   resume: 'Ordstirr',
-  notes: 'Sogur',
+  notes: 'Sögur',
   notesSingular: 'Saga',
-  starfield: 'Stjornur',
+  starfield: 'Stjörnur',
   settings: 'Thing',
+  account: 'Heiti',
+  privacy: 'Frid',
+  cache: 'Fordi',
   expenses: 'Surtr',
   expenseSingular: 'Surtr',
   subscriptions: 'Idunn',
@@ -92,7 +99,7 @@ const ASGARD: Terms = {
 const CAIRN: Terms = {
   productName: 'Cairn',
   productSubtitle: 'Fjall',
-  basecamp: 'Basecamp',
+  dashboard: 'Basecamp',
   provisions: 'Provisions',
   calendar: 'Itinerary',
   messages: 'Signals',
@@ -101,6 +108,9 @@ const CAIRN: Terms = {
   notesSingular: 'Log',
   starfield: 'Starfield',
   settings: 'Settings',
+  account: 'Trail Register',
+  privacy: 'Solitude',
+  cache: 'Resupply',
   expenses: 'Burn',
   expenseSingular: 'Burn',
   subscriptions: 'Supplylines',
@@ -135,15 +145,18 @@ const CAIRN: Terms = {
 const STANDARD: Terms = {
   productName: 'Asgard',
   productSubtitle: 'Fjall',
-  basecamp: 'Home',
+  dashboard: 'Dashboard',
   provisions: 'Finance',
   calendar: 'Calendar',
   messages: 'Messages',
   resume: 'Resume',
   notes: 'Notes',
   notesSingular: 'Note',
-  starfield: 'Planner',
+  starfield: 'Starfield',
   settings: 'Settings',
+  account: 'Account',
+  privacy: 'Privacy',
+  cache: 'Cache',
   expenses: 'Expenses',
   expenseSingular: 'Expense',
   subscriptions: 'Subscriptions',
@@ -219,3 +232,42 @@ export function terminologyToggleTooltip(current: TerminologyStyle): string {
   return 'Switch to Asgard terms'
 }
 
+export type ManifestTerms = Pick<
+  Terms,
+  | 'manifest'
+  | 'origins'
+  | 'expeditions'
+  | 'training'
+  | 'gear'
+  | 'landmarks'
+  | 'summits'
+  | 'pathfinding'
+  | 'summary'
+  | 'headline'
+  | 'location'
+  | 'bio'
+  | 'bio_button'
+  | 'companions'
+  | 'summit_reached'
+>
+
+export function getManifestTerms(style: TerminologyStyle): ManifestTerms {
+  const terms = termsFor(style)
+  return {
+    manifest: terms.manifest,
+    origins: terms.origins,
+    expeditions: terms.expeditions,
+    training: terms.training,
+    gear: terms.gear,
+    landmarks: terms.landmarks,
+    summits: terms.summits,
+    pathfinding: terms.pathfinding,
+    summary: terms.summary,
+    headline: terms.headline,
+    location: terms.location,
+    bio: terms.bio,
+    bio_button: terms.bio_button,
+    companions: terms.companions,
+    summit_reached: terms.summit_reached,
+  }
+}

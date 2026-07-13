@@ -13,7 +13,7 @@ export function CairnNotConfiguredNotice({
 }) {
   const hint =
     detail ??
-    'Set VITE_CAIRN_API_URL and ensure your Cairn account is accessible. Log in to grant access.'
+    'Sign in with your Cairn Cognito account. Fjall calls https://api.cairn.ing with your session token — there is no separate Cairn API token to configure.'
 
   return (
     <div

@@ -1,4 +1,6 @@
-import { cairnFetch } from '@/lib/cairn-client'
+import { cairnFetch, fetchCairnHealth } from '@/lib/cairn-client'
+import { CAIRN_API_URL } from '@/lib/config'
+import { isCognitoConfigured } from '@/lib/cognito'
 import type {
   CairnBurnPage,
   CairnCalendarOption,
@@ -21,8 +23,16 @@ export type CairnStatusResponse = {
   baseUrl: string
 }
 
+/**
+ * Fjall talks to Cairn directly (no Asgard BFF token).
+ * Treat Cognito + reachable API as "configured" — api.cairn.ing has no `/status`.
+ */
 export async function fetchCairnStatus(): Promise<CairnStatusResponse> {
-  return cairnFetch<CairnStatusResponse>('/status')
+  const health = await fetchCairnHealth()
+  return {
+    configured: isCognitoConfigured() && health.ok,
+    baseUrl: CAIRN_API_URL,
+  }
 }
 
 // ─── Settings ──────────────────────────────────────────────────────────────
@@ -79,6 +89,145 @@ export type CairnFullSettings = {
 
 export async function fetchCairnFullSettings(): Promise<CairnFullSettings> {
   return cairnFetch<CairnFullSettings>('/settings')
+}
+
+export type CairnProfile = {
+  username: string | null
+  name: string | null
+  email: string | null
+  image: string | null
+  isAdmin: boolean
+}
+
+export async function fetchCairnProfile(): Promise<CairnProfile> {
+  return cairnFetch<CairnProfile>('/profile')
+}
+
+export async function saveCairnAccountSettings(data: Record<string, unknown>): Promise<void> {
+  await cairnFetch('/settings/account', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function saveCairnPrivacySettings(data: Record<string, unknown>): Promise<void> {
+  await cairnFetch('/settings/privacy', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function saveCairnListedSetting(listed: boolean): Promise<void> {
+  await cairnFetch('/settings/account', {
+    method: 'PUT',
+    body: JSON.stringify({ listed }),
+  })
+}
+
+export async function saveCairnItinerarySettings(data: Record<string, unknown>): Promise<void> {
+  await cairnFetch('/settings/itinerary', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function addCairnICloudCalendar(data: {
+  appleId: string
+  password: string
+  name: string
+  color: string
+}): Promise<void> {
+  await cairnFetch('/itinerary', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updateCairnICloudCalendar(
+  id: string,
+  data: Record<string, unknown>,
+): Promise<void> {
+  await cairnFetch(`/itinerary/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteCairnICloudCalendar(id: string): Promise<void> {
+  await cairnFetch<void>(`/itinerary/${id}`, { method: 'DELETE' })
+}
+
+export async function addCairnCalendarSubscription(data: Record<string, unknown>): Promise<void> {
+  await cairnFetch('/itinerary-subscriptions', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteCairnCalendarSubscription(id: string): Promise<void> {
+  await cairnFetch<void>(`/itinerary-subscriptions/${id}`, { method: 'DELETE' })
+}
+
+export type CairnStarfieldNetwork = {
+  id: string
+  name: string
+  description?: string | null
+  color?: string | null
+}
+
+export async function fetchCairnStarfieldNetworks(): Promise<CairnStarfieldNetwork[]> {
+  const raw = await cairnFetch<Array<CairnStarfieldNetwork & { sk?: string }>>('/starfield/networks')
+  return raw.map((network) => ({
+    id: network.id || (network.sk ? extractCairnId(network.sk) : ''),
+    name: network.name,
+    description: network.description ?? null,
+    color: network.color ?? null,
+  }))
+}
+
+export type CairnSearchResultType = 'waypoint' | 'log' | 'provision' | 'stop' | 'trail' | 'marker'
+
+export type CairnSearchResult = {
+  id: string
+  type: CairnSearchResultType
+  title: string
+  subtitle?: string
+  url: string
+  externalUrl?: string
+  color?: string
+  score?: number
+}
+
+/** Map Summit/Cairn search URLs onto Fjall routes. */
+export function mapCairnSearchUrlToFjall(url: string): string {
+  try {
+    const parsed = new URL(url, 'https://fjall.local')
+    const path = parsed.pathname
+    const search = parsed.search
+
+    if (path.startsWith('/logs')) return `/sogur${search}`
+    if (path.startsWith('/provisions')) return `/audr${search}`
+    if (path.startsWith('/itinerary')) return `/dagatal${search}`
+    if (path.startsWith('/waypoints') || path.startsWith('/trails') || path.startsWith('/markers')) {
+      return `/hlidskjalf${search}`
+    }
+    if (path.startsWith('/manifest') || path.startsWith('/ordstirr')) return `/ordstirr${search}`
+    if (path.startsWith('/signals') || path.startsWith('/messages')) return `/sendibod${search}`
+    if (path.startsWith('/starfield')) return `/stjornur${search}`
+    if (path === '/' || path.startsWith('/basecamp')) return '/hlidskjalf'
+    return `${path}${search}` || '/hlidskjalf'
+  } catch {
+    return '/hlidskjalf'
+  }
+}
+
+export async function searchCairn(query: string, deep = true): Promise<CairnSearchResult[]> {
+  const qs = new URLSearchParams({ q: query, deep: String(deep) })
+  const results = await cairnFetch<CairnSearchResult[]>(`/search?${qs}`)
+  return results.map((result) => ({
+    ...result,
+    url: mapCairnSearchUrlToFjall(result.url),
+  }))
 }
 
 export async function saveCairnSignalSettings(data: CairnSignalSettings): Promise<void> {

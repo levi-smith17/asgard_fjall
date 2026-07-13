@@ -140,3 +140,85 @@ export function InspectorChromeSkeleton({ lines = 1 }: { lines?: number }) {
     </div>
   )
 }
+
+export function DataToolbarSkeleton({
+  className,
+  center = false,
+  leading,
+  trailing,
+}: {
+  className?: string
+  center?: boolean
+  leading?: React.ReactNode
+  trailing?: React.ReactNode
+}) {
+  return (
+    <div
+      className={cn(
+        'shrink-0 border-b border-border px-3 sm:px-6 lg:px-8',
+        'box-border flex h-14 min-h-14 max-h-14 items-center',
+        className,
+      )}
+    >
+      <div className="flex w-full items-center justify-between gap-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-3">
+        <div className="flex min-w-0 items-center gap-1 justify-self-start">
+          {leading ?? (
+            <>
+              <Block className="h-8 w-8" />
+              <Block className="h-8 w-14" />
+              <Block className="h-8 w-8" />
+            </>
+          )}
+        </div>
+        {center ? (
+          <Block className="hidden h-3 w-32 lg:mx-auto lg:block" />
+        ) : (
+          <div className="hidden lg:block" aria-hidden />
+        )}
+        <div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2 lg:justify-self-end">
+          {trailing ?? (
+            <>
+              <Block className="h-8 w-[5.5rem]" />
+              <Block className="hidden h-8 w-44 sm:block" />
+              <Block className="h-8 w-8" />
+              <Block className="h-8 w-8" />
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function StarfieldSkeleton() {
+  return (
+    <div className="flex min-h-0 flex-1 overflow-hidden">
+      <div className="hidden w-[260px] shrink-0 flex-col border-r border-border lg:flex">
+        <div className="flex h-14 min-h-14 max-h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
+          <Block className="h-4 w-20" />
+          <Block className="h-7 w-7 rounded-md" />
+        </div>
+        <div className="min-h-0 flex-1 space-y-1 overflow-hidden p-2">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <Block key={index} className="h-9 w-full rounded-lg" />
+          ))}
+        </div>
+      </div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <DataToolbarSkeleton
+          leading={<span className="sr-only">Loading</span>}
+          trailing={
+            <>
+              <Block className="h-8 w-8" />
+              <Block className="h-8 w-8" />
+              <Block className="h-8 w-8" />
+            </>
+          }
+        />
+        <div className="relative min-h-0 flex-1 bg-background">
+          <Block className="absolute inset-0 rounded-none opacity-40" />
+        </div>
+      </div>
+    </div>
+  )
+}

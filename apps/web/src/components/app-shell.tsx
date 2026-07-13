@@ -1,32 +1,141 @@
-import { Link, Outlet, useLocation } from 'react-router-dom'
-import { BookType, LogOut, Moon, Palette, Sun } from 'lucide-react'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { BookType, LogOut, Moon, Palette, Settings, Sun } from 'lucide-react'
 import { AsgardSidebarBrand } from '@/components/core/brand/asgard-sidebar-brand'
 import { CommandPaletteDialog } from '@/components/core/command-palette/command-palette-dialog'
 import { ValknutWatermark } from '@/components/core/icons/valknut-watermark'
 import { SidebarUtilitiesFlyout } from '@/components/core/shell/sidebar-utilities-flyout'
 import { Avatar } from '@/components/core/ui/avatar'
 import { Button } from '@/components/core/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/core/ui/popover'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { useAuth } from '@/hooks/use-auth'
 import { usePalette } from '@/hooks/use-palette'
 import { useSidebarCollapsed } from '@/hooks/use-sidebar-collapsed'
 import { useTerminology } from '@/hooks/use-terminology'
 import { useTheme } from '@/hooks/use-theme'
+import { fetchCairnProfile, fetchCairnStatus } from '@/lib/cairn-api'
 import { getFjallNavItems } from '@/lib/fjall-nav'
 import { cn } from '@/lib/utils'
 
+function themeToggleLabel(style: string, theme: string): string {
+  if (style === 'ASGARD') return theme === 'dark' ? 'Ljos' : 'Mrykr'
+  return theme === 'dark' ? 'Light' : 'Dark'
+}
+
+function ProfilePopover({
+  displayName,
+  displayEmail,
+  avatarUrl,
+  avatarFallback,
+  isNarrow,
+  onSignOut,
+}: {
+  displayName: string
+  displayEmail: string
+  avatarUrl: string | null
+  avatarFallback: string
+  isNarrow: boolean
+  onSignOut: () => void
+}) {
+  const trigger = (
+    <button
+      type="button"
+      className={cn(
+        'flex w-full items-center rounded-lg text-left transition-colors',
+        isNarrow
+          ? 'justify-center p-1 hover:bg-muted-hover'
+          : 'gap-2 px-3 py-1.5 hover:bg-muted-hover',
+      )}
+      aria-label="Account menu"
+    >
+      <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
+      {!isNarrow ? (
+        <div className="min-w-0 flex-1 text-left text-sm leading-tight">
+          <p className="truncate font-medium text-foreground">{displayName}</p>
+          {displayEmail ? (
+            <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
+          ) : null}
+        </div>
+      ) : null}
+    </button>
+  )
+
+  const popover = (
+    <Popover>
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverContent
+        side={isNarrow ? 'right' : 'top'}
+        align={isNarrow ? 'end' : 'start'}
+        className="w-56 space-y-3 p-3"
+      >
+        <div className="min-w-0 space-y-0.5">
+          <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
+          {displayEmail ? (
+            <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
+          ) : null}
+        </div>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="w-full justify-start gap-2"
+          onClick={onSignOut}
+        >
+          <LogOut className="h-4 w-4" aria-hidden />
+          Sign out
+        </Button>
+      </PopoverContent>
+    </Popover>
+  )
+
+  if (isNarrow) {
+    return (
+      <ToolbarTooltip label={displayName} placement="right">
+        {popover}
+      </ToolbarTooltip>
+    )
+  }
+
+  return popover
+}
+
 export function AppShell() {
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   const auth = useAuth()
   const { theme, toggleTheme } = useTheme()
-  const { terms, cycleTerminology, toggleTooltip } = useTerminology()
+  const { terms, style, cycleTerminology, toggleTooltip } = useTerminology()
   const { cyclePalette, toggleTooltip: paletteTooltip } = usePalette()
   const { isDesktop, isNarrow, desktopCollapsed, toggleDesktopCollapsed } = useSidebarCollapsed()
   const nav = getFjallNavItems(terms)
+  const themeLabel = themeToggleLabel(style, theme)
 
-  const displayName = auth.user?.email?.split('@')[0] ?? 'Guest'
-  const displayEmail = auth.user?.email ?? ''
+  const statusQuery = useQuery({
+    queryKey: ['cairn-status'],
+    queryFn: fetchCairnStatus,
+    retry: false,
+    staleTime: 60_000,
+  })
+
+  const profileQuery = useQuery({
+    queryKey: ['cairn-profile'],
+    queryFn: fetchCairnProfile,
+    enabled: Boolean(auth.user) && statusQuery.data?.configured === true,
+    retry: false,
+    staleTime: 60_000,
+  })
+
+  const displayName =
+    profileQuery.data?.name ?? auth.user?.email?.split('@')[0] ?? 'Guest'
+  const displayEmail = profileQuery.data?.email ?? auth.user?.email ?? ''
+  const avatarUrl = profileQuery.data?.image ?? null
   const avatarFallback = displayName.slice(0, 2)
+
+  function handleSignOut() {
+    auth.signOut()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <>
@@ -86,15 +195,20 @@ export function AppShell() {
                 <SidebarUtilitiesFlyout />
                 <div className="mt-2 -mx-2 self-stretch border-t border-sidebar-border pt-2">
                   <div className="flex justify-center">
-                    <ToolbarTooltip label={displayName} placement="right">
-                      <Avatar alt={displayName} fallback={avatarFallback} />
-                    </ToolbarTooltip>
+                    <ProfilePopover
+                      displayName={displayName}
+                      displayEmail={displayEmail}
+                      avatarUrl={avatarUrl}
+                      avatarFallback={avatarFallback}
+                      isNarrow
+                      onSignOut={handleSignOut}
+                    />
                   </div>
                 </div>
               </div>
             ) : (
               <>
-                <div className="grid w-full grid-cols-3 gap-1">
+                <div className="grid w-full grid-cols-4 gap-1">
                   <ToolbarTooltip label={toggleTooltip}>
                     <Button
                       type="button"
@@ -119,43 +233,44 @@ export function AppShell() {
                       <Palette className="h-4 w-4" />
                     </Button>
                   </ToolbarTooltip>
-                  <ToolbarTooltip label={theme === 'dark' ? 'Ljos' : 'Mrykr'}>
+                  <ToolbarTooltip label={themeLabel}>
                     <Button
                       type="button"
                       variant="secondary"
                       size="icon"
                       className="h-8 w-full"
                       onClick={toggleTheme}
-                      aria-label={theme === 'dark' ? 'Ljos' : 'Mrykr'}
+                      aria-label={themeLabel}
                     >
                       {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                     </Button>
                   </ToolbarTooltip>
+                  <ToolbarTooltip label={terms.settings}>
+                    <Button
+                      asChild
+                      variant="secondary"
+                      size="icon"
+                      className={cn(
+                        'h-8 w-full',
+                        pathname.startsWith('/thing') &&
+                          'bg-sidebar-accent text-sidebar-foreground-active hover:bg-sidebar-accent',
+                      )}
+                    >
+                      <Link to="/thing" aria-label={terms.settings}>
+                        <Settings className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </ToolbarTooltip>
                 </div>
                 <div className="mt-3 -mx-3 border-t border-sidebar-border pt-3">
-                  <div className="flex items-center gap-2 px-3">
-                    <Avatar alt={displayName} fallback={avatarFallback} />
-                    <div className="min-w-0 flex-1 text-left text-sm leading-tight">
-                      <p className="truncate font-medium text-foreground">{displayName}</p>
-                      {displayEmail ? (
-                        <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
-                      ) : null}
-                    </div>
-                    {auth.user ? (
-                      <ToolbarTooltip label="Sign out">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="icon"
-                          className="h-8 w-8 shrink-0"
-                          onClick={() => auth.signOut()}
-                          aria-label="Sign out"
-                        >
-                          <LogOut className="h-4 w-4" />
-                        </Button>
-                      </ToolbarTooltip>
-                    ) : null}
-                  </div>
+                  <ProfilePopover
+                    displayName={displayName}
+                    displayEmail={displayEmail}
+                    avatarUrl={avatarUrl}
+                    avatarFallback={avatarFallback}
+                    isNarrow={false}
+                    onSignOut={handleSignOut}
+                  />
                 </div>
               </>
             )}

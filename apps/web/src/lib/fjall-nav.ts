@@ -19,7 +19,7 @@ export type FjallNavItem = {
 
 export function getFjallNavItems(terms: Terms): FjallNavItem[] {
   return [
-    { key: 'basecamp', label: terms.basecamp, href: '/basecamp', icon: Home },
+    { key: 'hlidskjalf', label: terms.dashboard, href: '/hlidskjalf', icon: Home },
     { key: 'audr', label: terms.provisions, href: '/audr', icon: Wallet },
     { key: 'dagatal', label: terms.calendar, href: '/dagatal', icon: CalendarDays },
     { key: 'ordstirr', label: terms.resume, href: '/ordstirr', icon: ScrollText },
