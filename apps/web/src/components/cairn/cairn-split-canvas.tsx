@@ -1,7 +1,7 @@
-import { Valknut } from '@/components/core/icons/valknut'
 import { StudioDataToolbar } from '@/components/core/layout/studio-data-toolbar'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { cn } from '@/lib/utils'
+import { RefreshCw } from 'lucide-react'
 
 export function CairnToolbar({ description, onRefresh, isRefreshing, leading }: { description: string; onRefresh: () => void; isRefreshing: boolean; leading?: React.ReactNode }) {
   return (
@@ -11,7 +11,7 @@ export function CairnToolbar({ description, onRefresh, isRefreshing, leading }: 
       trailing={
         <ToolbarTooltip label="Refresh from Cairn">
           <button type="button" className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted-hover hover:text-foreground" onClick={onRefresh} aria-label="Refresh from Cairn">
-            <Valknut className={cn('h-4 w-4', isRefreshing && 'animate-spin')} aria-hidden />
+            <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} aria-hidden />
           </button>
         </ToolbarTooltip>
       }

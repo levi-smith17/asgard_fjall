@@ -40,9 +40,9 @@ function SnapshotCard({
   return (
     <Link
       to={to}
-      className="group flex h-32 flex-col rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 p-3 transition-colors hover:border-[var(--primary)]/40"
+      className="group flex h-32 flex-col rounded-xl border border-border bg-muted/40 p-3 transition-colors hover:border-primary/40"
     >
-      <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+      <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
         {label}
         <ChevronRight className="ml-auto h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
       </div>
@@ -67,16 +67,16 @@ function CardRow({
   return (
     <section>
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+        <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           <Icon className="h-3.5 w-3.5" aria-hidden />
           {title}
         </h2>
-        <Link to={to} className="text-xs text-[var(--primary)] hover:underline">
+        <Link to={to} className="text-xs text-primary hover:underline">
           Open
         </Link>
       </div>
       {items.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-[var(--border)] px-4 py-8 text-sm text-[var(--muted-foreground)]">
+        <div className="rounded-lg border border-dashed border-border px-4 py-8 text-sm text-muted-foreground">
           {empty}
         </div>
       ) : (
@@ -86,12 +86,12 @@ function CardRow({
               key={item.id}
               to={to}
               className={cn(
-                'rounded-lg border border-[var(--border)] bg-[var(--muted)]/30 px-4 py-4 transition-colors',
-                'hover:border-[var(--primary)]/40',
+                'rounded-lg border border-border bg-muted/30 px-4 py-4 transition-colors',
+                'hover:border-primary/40',
               )}
             >
               <p className="text-sm font-medium">{item.title}</p>
-              <p className="mt-1 line-clamp-2 text-xs text-[var(--muted-foreground)]">{item.subtitle}</p>
+              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{item.subtitle}</p>
             </Link>
           ))}
         </div>
@@ -181,15 +181,15 @@ export function BasecampPage() {
       : null
 
   return (
-    <div className="space-y-10 px-6 py-8 sm:px-10">
+    <div className="min-h-0 flex-1 space-y-10 overflow-y-auto px-6 py-8 sm:px-10">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-wide">{terms.basecamp}</h1>
-          <p className="mt-2 max-w-2xl text-sm text-[var(--muted-foreground)]">
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
             Snapshots + Summit-style rows + Stjornur. Data from <code>{CAIRN_API_URL}</code>.
           </p>
         </div>
-        <div className="text-right text-xs text-[var(--muted-foreground)]">
+        <div className="text-right text-xs text-muted-foreground">
           <p>
             API:{' '}
             {health.isLoading
@@ -206,13 +206,13 @@ export function BasecampPage() {
       </header>
 
       <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           Snapshots
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {snapshots.map((item) => (
             <SnapshotCard key={item.to} to={item.to} label={item.name}>
-              <p className="text-[var(--muted-foreground)]">{item.body}</p>
+              <p className="text-muted-foreground">{item.body}</p>
             </SnapshotCard>
           ))}
         </div>

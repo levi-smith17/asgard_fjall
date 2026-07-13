@@ -18,13 +18,14 @@
 
 ## Foundation
 - Studio layout + UI primitives, inspector pin (no BFF cache-sync)
-- Expanded terminology / `useTerms`
+- Expanded terminology / `useTerms` with cycle chrome
 - Cognito defaults baked in `config.ts` (overridable via `VITE_*`)
-- `GlobalSearchTrigger` is a no-op stub (command palette not ported)
+- Asgard-parity shell: narrow icon rail, tree brand + **Fjall** subtitle, overflow-hidden main + Valknut watermark
+- Dual palettes (`green` default + `fjall` gold) with light/dark theme
+- Command palette (⌘/Ctrl+K) + context-bar search triggers (Fjall routes + sign-in/out)
 
 ## Deferred
 - Stjörnur full canvas (`@xyflow/react`)
 - Passkey gate
 - Full Basecamp snapshot polish (parity with private Asgard Summit)
-- Command palette / global search
 - Chunk-size warning on production bundle (~2.5MB JS)

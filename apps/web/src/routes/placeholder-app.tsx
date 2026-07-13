@@ -10,9 +10,9 @@ export function PlaceholderAppPage({
   const name = terms[nameKey]
 
   return (
-    <div className="px-6 py-8 sm:px-10">
+    <div className="min-h-0 flex-1 overflow-y-auto px-6 py-8 sm:px-10">
       <h1 className="text-2xl font-semibold tracking-wide">{name}</h1>
-      <p className="mt-2 max-w-xl text-sm text-[var(--muted-foreground)]">
+      <p className="mt-2 max-w-xl text-sm text-muted-foreground">
         Port from private Asgard Cairn surfaces. Browser → <code>{CAIRN_API_URL}</code> via{' '}
         <code>cairnFetch</code> once CORS + Cognito (or BFF) are configured.
       </p>

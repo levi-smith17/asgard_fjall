@@ -178,13 +178,21 @@ const STANDARD: Terms = {
 const STORAGE_KEY = 'fjall_terminology_style'
 
 export function loadTerminologyStyle(): TerminologyStyle {
-  const raw = localStorage.getItem(STORAGE_KEY)
-  if (raw === 'CAIRN' || raw === 'STANDARD' || raw === 'ASGARD') return raw
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw === 'CAIRN' || raw === 'STANDARD' || raw === 'ASGARD') return raw
+  } catch {
+    // ignore
+  }
   return 'ASGARD'
 }
 
 export function saveTerminologyStyle(style: TerminologyStyle) {
-  localStorage.setItem(STORAGE_KEY, style)
+  try {
+    localStorage.setItem(STORAGE_KEY, style)
+  } catch {
+    // ignore
+  }
 }
 
 export function termsFor(style: TerminologyStyle): Terms {
@@ -197,3 +205,17 @@ export function termsFor(style: TerminologyStyle): Terms {
       return ASGARD
   }
 }
+
+export function nextTerminologyStyle(current: TerminologyStyle): TerminologyStyle {
+  if (current === 'STANDARD') return 'CAIRN'
+  if (current === 'CAIRN') return 'ASGARD'
+  return 'STANDARD'
+}
+
+export function terminologyToggleTooltip(current: TerminologyStyle): string {
+  const next = nextTerminologyStyle(current)
+  if (next === 'STANDARD') return 'Switch to Standard terms'
+  if (next === 'CAIRN') return 'Switch to Cairn terms'
+  return 'Switch to Asgard terms'
+}
+

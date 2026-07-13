@@ -1,5 +1,4 @@
-import { Valknut } from '@/components/core/icons/valknut'
-import { CalendarDays, Settings } from 'lucide-react'
+import { CalendarDays, Settings, RefreshCw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/core/ui/button'
 import { STUDIO_CONTEXT_BAR_CLASS } from '@/components/core/layout/studio-data-toolbar'
@@ -116,7 +115,7 @@ export function DagatalToolbar({
             disabled={eventsLoading}
             aria-label="Reload events"
           >
-            <Valknut className={cn('h-4 w-4', eventsLoading && 'animate-spin')} />
+            <RefreshCw className={cn('h-4 w-4', eventsLoading && 'animate-spin')} />
           </button>
         </ToolbarTooltip>
         <ToolbarTooltip label="Dagatal settings">

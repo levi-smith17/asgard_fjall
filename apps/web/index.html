@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Asgard Fjall</title>
+    <script>
+      // amazon-cognito-identity-js (buffer) expects Node's `global`
+      window.global ||= window
+    </script>
   </head>
   <body>
     <div id="root"></div>

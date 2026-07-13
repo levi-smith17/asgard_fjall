@@ -4,8 +4,7 @@ import { cn } from '@/lib/utils'
 
 /**
  * Norse valknut — three interlocking triangular bands (tricursal / Borromean form).
- * Path is visually centered in the 24×24 viewBox so `animate-spin` stays on-axis.
- * Prefer {@link ValknutSpin} for always-spinning refresh/loading affordances.
+ * Used as a decorative watermark; not for loaders/refresh controls.
  */
 const ValknutGlyph = createLucideIcon('valknut', [
   [
@@ -22,15 +21,7 @@ const ValknutGlyph = createLucideIcon('valknut', [
 
 export const Valknut = forwardRef<SVGSVGElement, LucideProps>(
   ({ className, ...props }, ref) => (
-    <ValknutGlyph ref={ref} className={cn('origin-center', className)} {...props} />
+    <ValknutGlyph ref={ref} className={cn(className)} {...props} />
   ),
 )
 Valknut.displayName = 'Valknut'
-
-/** Valknut that always rotates — drop-in for refresh/loading affordances. */
-export const ValknutSpin = forwardRef<SVGSVGElement, LucideProps>(
-  ({ className, ...props }, ref) => (
-    <Valknut ref={ref} className={cn('animate-spin', className)} {...props} />
-  ),
-)
-ValknutSpin.displayName = 'ValknutSpin'

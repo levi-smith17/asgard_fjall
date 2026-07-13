@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom'
-import { ValknutSpin } from '@/components/core/icons/valknut'
+import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 
 /** When Cognito is configured, require a session. Otherwise allow shell browsing. */
@@ -8,8 +8,8 @@ export function RequireAuth() {
 
   if (auth.loading) {
     return (
-      <div className="flex min-h-full flex-col items-center justify-center gap-3 text-sm text-[var(--muted-foreground)]">
-        <ValknutSpin className="h-5 w-5" aria-hidden />
+      <div className="flex min-h-full flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
         Checking session…
       </div>
     )

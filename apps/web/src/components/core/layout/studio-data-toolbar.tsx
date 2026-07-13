@@ -1,7 +1,9 @@
 import { cn } from '@/lib/utils'
 
+/** Page context bar under the header — fixed 56px.
+ * z-10 keeps overflowing filter menus above the canvas. */
 export const STUDIO_CONTEXT_BAR_CLASS =
-  'relative z-30 box-border flex h-14 min-h-14 max-h-14 shrink-0 items-center overflow-visible border-b border-border bg-context-bar px-3 sm:px-6 lg:px-8'
+  'relative z-10 box-border flex h-14 min-h-14 max-h-14 shrink-0 items-center overflow-visible border-b border-border bg-context-bar px-3 sm:px-6 lg:px-8'
 
 export function StudioDataToolbar({
   leading,

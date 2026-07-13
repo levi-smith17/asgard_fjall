@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { Valknut, ValknutSpin } from '@/components/core/icons/valknut'
+import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { SESSION_COOKIE_NAME, WEBAUTHN_RP_ID } from '@/lib/config'
 
@@ -14,8 +14,8 @@ export function LoginPage() {
 
   if (auth.loading) {
     return (
-      <div className="flex min-h-full flex-col items-center justify-center gap-3 text-sm text-[var(--muted-foreground)]">
-        <ValknutSpin className="h-5 w-5" aria-hidden />
+      <div className="flex min-h-full flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
         Checking session…
       </div>
     )
@@ -42,13 +42,13 @@ export function LoginPage() {
   return (
     <div className="flex min-h-full flex-col items-center justify-center gap-6 px-6">
       <div className="text-center">
-        <p className="text-3xl font-bold tracking-[0.28em] text-[var(--primary)] uppercase">Asgard</p>
-        <p className="mt-3 text-sm uppercase tracking-[0.22em] text-[var(--muted-foreground)]">Fjall</p>
+        <p className="text-3xl font-bold tracking-[0.28em] text-primary uppercase">Asgard</p>
+        <p className="mt-3 text-sm uppercase tracking-[0.22em] text-muted-foreground">Fjall</p>
       </div>
 
       {auth.configured ? (
         <form onSubmit={onSubmit} className="w-full max-w-sm space-y-3">
-          <p className="text-center text-xs text-[var(--muted-foreground)]">
+          <p className="text-center text-xs text-muted-foreground">
             Cairn Cognito session for <code>api.cairn.ing</code>. Passkey gate (
             <code>{SESSION_COOKIE_NAME}</code>, RP <code>{WEBAUTHN_RP_ID}</code>) comes next.
           </p>
@@ -59,7 +59,7 @@ export function LoginPage() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm"
+            className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm"
           />
           <input
             type="password"
@@ -68,27 +68,27 @@ export function LoginPage() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm"
+            className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm"
           />
           {error ? <p className="text-xs text-red-400">{error}</p> : null}
           <button
             type="submit"
             disabled={pending}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--background)] disabled:opacity-60"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
-            {pending ? <ValknutSpin className="h-4 w-4" aria-hidden /> : <Valknut className="h-4 w-4" aria-hidden />}
+            {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
             {pending ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
       ) : (
-        <div className="max-w-md space-y-4 text-center text-sm text-[var(--muted-foreground)]">
+        <div className="max-w-md space-y-4 text-center text-sm text-muted-foreground">
           <p>
             Set <code>VITE_COGNITO_USER_POOL_ID</code> and <code>VITE_COGNITO_CLIENT_ID</code> to enable
             Cairn sign-in. Until then you can browse the shell without API data.
           </p>
           <button
             type="button"
-            className="rounded-md border border-[var(--border)] px-5 py-2.5 text-sm"
+            className="rounded-md border border-border px-5 py-2.5 text-sm"
             onClick={() => navigate('/basecamp')}
           >
             Continue without Cognito

@@ -1,3 +1,4 @@
+import { GlobalSearchTrigger } from '@/components/core/command-palette/global-search-trigger'
 import { ContextBarPinAndSync } from '@/components/core/ui/context-bar-pin-and-sync'
 import { StudioContextBar } from '@/components/core/layout/studio-context-bar'
 import { useTerms } from '@/hooks/use-terminology'
@@ -37,10 +38,13 @@ export function SendibodContextBar({
         ) : null
       }
       actions={
-        <ContextBarPinAndSync
-          pinned={inspectorPinned}
-          onPinnedChange={onInspectorPinnedChange}
-        />
+        <>
+          <GlobalSearchTrigger />
+          <ContextBarPinAndSync
+            pinned={inspectorPinned}
+            onPinnedChange={onInspectorPinnedChange}
+          />
+        </>
       }
     />
   )
