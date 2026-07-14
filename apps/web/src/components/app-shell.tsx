@@ -1,13 +1,10 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  BookOpen,
   BookType,
   ChevronsUpDown,
-  Compass,
   ExternalLink,
   LogOut,
-  Mail,
   Moon,
   Palette,
   Settings,
@@ -29,11 +26,8 @@ import { useTerminology } from '@/hooks/use-terminology'
 import { useTheme } from '@/hooks/use-theme'
 import { fetchCairnProfile, fetchCairnStatus } from '@/lib/cairn-api'
 import { getFjallNavItems } from '@/lib/fjall-nav'
-import {
-  manifestPublicContactUrl,
-  manifestPublicJourneyUrl,
-  manifestPublicUrl,
-} from '@/lib/ordstirr-format'
+import { buildPublicViewLinks } from '@/lib/public-view-nav'
+import { parsePublicManifestPath } from '@/lib/public-manifest-path'
 import { cn } from '@/lib/utils'
 
 function themeToggleLabel(style: string, theme: string): string {
@@ -155,7 +149,6 @@ export function AppShell() {
   const { cyclePalette, toggleTooltip: paletteTooltip } = usePalette()
   const { isDesktop, isNarrow, desktopCollapsed, toggleDesktopCollapsed } = useSidebarCollapsed()
   const nav = getFjallNavItems(terms)
-  const [hlidskjalf, ...platformNav] = nav
   const themeLabel = themeToggleLabel(style, theme)
 
   const statusQuery = useQuery({
@@ -179,29 +172,8 @@ export function AppShell() {
   const avatarUrl = profileQuery.data?.image ?? null
   const avatarFallback = displayName.slice(0, 2)
   const username = profileQuery.data?.username
-
-  const publicLinks = username
-    ? [
-        {
-          key: 'public-manifest',
-          label: terms.resume,
-          href: manifestPublicUrl(username),
-          icon: BookOpen,
-        },
-        {
-          key: 'public-journey',
-          label: terms.bio_button,
-          href: manifestPublicJourneyUrl(username),
-          icon: Compass,
-        },
-        {
-          key: 'public-contact',
-          label: 'Contact',
-          href: manifestPublicContactUrl(username),
-          icon: Mail,
-        },
-      ].filter((link): link is typeof link & { href: string } => Boolean(link.href))
-    : []
+  const publicLinks = username ? buildPublicViewLinks(username, terms) : []
+  const publicProfile = parsePublicManifestPath(pathname)
 
   function handleSignOut() {
     auth.signOut()
@@ -213,10 +185,11 @@ export function AppShell() {
     label: string
     href: string
     icon: LucideIcon
+    active?: boolean
     external?: boolean
   }) {
     const Icon = item.icon
-    const active = !item.external && pathname.startsWith(item.href)
+    const active = item.external ? false : (item.active ?? pathname.startsWith(item.href))
     const itemClass = cn(
       'flex w-full items-center rounded-lg text-sm font-medium transition-colors',
       isNarrow ? 'justify-center px-0 py-2.5' : 'justify-start gap-2.5 px-3 py-2',
@@ -278,21 +251,25 @@ export function AppShell() {
           <AsgardSidebarBrand narrow={isNarrow} />
 
           <nav className={cn('flex-1 overflow-y-auto py-3', isNarrow ? 'px-1.5' : 'px-2 py-4')}>
-            <ul className="space-y-0.5">{renderNavLink(hlidskjalf)}</ul>
-
-            <div className={cn(isNarrow ? 'mt-2' : 'mt-3')}>
-              <SidebarGroupLabel narrow={isNarrow}>Platform</SidebarGroupLabel>
-              <ul className="space-y-0.5">{platformNav.map((item) => renderNavLink(item))}</ul>
+            <div>
+              <SidebarGroupLabel narrow={isNarrow}>{terms.platformGroup}</SidebarGroupLabel>
+              <ul className="space-y-0.5">{nav.map((item) => renderNavLink(item))}</ul>
             </div>
 
             {publicLinks.length > 0 ? (
               <div className={cn(isNarrow ? 'mt-2' : 'mt-3')}>
                 <SidebarGroupLabel narrow={isNarrow} className="mt-1">
-                  Public View
+                  {terms.publicViewGroup}
                 </SidebarGroupLabel>
                 <ul className="space-y-0.5">
                   {publicLinks.map((item) =>
-                    renderNavLink({ ...item, external: true }),
+                    renderNavLink({
+                      key: item.key,
+                      label: item.label,
+                      href: item.href,
+                      icon: item.icon,
+                      active: publicProfile?.view === item.view,
+                    }),
                   )}
                 </ul>
               </div>

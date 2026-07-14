@@ -10,6 +10,7 @@ import { OrdstirrPage } from '@/routes/ordstirr'
 import { DagatalPage } from '@/routes/dagatal'
 import { StjornurPage } from '@/routes/stjornur'
 import { ThingPage } from '@/routes/thing'
+import { PublicManifestPage } from '@/routes/manifest-public'
 
 export function App() {
   return (
@@ -28,6 +29,9 @@ export function App() {
           <Route path="/sendibod" element={<SendibodPage />} />
           <Route path="/thing" element={<ThingPage />} />
           <Route path="/settings" element={<Navigate to="/thing" replace />} />
+          <Route path="/manifest/:username" element={<PublicManifestPage view="manifest" />} />
+          <Route path="/manifest/:username/journey" element={<PublicManifestPage view="journey" />} />
+          <Route path="/manifest/:username/contact" element={<PublicManifestPage view="contact" />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/hlidskjalf" replace />} />

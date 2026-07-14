@@ -11,11 +11,17 @@ export type Terms = {
   notes: string
   notesSingular: string
   starfield: string
+  /** Lattic Forge — external app (Asgard: Völundr). */
+  forge: string
   settings: string
   account: string
   privacy: string
   /** Cairn catalog write-through cache (not Audr budgets, not Dagatal). */
   cache: string
+  /** Sidebar group: Platform / Pallr. */
+  platformGroup: string
+  /** Sidebar group: Public View / Almenningr. */
+  publicViewGroup: string
   // Audr (provisions) item types
   expenses: string
   expenseSingular: string
@@ -47,6 +53,7 @@ export type Terms = {
   location: string
   bio: string
   bio_button: string
+  contact: string
   companions: string
   summit_reached: string
 }
@@ -62,10 +69,13 @@ const ASGARD: Terms = {
   notes: 'Sögur',
   notesSingular: 'Saga',
   starfield: 'Stjörnur',
+  forge: 'Völundr',
   settings: 'Thing',
   account: 'Heiti',
   privacy: 'Frid',
   cache: 'Fordi',
+  platformGroup: 'Pallr',
+  publicViewGroup: 'Almenningr',
   expenses: 'Surtr',
   expenseSingular: 'Surtr',
   subscriptions: 'Idunn',
@@ -94,6 +104,7 @@ const ASGARD: Terms = {
   location: 'Location',
   bio: 'Sjalfsmynd',
   bio_button: 'Ferd Min',
+  contact: 'Ordsending',
   companions: 'Foruneyti',
   summit_reached: 'Bautasteinn',
 }
@@ -109,10 +120,13 @@ const CAIRN: Terms = {
   notes: 'Logbooks',
   notesSingular: 'Log',
   starfield: 'Starfield',
+  forge: 'Lattic Forge',
   settings: 'Settings',
   account: 'Trail Register',
   privacy: 'Solitude',
   cache: 'Resupply',
+  platformGroup: 'Platform',
+  publicViewGroup: 'Public View',
   expenses: 'Burn',
   expenseSingular: 'Burn',
   subscriptions: 'Supplylines',
@@ -141,6 +155,7 @@ const CAIRN: Terms = {
   location: 'Location',
   bio: 'Field Notes',
   bio_button: 'My Journey',
+  contact: 'Contact',
   companions: 'Companions',
   summit_reached: 'Summit Reached',
 }
@@ -156,10 +171,13 @@ const STANDARD: Terms = {
   notes: 'Notes',
   notesSingular: 'Note',
   starfield: 'Starfield',
+  forge: 'Lattic Forge',
   settings: 'Settings',
   account: 'Account',
   privacy: 'Privacy',
   cache: 'Cache',
+  platformGroup: 'Platform',
+  publicViewGroup: 'Public View',
   expenses: 'Expenses',
   expenseSingular: 'Expense',
   subscriptions: 'Subscriptions',
@@ -188,6 +206,7 @@ const STANDARD: Terms = {
   location: 'Location',
   bio: 'Bio',
   bio_button: 'More About Me',
+  contact: 'Contact',
   companions: 'Pets',
   summit_reached: 'In Memoriam',
 }
@@ -250,6 +269,7 @@ export type ManifestTerms = Pick<
   | 'location'
   | 'bio'
   | 'bio_button'
+  | 'contact'
   | 'companions'
   | 'summit_reached'
 >
@@ -270,6 +290,7 @@ export function getManifestTerms(style: TerminologyStyle): ManifestTerms {
     location: terms.location,
     bio: terms.bio,
     bio_button: terms.bio_button,
+    contact: terms.contact,
     companions: terms.companions,
     summit_reached: terms.summit_reached,
   }
