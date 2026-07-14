@@ -133,7 +133,7 @@ export function OrdstirrJourneyCanvas({
   const passedCompanions = data.companions.filter((companion) => companion.passed)
 
   return (
-    <div className="h-full overflow-y-auto bg-background">
+    <div className="h-full overflow-y-auto">
       <div className="mx-auto flex max-w-3xl flex-col gap-12 px-6 py-8">
         <div className="flex items-center gap-4">
           <Avatar src={data.user.image} alt={displayName} fallback={initials} className="h-20 w-20" />

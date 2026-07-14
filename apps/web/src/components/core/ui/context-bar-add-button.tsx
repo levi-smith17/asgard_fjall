@@ -1,10 +1,19 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown, Plus } from 'lucide-react'
 import { Button } from '@/components/core/ui/button'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { cn } from '@/lib/utils'
 
-export function ContextBarAddButton({ label, shortLabel, onClick }: { label: string; shortLabel?: string; onClick: () => void }) {
+export function ContextBarAddButton({
+  label,
+  shortLabel,
+  onClick,
+}: {
+  label: string
+  shortLabel?: string
+  onClick: () => void
+}) {
   const visibleLabel = shortLabel ?? label
   return (
     <ToolbarTooltip label={label}>
@@ -33,16 +42,49 @@ export function ContextBarSplitAddButton({
 }) {
   const visibleLabel = shortLabel ?? label
   const [open, setOpen] = useState(false)
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const menuId = useId()
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setMenuPos(null)
+      return
+    }
+    const update = () => {
+      const el = rootRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const menuWidth = menuRef.current?.offsetWidth ?? 176
+      const left = Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8)
+      setMenuPos({ top: rect.bottom + 4, left: Math.max(8, left) })
+    }
+    update()
+    window.addEventListener('resize', update)
+    window.addEventListener('scroll', update, true)
+    return () => {
+      window.removeEventListener('resize', update)
+      window.removeEventListener('scroll', update, true)
+    }
+  }, [open])
 
   useEffect(() => {
     if (!open) return
-    const onDoc = (event: MouseEvent) => { if (!rootRef.current?.contains(event.target as Node)) setOpen(false) }
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setOpen(false) }
+    const onDoc = (event: MouseEvent) => {
+      const target = event.target as Node
+      if (rootRef.current?.contains(target) || menuRef.current?.contains(target)) return
+      setOpen(false)
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
     document.addEventListener('mousedown', onDoc)
     document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey) }
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
   }, [open])
 
   return (
@@ -54,19 +96,48 @@ export function ContextBarSplitAddButton({
         </Button>
       </ToolbarTooltip>
       <ToolbarTooltip label={menuLabel}>
-        <Button type="button" className={cn('h-9 rounded-l-none border-l border-primary-foreground/25 px-2', open && 'bg-primary/90')} aria-haspopup="menu" aria-expanded={open} aria-controls={menuId} aria-label={menuLabel} onClick={() => setOpen((c) => !c)}>
+        <Button
+          type="button"
+          className={cn(
+            'h-9 rounded-l-none border-l border-primary-foreground/25 px-2',
+            open && 'bg-primary/90',
+          )}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-controls={menuId}
+          aria-label={menuLabel}
+          onClick={() => setOpen((c) => !c)}
+        >
           <ChevronDown className="h-4 w-4" aria-hidden />
         </Button>
       </ToolbarTooltip>
-      {open ? (
-        <div id={menuId} role="menu" className="absolute right-0 top-full z-50 mt-1 min-w-[11rem] overflow-hidden rounded-md border border-border bg-card py-0.5 shadow-lg">
-          {items.map((item) => (
-            <button key={item.id} type="button" role="menuitem" className="flex w-full items-center px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-muted/60" onClick={() => { item.onSelect(); setOpen(false) }}>
-              {item.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
+      {open && menuPos
+        ? createPortal(
+            <div
+              ref={menuRef}
+              id={menuId}
+              role="menu"
+              className="fixed z-[200] min-w-[11rem] overflow-hidden rounded-md border border-border bg-card py-0.5 shadow-lg"
+              style={{ top: menuPos.top, left: menuPos.left }}
+            >
+              {items.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="menuitem"
+                  className="flex w-full items-center px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-muted/60"
+                  onClick={() => {
+                    item.onSelect()
+                    setOpen(false)
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   )
 }

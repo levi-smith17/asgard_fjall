@@ -1,3 +1,4 @@
+import { CairnApiError } from '@/lib/cairn-client'
 import { cn } from '@/lib/utils'
 
 export function CairnNotConfiguredNotice({
@@ -36,4 +37,20 @@ export function CairnNotConfiguredNotice({
       </p>
     </div>
   )
+}
+
+export function cairnQueryErrorProps(error: unknown, fallback: string) {
+  const apiError = error instanceof CairnApiError ? error : null
+  const isConfigError = apiError?.status === 503
+  const isTokenError = apiError?.status === 401 || apiError?.status === 403
+  return {
+    title: apiError?.message ?? (error instanceof Error ? error.message : fallback),
+    detail: isConfigError
+      ? 'Cairn is unreachable or not configured.'
+      : isTokenError
+        ? 'Sign in with Cognito to access Cairn.'
+        : undefined,
+    isConfigError,
+    isTokenError,
+  }
 }

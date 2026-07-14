@@ -15,8 +15,8 @@ const STORAGE_KEY = 'fjall:palette'
 const PALETTE_ORDER: ColorPalette[] = ['green', 'fjall']
 
 const PALETTE_LABELS: Record<ColorPalette, string> = {
-  green: 'Asgard green',
-  fjall: 'Fjall gold',
+  green: 'Green',
+  fjall: 'Gold',
 }
 
 function readStoredPalette(): ColorPalette {
@@ -80,7 +80,7 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
       cyclePalette,
       paletteLabel: PALETTE_LABELS[palette],
       nextPaletteLabel: PALETTE_LABELS[nextPalette],
-      toggleTooltip: `Palette: ${PALETTE_LABELS[palette]} → ${PALETTE_LABELS[nextPalette]}`,
+      toggleTooltip: PALETTE_LABELS[nextPalette],
     }),
     [palette, setPalette, cyclePalette, nextPalette],
   )

@@ -86,6 +86,13 @@ export function manifestPublicJourneyUrl(username: string | null | undefined, cu
   return `${manifest}/journey`
 }
 
+export function manifestPublicContactUrl(username: string | null | undefined, customDomain?: string | null): string | null {
+  const manifest = manifestPublicUrl(username, customDomain)
+  if (!manifest) return null
+  if (customDomain?.trim()) return `${manifest.replace(/\/$/, '')}/contact`
+  return `${manifest}/contact`
+}
+
 export function formatManifestMonth(date: string | Date | null | undefined): string {
   if (!date) return ''
   const parsed = new Date(date)

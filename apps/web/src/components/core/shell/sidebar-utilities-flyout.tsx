@@ -159,7 +159,7 @@ export function SidebarUtilitiesFlyout() {
                     }}
                   >
                     <LogOut className="h-4 w-4 shrink-0" aria-hidden />
-                    <span className="truncate">Sign out</span>
+                    <span className="truncate">Log out</span>
                   </button>
                 ) : null}
                 <p className="border-t border-border px-3 py-2 text-[10px] text-muted-foreground">

@@ -1,6 +1,19 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { BookType, LogOut, Moon, Palette, Settings, Sun } from 'lucide-react'
+import {
+  BookOpen,
+  BookType,
+  ChevronsUpDown,
+  Compass,
+  ExternalLink,
+  LogOut,
+  Mail,
+  Moon,
+  Palette,
+  Settings,
+  Sun,
+  type LucideIcon,
+} from 'lucide-react'
 import { AsgardSidebarBrand } from '@/components/core/brand/asgard-sidebar-brand'
 import { CommandPaletteDialog } from '@/components/core/command-palette/command-palette-dialog'
 import { ValknutWatermark } from '@/components/core/icons/valknut-watermark'
@@ -16,11 +29,38 @@ import { useTerminology } from '@/hooks/use-terminology'
 import { useTheme } from '@/hooks/use-theme'
 import { fetchCairnProfile, fetchCairnStatus } from '@/lib/cairn-api'
 import { getFjallNavItems } from '@/lib/fjall-nav'
+import {
+  manifestPublicContactUrl,
+  manifestPublicJourneyUrl,
+  manifestPublicUrl,
+} from '@/lib/ordstirr-format'
 import { cn } from '@/lib/utils'
 
 function themeToggleLabel(style: string, theme: string): string {
   if (style === 'ASGARD') return theme === 'dark' ? 'Ljos' : 'Mrykr'
   return theme === 'dark' ? 'Light' : 'Dark'
+}
+
+function SidebarGroupLabel({
+  children,
+  className,
+  narrow,
+}: {
+  children: React.ReactNode
+  className?: string
+  narrow: boolean
+}) {
+  if (narrow) return null
+  return (
+    <div
+      className={cn(
+        'flex h-8 shrink-0 items-center rounded-md px-3 text-xs font-medium text-sidebar-foreground/70',
+        className,
+      )}
+    >
+      {children}
+    </div>
+  )
 }
 
 function ProfilePopover({
@@ -51,12 +91,15 @@ function ProfilePopover({
     >
       <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
       {!isNarrow ? (
-        <div className="min-w-0 flex-1 text-left text-sm leading-tight">
-          <p className="truncate font-medium text-foreground">{displayName}</p>
-          {displayEmail ? (
-            <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
-          ) : null}
-        </div>
+        <>
+          <div className="min-w-0 flex-1 text-left text-sm leading-tight">
+            <p className="truncate font-medium text-foreground">{displayName}</p>
+            {displayEmail ? (
+              <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
+            ) : null}
+          </div>
+          <ChevronsUpDown className="ml-auto size-4 shrink-0 text-muted-foreground" aria-hidden />
+        </>
       ) : null}
     </button>
   )
@@ -69,11 +112,14 @@ function ProfilePopover({
         align={isNarrow ? 'end' : 'start'}
         className="w-56 space-y-3 p-3"
       >
-        <div className="min-w-0 space-y-0.5">
-          <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
-          {displayEmail ? (
-            <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
-          ) : null}
+        <div className="flex items-center gap-2">
+          <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
+          <div className="min-w-0 space-y-0.5">
+            <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
+            {displayEmail ? (
+              <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
+            ) : null}
+          </div>
         </div>
         <Button
           type="button"
@@ -83,7 +129,7 @@ function ProfilePopover({
           onClick={onSignOut}
         >
           <LogOut className="h-4 w-4" aria-hidden />
-          Sign out
+          Log out
         </Button>
       </PopoverContent>
     </Popover>
@@ -109,6 +155,7 @@ export function AppShell() {
   const { cyclePalette, toggleTooltip: paletteTooltip } = usePalette()
   const { isDesktop, isNarrow, desktopCollapsed, toggleDesktopCollapsed } = useSidebarCollapsed()
   const nav = getFjallNavItems(terms)
+  const [hlidskjalf, ...platformNav] = nav
   const themeLabel = themeToggleLabel(style, theme)
 
   const statusQuery = useQuery({
@@ -131,10 +178,94 @@ export function AppShell() {
   const displayEmail = profileQuery.data?.email ?? auth.user?.email ?? ''
   const avatarUrl = profileQuery.data?.image ?? null
   const avatarFallback = displayName.slice(0, 2)
+  const username = profileQuery.data?.username
+
+  const publicLinks = username
+    ? [
+        {
+          key: 'public-manifest',
+          label: terms.resume,
+          href: manifestPublicUrl(username),
+          icon: BookOpen,
+        },
+        {
+          key: 'public-journey',
+          label: terms.bio_button,
+          href: manifestPublicJourneyUrl(username),
+          icon: Compass,
+        },
+        {
+          key: 'public-contact',
+          label: 'Contact',
+          href: manifestPublicContactUrl(username),
+          icon: Mail,
+        },
+      ].filter((link): link is typeof link & { href: string } => Boolean(link.href))
+    : []
 
   function handleSignOut() {
     auth.signOut()
     navigate('/login', { replace: true })
+  }
+
+  function renderNavLink(item: {
+    key: string
+    label: string
+    href: string
+    icon: LucideIcon
+    external?: boolean
+  }) {
+    const Icon = item.icon
+    const active = !item.external && pathname.startsWith(item.href)
+    const itemClass = cn(
+      'flex w-full items-center rounded-lg text-sm font-medium transition-colors',
+      isNarrow ? 'justify-center px-0 py-2.5' : 'justify-start gap-2.5 px-3 py-2',
+      active
+        ? 'bg-sidebar-accent text-sidebar-foreground-active'
+        : 'text-sidebar-foreground hover:bg-muted-hover hover:text-foreground',
+    )
+
+    const content = (
+      <>
+        <Icon className="h-[1.125rem] w-[1.125rem] shrink-0" aria-hidden />
+        {!isNarrow ? (
+          <>
+            <span className="truncate">{item.label}</span>
+            {item.external ? (
+              <ExternalLink className="ml-auto h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden />
+            ) : null}
+          </>
+        ) : null}
+      </>
+    )
+
+    const link = item.external ? (
+      <a
+        href={item.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={itemClass}
+        aria-label={item.label}
+      >
+        {content}
+      </a>
+    ) : (
+      <Link to={item.href} className={itemClass} aria-label={item.label}>
+        {content}
+      </Link>
+    )
+
+    return (
+      <li key={item.key}>
+        {isNarrow ? (
+          <ToolbarTooltip label={item.label} placement="right">
+            {link}
+          </ToolbarTooltip>
+        ) : (
+          link
+        )}
+      </li>
+    )
   }
 
   return (
@@ -147,46 +278,25 @@ export function AppShell() {
           <AsgardSidebarBrand narrow={isNarrow} />
 
           <nav className={cn('flex-1 overflow-y-auto py-3', isNarrow ? 'px-1.5' : 'px-2 py-4')}>
-            <ul className="space-y-0.5">
-              {nav.map((item) => {
-                const Icon = item.icon
-                const active = pathname.startsWith(item.href)
-                const itemClass = cn(
-                  'flex w-full items-center rounded-lg text-sm font-medium transition-colors',
-                  isNarrow
-                    ? 'justify-center px-0 py-2.5'
-                    : 'justify-start gap-2.5 px-3 py-2',
-                  active
-                    ? 'bg-sidebar-accent text-sidebar-foreground-active'
-                    : 'text-sidebar-foreground hover:bg-muted-hover hover:text-foreground',
-                )
+            <ul className="space-y-0.5">{renderNavLink(hlidskjalf)}</ul>
 
-                const content = (
-                  <>
-                    <Icon className="h-[1.125rem] w-[1.125rem] shrink-0" aria-hidden />
-                    {!isNarrow ? <span className="truncate">{item.label}</span> : null}
-                  </>
-                )
+            <div className={cn(isNarrow ? 'mt-2' : 'mt-3')}>
+              <SidebarGroupLabel narrow={isNarrow}>Platform</SidebarGroupLabel>
+              <ul className="space-y-0.5">{platformNav.map((item) => renderNavLink(item))}</ul>
+            </div>
 
-                const link = (
-                  <Link to={item.href} className={itemClass} aria-label={item.label}>
-                    {content}
-                  </Link>
-                )
-
-                return (
-                  <li key={item.key}>
-                    {isNarrow ? (
-                      <ToolbarTooltip label={item.label} placement="right">
-                        {link}
-                      </ToolbarTooltip>
-                    ) : (
-                      link
-                    )}
-                  </li>
-                )
-              })}
-            </ul>
+            {publicLinks.length > 0 ? (
+              <div className={cn(isNarrow ? 'mt-2' : 'mt-3')}>
+                <SidebarGroupLabel narrow={isNarrow} className="mt-1">
+                  Public View
+                </SidebarGroupLabel>
+                <ul className="space-y-0.5">
+                  {publicLinks.map((item) =>
+                    renderNavLink({ ...item, external: true }),
+                  )}
+                </ul>
+              </div>
+            ) : null}
           </nav>
 
           <div className={cn('border-t border-sidebar-border py-3', isNarrow ? 'px-2' : 'px-3')}>

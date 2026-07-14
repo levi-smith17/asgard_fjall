@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { InspectorHintRail } from './inspector-hint-rail'
 import { StudioMobileRailContext } from './studio-mobile-rail-context'
 import { StudioRailToggle } from './studio-rail-toggle'
@@ -43,6 +44,16 @@ export function StudioLayout({
       ),
     }
   }, [rail, railOpen, railLabel, setRailOpen])
+
+  const mobileInspector =
+    inspectorOpen && typeof document !== 'undefined'
+      ? createPortal(
+          <div className="fixed inset-x-0 bottom-0 z-[100] flex max-h-[50dvh] flex-col overflow-hidden rounded-t-xl border-t border-border bg-column-inspector pb-[env(safe-area-inset-bottom)] shadow-2xl md:hidden">
+            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">{inspector}</div>
+          </div>,
+          document.body,
+        )
+      : null
 
   return (
     <StudioMobileRailContext.Provider value={railContext}>
@@ -99,11 +110,7 @@ export function StudioLayout({
             </div>
           ) : null}
         </div>
-        {inspectorOpen ? (
-          <div className="fixed inset-x-0 bottom-0 z-50 flex max-h-[50dvh] flex-col overflow-hidden rounded-t-xl border-t border-border bg-column-inspector pb-[env(safe-area-inset-bottom)] shadow-2xl md:hidden">
-            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">{inspector}</div>
-          </div>
-        ) : null}
+        {mobileInspector}
       </div>
     </StudioMobileRailContext.Provider>
   )

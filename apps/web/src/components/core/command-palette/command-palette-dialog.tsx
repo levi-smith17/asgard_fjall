@@ -346,7 +346,7 @@ export function CommandPaletteDialog() {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search Cairn…"
+            placeholder="Search everything…"
             className="h-9 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
             aria-autocomplete="list"
             aria-controls="command-palette-results"
@@ -375,7 +375,7 @@ export function CommandPaletteDialog() {
             <p className="px-4 py-8 text-center text-sm text-muted-foreground">
               {query.trim()
                 ? 'No results match your search.'
-                : 'Start typing to search across Cairn.'}
+                : 'Start typing to search everything.'}
             </p>
           ) : (
             displayEntries.map((entry, index) => (

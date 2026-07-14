@@ -12,6 +12,8 @@ import type {
   CairnTrail,
   CairnTrailView,
   CairnWaypoint,
+  CairnWaypointMeta,
+  SaveCairnWaypointRequest,
 } from '@/lib/cairn-types'
 import { extractCairnId } from '@/lib/cairn-format'
 import { parseCairnItineraryEventsPayload, reviveItineraryEvents } from '@/lib/dagatal-events'
@@ -315,6 +317,31 @@ export async function deleteCairnMarker(id: string): Promise<void> {
 
 export async function fetchCairnWaypoints(): Promise<CairnWaypoint[]> {
   return cairnFetch<CairnWaypoint[]>('/waypoints')
+}
+
+export async function createCairnWaypoint(data: SaveCairnWaypointRequest): Promise<CairnWaypoint> {
+  return cairnFetch<CairnWaypoint>('/waypoints', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updateCairnWaypoint(
+  id: string,
+  data: Partial<SaveCairnWaypointRequest>,
+): Promise<CairnWaypoint> {
+  return cairnFetch<CairnWaypoint>(`/waypoints/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteCairnWaypoint(id: string): Promise<void> {
+  await cairnFetch<void>(`/waypoints/${id}`, { method: 'DELETE' })
+}
+
+export async function fetchCairnWaypointMeta(url: string): Promise<CairnWaypointMeta> {
+  return cairnFetch<CairnWaypointMeta>(`/waypoints/fetch-meta?url=${encodeURIComponent(url)}`)
 }
 
 // ─── Logs (Sögur) ──────────────────────────────────────────────────────────

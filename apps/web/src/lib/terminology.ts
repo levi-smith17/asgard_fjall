@@ -32,6 +32,7 @@ export type Terms = {
   runSingular: string
   spjald: string
   spjold: string
+  unassigned: string
   // Ordstirr / manifest fields
   manifest: string
   origins: string
@@ -79,6 +80,7 @@ const ASGARD: Terms = {
   runSingular: 'Run',
   spjald: 'Spjald',
   spjold: 'Spjold',
+  unassigned: 'Oflokkad',
   manifest: 'Ordstirr',
   origins: 'Rót',
   expeditions: 'Leidangr',
@@ -125,6 +127,7 @@ const CAIRN: Terms = {
   runSingular: 'Marker',
   spjald: 'Tile',
   spjold: 'Tiles',
+  unassigned: 'Unplaced',
   manifest: 'Manifest',
   origins: 'Origins',
   expeditions: 'Expeditions',
@@ -171,6 +174,7 @@ const STANDARD: Terms = {
   runSingular: 'Tag',
   spjald: 'Tile',
   spjold: 'Tiles',
+  unassigned: 'Unassigned',
   manifest: 'Resume',
   origins: 'About',
   expeditions: 'Work Experience',
@@ -219,16 +223,15 @@ export function termsFor(style: TerminologyStyle): Terms {
   }
 }
 
+/** Public UI cycles Standard ↔ Asgard only; CAIRN remains available behind the scenes. */
 export function nextTerminologyStyle(current: TerminologyStyle): TerminologyStyle {
-  if (current === 'STANDARD') return 'CAIRN'
-  if (current === 'CAIRN') return 'ASGARD'
+  if (current === 'STANDARD') return 'ASGARD'
   return 'STANDARD'
 }
 
 export function terminologyToggleTooltip(current: TerminologyStyle): string {
   const next = nextTerminologyStyle(current)
   if (next === 'STANDARD') return 'Switch to Standard terms'
-  if (next === 'CAIRN') return 'Switch to Cairn terms'
   return 'Switch to Asgard terms'
 }
 
