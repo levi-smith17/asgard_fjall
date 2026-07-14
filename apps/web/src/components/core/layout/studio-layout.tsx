@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { InspectorHintRail } from './inspector-hint-rail'
 import { StudioMobileRailContext } from './studio-mobile-rail-context'
 import { StudioRailToggle } from './studio-rail-toggle'
-import { useMediaQuery } from '@/hooks/use-media-query'
+import { useMediaQuery } from '@/hooks/use-sidebar-collapsed'
 import { cn } from '@/lib/utils'
 
 export const INSPECTOR_PANEL_WIDTH = 300
@@ -22,6 +22,7 @@ export function StudioLayout({
 }: {
   contextBar: React.ReactNode
   rail?: React.ReactNode
+  /** Context-aware name for the rail toggle (e.g. "Laufar"). */
   railLabel?: string
   canvas: React.ReactNode
   inspectorState?: InspectorSideState
@@ -40,7 +41,11 @@ export function StudioLayout({
     if (!rail) return null
     return {
       toggle: (
-        <StudioRailToggle open={railOpen} onOpenChange={setRailOpen} label={railLabel} />
+        <StudioRailToggle
+          open={railOpen}
+          onOpenChange={setRailOpen}
+          label={railLabel}
+        />
       ),
     }
   }, [rail, railOpen, railLabel, setRailOpen])
@@ -49,7 +54,11 @@ export function StudioLayout({
     inspectorOpen && typeof document !== 'undefined'
       ? createPortal(
           <div className="fixed inset-x-0 bottom-0 z-[100] flex max-h-[50dvh] flex-col overflow-hidden rounded-t-xl border-t border-border bg-column-inspector pb-[env(safe-area-inset-bottom)] shadow-2xl md:hidden">
-            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">{inspector}</div>
+            {/*
+              Keep overflow on the inspector's own body so chrome/headers stay fixed
+              at the top of the sheet while content scrolls underneath.
+            */}
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{inspector}</div>
           </div>,
           document.body,
         )
@@ -102,11 +111,11 @@ export function StudioLayout({
           {inspectorOpen ? (
             <div
               className={cn(
-                'relative hidden shrink-0 flex-col overflow-x-hidden overflow-y-auto border-l border-border bg-column-inspector md:flex',
+                'relative hidden shrink-0 flex-col overflow-hidden border-l border-border bg-column-inspector md:flex',
               )}
               style={{ width: INSPECTOR_PANEL_WIDTH }}
             >
-              {inspector}
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{inspector}</div>
             </div>
           ) : null}
         </div>

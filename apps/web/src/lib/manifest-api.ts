@@ -70,6 +70,14 @@ export type ManifestPathfinding = {
   description: string | null
 }
 
+export type ManifestCompanionMedia = {
+  id: string
+  key: string
+  type: 'IMAGE' | 'VIDEO'
+  caption?: string | null
+  order: number
+}
+
 export type ManifestCompanion = {
   id: string
   name: string
@@ -78,13 +86,7 @@ export type ManifestCompanion = {
   birthday?: string | null
   bio?: string | null
   passed?: boolean
-  media: Array<{
-    id: string
-    key: string
-    type: 'IMAGE' | 'VIDEO'
-    caption?: string | null
-    order: number
-  }>
+  media: ManifestCompanionMedia[]
 }
 
 export type ManifestData = {
@@ -213,4 +215,61 @@ export async function saveManifestCompanion(data: {
 
 export async function deleteManifestCompanion(id: string): Promise<void> {
   await cairnFetch<void>(`/manifest/companions/${id}`, { method: 'DELETE' })
+}
+
+export async function uploadManifestCompanionMedia(
+  file: File,
+  companionId: string,
+  order: number,
+): Promise<{ key: string; mediaId: string; type: 'IMAGE' | 'VIDEO' }> {
+  const data = await cairnFetch<{
+    url: string
+    key: string
+    mediaId: string
+    type: string
+  }>('/companions/upload-url', {
+    method: 'POST',
+    body: JSON.stringify({
+      companionId,
+      contentType: file.type,
+      fileSize: file.size,
+      order,
+    }),
+  })
+  await fetch(data.url, {
+    method: 'PUT',
+    headers: { 'Content-Type': file.type },
+    body: file,
+  })
+  return {
+    key: data.key,
+    mediaId: data.mediaId,
+    type: String(data.type).toUpperCase() === 'VIDEO' ? 'VIDEO' : 'IMAGE',
+  }
+}
+
+export async function deleteManifestCompanionMedia(params: {
+  companionId: string
+  mediaId: string
+}): Promise<void> {
+  const query = new URLSearchParams({
+    companionId: params.companionId,
+    mediaId: params.mediaId,
+  })
+  await cairnFetch<void>(`/manifest/companions/media?${query}`, { method: 'DELETE' })
+}
+
+export async function saveManifestCompanionMedia(
+  companionId: string,
+  media: ManifestCompanionMedia[],
+): Promise<void> {
+  await cairnFetch<void>(`/manifest/companions/${companionId}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      media: media.map((item, index) => ({
+        ...item,
+        order: index,
+      })),
+    }),
+  })
 }

@@ -23,6 +23,13 @@ import {
   saveManifestSummit,
   saveManifestTraining,
 } from '@/lib/manifest-api'
+import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
+import { Button } from '@/components/core/ui/button'
+import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
+import { ContextTabButton } from '@/components/core/ui/context-tab'
+import { InspectorChrome, InspectorChromeTitle } from '@/components/core/ui/inspector-chrome'
+import { SwitchField } from '@/components/core/ui/switch-field'
 import { useTerminology } from '@/hooks/use-terminology'
 import { getManifestTerms } from '@/lib/manifest-terminology'
 import {
@@ -32,8 +39,8 @@ import {
   ManifestPlainTextareaField,
   ManifestTextField,
 } from './ordstirr-entry-fields'
+import { OrdstirrCompanionPhotosPanel } from './ordstirr-companion-photos-panel'
 import { createDraftId, OrdstirrManifestListInspector } from './ordstirr-manifest-list-inspector'
-import { SwitchField } from '@/components/core/ui/switch-field'
 
 type ListInspectorProps<T extends { id: string }> = {
   items: T[]
@@ -434,68 +441,241 @@ export function OrdstirrPathfindingInspector(props: ListInspectorProps<ManifestP
   )
 }
 
-export function OrdstirrCompanionInspector(props: ListInspectorProps<ManifestCompanion>) {
+export function OrdstirrCompanionInspector({
+  items,
+  selectedId,
+  creating,
+  onChange,
+  onSelect,
+  onCreatingChange,
+  onSaved,
+}: ListInspectorProps<ManifestCompanion>) {
   const terms = useOrdstirrTerms()
-  return (
-    <OrdstirrManifestListInspector
-      sectionLabel={terms.companions}
-      helpKind="metadata"
-      deleteTitle={`Delete ${terms.companions}?`}
-      deleteDescription={`This ${terms.companions.toLowerCase()} entry will be removed from your ${terms.manifest.toLowerCase()}.`}
-      emptyItem={() => ({
-        id: createDraftId(),
-        name: '',
-        species: '',
-        breed: null,
-        birthday: null,
-        bio: null,
-        passed: false,
-        media: [],
-      })}
-      canSave={(item) => Boolean(item.name.trim() && item.species.trim())}
-      saveItem={(item) =>
-        saveManifestCompanion({
-          id: draftIdSave(item),
-          name: item.name.trim(),
-          species: item.species.trim(),
-          breed: item.breed ?? null,
-          birthday: item.birthday ?? null,
-          bio: item.bio ?? null,
-          passed: item.passed ?? false,
+  const [tab, setTab] = useState<'details' | 'photos'>('details')
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const savedSnapshotRef = useRef<string | null>(null)
+
+  const emptyItem = (): ManifestCompanion => ({
+    id: createDraftId(),
+    name: '',
+    species: '',
+    breed: null,
+    birthday: null,
+    bio: null,
+    passed: false,
+    media: [],
+  })
+
+  const selected = creating
+    ? items.find((item) => item.id === selectedId) ?? emptyItem()
+    : selectedId
+      ? items.find((item) => item.id === selectedId) ?? null
+      : null
+
+  const canSave = (item: ManifestCompanion) => Boolean(item.name.trim() && item.species.trim())
+  const isDraft = Boolean(selected?.id.startsWith('draft-'))
+
+  useEffect(() => {
+    setTab('details')
+  }, [selectedId, creating])
+
+  useEffect(() => {
+    if (!selected) {
+      savedSnapshotRef.current = null
+      return
+    }
+    savedSnapshotRef.current = JSON.stringify({
+      name: selected.name,
+      species: selected.species,
+      breed: selected.breed,
+      birthday: selected.birthday,
+      bio: selected.bio,
+      passed: selected.passed,
+    })
+  }, [selectedId, creating])
+
+  useEffect(() => {
+    if (!selected || !canSave(selected)) return
+    if (creating && !items.some((item) => item.id === selected.id)) return
+
+    const snapshot = JSON.stringify({
+      name: selected.name,
+      species: selected.species,
+      breed: selected.breed,
+      birthday: selected.birthday,
+      bio: selected.bio,
+      passed: selected.passed,
+    })
+    if (savedSnapshotRef.current === snapshot) return
+
+    const timer = window.setTimeout(() => {
+      setSaving(true)
+      void saveManifestCompanion({
+        id: draftIdSave(selected),
+        name: selected.name.trim(),
+        species: selected.species.trim(),
+        breed: selected.breed ?? null,
+        birthday: selected.birthday ?? null,
+        bio: selected.bio ?? null,
+        passed: selected.passed ?? false,
+      })
+        .then(() => {
+          savedSnapshotRef.current = snapshot
+          onSaved()
+          toast.success('Saved')
         })
-      }
-      deleteItem={deleteManifestCompanion}
-      renderFields={(item, update) => (
-        <>
-          <ManifestTextField
-            label="Name"
-            value={item.name}
-            onChange={(name) => update({ name })}
-            placeholder={`${terms.companions} name`}
+        .catch((error) => {
+          toast.error(error instanceof Error ? error.message : `Failed to save ${terms.companions}`)
+        })
+        .finally(() => setSaving(false))
+    }, 700)
+
+    return () => window.clearTimeout(timer)
+  }, [creating, items, onSaved, selected, terms.companions])
+
+  function updateSelected(patch: Partial<ManifestCompanion>) {
+    if (!selected) return
+    if (creating && !items.some((item) => item.id === selected.id)) {
+      onChange([...items, { ...selected, ...patch }])
+      onSelect(selected.id)
+      return
+    }
+    onChange(items.map((item) => (item.id === selected.id ? { ...item, ...patch } : item)))
+  }
+
+  async function handleDelete() {
+    if (!selected || isDraft) {
+      onCreatingChange(false)
+      onSelect(null)
+      setDeleteOpen(false)
+      return
+    }
+    setSaving(true)
+    try {
+      await deleteManifestCompanion(selected.id)
+      onChange(items.filter((item) => item.id !== selected.id))
+      onSelect(null)
+      onSaved()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : `Failed to delete ${terms.companions}`)
+    } finally {
+      setSaving(false)
+      setDeleteOpen(false)
+    }
+  }
+
+  if (!selected) {
+    return (
+      <div className="flex h-full flex-col">
+        <InspectorChrome>
+          <InspectorChromeTitle eyebrow={terms.companions} title="Inspector" />
+        </InspectorChrome>
+        <div className="flex flex-1 items-center justify-center px-5 text-center text-sm text-muted-foreground">
+          Select an entry on the canvas to edit.
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex h-full flex-col">
+      <InspectorChrome>
+        <InspectorChromeTitle
+          eyebrow={terms.companions}
+          title={creating || isDraft ? `New ${terms.companions}` : selected.name || `Edit ${terms.companions}`}
+        />
+      </InspectorChrome>
+
+      <nav className="flex h-14 shrink-0 border-b border-border" aria-label="Inspector">
+        <ContextTabButton
+          active={tab === 'details'}
+          onClick={() => setTab('details')}
+          className="flex-1 justify-center text-xs"
+        >
+          Details
+        </ContextTabButton>
+        <ContextTabButton
+          active={tab === 'photos'}
+          onClick={() => setTab('photos')}
+          className="flex-1 justify-center text-xs"
+        >
+          Photos
+        </ContextTabButton>
+      </nav>
+
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
+        {tab === 'details' ? (
+          <>
+            <p className="text-xs text-muted-foreground">
+              Edit descriptions on the canvas. Metadata fields save here.
+            </p>
+            <ManifestTextField
+              label="Name"
+              value={selected.name}
+              onChange={(name) => updateSelected({ name })}
+              placeholder={`${terms.companions} name`}
+            />
+            <ManifestTextField
+              label="Species"
+              value={selected.species}
+              onChange={(species) => updateSelected({ species })}
+            />
+            <ManifestTextField
+              label="Breed"
+              value={selected.breed ?? ''}
+              onChange={(breed) => updateSelected({ breed: breed || null })}
+            />
+            <ManifestMonthField
+              label="Birthday"
+              value={selected.birthday ?? null}
+              onChange={(birthday) => updateSelected({ birthday })}
+            />
+            <SwitchField
+              label="Passed"
+              checked={selected.passed ?? false}
+              onCheckedChange={(passed) => updateSelected({ passed })}
+            />
+          </>
+        ) : (
+          <OrdstirrCompanionPhotosPanel
+            companionId={selected.id}
+            name={selected.name || terms.companions}
+            media={selected.media ?? []}
+            disabled={isDraft || creating}
+            onMediaChange={(media) => updateSelected({ media })}
           />
-          <ManifestTextField
-            label="Species"
-            value={item.species}
-            onChange={(species) => update({ species })}
-          />
-          <ManifestTextField
-            label="Breed"
-            value={item.breed ?? ''}
-            onChange={(breed) => update({ breed: breed || null })}
-          />
-          <ManifestMonthField
-            label="Birthday"
-            value={item.birthday ?? null}
-            onChange={(birthday) => update({ birthday })}
-          />
-          <SwitchField
-            label="Passed"
-            checked={item.passed ?? false}
-            onCheckedChange={(passed) => update({ passed })}
-          />
-        </>
-      )}
-      {...props}
-    />
+        )}
+      </div>
+
+      {!creating || saving ? (
+        <div className="flex shrink-0 flex-col gap-2 border-t border-border px-5 py-4">
+          {saving && tab === 'details' ? (
+            <p className="text-center text-xs text-muted-foreground">Saving…</p>
+          ) : null}
+          {!creating && !isDraft ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full border-destructive/40 text-destructive hover:bg-destructive/10"
+              onClick={() => setDeleteOpen(true)}
+            >
+              Delete
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title={`Delete ${terms.companions}?`}
+        description={`This ${terms.companions.toLowerCase()} entry will be removed from your ${terms.manifest.toLowerCase()}.`}
+        confirmLabel="Delete"
+        confirmVariant="destructive"
+        onCancel={() => setDeleteOpen(false)}
+        onConfirm={() => void handleDelete()}
+      />
+    </div>
   )
 }

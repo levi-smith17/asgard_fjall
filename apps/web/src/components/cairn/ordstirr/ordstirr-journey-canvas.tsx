@@ -10,6 +10,7 @@ import {
   type OrdstirrJourneySectionId,
 } from '@/lib/ordstirr-format'
 import { cn } from '@/lib/utils'
+import { OrdstirrCompanionMediaCarousel } from './ordstirr-companion-media-carousel'
 import { patchManifestCompanion } from './ordstirr-manifest-patch'
 import { OrdstirrInlineRichText } from './ordstirr-inline-rich-text'
 
@@ -191,6 +192,13 @@ export function OrdstirrJourneyCanvas({
                     placeholder={`${terms.companions} ${terms.bio.toLowerCase()}…`}
                     className="mt-2 px-1"
                   />
+                  {(companion.media?.length ?? 0) > 0 ? (
+                    <OrdstirrCompanionMediaCarousel
+                      media={companion.media}
+                      name={companion.name}
+                      className="mt-3"
+                    />
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -226,6 +234,13 @@ export function OrdstirrJourneyCanvas({
                     placeholder={`${terms.companions} ${terms.bio.toLowerCase()}…`}
                     className="mt-2 px-1"
                   />
+                  {(companion.media?.length ?? 0) > 0 ? (
+                    <OrdstirrCompanionMediaCarousel
+                      media={companion.media}
+                      name={companion.name}
+                      className="mt-3"
+                    />
+                  ) : null}
                 </div>
               ))}
             </div>

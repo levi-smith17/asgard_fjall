@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import { ExternalLink, Plus, Section } from 'lucide-react'
+import { ExternalLink, Plus, Section, Settings } from 'lucide-react'
 import { Badge } from '@/components/core/ui/badge'
 import { Button } from '@/components/core/ui/button'
 import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
@@ -24,6 +24,8 @@ export function OrdstirrSectionsRail<T extends string>({
   groups,
   activeSection,
   onSelectSection,
+  inspectSectionIds,
+  onInspectSection,
   addSections,
   onAddSection,
   liveUrl,
@@ -31,6 +33,9 @@ export function OrdstirrSectionsRail<T extends string>({
   groups: OrdstirrRailGroup<T>[]
   activeSection: T | null
   onSelectSection: (sectionId: T) => void
+  /** Section ids that show a settings gear (opens inspector without selecting as jump target). */
+  inspectSectionIds?: readonly T[]
+  onInspectSection?: (sectionId: T) => void
   addSections?: OrdstirrRailSection<T>[]
   onAddSection?: (sectionId: T) => void
   /** Public Cairn URL — shown as an icon-only external link left of Add. */
@@ -38,6 +43,7 @@ export function OrdstirrSectionsRail<T extends string>({
 }) {
   const [addOpen, setAddOpen] = useState(false)
   const addRef = useRef<HTMLDivElement>(null)
+  const inspectable = new Set(inspectSectionIds ?? [])
 
   useEffect(() => {
     if (!addOpen) return
@@ -121,28 +127,45 @@ export function OrdstirrSectionsRail<T extends string>({
               {group.sections.map((section) => {
                 const Icon = section.icon
                 const active = activeSection === section.id
+                const showGear = inspectable.has(section.id) && onInspectSection
                 return (
                   <li key={section.id}>
-                    <button
-                      type="button"
-                      onClick={() => onSelectSection(section.id)}
+                    <div
                       className={cn(
-                        'flex w-full items-center justify-between gap-2 rounded-lg border bg-card p-2 text-left text-xs transition-colors',
+                        'flex w-full items-center gap-1 rounded-lg border bg-card p-1.5 text-xs transition-colors',
                         active
                           ? 'border-primary/40 bg-primary/10'
                           : 'border-border hover:border-primary/50',
                       )}
                     >
-                      <span className="flex min-w-0 items-center gap-2">
-                        <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                        <span className="truncate text-sm font-medium">{section.label}</span>
-                      </span>
-                      {section.count !== null && section.count > 0 ? (
-                        <Badge variant="secondary" className="shrink-0 text-xs tabular-nums">
-                          {section.count}
-                        </Badge>
+                      <button
+                        type="button"
+                        onClick={() => onSelectSection(section.id)}
+                        className="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-md px-1 py-0.5 text-left"
+                      >
+                        <span className="flex min-w-0 items-center gap-2">
+                          <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          <span className="truncate text-sm font-medium">{section.label}</span>
+                        </span>
+                        {section.count !== null && section.count > 0 ? (
+                          <Badge variant="secondary" className="shrink-0 text-xs tabular-nums">
+                            {section.count}
+                          </Badge>
+                        ) : null}
+                      </button>
+                      {showGear ? (
+                        <ToolbarTooltip label={`Edit ${section.label}`}>
+                          <button
+                            type="button"
+                            onClick={() => onInspectSection(section.id)}
+                            className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            aria-label={`Edit ${section.label}`}
+                          >
+                            <Settings className="h-3.5 w-3.5" />
+                          </button>
+                        </ToolbarTooltip>
                       ) : null}
-                    </button>
+                    </div>
                   </li>
                 )
               })}

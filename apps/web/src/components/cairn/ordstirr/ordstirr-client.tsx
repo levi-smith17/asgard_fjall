@@ -371,7 +371,9 @@ export function OrdstirrWorkspace() {
       resetEntrySelection()
     }
     setActiveManifestSection(sectionId)
-    if (sectionId === 'origins' || LIST_SECTIONS.has(sectionId) === false) {
+    if (sectionId === 'origins') {
+      setInspectorEngaged(false)
+    } else if (LIST_SECTIONS.has(sectionId) === false) {
       setInspectorEngaged(true)
     } else if (!selectedEntryId || switching) {
       setInspectorEngaged(false)
@@ -394,7 +396,7 @@ export function OrdstirrWorkspace() {
     }
     setActiveJourneySection(sectionId)
     if (sectionId === 'bio') {
-      setInspectorEngaged(true)
+      setInspectorEngaged(false)
       // Land at the top of Ferd Min rather than mid-page scrolling to Sjalfsmynd.
       const scrollTop = () => {
         document
@@ -411,6 +413,33 @@ export function OrdstirrWorkspace() {
     }
     if (switching) window.setTimeout(scroll, 50)
     else requestAnimationFrame(scroll)
+  }
+
+  function handleRailInspectSection(sectionId: OrdstirrSectionId | OrdstirrJourneySectionId) {
+    if (sectionId === 'origins') {
+      if (creatingEntry && selectedEntryId && isDraftEntryId(selectedEntryId)) {
+        removeDraftEntry(selectedEntryId)
+      }
+      setCanvasView('manifest')
+      resetEntrySelection()
+      setActiveManifestSection('origins')
+      setInspectorEngaged(true)
+      return
+    }
+    if (sectionId === 'bio') {
+      if (creatingEntry && selectedEntryId && isDraftEntryId(selectedEntryId)) {
+        removeDraftEntry(selectedEntryId)
+      }
+      setCanvasView('journey')
+      resetEntrySelection()
+      setActiveJourneySection('bio')
+      setInspectorEngaged(true)
+      requestAnimationFrame(() => {
+        document
+          .querySelector<HTMLElement>('[data-ordstirr-journey-scroll]')
+          ?.scrollTo({ top: 0, behavior: 'smooth' })
+      })
+    }
   }
 
   function handleRailSectionSelect(sectionId: OrdstirrSectionId | OrdstirrJourneySectionId) {
@@ -639,6 +668,8 @@ export function OrdstirrWorkspace() {
             groups={railGroups}
             activeSection={activeRailSection}
             onSelectSection={handleRailSectionSelect}
+            inspectSectionIds={['origins', 'bio'] as const}
+            onInspectSection={handleRailInspectSection}
             addSections={railAddSections}
             onAddSection={handleRailAddSection}
             liveUrl={canvasView === 'journey' ? publicJourneyUrl : publicUrl}
