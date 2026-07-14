@@ -7,23 +7,29 @@ import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { cn } from '@/lib/utils'
 
-export type OrdstirrRailSection<T extends string> = {
+export type OrdstirrRailSection<T extends string = string> = {
   id: T
   label: string
   icon: LucideIcon
   count: number | null
 }
 
+export type OrdstirrRailGroup<T extends string = string> = {
+  id: string
+  label: string
+  sections: OrdstirrRailSection<T>[]
+}
+
 export function OrdstirrSectionsRail<T extends string>({
-  sections,
+  groups,
   activeSection,
   onSelectSection,
   addSections,
   onAddSection,
   liveUrl,
 }: {
-  sections: OrdstirrRailSection<T>[]
-  activeSection: T
+  groups: OrdstirrRailGroup<T>[]
+  activeSection: T | null
   onSelectSection: (sectionId: T) => void
   addSections?: OrdstirrRailSection<T>[]
   onAddSection?: (sectionId: T) => void
@@ -102,37 +108,47 @@ export function OrdstirrSectionsRail<T extends string>({
           ) : null}
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto p-2">
-        <ul className="space-y-1.5">
-          {sections.map((section) => {
-            const Icon = section.icon
-            const active = activeSection === section.id
-            return (
-              <li key={section.id}>
-                <button
-                  type="button"
-                  onClick={() => onSelectSection(section.id)}
-                  className={cn(
-                    'flex w-full items-center justify-between gap-2 rounded-lg border bg-card p-2 text-left text-xs transition-colors',
-                    active
-                      ? 'border-primary/40 bg-primary/10'
-                      : 'border-border hover:border-primary/50',
-                  )}
-                >
-                  <span className="flex min-w-0 items-center gap-2">
-                    <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <span className="truncate text-sm font-medium">{section.label}</span>
-                  </span>
-                  {section.count !== null && section.count > 0 ? (
-                    <Badge variant="secondary" className="shrink-0 text-xs tabular-nums">
-                      {section.count}
-                    </Badge>
-                  ) : null}
-                </button>
-              </li>
-            )
-          })}
-        </ul>
+      <div className="min-h-0 flex-1 overflow-y-auto px-2 py-3">
+        {groups.map((group, groupIndex) => (
+          <div key={group.id}>
+            {groupIndex > 0 ? (
+              <div className="my-3 border-t border-border" aria-hidden />
+            ) : null}
+            <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              {group.label}
+            </p>
+            <ul className="space-y-1.5">
+              {group.sections.map((section) => {
+                const Icon = section.icon
+                const active = activeSection === section.id
+                return (
+                  <li key={section.id}>
+                    <button
+                      type="button"
+                      onClick={() => onSelectSection(section.id)}
+                      className={cn(
+                        'flex w-full items-center justify-between gap-2 rounded-lg border bg-card p-2 text-left text-xs transition-colors',
+                        active
+                          ? 'border-primary/40 bg-primary/10'
+                          : 'border-border hover:border-primary/50',
+                      )}
+                    >
+                      <span className="flex min-w-0 items-center gap-2">
+                        <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span className="truncate text-sm font-medium">{section.label}</span>
+                      </span>
+                      {section.count !== null && section.count > 0 ? (
+                        <Badge variant="secondary" className="shrink-0 text-xs tabular-nums">
+                          {section.count}
+                        </Badge>
+                      ) : null}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        ))}
       </div>
     </div>
   )

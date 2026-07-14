@@ -180,6 +180,17 @@ export function OrdstirrWorkspace() {
     [draft, terms],
   )
 
+  const railGroups = useMemo(
+    () => [
+      { id: 'manifest', label: terms.manifest, sections: manifestSections },
+      { id: 'journey', label: terms.bio_button, sections: journeySections },
+    ],
+    [journeySections, manifestSections, terms.bio_button, terms.manifest],
+  )
+
+  const activeRailSection: OrdstirrSectionId | OrdstirrJourneySectionId =
+    canvasView === 'manifest' ? activeManifestSection : activeJourneySection
+
   const registerManifestSection = useCallback((id: OrdstirrSectionId, node: HTMLElement | null) => {
     manifestSectionRefs.current[id] = node
   }, [])
@@ -351,22 +362,71 @@ export function OrdstirrWorkspace() {
   }
 
   function handleManifestSectionSelect(sectionId: OrdstirrSectionId) {
-    scrollToManifestSection(sectionId)
+    const switching = canvasView !== 'manifest'
+    if (switching) {
+      if (creatingEntry && selectedEntryId && isDraftEntryId(selectedEntryId)) {
+        removeDraftEntry(selectedEntryId)
+      }
+      setCanvasView('manifest')
+      resetEntrySelection()
+    }
+    setActiveManifestSection(sectionId)
     if (sectionId === 'origins' || LIST_SECTIONS.has(sectionId) === false) {
       setInspectorEngaged(true)
-      return
+    } else if (!selectedEntryId || switching) {
+      setInspectorEngaged(false)
     }
-    // List sections: canvas holds entries; only open inspector when an entry is selected.
-    if (!selectedEntryId) setInspectorEngaged(false)
+    const scroll = () => {
+      manifestSectionRefs.current[sectionId]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    if (switching) window.setTimeout(scroll, 50)
+    else requestAnimationFrame(scroll)
   }
 
   function handleJourneySectionSelect(sectionId: OrdstirrJourneySectionId) {
-    scrollToJourneySection(sectionId)
+    const switching = canvasView !== 'journey'
+    if (switching) {
+      if (creatingEntry && selectedEntryId && isDraftEntryId(selectedEntryId)) {
+        removeDraftEntry(selectedEntryId)
+      }
+      setCanvasView('journey')
+      resetEntrySelection()
+    }
+    setActiveJourneySection(sectionId)
     if (sectionId === 'bio') {
       setInspectorEngaged(true)
+      // Land at the top of Ferd Min rather than mid-page scrolling to Sjalfsmynd.
+      const scrollTop = () => {
+        document
+          .querySelector<HTMLElement>('[data-ordstirr-journey-scroll]')
+          ?.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+      if (switching) window.setTimeout(scrollTop, 50)
+      else requestAnimationFrame(scrollTop)
       return
     }
-    if (!selectedEntryId) setInspectorEngaged(false)
+    if (!selectedEntryId || switching) setInspectorEngaged(false)
+    const scroll = () => {
+      journeySectionRefs.current[sectionId]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    if (switching) window.setTimeout(scroll, 50)
+    else requestAnimationFrame(scroll)
+  }
+
+  function handleRailSectionSelect(sectionId: OrdstirrSectionId | OrdstirrJourneySectionId) {
+    if (MANIFEST_SECTIONS.has(sectionId as OrdstirrSectionId)) {
+      handleManifestSectionSelect(sectionId as OrdstirrSectionId)
+      return
+    }
+    handleJourneySectionSelect(sectionId as OrdstirrJourneySectionId)
+  }
+
+  function handleRailAddSection(sectionId: OrdstirrSectionId | OrdstirrJourneySectionId) {
+    if (MANIFEST_ADD_SECTIONS.includes(sectionId as OrdstirrSectionId)) {
+      handleAddManifestEntry(sectionId as OrdstirrSectionId)
+      return
+    }
+    handleAddJourneyEntry(sectionId as OrdstirrJourneySectionId)
   }
 
   function handleSelectManifestEntry(sectionId: OrdstirrSectionId, entryId: string) {
@@ -413,7 +473,9 @@ export function OrdstirrWorkspace() {
     setCanvasView(view)
     resetEntrySelection()
     if (view === 'journey') {
+      // Land at top of Ferd Min; Sjalfsmynd rail selection reflects the page.
       setActiveJourneySection('bio')
+      setInspectorEngaged(false)
     } else {
       setActiveManifestSection('origins')
     }
@@ -426,6 +488,10 @@ export function OrdstirrWorkspace() {
   const journeyAddSections = useMemo(
     () => journeySections.filter((section) => JOURNEY_ADD_SECTIONS.includes(section.id)),
     [journeySections],
+  )
+  const railAddSections = useMemo(
+    () => [...manifestAddSections, ...journeyAddSections],
+    [journeyAddSections, manifestAddSections],
   )
 
   const listInspectorProps = {
@@ -560,9 +626,6 @@ export function OrdstirrWorkspace() {
       railLabel="Sections"
       contextBar={
         <OrdstirrContextBar
-          canvasView={canvasView}
-          terms={terms}
-          onCanvasViewChange={handleCanvasViewChange}
           inspectorPinned={inspectorPinned}
           onInspectorPinnedChange={setInspectorPinned}
           isDirty={originsDirty}
@@ -572,25 +635,14 @@ export function OrdstirrWorkspace() {
       }
       rail={
         configured && draft && !loading ? (
-          canvasView === 'manifest' ? (
-            <OrdstirrSectionsRail
-              sections={manifestSections}
-              activeSection={activeManifestSection}
-              onSelectSection={handleManifestSectionSelect}
-              addSections={manifestAddSections}
-              onAddSection={handleAddManifestEntry}
-              liveUrl={publicUrl}
-            />
-          ) : (
-            <OrdstirrSectionsRail
-              sections={journeySections}
-              activeSection={activeJourneySection}
-              onSelectSection={handleJourneySectionSelect}
-              addSections={journeyAddSections}
-              onAddSection={handleAddJourneyEntry}
-              liveUrl={publicJourneyUrl}
-            />
-          )
+          <OrdstirrSectionsRail
+            groups={railGroups}
+            activeSection={activeRailSection}
+            onSelectSection={handleRailSectionSelect}
+            addSections={railAddSections}
+            onAddSection={handleRailAddSection}
+            liveUrl={canvasView === 'journey' ? publicJourneyUrl : publicUrl}
+          />
         ) : undefined
       }
       canvas={

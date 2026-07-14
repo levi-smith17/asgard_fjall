@@ -4,6 +4,7 @@ import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { Input } from '@/components/core/ui/input'
 import { InspectorFormActions, InspectorFormHeader } from '@/components/core/ui/inspector-form-actions'
 import { useTerms } from '@/hooks/use-terminology'
+import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 
 export function TrailInspector({
   trail, isNew, title, onBack, onSave, onDelete, isSaving,
@@ -17,7 +18,7 @@ export function TrailInspector({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <InspectorFormHeader title={headerTitle} onBack={onBack} />
+      <InspectorFormHeader title={headerTitle} icon={ASGARD_ENTITY_ICONS.greinar} onBack={onBack} />
       <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
         <label className="block space-y-1.5">
           <span className="text-xs font-medium text-muted-foreground">Name</span>

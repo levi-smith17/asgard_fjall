@@ -1,4 +1,4 @@
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, type LucideIcon } from 'lucide-react'
 import { Button } from '@/components/core/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -45,11 +45,13 @@ export function InspectorFormActions({
 
 export function InspectorFormHeader({
   title,
+  icon: Icon,
   onBack,
   showBack = true,
   actions,
 }: {
   title: string
+  icon?: LucideIcon
   onBack?: () => void
   showBack?: boolean
   actions?: React.ReactNode
@@ -61,6 +63,7 @@ export function InspectorFormHeader({
           <ChevronLeft className="h-4 w-4" />
         </Button>
       ) : null}
+      {Icon ? <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /> : null}
       <span className="min-w-0 flex-1 truncate text-sm font-medium">{title}</span>
       {actions}
     </div>

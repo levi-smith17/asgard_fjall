@@ -1,4 +1,5 @@
 import {
+  Bookmark,
   Folder,
   LayoutGrid,
   Shapes,
@@ -6,8 +7,9 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
-/** Shared entity icons for Greinar / Runir / Gerdir / Spjald (sidebar, add menus, filters). */
+/** Shared entity icons (add menus, New inspector titles, filters, catalog). */
 export const ASGARD_ENTITY_ICONS = {
+  laufar: Bookmark,
   greinar: Folder,
   runir: Tag,
   gerdir: Shapes,

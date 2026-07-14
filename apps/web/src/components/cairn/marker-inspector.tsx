@@ -5,6 +5,7 @@ import { Input } from '@/components/core/ui/input'
 import { InspectorFormActions, InspectorFormHeader } from '@/components/core/ui/inspector-form-actions'
 import { MarkerColorSwatch, PRESET_COLORS } from '@/components/cairn/markers-list'
 import { useTerms } from '@/hooks/use-terminology'
+import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import { cn } from '@/lib/utils'
 
 export function MarkerInspector({
@@ -22,7 +23,7 @@ export function MarkerInspector({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <InspectorFormHeader title={headerTitle} onBack={onBack} />
+      <InspectorFormHeader title={headerTitle} icon={ASGARD_ENTITY_ICONS.runir} onBack={onBack} />
       <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
         {parentPrefix ? <p className="text-xs text-muted-foreground">Parent: <span className="font-medium">{parentPrefix}</span></p> : null}
         <label className="block space-y-1.5">

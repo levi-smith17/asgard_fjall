@@ -1,29 +1,18 @@
-import { Loader2, Save } from 'lucide-react'
 import { GlobalSearchTrigger } from '@/components/core/command-palette/global-search-trigger'
 import { Button } from '@/components/core/ui/button'
 import { ContextBarPinAndSync } from '@/components/core/ui/context-bar-pin-and-sync'
 import { StudioContextBar } from '@/components/core/layout/studio-context-bar'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { useTerminology } from '@/hooks/use-terminology'
-import type { ManifestTerms } from '@/lib/manifest-terminology'
-import type { OrdstirrCanvasView } from '@/lib/ordstirr-format'
-import { OrdstirrPageTabs } from './ordstirr-page-tabs'
+import { Loader2, Save } from 'lucide-react'
 
 export function OrdstirrContextBar({
-  canvasView,
-  terms,
-  onCanvasViewChange,
   inspectorPinned,
   onInspectorPinnedChange,
   isDirty,
   saving,
   onSave,
 }: {
-  publicUrl?: string | null
-  publicJourneyUrl?: string | null
-  canvasView: OrdstirrCanvasView
-  terms: ManifestTerms
-  onCanvasViewChange: (view: OrdstirrCanvasView) => void
   inspectorPinned: boolean
   onInspectorPinnedChange: (pinned: boolean) => void
   isDirty: boolean
@@ -37,13 +26,6 @@ export function OrdstirrContextBar({
       aria-label={`${appTerms.resume} context`}
       title={appTerms.resume}
       subtitle="Public manifest and live editor"
-      tabs={
-        <OrdstirrPageTabs
-          canvasView={canvasView}
-          terms={terms}
-          onCanvasViewChange={onCanvasViewChange}
-        />
-      }
       actions={
         <>
           <GlobalSearchTrigger />

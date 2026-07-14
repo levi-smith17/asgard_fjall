@@ -740,6 +740,16 @@ export function PublicManifestPage({ view }: { view: PublicManifestView }) {
 
   useEffect(() => {
     const fromHash = hash.replace(/^#/, '') as PublicOrdstirrRailSectionId
+    if (fromHash === 'bio') {
+      // Keep selection, but land at the top of Ferd Min rather than #bio.
+      setActiveSection('bio')
+      window.requestAnimationFrame(() => {
+        document
+          .querySelector<HTMLElement>('[data-public-ordstirr-scroll]')
+          ?.scrollTo({ top: 0, behavior: 'smooth' })
+      })
+      return
+    }
     if (fromHash) {
       setActiveSection(fromHash)
       scrollToSection(fromHash)
@@ -758,7 +768,24 @@ export function PublicManifestPage({ view }: { view: PublicManifestView }) {
     (view === 'journey' && journeyQuery.isError) ||
     (view === 'contact' && contactQuery.isError)
 
+  const scrollJourneyToTop = () => {
+    window.requestAnimationFrame(() => {
+      document
+        .querySelector<HTMLElement>('[data-public-ordstirr-scroll]')
+        ?.scrollTo({ top: 0, behavior: 'smooth' })
+    })
+  }
+
   const handleSelectSection = (sectionId: PublicOrdstirrRailSectionId) => {
+    if (sectionId === 'bio') {
+      setActiveSection('bio')
+      if (view !== 'journey') {
+        navigate(publicManifestPath(username, 'journey'))
+        return
+      }
+      scrollJourneyToTop()
+      return
+    }
     const targetView = viewForPublicRailSection(sectionId)
     setActiveSection(sectionId)
     if (targetView === view) {
@@ -808,7 +835,7 @@ export function PublicManifestPage({ view }: { view: PublicManifestView }) {
           onSelectSection={handleSelectSection}
         />
       }
-      canvas={<div className="min-h-0 flex-1 overflow-y-auto">{body}</div>}
+      canvas={<div className="min-h-0 flex-1 overflow-y-auto" data-public-ordstirr-scroll>{body}</div>}
     />
   )
 }

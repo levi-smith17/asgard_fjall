@@ -10,6 +10,7 @@ import { MarkerPicker } from '@/components/cairn/marker-picker'
 import { Select } from '@/components/core/ui/select'
 import { fetchCairnWaypointMeta } from '@/lib/cairn-api'
 import { useTerms } from '@/hooks/use-terminology'
+import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 
 export type WaypointDraft = {
   title: string
@@ -89,7 +90,12 @@ export function WaypointInspector({
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      <InspectorFormHeader title={headerTitle} onBack={onClose} showBack={false} />
+      <InspectorFormHeader
+        title={headerTitle}
+        icon={ASGARD_ENTITY_ICONS.laufar}
+        onBack={onClose}
+        showBack={false}
+      />
       <div className="min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-4 py-4">
         <label className="block space-y-1.5">
           <span className="text-xs font-medium text-muted-foreground">Title</span>

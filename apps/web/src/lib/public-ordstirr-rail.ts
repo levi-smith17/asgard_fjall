@@ -93,7 +93,7 @@ export function viewForPublicRailSection(
   sectionId: PublicOrdstirrRailSectionId,
 ): PublicManifestView {
   if (sectionId === 'ordsending') return 'contact'
-  if (sectionId === 'bio' || sectionId === 'companions' || sectionId === 'in-memoriam') {
+  if (sectionId === 'companions' || sectionId === 'in-memoriam' || sectionId === 'bio') {
     return 'journey'
   }
   return 'manifest'

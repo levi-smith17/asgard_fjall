@@ -31,7 +31,6 @@ export function ThingAccountSettings() {
   const [name, setName] = useState('')
   const [image, setImage] = useState('')
   const [username, setUsername] = useState('')
-  const [customDomain, setCustomDomain] = useState('')
   const [timeFormat, setTimeFormat] = useState<'TWELVE' | 'TWENTYFOUR'>('TWELVE')
 
   useEffect(() => {
@@ -39,7 +38,6 @@ export function ThingAccountSettings() {
     setName(account.name ?? '')
     setImage(account.image ?? '')
     setUsername(account.username ?? '')
-    setCustomDomain(account.customDomain ?? '')
     setTimeFormat(account.timeFormat)
   }, [account])
 
@@ -49,7 +47,7 @@ export function ThingAccountSettings() {
         name: name.trim() || null,
         image: image.trim() || null,
         username: username.trim() || null,
-        customDomain: customDomain.trim() || null,
+        customDomain: account?.customDomain ?? null,
         timeFormat,
       }),
     onSuccess: async () => {
@@ -96,14 +94,6 @@ export function ThingAccountSettings() {
         <p className="text-xs text-muted-foreground">Used for your public manifest URL.</p>
       </label>
 
-      <label className="block space-y-1.5">
-        <span className="text-sm font-medium">Custom domain</span>
-        <Input
-          value={customDomain}
-          onChange={(event) => setCustomDomain(event.target.value)}
-          placeholder="example.com"
-        />
-      </label>
 
       <ThingSettingRow
         label="Time format"
