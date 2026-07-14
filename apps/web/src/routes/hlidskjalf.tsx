@@ -729,6 +729,19 @@ export function HlidskjalfPage() {
     [patchParams],
   )
 
+  const startAddCairnEntity = useCallback(
+    (tab: CairnCatalogTab) => {
+      patchParams((params) => {
+        params.set('cairn', tab)
+        params.set('cairnId', 'new')
+        params.delete('laufar')
+        params.delete('markerPath')
+        params.delete('markerParent')
+      })
+    },
+    [patchParams],
+  )
+
   const dismissInspector = useCallback(() => {
     if (inspectorPinned) return
     clearCairnSelection()
@@ -816,6 +829,8 @@ export function HlidskjalfPage() {
           inspectorPinned={inspectorPinned}
           onInspectorPinnedChange={setInspectorPinned}
           onAddLauf={() => selectLaufar('new')}
+          onAddGreinar={() => startAddCairnEntity('greinar')}
+          onAddRunir={() => startAddCairnEntity('runir')}
         />
       }
       rail={

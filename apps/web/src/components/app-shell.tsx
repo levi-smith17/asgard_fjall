@@ -1,10 +1,8 @@
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   BookType,
-  ChevronsUpDown,
   ExternalLink,
-  LogOut,
   Moon,
   Palette,
   Settings,
@@ -17,7 +15,6 @@ import { ValknutWatermark } from '@/components/core/icons/valknut-watermark'
 import { SidebarUtilitiesFlyout } from '@/components/core/shell/sidebar-utilities-flyout'
 import { Avatar } from '@/components/core/ui/avatar'
 import { Button } from '@/components/core/ui/button'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/core/ui/popover'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { useAuth } from '@/hooks/use-auth'
 import { usePalette } from '@/hooks/use-palette'
@@ -46,103 +43,19 @@ function SidebarGroupLabel({
 }) {
   if (narrow) return null
   return (
-    <div
+    <p
       className={cn(
-        'flex h-8 shrink-0 items-center rounded-md px-3 text-xs font-medium text-sidebar-foreground/70',
+        'mb-1 px-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground',
         className,
       )}
     >
       {children}
-    </div>
+    </p>
   )
-}
-
-function ProfilePopover({
-  displayName,
-  displayEmail,
-  avatarUrl,
-  avatarFallback,
-  isNarrow,
-  onSignOut,
-}: {
-  displayName: string
-  displayEmail: string
-  avatarUrl: string | null
-  avatarFallback: string
-  isNarrow: boolean
-  onSignOut: () => void
-}) {
-  const trigger = (
-    <button
-      type="button"
-      className={cn(
-        'flex w-full items-center rounded-lg text-left transition-colors',
-        isNarrow
-          ? 'justify-center p-1 hover:bg-muted-hover'
-          : 'gap-2 px-3 py-1.5 hover:bg-muted-hover',
-      )}
-      aria-label="Account menu"
-    >
-      <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
-      {!isNarrow ? (
-        <>
-          <div className="min-w-0 flex-1 text-left text-sm leading-tight">
-            <p className="truncate font-medium text-foreground">{displayName}</p>
-            {displayEmail ? (
-              <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
-            ) : null}
-          </div>
-          <ChevronsUpDown className="ml-auto size-4 shrink-0 text-muted-foreground" aria-hidden />
-        </>
-      ) : null}
-    </button>
-  )
-
-  const popover = (
-    <Popover>
-      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent
-        side={isNarrow ? 'right' : 'top'}
-        align={isNarrow ? 'end' : 'start'}
-        className="w-56 space-y-3 p-3"
-      >
-        <div className="flex items-center gap-2">
-          <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
-          <div className="min-w-0 space-y-0.5">
-            <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
-            {displayEmail ? (
-              <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
-            ) : null}
-          </div>
-        </div>
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          className="w-full justify-start gap-2"
-          onClick={onSignOut}
-        >
-          <LogOut className="h-4 w-4" aria-hidden />
-          Log out
-        </Button>
-      </PopoverContent>
-    </Popover>
-  )
-
-  if (isNarrow) {
-    return (
-      <ToolbarTooltip label={displayName} placement="right">
-        {popover}
-      </ToolbarTooltip>
-    )
-  }
-
-  return popover
 }
 
 export function AppShell() {
   const { pathname } = useLocation()
-  const navigate = useNavigate()
   const auth = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { terms, style, cycleTerminology, toggleTooltip } = useTerminology()
@@ -174,11 +87,6 @@ export function AppShell() {
   const username = profileQuery.data?.username
   const publicLinks = username ? buildPublicViewLinks(username, terms) : []
   const publicProfile = parsePublicManifestPath(pathname)
-
-  function handleSignOut() {
-    auth.signOut()
-    navigate('/login', { replace: true })
-  }
 
   function renderNavLink(item: {
     key: string
@@ -257,10 +165,13 @@ export function AppShell() {
             </div>
 
             {publicLinks.length > 0 ? (
-              <div className={cn(isNarrow ? 'mt-2' : 'mt-3')}>
-                {!isNarrow ? (
-                  <div className="-mx-2 mb-3 border-t border-sidebar-border" />
-                ) : null}
+              <div>
+                <div
+                  className={cn(
+                    'border-t border-sidebar-border',
+                    isNarrow ? '-mx-1.5 my-2' : '-mx-2 my-4',
+                  )}
+                />
                 <SidebarGroupLabel narrow={isNarrow}>
                   {terms.publicViewGroup}
                 </SidebarGroupLabel>
@@ -285,14 +196,9 @@ export function AppShell() {
                 <SidebarUtilitiesFlyout />
                 <div className="mt-2 -mx-2 self-stretch border-t border-sidebar-border pt-2">
                   <div className="flex justify-center">
-                    <ProfilePopover
-                      displayName={displayName}
-                      displayEmail={displayEmail}
-                      avatarUrl={avatarUrl}
-                      avatarFallback={avatarFallback}
-                      isNarrow
-                      onSignOut={handleSignOut}
-                    />
+                    <ToolbarTooltip label={displayName} placement="right">
+                      <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
+                    </ToolbarTooltip>
                   </div>
                 </div>
               </div>
@@ -353,14 +259,15 @@ export function AppShell() {
                   </ToolbarTooltip>
                 </div>
                 <div className="mt-3 -mx-3 border-t border-sidebar-border pt-3">
-                  <ProfilePopover
-                    displayName={displayName}
-                    displayEmail={displayEmail}
-                    avatarUrl={avatarUrl}
-                    avatarFallback={avatarFallback}
-                    isNarrow={false}
-                    onSignOut={handleSignOut}
-                  />
+                  <div className="flex items-center gap-2 px-3">
+                    <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
+                    <div className="min-w-0 flex-1 text-left text-sm leading-tight">
+                      <p className="truncate font-medium text-foreground">{displayName}</p>
+                      {displayEmail ? (
+                        <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
+                      ) : null}
+                    </div>
+                  </div>
                 </div>
               </>
             )}

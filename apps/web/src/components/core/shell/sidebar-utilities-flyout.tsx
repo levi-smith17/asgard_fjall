@@ -1,9 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link } from 'react-router-dom'
-import { BookType, LogOut, MoreHorizontal, Moon, Palette, Settings, Sun } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
+import { BookType, MoreHorizontal, Moon, Palette, Settings, Sun } from 'lucide-react'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
-import { useAuth } from '@/hooks/use-auth'
 import { usePalette } from '@/hooks/use-palette'
 import { useTerminology } from '@/hooks/use-terminology'
 import { useTheme } from '@/hooks/use-theme'
@@ -16,13 +15,14 @@ function themeToggleLabel(style: string, theme: string): string {
 
 /** Collapses footer utilities into a single flyout on the narrow sidebar. */
 export function SidebarUtilitiesFlyout() {
-  const auth = useAuth()
+  const { pathname } = useLocation()
   const { theme, toggleTheme } = useTheme()
   const { style, terms, cycleTerminology, toggleTooltip } = useTerminology()
-  const { cyclePalette, toggleTooltip: paletteTooltip, paletteLabel } = usePalette()
+  const { cyclePalette, toggleTooltip: paletteTooltip } = usePalette()
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null)
+  const settingsActive = pathname.startsWith('/thing')
 
   const themeLabel = themeToggleLabel(style, theme)
 
@@ -34,7 +34,7 @@ export function SidebarUtilitiesFlyout() {
     const update = () => {
       const el = triggerRef.current
       if (!el) return
-      const menuHeight = auth.user ? 208 : 176
+      const menuHeight = 176
       const top = Math.min(rectBottomSafe(el, menuHeight), window.innerHeight - menuHeight - 8)
       setMenuPos({ top: Math.max(8, top), left: el.getBoundingClientRect().right + 8 })
     }
@@ -45,7 +45,7 @@ export function SidebarUtilitiesFlyout() {
       window.removeEventListener('resize', update)
       window.removeEventListener('scroll', update, true)
     }
-  }, [open, auth.user])
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -142,29 +142,12 @@ export function SidebarUtilitiesFlyout() {
                 <Link
                   to="/thing"
                   role="menuitem"
-                  className={itemClass}
+                  className={cn(itemClass, settingsActive && 'bg-primary/10 text-primary')}
                   onClick={() => setOpen(false)}
                 >
                   <Settings className="h-4 w-4 shrink-0" aria-hidden />
                   <span className="truncate">{terms.settings}</span>
                 </Link>
-                {auth.user ? (
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className={itemClass}
-                    onClick={() => {
-                      void auth.signOut()
-                      setOpen(false)
-                    }}
-                  >
-                    <LogOut className="h-4 w-4 shrink-0" aria-hidden />
-                    <span className="truncate">Log out</span>
-                  </button>
-                ) : null}
-                <p className="border-t border-border px-3 py-2 text-[10px] text-muted-foreground">
-                  {paletteLabel}
-                </p>
               </div>
             </>,
             document.body,

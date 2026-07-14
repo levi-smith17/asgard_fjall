@@ -6,8 +6,6 @@ import {
   CalendarDays,
   Clock,
   Folder,
-  LogIn,
-  LogOut,
   NotebookPen,
   Search,
   Tag,
@@ -15,7 +13,6 @@ import {
 } from 'lucide-react'
 import { Input } from '@/components/core/ui/input'
 import { useCommandPalette } from '@/context/command-palette-context'
-import { useAuth } from '@/hooks/use-auth'
 import { useDebounce } from '@/hooks/use-debounce'
 import { useTerminology } from '@/hooks/use-terminology'
 import {
@@ -30,17 +27,7 @@ const RECENT_MAX = 8
 
 type StoredResult = Omit<CairnSearchResult, 'score'>
 
-type ActionEntry = {
-  id: string
-  kind: 'action'
-  label: string
-  subtitle?: string
-  action: 'sign-out' | 'sign-in'
-}
-
-type PaletteEntry =
-  | ({ kind: 'result' } & (CairnSearchResult | StoredResult))
-  | ActionEntry
+type PaletteEntry = { kind: 'result' } & (CairnSearchResult | StoredResult)
 
 function loadRecents(): StoredResult[] {
   try {
@@ -116,33 +103,6 @@ function ResultRow({
   onSelect: () => void
   typeMeta: ReturnType<typeof buildTypeMeta>
 }) {
-  if (entry.kind === 'action') {
-    return (
-      <button
-        type="button"
-        role="option"
-        aria-selected={active}
-        onClick={onSelect}
-        className={cn(
-          'flex w-full items-start gap-3 px-4 py-3 text-left transition-colors',
-          active ? 'bg-primary/10' : 'hover:bg-muted/50',
-        )}
-      >
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-medium text-foreground">{entry.label}</div>
-          {entry.subtitle ? (
-            <div className="truncate text-xs text-muted-foreground">{entry.subtitle}</div>
-          ) : null}
-        </div>
-        {entry.action === 'sign-out' ? (
-          <LogOut className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-        ) : (
-          <LogIn className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-        )}
-      </button>
-    )
-  }
-
   const meta = typeMeta[entry.type]
   const { Icon } = meta
 
@@ -180,7 +140,6 @@ function ResultRow({
 export function CommandPaletteDialog() {
   const { open, closeCommandPalette } = useCommandPalette()
   const navigate = useNavigate()
-  const auth = useAuth()
   const { terms } = useTerminology()
   const typeMeta = useMemo(() => buildTypeMeta(terms), [terms])
   const [query, setQuery] = useState('')
@@ -191,46 +150,13 @@ export function CommandPaletteDialog() {
   const [activeIndex, setActiveIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const actionEntries = useMemo<ActionEntry[]>(() => {
-    if (auth.user) {
-      return [
-        {
-          id: 'sign-out',
-          kind: 'action',
-          label: 'Sign out',
-          subtitle: auth.user.email,
-          action: 'sign-out',
-        },
-      ]
-    }
-    return [
-      {
-        id: 'sign-in',
-        kind: 'action',
-        label: 'Sign in',
-        subtitle: '/login',
-        action: 'sign-in',
-      },
-    ]
-  }, [auth.user])
-
   const displayEntries = useMemo<PaletteEntry[]>(() => {
     const q = query.trim()
     if (!q) {
-      return [
-        ...recents.map((r) => ({ kind: 'result' as const, ...r })),
-        ...actionEntries,
-      ]
+      return recents.map((r) => ({ kind: 'result' as const, ...r }))
     }
-    const filteredActions = actionEntries.filter((entry) => {
-      const hay = `${entry.label} ${entry.subtitle ?? ''}`.toLowerCase()
-      return hay.includes(q.toLowerCase())
-    })
-    return [
-      ...results.map((r) => ({ kind: 'result' as const, ...r })),
-      ...filteredActions,
-    ]
-  }, [query, recents, results, actionEntries])
+    return results.map((r) => ({ kind: 'result' as const, ...r }))
+  }, [query, recents, results])
 
   useEffect(() => {
     if (!open) {
@@ -276,19 +202,10 @@ export function CommandPaletteDialog() {
   const selectEntry = useCallback(
     (entry: PaletteEntry) => {
       closeCommandPalette()
-      if (entry.kind === 'action') {
-        if (entry.action === 'sign-out') {
-          auth.signOut()
-          navigate('/login', { replace: true })
-          return
-        }
-        navigate('/login')
-        return
-      }
       saveRecent(entry)
       navigate(entry.url)
     },
-    [auth, closeCommandPalette, navigate],
+    [closeCommandPalette, navigate],
   )
 
   useEffect(() => {
@@ -380,7 +297,7 @@ export function CommandPaletteDialog() {
           ) : (
             displayEntries.map((entry, index) => (
               <ResultRow
-                key={entry.kind === 'action' ? entry.id : `${entry.type}:${entry.id}`}
+                key={`${entry.type}:${entry.id}`}
                 entry={entry}
                 active={index === activeIndex}
                 onSelect={() => selectEntry(entry)}

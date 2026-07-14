@@ -15,6 +15,7 @@ export function ContextBarAddButton({
   onClick: () => void
 }) {
   const visibleLabel = shortLabel ?? label
+
   return (
     <ToolbarTooltip label={label}>
       <Button type="button" onClick={onClick} className="h-9 gap-1.5 px-2.5 shadow-sm sm:px-4">
@@ -25,8 +26,14 @@ export function ContextBarAddButton({
   )
 }
 
-export type ContextBarSplitAddItem = { id: string; label: string; onSelect: () => void }
+export type ContextBarSplitAddItem = {
+  id: string
+  label: string
+  onSelect: () => void
+  icon?: React.ComponentType<{ className?: string }>
+}
 
+/** Primary green add action with a chevron menu for secondary create actions. */
 export function ContextBarSplitAddButton({
   label,
   shortLabel,
@@ -90,27 +97,29 @@ export function ContextBarSplitAddButton({
   return (
     <div ref={rootRef} className="relative flex shrink-0 shadow-sm">
       <ToolbarTooltip label={label}>
-        <Button type="button" onClick={onClick} className="h-9 gap-1.5 rounded-r-none px-2.5 sm:px-4">
+        <Button
+          type="button"
+          onClick={onClick}
+          className="h-9 gap-1.5 rounded-r-none px-2.5 sm:px-4"
+        >
           <Plus className="h-4 w-4 shrink-0" aria-hidden />
           <span className="hidden sm:inline">{visibleLabel}</span>
         </Button>
       </ToolbarTooltip>
-      <ToolbarTooltip label={menuLabel}>
-        <Button
-          type="button"
-          className={cn(
-            'h-9 rounded-l-none border-l border-primary-foreground/25 px-2',
-            open && 'bg-primary/90',
-          )}
-          aria-haspopup="menu"
-          aria-expanded={open}
-          aria-controls={menuId}
-          aria-label={menuLabel}
-          onClick={() => setOpen((c) => !c)}
-        >
-          <ChevronDown className="h-4 w-4" aria-hidden />
-        </Button>
-      </ToolbarTooltip>
+      <Button
+        type="button"
+        className={cn(
+          'h-9 rounded-l-none border-l border-primary-foreground/25 px-2',
+          open && 'bg-primary/90',
+        )}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={menuId}
+        aria-label={menuLabel}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <ChevronDown className="h-4 w-4" aria-hidden />
+      </Button>
       {open && menuPos
         ? createPortal(
             <div
@@ -120,20 +129,26 @@ export function ContextBarSplitAddButton({
               className="fixed z-[200] min-w-[11rem] overflow-hidden rounded-md border border-border bg-card py-0.5 shadow-lg"
               style={{ top: menuPos.top, left: menuPos.left }}
             >
-              {items.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  role="menuitem"
-                  className="flex w-full items-center px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-muted/60"
-                  onClick={() => {
-                    item.onSelect()
-                    setOpen(false)
-                  }}
-                >
-                  {item.label}
-                </button>
-              ))}
+              {items.map((item) => {
+                const Icon = item.icon
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="menuitem"
+                    className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-muted/60"
+                    onClick={() => {
+                      item.onSelect()
+                      setOpen(false)
+                    }}
+                  >
+                    {Icon ? (
+                      <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                    ) : null}
+                    <span className="truncate">{item.label}</span>
+                  </button>
+                )
+              })}
             </div>,
             document.body,
           )
