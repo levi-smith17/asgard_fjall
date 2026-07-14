@@ -1,16 +1,34 @@
-import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { KeyRound, Loader2 } from 'lucide-react'
+import { Button } from '@/components/core/ui/button'
+import { Input } from '@/components/core/ui/input'
 import { useAuth } from '@/hooks/use-auth'
-import { SESSION_COOKIE_NAME, WEBAUTHN_RP_ID } from '@/lib/config'
+import {
+  fetchAuthStatus,
+  loginWithPasskey,
+  registerPasskey,
+} from '@/lib/webauthn-client'
 
 export function LoginPage() {
   const auth = useAuth()
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const location = useLocation()
+  const [deviceName, setDeviceName] = useState('MacBook')
+  const [passkeysConfigured, setPasskeysConfigured] = useState<boolean | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [pending, setPending] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [cognitoEmail, setCognitoEmail] = useState('')
+  const [cognitoPassword, setCognitoPassword] = useState('')
+
+  const redirectTo =
+    (location.state as { from?: string } | null)?.from?.replace(/\/login$/, '') || '/hlidskjalf'
+
+  useEffect(() => {
+    void fetchAuthStatus()
+      .then((status) => setPasskeysConfigured(status.passkeysConfigured))
+      .catch(() => setPasskeysConfigured(null))
+  }, [])
 
   if (auth.loading) {
     return (
@@ -21,80 +39,132 @@ export function LoginPage() {
     )
   }
 
-  if (auth.user) {
-    return <Navigate to="/hlidskjalf" replace />
+  if (auth.status === 'authenticated') {
+    return <Navigate to={redirectTo} replace />
   }
 
-  async function onSubmit(event: React.FormEvent) {
-    event.preventDefault()
+  async function handleRegister() {
+    setSubmitting(true)
     setError(null)
-    setPending(true)
     try {
-      await auth.signIn(email.trim(), password)
-      navigate('/hlidskjalf', { replace: true })
+      await registerPasskey(deviceName.trim() || undefined)
+      await auth.refresh()
+      navigate(redirectTo, { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign-in failed')
+      setError(err instanceof Error ? err.message : 'Passkey registration failed')
     } finally {
-      setPending(false)
+      setSubmitting(false)
+    }
+  }
+
+  async function handleLogin() {
+    setSubmitting(true)
+    setError(null)
+    try {
+      await loginWithPasskey()
+      await auth.refresh()
+      navigate(redirectTo, { replace: true })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Passkey sign-in failed')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleCognitoConnect(event: React.FormEvent) {
+    event.preventDefault()
+    setSubmitting(true)
+    setError(null)
+    try {
+      await auth.signInCognito(cognitoEmail.trim(), cognitoPassword)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Cairn sign-in failed')
+    } finally {
+      setSubmitting(false)
     }
   }
 
   return (
-    <div className="flex min-h-full flex-col items-center justify-center gap-6 px-6">
-      <div className="text-center">
-        <p className="text-3xl font-bold tracking-[0.28em] text-primary uppercase">Asgard</p>
-        <p className="mt-3 text-sm uppercase tracking-[0.22em] text-muted-foreground">Fjall</p>
-      </div>
-
-      {auth.configured ? (
-        <form onSubmit={onSubmit} className="w-full max-w-sm space-y-3">
-          <p className="text-center text-xs text-muted-foreground">
-            Cairn Cognito session for <code>api.cairn.ing</code>. Passkey gate (
-            <code>{SESSION_COOKIE_NAME}</code>, RP <code>{WEBAUTHN_RP_ID}</code>) comes next.
+    <div className="flex min-h-full items-center justify-center bg-background px-4 py-8">
+      <div className="w-full max-w-sm space-y-6 rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="space-y-2 text-center">
+          <p className="text-3xl font-bold tracking-[0.28em] text-primary uppercase">Asgard</p>
+          <p className="text-sm uppercase tracking-[0.22em] text-muted-foreground">Fjall</p>
+          <p className="text-sm text-muted-foreground">
+            {passkeysConfigured
+              ? 'Sign in with your passkey'
+              : passkeysConfigured === null
+                ? 'Passkey auth offline — connect Cairn below or start apps/auth'
+                : 'Register your first passkey'}
           </p>
-          <input
-            type="email"
-            required
-            autoComplete="username"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm"
-          />
-          <input
-            type="password"
-            required
-            autoComplete="current-password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md border border-border bg-muted px-3 py-2 text-sm"
-          />
-          {error ? <p className="text-xs text-red-400">{error}</p> : null}
-          <button
-            type="submit"
-            disabled={pending}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
-          >
-            {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-            {pending ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
-      ) : (
-        <div className="max-w-md space-y-4 text-center text-sm text-muted-foreground">
-          <p>
-            Set <code>VITE_COGNITO_USER_POOL_ID</code> and <code>VITE_COGNITO_CLIENT_ID</code> to enable
-            Cairn sign-in. Until then you can browse the shell without API data.
-          </p>
-          <button
-            type="button"
-            className="rounded-md border border-border px-5 py-2.5 text-sm"
-            onClick={() => navigate('/hlidskjalf')}
-          >
-            Continue without Cognito
-          </button>
         </div>
-      )}
+
+        {passkeysConfigured !== null ? (
+          !passkeysConfigured ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="deviceName" className="text-sm font-medium text-foreground">
+                  Device name
+                </label>
+                <Input
+                  id="deviceName"
+                  value={deviceName}
+                  onChange={(event) => setDeviceName(event.target.value)}
+                  placeholder="MacBook"
+                />
+              </div>
+              <Button
+                type="button"
+                className="w-full"
+                disabled={submitting}
+                onClick={() => void handleRegister()}
+              >
+                <KeyRound className="h-4 w-4" />
+                {submitting ? 'Registering…' : 'Create passkey'}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              type="button"
+              className="w-full"
+              disabled={submitting}
+              onClick={() => void handleLogin()}
+            >
+              <KeyRound className="h-4 w-4" />
+              {submitting ? 'Signing in…' : 'Sign in with passkey'}
+            </Button>
+          )
+        ) : null}
+
+        {auth.cognitoConfigured ? (
+          <form onSubmit={(e) => void handleCognitoConnect(e)} className="space-y-3 border-t border-border pt-4">
+            <p className="text-xs text-muted-foreground">
+              Cairn API session (Bearer). Needed for live data after the passkey gate.
+            </p>
+            <Input
+              type="email"
+              required
+              autoComplete="username"
+              placeholder="Email"
+              value={cognitoEmail}
+              onChange={(e) => setCognitoEmail(e.target.value)}
+            />
+            <Input
+              type="password"
+              required
+              autoComplete="current-password"
+              placeholder="Password"
+              value={cognitoPassword}
+              onChange={(e) => setCognitoPassword(e.target.value)}
+            />
+            <Button type="submit" variant="outline" className="w-full" disabled={submitting}>
+              {submitting ? 'Connecting…' : 'Connect Cairn'}
+            </Button>
+          </form>
+        ) : null}
+
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      </div>
     </div>
   )
 }

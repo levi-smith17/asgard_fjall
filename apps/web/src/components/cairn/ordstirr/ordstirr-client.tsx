@@ -22,6 +22,8 @@ import {
   buildOrdstirrSections,
   manifestPublicJourneyUrl,
   manifestPublicUrl,
+  sortExpeditionsByDateDesc,
+  sortSummitsByDateDesc,
   type OrdstirrCanvasView,
   type OrdstirrJourneySectionId,
   type OrdstirrSectionId,
@@ -133,6 +135,8 @@ export function OrdstirrWorkspace() {
     setDraft({
       ...manifestQuery.data,
       origins,
+      expeditions: sortExpeditionsByDateDesc(manifestQuery.data.expeditions),
+      summits: sortSummitsByDateDesc(manifestQuery.data.summits),
     })
   }, [manifestQuery.data])
 
@@ -257,7 +261,13 @@ export function OrdstirrWorkspace() {
       if (!prev) return prev
       switch (sectionId) {
         case 'expeditions':
-          return { ...prev, expeditions: [entry as (typeof prev.expeditions)[0], ...prev.expeditions] }
+          return {
+            ...prev,
+            expeditions: sortExpeditionsByDateDesc([
+              entry as (typeof prev.expeditions)[0],
+              ...prev.expeditions,
+            ]),
+          }
         case 'training':
           return { ...prev, training: [entry as (typeof prev.training)[0], ...prev.training] }
         case 'gear':
@@ -265,7 +275,10 @@ export function OrdstirrWorkspace() {
         case 'landmarks':
           return { ...prev, landmarks: [entry as (typeof prev.landmarks)[0], ...prev.landmarks] }
         case 'summits':
-          return { ...prev, summits: [entry as (typeof prev.summits)[0], ...prev.summits] }
+          return {
+            ...prev,
+            summits: sortSummitsByDateDesc([entry as (typeof prev.summits)[0], ...prev.summits]),
+          }
         case 'pathfinding':
           return { ...prev, pathfinding: [entry as (typeof prev.pathfinding)[0], ...prev.pathfinding] }
         default:
@@ -578,7 +591,11 @@ export function OrdstirrWorkspace() {
         return (
           <OrdstirrExpeditionInspector
             items={draft.expeditions}
-            onChange={(expeditions) => setDraft((prev) => (prev ? { ...prev, expeditions } : prev))}
+            onChange={(expeditions) =>
+              setDraft((prev) =>
+                prev ? { ...prev, expeditions: sortExpeditionsByDateDesc(expeditions) } : prev,
+              )
+            }
             {...listInspectorProps}
           />
         )
@@ -610,7 +627,11 @@ export function OrdstirrWorkspace() {
         return (
           <OrdstirrSummitInspector
             items={draft.summits}
-            onChange={(summits) => setDraft((prev) => (prev ? { ...prev, summits } : prev))}
+            onChange={(summits) =>
+              setDraft((prev) =>
+                prev ? { ...prev, summits: sortSummitsByDateDesc(summits) } : prev,
+              )
+            }
             {...listInspectorProps}
           />
         )

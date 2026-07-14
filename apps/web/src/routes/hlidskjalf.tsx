@@ -479,7 +479,7 @@ function OrdstirrSection({
 function HlidskjalfCanvas() {
   const terms = useTerms()
   const auth = useAuth()
-  const enabled = Boolean(auth.user)
+  const enabled = Boolean(auth.cairnUser)
 
   const logsQuery = useQuery({
     queryKey: ['cairn-logs-hlidskjalf'],

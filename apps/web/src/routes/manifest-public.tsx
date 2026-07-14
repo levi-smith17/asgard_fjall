@@ -36,6 +36,8 @@ import {
   formatCompanionAge,
   formatManifestDate,
   formatManifestDateRange,
+  sortExpeditionsByDateDesc,
+  sortSummitsByDateDesc,
 } from '@/lib/ordstirr-format'
 import { publicCompanionMediaUrl } from '@/lib/public-media-url'
 import {
@@ -321,6 +323,8 @@ function ManifestView({ data }: { data: PublicManifestData }) {
   const wayfarer = data.wayfarer
   const initials = wayfarer.name?.slice(0, 2) ?? wayfarer.email?.[0] ?? '?'
   const avatar = wayfarer.image ?? wayfarer.avatar ?? null
+  const expeditions = sortExpeditionsByDateDesc(data.expeditions)
+  const summits = sortSummitsByDateDesc(data.summits)
 
   const grouped = data.gear.reduce<Record<string, typeof data.gear>>((acc, item) => {
     const key = item.category ?? 'Other'
@@ -360,11 +364,11 @@ function ManifestView({ data }: { data: PublicManifestData }) {
         </div>
       </div>
 
-      {data.expeditions.length > 0 ? (
+      {expeditions.length > 0 ? (
         <section id="expeditions" className="scroll-mt-6">
           <SectionHeading title={terms.expeditions} />
           <div className="flex flex-col gap-6">
-            {data.expeditions.map((exp) => (
+            {expeditions.map((exp) => (
               <TimelineEntry
                 key={exp.id}
                 title={exp.title}
@@ -438,11 +442,11 @@ function ManifestView({ data }: { data: PublicManifestData }) {
         </section>
       ) : null}
 
-      {data.summits.length > 0 ? (
+      {summits.length > 0 ? (
         <section id="summits" className="scroll-mt-6">
           <SectionHeading title={terms.summits} />
           <div className="flex flex-col gap-4">
-            {data.summits.map((summit) => (
+            {summits.map((summit) => (
               <div key={summit.id} className="flex flex-col gap-1">
                 <div className="flex items-start justify-between gap-4">
                   <div>

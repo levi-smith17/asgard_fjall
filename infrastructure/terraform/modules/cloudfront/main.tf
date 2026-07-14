@@ -71,6 +71,43 @@ resource "aws_cloudfront_distribution" "web" {
     origin_id                = "s3-${aws_s3_bucket.web.id}"
   }
 
+  dynamic "origin" {
+    for_each = var.auth_origin_domain == null ? [] : [var.auth_origin_domain]
+    content {
+      domain_name = origin.value
+      origin_id   = "auth-lambda"
+      custom_origin_config {
+        http_port              = 80
+        https_port             = 443
+        origin_protocol_policy = "https-only"
+        origin_ssl_protocols   = ["TLSv1.2"]
+      }
+    }
+  }
+
+  dynamic "ordered_cache_behavior" {
+    for_each = var.auth_origin_domain == null ? [] : [1]
+    content {
+      path_pattern     = "/api/auth*"
+      target_origin_id = "auth-lambda"
+      allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods   = ["GET", "HEAD"]
+      compress         = true
+      min_ttl          = 0
+      default_ttl      = 0
+      max_ttl          = 0
+      viewer_protocol_policy = "redirect-to-https"
+
+      forwarded_values {
+        query_string = true
+        headers      = ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
+        cookies {
+          forward = "all"
+        }
+      }
+    }
+  }
+
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]

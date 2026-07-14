@@ -127,7 +127,9 @@ export function CairnCatalogInspector({
       <div className="border-b border-border px-4 py-3">
         <p className="text-sm font-semibold text-foreground">{activeTab === 'greinar' ? terms.greinar : terms.runir}</p>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          {activeTab === 'greinar' ? `Organize ${terms.laufar.toLowerCase()} and ${terms.spjold.toLowerCase()} into named ${terms.greinar.toLowerCase()}.` : `Tag ${terms.laufar.toLowerCase()} with hierarchical ${terms.runir.toLowerCase()}.`}
+          {activeTab === 'greinar'
+            ? `Organize ${terms.laufar.toLowerCase()} into named ${terms.greinar.toLowerCase()}.`
+            : `Tag ${terms.laufar.toLowerCase()} with hierarchical ${terms.runir.toLowerCase()}.`}
         </p>
       </div>
       {activeTab === 'greinar' ? (

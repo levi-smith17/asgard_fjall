@@ -22,12 +22,13 @@ import {
   type CairnCalendarEntry,
 } from '@/lib/cairn-api'
 import { useTerms } from '@/hooks/use-terminology'
+import { ASGARD_PRIMARY_HEX } from '@/lib/brand-colors'
 
 const PRESET_COLORS = [
   '#ef4444',
   '#f97316',
   '#eab308',
-  '#22c55e',
+  ASGARD_PRIMARY_HEX,
   '#06b6d4',
   '#3b82f6',
   '#8b5cf6',
@@ -226,7 +227,7 @@ export function ThingItinerarySettings() {
   const [showAddSubscription, setShowAddSubscription] = useState(false)
   const [subName, setSubName] = useState('')
   const [subUrl, setSubUrl] = useState('')
-  const [subColor, setSubColor] = useState('#22c55e')
+  const [subColor, setSubColor] = useState(ASGARD_PRIMARY_HEX)
 
   useEffect(() => {
     if (!itinerary) return

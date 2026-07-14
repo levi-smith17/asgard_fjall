@@ -1,5 +1,15 @@
 import type { LucideIcon } from 'lucide-react'
-import { Award, Backpack, Briefcase, Compass, Flag, GraduationCap, MapPin, PawPrint, ScrollText } from 'lucide-react'
+import {
+  Award,
+  Backpack,
+  Briefcase,
+  Compass,
+  Flag,
+  GraduationCap,
+  MapPin,
+  PawPrint,
+  ScrollText,
+} from 'lucide-react'
 import type { ManifestTerms } from '@/lib/manifest-terminology'
 import type { ManifestData } from '@/lib/manifest-api'
 
@@ -63,16 +73,24 @@ export function buildOrdstirrSections(data: ManifestData, terms: ManifestTerms):
 }
 
 export function buildJourneySections(data: ManifestData, terms: ManifestTerms): OrdstirrJourneySection[] {
-  const active = data.companions.filter((c) => !c.passed)
-  const passed = data.companions.filter((c) => c.passed)
+  const active = data.companions.filter((companion) => !companion.passed)
+  const passed = data.companions.filter((companion) => companion.passed)
   return [
     { id: 'bio', label: terms.bio, icon: ScrollText, count: null },
     { id: 'companions', label: terms.companions, icon: PawPrint, count: active.length || null },
-    { id: 'in-memoriam', label: terms.summit_reached, icon: Award, count: passed.length || null },
+    {
+      id: 'in-memoriam',
+      label: terms.summit_reached,
+      icon: Award,
+      count: passed.length || null,
+    },
   ]
 }
 
-export function manifestPublicUrl(username: string | null | undefined, customDomain?: string | null): string | null {
+export function manifestPublicUrl(
+  username: string | null | undefined,
+  customDomain?: string | null,
+): string | null {
   if (!username?.trim()) return null
   const path = `/manifest/${username.trim()}`
   const domain = customDomain?.trim()
@@ -85,16 +103,13 @@ export function manifestPublicUrl(username: string | null | undefined, customDom
   return `https://cairn.ing${path}`
 }
 
-export function manifestPublicJourneyUrl(username: string | null | undefined, customDomain?: string | null): string | null {
+export function manifestPublicJourneyUrl(
+  username: string | null | undefined,
+  customDomain?: string | null,
+): string | null {
   const manifest = manifestPublicUrl(username, customDomain)
   if (!manifest) return null
   return `${manifest.replace(/\/$/, '')}/journey`
-}
-
-export function manifestPublicContactUrl(username: string | null | undefined, customDomain?: string | null): string | null {
-  const manifest = manifestPublicUrl(username, customDomain)
-  if (!manifest) return null
-  return `${manifest.replace(/\/$/, '')}/contact`
 }
 
 export function formatManifestMonth(date: string | Date | null | undefined): string {
@@ -123,8 +138,42 @@ export function formatCompanionAge(birthday: string | Date | null | undefined): 
   return years === 1 ? '1 year old' : `${years} years old`
 }
 
-export function formatManifestDateRange(startDate: string, endDate: string | null, current: boolean): string {
+export function formatManifestDateRange(
+  startDate: string,
+  endDate: string | null,
+  current: boolean,
+): string {
   const start = formatManifestMonth(startDate)
   const end = current ? 'Present' : endDate ? formatManifestMonth(endDate) : ''
   return `${start} — ${end}`
+}
+
+/** Newest date first; missing/invalid dates sort last. */
+export function compareIsoDateDesc(
+  a: string | Date | null | undefined,
+  b: string | Date | null | undefined,
+): number {
+  const at = a ? new Date(a).getTime() : Number.NaN
+  const bt = b ? new Date(b).getTime() : Number.NaN
+  const aOk = !Number.isNaN(at)
+  const bOk = !Number.isNaN(bt)
+  if (!aOk && !bOk) return 0
+  if (!aOk) return 1
+  if (!bOk) return -1
+  return bt - at
+}
+
+/** Leidangr / expeditions: current roles first, then start date descending. */
+export function sortExpeditionsByDateDesc<T extends { startDate: string; current?: boolean }>(
+  items: T[],
+): T[] {
+  return [...items].sort((a, b) => {
+    if (Boolean(a.current) !== Boolean(b.current)) return a.current ? -1 : 1
+    return compareIsoDateDesc(a.startDate, b.startDate)
+  })
+}
+
+/** Tindar / summits: date descending. */
+export function sortSummitsByDateDesc<T extends { date: string | null }>(items: T[]): T[] {
+  return [...items].sort((a, b) => compareIsoDateDesc(a.date, b.date))
 }

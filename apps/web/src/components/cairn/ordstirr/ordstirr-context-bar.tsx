@@ -25,7 +25,7 @@ export function OrdstirrContextBar({
     <StudioContextBar
       aria-label={`${appTerms.resume} context`}
       title={appTerms.resume}
-      subtitle="Public manifest and live editor"
+      subtitle="Public profile and live editor"
       actions={
         <>
           <GlobalSearchTrigger />

@@ -56,3 +56,15 @@ variable "terraform_state_bucket" {
   type    = string
   default = "asgard-terraform-state-910896517350"
 }
+
+variable "fjall_session_secret" {
+  description = "HMAC secret for fjall_session cookies (passkey auth)."
+  type        = string
+  sensitive   = true
+}
+
+variable "fjall_auth_email" {
+  description = "Single-user email embedded in passkey session payload."
+  type        = string
+  default     = "admin@local"
+}

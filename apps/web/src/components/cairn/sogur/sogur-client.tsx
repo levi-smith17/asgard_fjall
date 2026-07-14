@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { BookOpen } from 'lucide-react'
@@ -165,6 +165,34 @@ export function SogurWorkspace() {
     setInspectorPinned(pinned)
   }
 
+  const dismissInspector = useCallback(() => {
+    if (inspectorPinned) return
+    setInspectorEngaged(false)
+    setCatalog(null)
+    setInspectorMode(null)
+  }, [inspectorPinned])
+
+  function handleCanvasPointerDown(event: React.PointerEvent) {
+    if (inspectorPinned) return
+    const target = event.target as HTMLElement
+    if (
+      target.closest(
+        'a, button, input, select, textarea, [data-inspectable], [data-sogur-editor], .ProseMirror',
+      )
+    ) {
+      return
+    }
+    dismissInspector()
+  }
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') dismissInspector()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [dismissInspector])
+
   async function handleCreateSaga(input: { trailId?: string; newGreinName?: string }) {
     setCreating(true)
     try {
@@ -255,7 +283,10 @@ export function SogurWorkspace() {
         ) : !configured ? (
           <CairnNotConfiguredNotice />
         ) : (
-          <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+          <div
+            className="flex min-h-0 w-full flex-1 flex-col overflow-hidden"
+            onPointerDown={handleCanvasPointerDown}
+          >
             {selectedBook ? (
               <SogurLogbook
                 bookId={selectedBook.id}
@@ -327,7 +358,7 @@ export function SogurWorkspace() {
             bookName={selectedBook.name}
             onLogsChange={handleLogsChange}
             onSelectPage={selectPage}
-            onClose={() => setInspectorEngaged(false)}
+            onClose={dismissInspector}
           />
         ) : null
       }

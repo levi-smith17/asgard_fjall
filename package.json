@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter @asgard-fjall/web dev",
+    "dev:auth": "pnpm --filter @asgard-fjall/auth dev",
     "build": "pnpm --filter @asgard-fjall/web build",
+    "build:auth": "pnpm --filter @asgard-fjall/auth build",
     "lint": "pnpm --filter @asgard-fjall/web lint",
     "test": "pnpm --filter @asgard-fjall/web test"
   },

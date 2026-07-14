@@ -22,3 +22,9 @@ variable "owner" {
 variable "project_name" {
   type = string
 }
+
+variable "auth_origin_domain" {
+  type        = string
+  default     = null
+  description = "Lambda Function URL hostname for /api/auth* (no https://)."
+}

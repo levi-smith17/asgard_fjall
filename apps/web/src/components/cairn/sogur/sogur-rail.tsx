@@ -75,11 +75,12 @@ export function SogurRail({
         </div>
       </div>
 
-      <div className="shrink-0 border-b border-border px-3 py-2">
+      <div className="flex h-14 min-h-14 max-h-14 shrink-0 items-center border-b border-border px-3">
         <FilterInput
           value={search}
           onChange={onSearchChange}
           placeholder={`Filter ${terms.notes.toLowerCase()}…`}
+          className="w-full"
         />
       </div>
 

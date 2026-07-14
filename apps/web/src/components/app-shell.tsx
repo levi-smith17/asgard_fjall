@@ -74,14 +74,14 @@ export function AppShell() {
   const profileQuery = useQuery({
     queryKey: ['cairn-profile'],
     queryFn: fetchCairnProfile,
-    enabled: Boolean(auth.user) && statusQuery.data?.configured === true,
+    enabled: Boolean(auth.cairnUser) && statusQuery.data?.configured === true,
     retry: false,
     staleTime: 60_000,
   })
 
   const displayName =
-    profileQuery.data?.name ?? auth.user?.email?.split('@')[0] ?? 'Guest'
-  const displayEmail = profileQuery.data?.email ?? auth.user?.email ?? ''
+    profileQuery.data?.name ?? auth.gateUser?.email?.split('@')[0] ?? 'Guest'
+  const displayEmail = profileQuery.data?.email ?? auth.gateUser?.email ?? ''
   const avatarUrl = profileQuery.data?.image ?? null
   const avatarFallback = displayName.slice(0, 2)
   const username = profileQuery.data?.username

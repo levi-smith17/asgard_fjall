@@ -81,11 +81,11 @@ function SortableMediaCard({
                 className="h-full w-full object-cover"
               />
             )}
-            <ToolbarTooltip label="Remove">
+            <ToolbarTooltip label="Remove" className="absolute right-1.5 top-1.5 z-10">
               <button
                 type="button"
                 onClick={onDelete}
-                className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-md bg-background/90 text-destructive shadow-sm backdrop-blur-sm transition-colors hover:bg-destructive hover:text-destructive-foreground"
+                className="flex h-7 w-7 items-center justify-center rounded-md bg-background/90 text-destructive shadow-sm backdrop-blur-sm transition-colors hover:bg-destructive hover:text-destructive-foreground"
                 aria-label="Remove photo"
               >
                 <Trash2 className="h-3.5 w-3.5" />
