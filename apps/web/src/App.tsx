@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { AppShell } from '@/components/app-shell'
 import { RequireAuth } from '@/components/require-auth'
 import { HlidskjalfPage } from '@/routes/hlidskjalf'
@@ -11,6 +11,13 @@ import { DagatalPage } from '@/routes/dagatal'
 import { StjornurPage } from '@/routes/stjornur'
 import { ThingPage } from '@/routes/thing'
 import { PublicManifestPage } from '@/routes/manifest-public'
+import { publicManifestPath, type PublicManifestView } from '@/lib/public-manifest-path'
+
+function LegacyPublicManifestRedirect({ view }: { view: PublicManifestView }) {
+  const { username } = useParams<{ username: string }>()
+  if (!username) return <Navigate to="/hlidskjalf" replace />
+  return <Navigate to={publicManifestPath(username, view)} replace />
+}
 
 export function App() {
   return (
@@ -29,9 +36,21 @@ export function App() {
           <Route path="/sendibod" element={<SendibodPage />} />
           <Route path="/thing" element={<ThingPage />} />
           <Route path="/settings" element={<Navigate to="/thing" replace />} />
-          <Route path="/manifest/:username" element={<PublicManifestPage view="manifest" />} />
-          <Route path="/manifest/:username/journey" element={<PublicManifestPage view="journey" />} />
-          <Route path="/manifest/:username/contact" element={<PublicManifestPage view="contact" />} />
+          <Route path="/ordstirr/:username" element={<PublicManifestPage view="manifest" />} />
+          <Route path="/ordstirr/:username/ferd" element={<PublicManifestPage view="journey" />} />
+          <Route
+            path="/ordstirr/:username/ordsending"
+            element={<PublicManifestPage view="contact" />}
+          />
+          <Route path="/manifest/:username" element={<LegacyPublicManifestRedirect view="manifest" />} />
+          <Route
+            path="/manifest/:username/journey"
+            element={<LegacyPublicManifestRedirect view="journey" />}
+          />
+          <Route
+            path="/manifest/:username/contact"
+            element={<LegacyPublicManifestRedirect view="contact" />}
+          />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/hlidskjalf" replace />} />

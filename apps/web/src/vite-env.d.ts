@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly VITE_COGNITO_CLIENT_ID?: string
   readonly VITE_WEBAUTHN_RP_ID?: string
   readonly VITE_SESSION_COOKIE_NAME?: string
+  readonly VITE_CLOUDFRONT_PUBLIC_MEDIA_URL?: string
 }
 
 interface ImportMeta {

@@ -1,10 +1,21 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { CheckCircle, ExternalLink, GitBranch, Globe, Mail, MapPin } from 'lucide-react'
+import {
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  GitBranch,
+  Globe,
+  Mail,
+  MapPin,
+} from 'lucide-react'
 import { OrdstirrGearChart } from '@/components/cairn/ordstirr/ordstirr-gear-chart'
+import { PublicOrdstirrSectionsRail } from '@/components/cairn/ordstirr/public-ordstirr-sections-rail'
 import { GlobalSearchTrigger } from '@/components/core/command-palette/global-search-trigger'
 import { StudioContextBar } from '@/components/core/layout/studio-context-bar'
+import { StudioLayout } from '@/components/core/layout/studio-layout'
 import { Avatar } from '@/components/core/ui/avatar'
 import { Button } from '@/components/core/ui/button'
 import { Input } from '@/components/core/ui/input'
@@ -25,6 +36,12 @@ import {
   formatManifestDate,
   formatManifestDateRange,
 } from '@/lib/ordstirr-format'
+import { publicCompanionMediaUrl } from '@/lib/public-media-url'
+import {
+  buildPublicOrdstirrRailSections,
+  type PublicOrdstirrRailSectionId,
+  viewForPublicRailSection,
+} from '@/lib/public-ordstirr-rail'
 import { publicManifestPath, type PublicManifestView } from '@/lib/public-manifest-path'
 import { cn } from '@/lib/utils'
 
@@ -201,6 +218,103 @@ function LandmarkCard({
   )
 }
 
+function CompanionMediaCarousel({
+  companion,
+}: {
+  companion: PublicJourneyData['companions'][number]
+}) {
+  const media = useMemo(() => {
+    const items = companion.media ?? []
+    if (items.length > 0) return items
+    if (companion.imageUrl) {
+      return [{ id: 'image', key: companion.imageUrl, type: 'IMAGE', caption: null }]
+    }
+    return []
+  }, [companion.imageUrl, companion.media])
+
+  const [index, setIndex] = useState(0)
+  const current = media[index]
+
+  if (media.length === 0) {
+    return companion.bio ? (
+      <RichTextContent html={companion.bio} className="text-muted-foreground" />
+    ) : null
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {companion.bio ? (
+        <RichTextContent html={companion.bio} className="text-muted-foreground" />
+      ) : null}
+      <div className="relative">
+        <div className="flex h-96 items-center justify-center overflow-hidden rounded-lg bg-transparent">
+          {String(current.type).toUpperCase() === 'VIDEO' ? (
+            <video
+              key={current.id}
+              src={publicCompanionMediaUrl(current.key)}
+              className="h-full w-full object-contain"
+              controls
+            />
+          ) : (
+            <img
+              key={current.id}
+              src={publicCompanionMediaUrl(current.key)}
+              alt={current.caption ?? companion.name}
+              className="h-full w-full object-contain"
+            />
+          )}
+        </div>
+        {media.length > 1 ? (
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute left-2 top-1/2 h-8 w-8 -translate-y-1/2 bg-muted/90 opacity-90 hover:opacity-100"
+              onClick={() => setIndex((value) => (value - 1 + media.length) % media.length)}
+              aria-label="Previous media"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 bg-muted/90 opacity-90 hover:opacity-100"
+              onClick={() => setIndex((value) => (value + 1) % media.length)}
+              aria-label="Next media"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </>
+        ) : null}
+      </div>
+      {current.caption ? (
+        <p className="text-center text-xs text-muted-foreground">{current.caption}</p>
+      ) : null}
+    </div>
+  )
+}
+
+function CompanionBlock({
+  companion,
+}: {
+  companion: PublicJourneyData['companions'][number]
+}) {
+  const memorial = Boolean(companion.passed)
+  const age = memorial ? null : formatCompanionAge(companion.birthday)
+  const subtitle = [companion.species, companion.breed, age].filter(Boolean).join(' · ')
+  return (
+    <div className="flex flex-col gap-3">
+      <div>
+        <h3 className="font-medium">{companion.name}</h3>
+        {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
+      </div>
+      <CompanionMediaCarousel companion={companion} />
+    </div>
+  )
+}
+
 function ManifestView({ data }: { data: PublicManifestData }) {
   const { terms } = useTerminology()
   const wayfarer = data.wayfarer
@@ -216,7 +330,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-12 px-6 py-6">
-      <div className="flex flex-col gap-6">
+      <div id="origins" className="flex scroll-mt-6 flex-col gap-6">
         <div className="flex items-center gap-4">
           <Avatar
             src={avatar}
@@ -246,7 +360,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
       </div>
 
       {data.expeditions.length > 0 ? (
-        <section>
+        <section id="expeditions" className="scroll-mt-6">
           <SectionHeading title={terms.expeditions} />
           <div className="flex flex-col gap-6">
             {data.expeditions.map((exp) => (
@@ -264,7 +378,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
       ) : null}
 
       {data.training.length > 0 ? (
-        <section>
+        <section id="training" className="scroll-mt-6">
           <SectionHeading title={terms.training} />
           <div className="flex flex-col gap-6">
             {data.training.map((item) => (
@@ -282,7 +396,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
       ) : null}
 
       {data.gear.length > 0 ? (
-        <section>
+        <section id="gear" className="scroll-mt-6">
           <SectionHeading title={terms.gear} />
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {Object.entries(grouped).map(([category, items]) => (
@@ -297,7 +411,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
       ) : null}
 
       {data.landmarks.length > 0 ? (
-        <section>
+        <section id="landmarks" className="scroll-mt-6">
           <SectionHeading title={terms.landmarks} />
           <div className="flex flex-col gap-4 sm:hidden">
             {data.landmarks.map((landmark) => (
@@ -324,7 +438,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
       ) : null}
 
       {data.summits.length > 0 ? (
-        <section>
+        <section id="summits" className="scroll-mt-6">
           <SectionHeading title={terms.summits} />
           <div className="flex flex-col gap-4">
             {data.summits.map((summit) => (
@@ -367,7 +481,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
       ) : null}
 
       {data.pathfinding.length > 0 ? (
-        <section>
+        <section id="pathfinding" className="scroll-mt-6">
           <SectionHeading title={terms.pathfinding} />
           <div className="flex flex-col gap-6">
             {data.pathfinding.map((item) => (
@@ -400,7 +514,12 @@ function JourneyView({ data }: { data: PublicJourneyData }) {
     <div className="mx-auto flex max-w-3xl flex-col gap-12 px-6 py-6">
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-4">
-          <Avatar src={avatar} alt={wayfarer.name ?? wayfarer.username} fallback={initials} className="h-20 w-20" />
+          <Avatar
+            src={avatar}
+            alt={wayfarer.name ?? wayfarer.username}
+            fallback={initials}
+            className="h-20 w-20"
+          />
           <div className="flex flex-col gap-1">
             <h1 className="text-2xl font-semibold">{wayfarer.name ?? wayfarer.email}</h1>
             {data.origins?.headline ? (
@@ -410,59 +529,35 @@ function JourneyView({ data }: { data: PublicJourneyData }) {
         </div>
 
         <ContactLinks username={wayfarer.username} name={wayfarer.name} origins={data.origins} />
-
-        <div className="flex justify-end">
-          <Button asChild variant="outline" size="sm">
-            <Link to={publicManifestPath(wayfarer.username, 'manifest')}>{terms.manifest}</Link>
-          </Button>
-        </div>
       </div>
 
       {data.origins?.bio ? (
-        <section>
+        <section id="bio" className="scroll-mt-6">
           <SectionHeading title={terms.bio} />
           <RichTextContent html={data.origins.bio} className="text-muted-foreground" />
         </section>
       ) : null}
 
       {living.length > 0 ? (
-        <section>
+        <section id="companions" className="scroll-mt-6">
           <SectionHeading title={terms.companions} />
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div className="flex flex-col gap-8">
             {living.map((companion) => (
-              <CompanionCard key={companion.id} companion={companion} />
+              <CompanionBlock key={companion.id} companion={companion} />
             ))}
           </div>
         </section>
       ) : null}
 
       {memorial.length > 0 ? (
-        <section>
+        <section id="in-memoriam" className="scroll-mt-6">
           <SectionHeading title={terms.summit_reached} />
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div className="flex flex-col gap-8">
             {memorial.map((companion) => (
-              <CompanionCard key={companion.id} companion={companion} />
+              <CompanionBlock key={companion.id} companion={companion} />
             ))}
           </div>
         </section>
-      ) : null}
-    </div>
-  )
-}
-
-function CompanionCard({
-  companion,
-}: {
-  companion: PublicJourneyData['companions'][number]
-}) {
-  const age = formatCompanionAge(companion.birthday)
-  const subtitle = [companion.species, companion.breed, age].filter(Boolean).join(' · ')
-  return (
-    <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4">
-      <p className="font-medium">{companion.name}</p>
-      {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
-      {companion.bio ? (
-        <RichTextContent html={companion.bio} className="text-sm text-muted-foreground" />
       ) : null}
     </div>
   )
@@ -574,27 +669,22 @@ function ContactView({
   wayfarerName: string | null
   image: string | null
 }) {
-  const { terms } = useTerminology()
   const initials = wayfarerName?.slice(0, 2) ?? username.slice(0, 2)
 
   return (
-    <div className="flex min-h-0 flex-1 items-start justify-center overflow-y-auto px-4 py-8">
+    <div
+      id="ordsending"
+      className="flex min-h-0 flex-1 scroll-mt-6 items-start justify-center overflow-y-auto px-4 py-8"
+    >
       <div className="flex w-full max-w-md flex-col gap-6 rounded-xl bg-muted/50 p-6">
         <div className="flex items-center gap-4">
           <Avatar src={image} alt={wayfarerName ?? username} fallback={initials} className="h-16 w-16" />
           <div>
-            <h1 className="text-2xl font-semibold">
-              Contact {wayfarerName ?? username}
-            </h1>
+            <h1 className="text-2xl font-semibold">Contact {wayfarerName ?? username}</h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
               Send a message — your email stays private.
             </p>
           </div>
-        </div>
-        <div className="flex justify-start">
-          <Button asChild variant="outline" size="sm">
-            <Link to={publicManifestPath(username, 'manifest')}>{terms.manifest}</Link>
-          </Button>
         </div>
         <ContactForm username={username} wayfarerName={wayfarerName} />
       </div>
@@ -611,22 +701,31 @@ function pageTitle(
   return terms.manifest
 }
 
+function scrollToSection(sectionId: PublicOrdstirrRailSectionId) {
+  window.requestAnimationFrame(() => {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
+}
+
 export function PublicManifestPage({ view }: { view: PublicManifestView }) {
   const { username } = useParams<{ username: string }>()
   const { terms } = useTerminology()
+  const navigate = useNavigate()
+  const { hash } = useLocation()
   const title = pageTitle(view, terms)
+  const [activeSection, setActiveSection] = useState<PublicOrdstirrRailSectionId | null>(null)
 
   const manifestQuery = useQuery({
     queryKey: ['public-manifest', username],
     queryFn: () => fetchPublicManifest(username!),
-    enabled: Boolean(username) && view === 'manifest',
+    enabled: Boolean(username),
     retry: false,
   })
 
   const journeyQuery = useQuery({
     queryKey: ['public-manifest-journey', username],
     queryFn: () => fetchPublicJourney(username!),
-    enabled: Boolean(username) && view === 'journey',
+    enabled: Boolean(username),
     retry: false,
   })
 
@@ -637,22 +736,37 @@ export function PublicManifestPage({ view }: { view: PublicManifestView }) {
     retry: false,
   })
 
+  const railSections = useMemo(
+    () => buildPublicOrdstirrRailSections(terms, manifestQuery.data, journeyQuery.data),
+    [journeyQuery.data, manifestQuery.data, terms],
+  )
+
+  useEffect(() => {
+    const fromHash = hash.replace(/^#/, '') as PublicOrdstirrRailSectionId
+    if (fromHash) {
+      setActiveSection(fromHash)
+      scrollToSection(fromHash)
+      return
+    }
+    const firstOnPage = railSections.find((section) => section.view === view)
+    setActiveSection(firstOnPage?.id ?? null)
+  }, [hash, railSections, view])
+
   if (!username) return <Navigate to="/" replace />
 
-  const isError =
+  const viewError =
     (view === 'manifest' && manifestQuery.isError) ||
     (view === 'journey' && journeyQuery.isError) ||
     (view === 'contact' && contactQuery.isError)
 
-  if (isError) {
-    return (
-      <div className="flex h-full min-h-0 flex-col overflow-hidden">
-        <StudioContextBar aria-label={title} title={title} actions={<GlobalSearchTrigger />} />
-        <div className="flex flex-1 items-center justify-center p-8 text-sm text-muted-foreground">
-          This public profile could not be loaded.
-        </div>
-      </div>
-    )
+  const handleSelectSection = (sectionId: PublicOrdstirrRailSectionId) => {
+    const targetView = viewForPublicRailSection(sectionId)
+    setActiveSection(sectionId)
+    if (targetView === view) {
+      scrollToSection(sectionId)
+      return
+    }
+    navigate(`${publicManifestPath(username, targetView)}#${sectionId}`)
   }
 
   let body: React.ReactNode = (
@@ -661,18 +775,16 @@ export function PublicManifestPage({ view }: { view: PublicManifestView }) {
     </div>
   )
 
-  if (view === 'manifest' && manifestQuery.data) {
+  if (viewError) {
     body = (
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <ManifestView data={manifestQuery.data} />
+      <div className="flex flex-1 items-center justify-center p-8 text-sm text-muted-foreground">
+        This public profile could not be loaded.
       </div>
     )
+  } else if (view === 'manifest' && manifestQuery.data) {
+    body = <ManifestView data={manifestQuery.data} />
   } else if (view === 'journey' && journeyQuery.data) {
-    body = (
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <JourneyView data={journeyQuery.data} />
-      </div>
-    )
+    body = <JourneyView data={journeyQuery.data} />
   } else if (view === 'contact' && contactQuery.data) {
     body = (
       <ContactView
@@ -684,9 +796,20 @@ export function PublicManifestPage({ view }: { view: PublicManifestView }) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <StudioContextBar aria-label={title} title={title} actions={<GlobalSearchTrigger />} />
-      {body}
-    </div>
+    <StudioLayout
+      railLabel="Sections"
+      contextBar={
+        <StudioContextBar aria-label={title} title={title} actions={<GlobalSearchTrigger />} />
+      }
+      rail={
+        <PublicOrdstirrSectionsRail
+          sections={railSections}
+          activeSection={activeSection}
+          currentView={view}
+          onSelectSection={handleSelectSection}
+        />
+      }
+      canvas={<div className="min-h-0 flex-1 overflow-y-auto">{body}</div>}
+    />
   )
 }

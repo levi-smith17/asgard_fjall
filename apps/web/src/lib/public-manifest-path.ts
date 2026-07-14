@@ -1,16 +1,43 @@
 export type PublicManifestView = 'manifest' | 'journey' | 'contact'
 
-export function parsePublicManifestPath(
-  pathname: string,
-): { username: string; view: PublicManifestView } | null {
-  const match = pathname.match(/^\/manifest\/([^/]+)(?:\/(journey|contact))?\/?$/)
-  if (!match?.[1]) return null
-  const view = (match[2] as 'journey' | 'contact' | undefined) ?? 'manifest'
-  return { username: match[1], view }
+export type PublicManifestPathMatch = {
+  username: string
+  view: PublicManifestView
 }
 
-export function publicManifestPath(username: string, view: PublicManifestView = 'manifest'): string {
-  if (view === 'journey') return `/manifest/${username}/journey`
-  if (view === 'contact') return `/manifest/${username}/contact`
-  return `/manifest/${username}`
+/** In-app Asgard public paths (not Cairn `/manifest/.../journey|contact`). */
+export function publicManifestPath(
+  username: string,
+  view: PublicManifestView = 'manifest',
+): string {
+  if (view === 'journey') return `/ordstirr/${username}/ferd`
+  if (view === 'contact') return `/ordstirr/${username}/ordsending`
+  return `/ordstirr/${username}`
+}
+
+export function parsePublicManifestPath(pathname: string): PublicManifestPathMatch | null {
+  const asgard = pathname.match(/^\/ordstirr\/([^/]+)(?:\/(ferd|ordsending))?\/?$/)
+  if (asgard?.[1]) {
+    const segment = asgard[2]
+    const view: PublicManifestView =
+      segment === 'ferd' ? 'journey' : segment === 'ordsending' ? 'contact' : 'manifest'
+    return { username: asgard[1], view }
+  }
+
+  // Legacy Cairn paths — keep parsing so redirects can locate the view.
+  const cairn = pathname.match(/^\/manifest\/([^/]+)(?:\/(journey|contact))?\/?$/)
+  if (cairn?.[1]) {
+    const view = (cairn[2] as 'journey' | 'contact' | undefined) ?? 'manifest'
+    return { username: cairn[1], view }
+  }
+
+  return null
+}
+
+/** Map a legacy Cairn public URL onto the Asgard path (or null if not a public path). */
+export function asgardPublicPathFromLegacy(pathname: string): string | null {
+  const match = parsePublicManifestPath(pathname)
+  if (!match) return null
+  if (!pathname.startsWith('/manifest/')) return null
+  return publicManifestPath(match.username, match.view)
 }

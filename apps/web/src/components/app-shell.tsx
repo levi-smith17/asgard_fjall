@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
+  BookOpen,
   BookType,
   ExternalLink,
   Moon,
@@ -23,8 +24,7 @@ import { useTerminology } from '@/hooks/use-terminology'
 import { useTheme } from '@/hooks/use-theme'
 import { fetchCairnProfile, fetchCairnStatus } from '@/lib/cairn-api'
 import { getFjallNavItems } from '@/lib/fjall-nav'
-import { buildPublicViewLinks } from '@/lib/public-view-nav'
-import { parsePublicManifestPath } from '@/lib/public-manifest-path'
+import { parsePublicManifestPath, publicManifestPath } from '@/lib/public-manifest-path'
 import { cn } from '@/lib/utils'
 
 function themeToggleLabel(style: string, theme: string): string {
@@ -85,8 +85,8 @@ export function AppShell() {
   const avatarUrl = profileQuery.data?.image ?? null
   const avatarFallback = displayName.slice(0, 2)
   const username = profileQuery.data?.username
-  const publicLinks = username ? buildPublicViewLinks(username, terms) : []
-  const publicProfile = parsePublicManifestPath(pathname)
+  const publicOrdstirrHref = username ? publicManifestPath(username, 'manifest') : null
+  const publicViewActive = Boolean(parsePublicManifestPath(pathname))
 
   function renderNavLink(item: {
     key: string
@@ -97,7 +97,10 @@ export function AppShell() {
     external?: boolean
   }) {
     const Icon = item.icon
-    const active = item.external ? false : (item.active ?? pathname.startsWith(item.href))
+    const active = item.external
+      ? false
+      : (item.active ??
+        (item.key === 'ordstirr' ? pathname === item.href : pathname.startsWith(item.href)))
     const itemClass = cn(
       'flex w-full items-center rounded-lg text-sm font-medium transition-colors',
       isNarrow ? 'justify-center px-0 py-2.5' : 'justify-start gap-2.5 px-3 py-2',
@@ -136,6 +139,42 @@ export function AppShell() {
       </Link>
     )
 
+    if (item.key === 'ordstirr' && publicOrdstirrHref) {
+      const bookButton = (
+        <Link
+          to={publicOrdstirrHref}
+          aria-label={terms.publicViewGroup}
+          className={cn(
+            'flex shrink-0 items-center justify-center rounded-lg transition-colors',
+            isNarrow ? 'h-8 w-8' : 'h-9 w-9',
+            publicViewActive
+              ? 'bg-sidebar-accent text-sidebar-foreground-active'
+              : 'text-sidebar-foreground hover:bg-muted-hover hover:text-foreground',
+          )}
+        >
+          <BookOpen className="h-[1.125rem] w-[1.125rem]" aria-hidden />
+        </Link>
+      )
+
+      return (
+        <li
+          key={item.key}
+          className={cn(isNarrow ? 'flex flex-col items-center gap-0.5' : 'flex items-center gap-0.5')}
+        >
+          {isNarrow ? (
+            <ToolbarTooltip label={item.label} placement="right">
+              {link}
+            </ToolbarTooltip>
+          ) : (
+            <div className="min-w-0 flex-1">{link}</div>
+          )}
+          <ToolbarTooltip label={terms.publicViewGroup} placement={isNarrow ? 'right' : 'top'}>
+            {bookButton}
+          </ToolbarTooltip>
+        </li>
+      )
+    }
+
     return (
       <li key={item.key}>
         {isNarrow ? (
@@ -163,31 +202,6 @@ export function AppShell() {
               <SidebarGroupLabel narrow={isNarrow}>{terms.platformGroup}</SidebarGroupLabel>
               <ul className="space-y-0.5">{nav.map((item) => renderNavLink(item))}</ul>
             </div>
-
-            {publicLinks.length > 0 ? (
-              <div>
-                <div
-                  className={cn(
-                    'border-t border-sidebar-border',
-                    isNarrow ? '-mx-1.5 my-2' : '-mx-2 my-4',
-                  )}
-                />
-                <SidebarGroupLabel narrow={isNarrow}>
-                  {terms.publicViewGroup}
-                </SidebarGroupLabel>
-                <ul className="space-y-0.5">
-                  {publicLinks.map((item) =>
-                    renderNavLink({
-                      key: item.key,
-                      label: item.label,
-                      href: item.href,
-                      icon: item.icon,
-                      active: publicProfile?.view === item.view,
-                    }),
-                  )}
-                </ul>
-              </div>
-            ) : null}
           </nav>
 
           <div className={cn('border-t border-sidebar-border py-3', isNarrow ? 'px-2' : 'px-3')}>
