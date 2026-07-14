@@ -5,12 +5,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
 import { CommandPaletteProvider } from '@/context/command-palette-context'
 import { AuthProvider } from '@/hooks/use-auth'
-import { PaletteProvider } from '@/hooks/use-palette'
+import { PaletteProvider, bootstrapPaletteFromStorage } from '@/hooks/use-palette'
 import { ThemeProvider } from '@/hooks/use-theme'
 import { App } from './App'
 import './index.css'
 
-document.documentElement.dataset.palette = document.documentElement.dataset.palette ?? 'green'
+bootstrapPaletteFromStorage()
 document.documentElement.dataset.theme = document.documentElement.dataset.theme ?? 'dark'
 
 const queryClient = new QueryClient()

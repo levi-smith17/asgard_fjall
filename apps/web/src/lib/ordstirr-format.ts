@@ -73,24 +73,28 @@ export function buildJourneySections(data: ManifestData, terms: ManifestTerms): 
 }
 
 export function manifestPublicUrl(username: string | null | undefined, customDomain?: string | null): string | null {
+  if (!username?.trim()) return null
+  const path = `/manifest/${username.trim()}`
   const domain = customDomain?.trim()
-  if (domain) return domain.startsWith('http') ? domain : `https://${domain}`
-  if (username?.trim()) return `https://cairn.ing/manifest/${username.trim()}`
-  return null
+  if (domain) {
+    const base = (domain.startsWith('http') ? domain : `https://${domain}`).replace(/\/$/, '')
+    // Custom domain may already be a full public URL.
+    if (/\/manifest(\/|$)/i.test(base)) return base
+    return `${base}${path}`
+  }
+  return `https://cairn.ing${path}`
 }
 
 export function manifestPublicJourneyUrl(username: string | null | undefined, customDomain?: string | null): string | null {
   const manifest = manifestPublicUrl(username, customDomain)
   if (!manifest) return null
-  if (customDomain?.trim()) return `${manifest.replace(/\/$/, '')}/journey`
-  return `${manifest}/journey`
+  return `${manifest.replace(/\/$/, '')}/journey`
 }
 
 export function manifestPublicContactUrl(username: string | null | undefined, customDomain?: string | null): string | null {
   const manifest = manifestPublicUrl(username, customDomain)
   if (!manifest) return null
-  if (customDomain?.trim()) return `${manifest.replace(/\/$/, '')}/contact`
-  return `${manifest}/contact`
+  return `${manifest.replace(/\/$/, '')}/contact`
 }
 
 export function formatManifestMonth(date: string | Date | null | undefined): string {

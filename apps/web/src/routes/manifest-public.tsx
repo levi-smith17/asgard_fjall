@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { CheckCircle, ExternalLink, Globe, Mail, MapPin } from 'lucide-react'
+import { CheckCircle, ExternalLink, GitBranch, Globe, Mail, MapPin } from 'lucide-react'
 import { OrdstirrGearChart } from '@/components/cairn/ordstirr/ordstirr-gear-chart'
 import { GlobalSearchTrigger } from '@/components/core/command-palette/global-search-trigger'
 import { StudioContextBar } from '@/components/core/layout/studio-context-bar'
@@ -71,14 +71,13 @@ function ContactLinks({
   username,
   name,
   origins,
-  contactLabel,
 }: {
   username: string
   name: string | null
   origins: PublicManifestData['origins'] | PublicJourneyData['origins']
-  contactLabel: string
 }) {
-  const label = `${contactLabel} ${name ?? username}`
+  // Visitor-facing English — do not use Ordsending/terminology for this CTA.
+  const label = `Contact ${name ?? username}`
   return (
     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
       {origins?.location ? (
@@ -133,6 +132,75 @@ function ContactLinks({
   )
 }
 
+function LandmarkCard({
+  landmark,
+}: {
+  landmark: PublicManifestData['landmarks'][number]
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const [overflows, setOverflows] = useState(false)
+  const innerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = innerRef.current
+    if (el) setOverflows(el.scrollHeight > el.clientHeight)
+  }, [landmark.description, landmark.startDate])
+
+  return (
+    <div className="flex flex-col gap-2 rounded-lg border border-border bg-secondary p-4">
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-medium">{landmark.name}</p>
+        <div className="flex shrink-0 items-center gap-2">
+          {landmark.url ? (
+            <a
+              href={landmark.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+              aria-label="Open project link"
+            >
+              <ExternalLink className="h-3 w-3" aria-hidden />
+            </a>
+          ) : null}
+          {landmark.githubUrl ? (
+            <a
+              href={landmark.githubUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+              aria-label="Open GitHub repository"
+            >
+              <GitBranch className="h-3 w-3" aria-hidden />
+            </a>
+          ) : null}
+        </div>
+      </div>
+      <div ref={innerRef} className={cn('relative', !expanded && 'max-h-48 overflow-hidden')}>
+        {landmark.startDate ? (
+          <p className="text-sm text-muted-foreground">
+            {formatManifestDateRange(landmark.startDate, landmark.endDate, landmark.current)}
+          </p>
+        ) : null}
+        {landmark.description ? (
+          <RichTextContent html={landmark.description} className="text-sm text-muted-foreground" />
+        ) : null}
+        {!expanded && overflows ? (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-secondary to-transparent" />
+        ) : null}
+      </div>
+      {overflows ? (
+        <button
+          type="button"
+          onClick={() => setExpanded((current) => !current)}
+          className="self-start text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {expanded ? 'Show less' : 'Read more'}
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
 function ManifestView({ data }: { data: PublicManifestData }) {
   const { terms } = useTerminology()
   const wayfarer = data.wayfarer
@@ -164,12 +232,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
           </div>
         </div>
 
-        <ContactLinks
-          username={wayfarer.username}
-          name={wayfarer.name}
-          origins={data.origins}
-          contactLabel={terms.contact}
-        />
+        <ContactLinks username={wayfarer.username} name={wayfarer.name} origins={data.origins} />
 
         {data.origins?.summary ? (
           <RichTextContent html={data.origins.summary} className="text-muted-foreground" />
@@ -236,41 +299,26 @@ function ManifestView({ data }: { data: PublicManifestData }) {
       {data.landmarks.length > 0 ? (
         <section>
           <SectionHeading title={terms.landmarks} />
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 sm:hidden">
             {data.landmarks.map((landmark) => (
-              <div key={landmark.id} className="flex flex-col gap-1">
-                <div className="flex items-start justify-between gap-4">
-                  <p className="font-medium">
-                    {landmark.name}
-                    {landmark.url ? (
-                      <a
-                        href={landmark.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-1.5 inline-block align-middle text-muted-foreground hover:text-foreground"
-                      >
-                        <ExternalLink className="h-3 w-3" aria-hidden />
-                      </a>
-                    ) : null}
-                  </p>
-                  {landmark.startDate ? (
-                    <span className="shrink-0 text-sm text-muted-foreground">
-                      {formatManifestDateRange(
-                        landmark.startDate,
-                        landmark.endDate,
-                        landmark.current,
-                      )}
-                    </span>
-                  ) : null}
-                </div>
-                {landmark.description ? (
-                  <RichTextContent
-                    html={landmark.description}
-                    className="text-sm text-muted-foreground"
-                  />
-                ) : null}
-              </div>
+              <LandmarkCard key={landmark.id} landmark={landmark} />
             ))}
+          </div>
+          <div className="hidden gap-4 sm:flex">
+            <div className="flex flex-1 flex-col gap-4">
+              {data.landmarks
+                .filter((_, index) => index % 2 === 0)
+                .map((landmark) => (
+                  <LandmarkCard key={landmark.id} landmark={landmark} />
+                ))}
+            </div>
+            <div className="flex flex-1 flex-col gap-4">
+              {data.landmarks
+                .filter((_, index) => index % 2 === 1)
+                .map((landmark) => (
+                  <LandmarkCard key={landmark.id} landmark={landmark} />
+                ))}
+            </div>
           </div>
         </section>
       ) : null}
@@ -361,17 +409,21 @@ function JourneyView({ data }: { data: PublicJourneyData }) {
           </div>
         </div>
 
-        <ContactLinks
-          username={wayfarer.username}
-          name={wayfarer.name}
-          origins={data.origins}
-          contactLabel={terms.contact}
-        />
+        <ContactLinks username={wayfarer.username} name={wayfarer.name} origins={data.origins} />
 
-        {data.origins?.bio ? (
-          <RichTextContent html={data.origins.bio} className="text-muted-foreground" />
-        ) : null}
+        <div className="flex justify-end">
+          <Button asChild variant="outline" size="sm">
+            <Link to={publicManifestPath(wayfarer.username, 'manifest')}>{terms.manifest}</Link>
+          </Button>
+        </div>
       </div>
+
+      {data.origins?.bio ? (
+        <section>
+          <SectionHeading title={terms.bio} />
+          <RichTextContent html={data.origins.bio} className="text-muted-foreground" />
+        </section>
+      ) : null}
 
       {living.length > 0 ? (
         <section>
@@ -532,12 +584,17 @@ function ContactView({
           <Avatar src={image} alt={wayfarerName ?? username} fallback={initials} className="h-16 w-16" />
           <div>
             <h1 className="text-2xl font-semibold">
-              {terms.contact} {wayfarerName ?? username}
+              Contact {wayfarerName ?? username}
             </h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
               Send a message — your email stays private.
             </p>
           </div>
+        </div>
+        <div className="flex justify-start">
+          <Button asChild variant="outline" size="sm">
+            <Link to={publicManifestPath(username, 'manifest')}>{terms.manifest}</Link>
+          </Button>
         </div>
         <ContactForm username={username} wayfarerName={wayfarerName} />
       </div>

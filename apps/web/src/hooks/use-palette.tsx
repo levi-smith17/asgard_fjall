@@ -19,6 +19,11 @@ const PALETTE_LABELS: Record<ColorPalette, string> = {
   fjall: 'Gold',
 }
 
+const FAVICON_BY_PALETTE: Record<ColorPalette, string> = {
+  green: '/favicon.svg',
+  fjall: '/favicon-fjall.svg',
+}
+
 function readStoredPalette(): ColorPalette {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
@@ -29,8 +34,29 @@ function readStoredPalette(): ColorPalette {
   return 'green'
 }
 
+function applyFavicon(palette: ColorPalette) {
+  const href = FAVICON_BY_PALETTE[palette]
+  let link = document.querySelector<HTMLLinkElement>('link[rel="icon"][type="image/svg+xml"]')
+  if (!link) {
+    link = document.createElement('link')
+    link.rel = 'icon'
+    link.type = 'image/svg+xml'
+    document.head.appendChild(link)
+  }
+  if (link.getAttribute('href') !== href) {
+    link.setAttribute('href', href)
+  }
+}
+
 function applyPalette(palette: ColorPalette) {
   document.documentElement.dataset.palette = palette
+  applyFavicon(palette)
+}
+
+/** Apply stored palette favicon before React mounts to avoid a flash of the default green icon. */
+export function bootstrapPaletteFromStorage() {
+  const palette = readStoredPalette()
+  applyPalette(palette)
 }
 
 type PaletteContextValue = {
