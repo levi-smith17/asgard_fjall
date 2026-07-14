@@ -258,7 +258,10 @@ export function AppShell() {
 
             {publicLinks.length > 0 ? (
               <div className={cn(isNarrow ? 'mt-2' : 'mt-3')}>
-                <SidebarGroupLabel narrow={isNarrow} className="mt-1">
+                {!isNarrow ? (
+                  <div className="-mx-2 mb-3 border-t border-sidebar-border" />
+                ) : null}
+                <SidebarGroupLabel narrow={isNarrow}>
                   {terms.publicViewGroup}
                 </SidebarGroupLabel>
                 <ul className="space-y-0.5">

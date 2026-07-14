@@ -11,16 +11,25 @@ import { ContextTabButton } from '@/components/core/ui/context-tab'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { createCairnMarker, createCairnTrail, deleteCairnMarker, deleteCairnTrail, updateCairnMarker, updateCairnTrail } from '@/lib/cairn-api'
 import { useTerms } from '@/hooks/use-terminology'
+import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import { cn } from '@/lib/utils'
 
 export type CairnCatalogTab = 'greinar' | 'runir'
 
 function CatalogTabBar({ active, onChange }: { active: CairnCatalogTab; onChange: (tab: CairnCatalogTab) => void }) {
   const terms = useTerms()
+  const GreinarIcon = ASGARD_ENTITY_ICONS.greinar
+  const RunirIcon = ASGARD_ENTITY_ICONS.runir
   return (
     <nav className="flex h-14 shrink-0 border-b border-border" aria-label="Cairn catalog">
-      <ContextTabButton active={active === 'greinar'} onClick={() => onChange('greinar')} className="flex-1 justify-center text-xs">{terms.greinar}</ContextTabButton>
-      <ContextTabButton active={active === 'runir'} onClick={() => onChange('runir')} className="flex-1 justify-center text-xs">{terms.runir}</ContextTabButton>
+      <ContextTabButton active={active === 'greinar'} onClick={() => onChange('greinar')} className="flex-1 justify-center gap-1.5 text-xs">
+        <GreinarIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        {terms.greinar}
+      </ContextTabButton>
+      <ContextTabButton active={active === 'runir'} onClick={() => onChange('runir')} className="flex-1 justify-center gap-1.5 text-xs">
+        <RunirIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        {terms.runir}
+      </ContextTabButton>
     </nav>
   )
 }

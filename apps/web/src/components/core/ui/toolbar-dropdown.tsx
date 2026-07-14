@@ -71,7 +71,11 @@ export function ToolbarDropdown({ value, options, onChange, className, fullWidth
         className={cn('inline-flex h-8 items-center rounded-md border border-border bg-input text-xs font-medium text-foreground transition-colors hover:bg-muted-hover', iconOnly ? 'w-8 justify-center px-0' : fullWidth ? 'w-full justify-between gap-1.5 px-2.5' : 'max-w-[12rem] gap-1.5 px-2.5', iconOnly && value !== options[0]?.id && 'border-primary/40 bg-primary/10 text-primary')}
         aria-haspopup="listbox" aria-expanded={open} aria-label={ariaLabel ?? selected?.label ?? 'Select…'}>
         {iconOnly ? (icon ?? <ChevronDown className="h-3.5 w-3.5" />) : (
-          <><span className="truncate">{selected?.label ?? 'Select…'}</span><ChevronDown className={cn('h-3 w-3 shrink-0 opacity-70 transition-transform', open && 'rotate-180')} /></>
+          <>
+            {icon ? <span className="shrink-0 text-muted-foreground">{icon}</span> : null}
+            <span className="min-w-0 flex-1 truncate text-left">{selected?.label ?? 'Select…'}</span>
+            <ChevronDown className={cn('h-3 w-3 shrink-0 opacity-70 transition-transform', open && 'rotate-180')} />
+          </>
         )}
       </button>
       {menu}

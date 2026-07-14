@@ -1,14 +1,16 @@
-import { Plus, SlidersHorizontal } from 'lucide-react'
+import { Plus, Repeat } from 'lucide-react'
 import { Badge } from '@/components/core/ui/badge'
 import { Button } from '@/components/core/ui/button'
 import { Select } from '@/components/core/ui/select'
 import { Switch } from '@/components/core/ui/switch'
+import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { MarkerBadge } from '@/components/cairn/marker-badge'
 import { toDisplayMarker } from '@/lib/embedded-markers'
 import { toggleCairnSupplylineActive } from '@/lib/cairn-api'
 import { daysUntilRenewal, getEffectiveNextRenewal } from '@/lib/cairn-supplyline-renewal'
 import { audrFmt } from '@/lib/audr-format'
+import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
 import type { CairnSupplyline } from '@/lib/cairn-types'
@@ -48,7 +50,7 @@ export function AudrIdunnRail({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="flex h-14 min-h-14 max-h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
-        <span className="text-sm font-semibold text-foreground">{terms.subscriptions}</span>
+        <StudioRailTitle icon={Repeat}>{terms.subscriptions}</StudioRailTitle>
         <div className="flex items-center gap-1">
           <ToolbarTooltip label={`${terms.greinar} & ${terms.runir}`}>
             <button
@@ -57,7 +59,7 @@ export function AudrIdunnRail({
               onClick={onOpenCatalog}
               aria-label={`${terms.greinar} & ${terms.runir}`}
             >
-              <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
+              <ASGARD_ENTITY_ICONS.greinar className="h-3.5 w-3.5" aria-hidden />
             </button>
           </ToolbarTooltip>
           <ToolbarTooltip label={`Add ${terms.subscriptionSingular}`}>

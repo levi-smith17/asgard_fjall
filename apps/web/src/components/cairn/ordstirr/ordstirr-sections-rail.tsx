@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import { ExternalLink, Plus } from 'lucide-react'
+import { ExternalLink, Plus, Section } from 'lucide-react'
 import { Badge } from '@/components/core/ui/badge'
 import { Button } from '@/components/core/ui/button'
+import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { cn } from '@/lib/utils'
 
@@ -46,7 +47,7 @@ export function OrdstirrSectionsRail<T extends string>({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="flex h-14 min-h-14 max-h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
-        <span className="text-sm font-semibold text-foreground">Sections</span>
+        <StudioRailTitle icon={Section}>Sections</StudioRailTitle>
         <div className="flex items-center gap-0.5">
           {liveUrl ? (
             <ToolbarTooltip label="Live on Cairn">

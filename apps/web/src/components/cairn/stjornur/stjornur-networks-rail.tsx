@@ -1,5 +1,6 @@
-import { Plus, Settings } from 'lucide-react'
+import { Network, Plus, Settings } from 'lucide-react'
 import type { SfNetwork } from '@/lib/starfield-types'
+import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
 import { Button } from '@/components/core/ui/button'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { cn } from '@/lib/utils'
@@ -24,7 +25,7 @@ export function StjornurNetworksRail({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="flex h-14 min-h-14 max-h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
-        <span className="text-sm font-semibold text-foreground">Networks</span>
+        <StudioRailTitle icon={Network}>Networks</StudioRailTitle>
         <ToolbarTooltip label="Add network">
           <Button
             type="button"

@@ -1,4 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
+import { Section } from 'lucide-react'
+import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
 import { cn } from '@/lib/utils'
 
 export type ThingRailSection = {
@@ -19,7 +21,7 @@ export function ThingSectionsRail({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="flex h-14 min-h-14 max-h-14 shrink-0 items-center border-b border-border px-3">
-        <span className="text-sm font-semibold text-foreground">Sections</span>
+        <StudioRailTitle icon={Section}>Sections</StudioRailTitle>
       </div>
       <nav className="min-h-0 flex-1 overflow-y-auto p-2" aria-label="Thing settings sections">
         <ul className="space-y-1.5">

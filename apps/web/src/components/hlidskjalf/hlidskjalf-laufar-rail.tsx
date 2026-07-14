@@ -1,11 +1,13 @@
-import { Settings, SlidersHorizontal } from 'lucide-react'
+import { Bookmark, Settings } from 'lucide-react'
 import type { CairnMarkerView, CairnTrailView, CairnWaypointView } from '@/lib/cairn-types'
+import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
 import { FilterInput } from '@/components/core/ui/filter-input'
 import { MarkerPicker } from '@/components/cairn/marker-picker'
 import { MarkerColorSwatch } from '@/components/cairn/markers-list'
 import { ToolbarDropdown } from '@/components/core/ui/toolbar-dropdown'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { useTerms } from '@/hooks/use-terminology'
+import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import { secureRemoteAssetUrl } from '@/lib/cairn-format'
 import { cn } from '@/lib/utils'
 
@@ -79,7 +81,7 @@ export function HlidskjalfLaufarRail({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex h-14 min-h-14 max-h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
-        <span className="text-sm font-semibold text-foreground">{terms.laufar}</span>
+        <StudioRailTitle icon={Bookmark}>{terms.laufar}</StudioRailTitle>
         <ToolbarTooltip label={`${terms.greinar} & ${terms.runir}`}>
           <button
             type="button"
@@ -87,7 +89,7 @@ export function HlidskjalfLaufarRail({
             onClick={onOpenCatalog}
             aria-label={`${terms.greinar} & ${terms.runir}`}
           >
-            <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
+            <ASGARD_ENTITY_ICONS.greinar className="h-3.5 w-3.5" aria-hidden />
           </button>
         </ToolbarTooltip>
       </div>
@@ -104,6 +106,8 @@ export function HlidskjalfLaufarRail({
             onChange={onGreinFilterChange}
             className="min-w-0 flex-1"
             fullWidth
+            icon={<ASGARD_ENTITY_ICONS.greinar className="h-3.5 w-3.5" />}
+            ariaLabel={terms.greinar}
           />
           <div className="min-w-0 flex-1">
             <MarkerPicker
