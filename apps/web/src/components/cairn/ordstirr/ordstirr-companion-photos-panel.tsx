@@ -14,10 +14,11 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, ImagePlus, Trash2 } from 'lucide-react'
+import { GripVertical, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/core/ui/button'
 import { Input } from '@/components/core/ui/input'
+import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import {
   deleteManifestCompanionMedia,
   saveManifestCompanionMedia,
@@ -57,30 +58,40 @@ function SortableMediaCard({
       <div className="flex items-start gap-2">
         <button
           type="button"
-          className="mt-1 cursor-grab touch-none text-muted-foreground/50 hover:text-muted-foreground active:cursor-grabbing"
+          className="mt-2 cursor-grab touch-none text-muted-foreground/50 hover:text-muted-foreground active:cursor-grabbing"
           aria-label="Drag to reorder"
           {...attributes}
           {...listeners}
         >
           <GripVertical className="h-4 w-4" />
         </button>
-        <div className="relative aspect-square w-full max-w-[7.5rem] shrink-0 overflow-hidden rounded-md bg-muted">
-          {item.type === 'VIDEO' ? (
-            <video
-              src={publicCompanionMediaUrl(item.key)}
-              className="h-full w-full object-cover"
-              muted
-              playsInline
-            />
-          ) : (
-            <img
-              src={publicCompanionMediaUrl(item.key)}
-              alt={item.caption ?? name}
-              className="h-full w-full object-cover"
-            />
-          )}
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="relative aspect-square w-full overflow-hidden rounded-md bg-muted">
+            {item.type === 'VIDEO' ? (
+              <video
+                src={publicCompanionMediaUrl(item.key)}
+                className="h-full w-full object-cover"
+                muted
+                playsInline
+              />
+            ) : (
+              <img
+                src={publicCompanionMediaUrl(item.key)}
+                alt={item.caption ?? name}
+                className="h-full w-full object-cover"
+              />
+            )}
+            <ToolbarTooltip label="Remove">
+              <button
+                type="button"
+                onClick={onDelete}
+                className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-md bg-background/90 text-destructive shadow-sm backdrop-blur-sm transition-colors hover:bg-destructive hover:text-destructive-foreground"
+                aria-label="Remove photo"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </ToolbarTooltip>
+          </div>
           <Input
             defaultValue={item.caption ?? ''}
             placeholder="Caption (optional)"
@@ -90,16 +101,6 @@ function SortableMediaCard({
               if (caption !== (item.caption ?? null)) onCaptionBlur(caption)
             }}
           />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 w-full border-destructive/40 text-destructive hover:bg-destructive/10"
-            onClick={onDelete}
-          >
-            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-            Remove
-          </Button>
         </div>
       </div>
     </div>
@@ -204,20 +205,22 @@ export function OrdstirrCompanionPhotosPanel({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs text-muted-foreground">
-          Drag cards to reorder. Photos appear on Ferd Min.
+        <p className="min-w-0 text-xs text-muted-foreground">
+          Drag to reorder. Photos appear on Ferd Min.
         </p>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="h-8 shrink-0 gap-1.5"
-          disabled={uploading}
-          onClick={() => inputRef.current?.click()}
-        >
-          <ImagePlus className="h-3.5 w-3.5" />
-          {uploading ? 'Uploading…' : 'Add'}
-        </Button>
+        <ToolbarTooltip label={uploading ? 'Uploading…' : 'Add photo or video'}>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7 shrink-0"
+            disabled={uploading}
+            onClick={() => inputRef.current?.click()}
+            aria-label="Add photo or video"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </ToolbarTooltip>
         <input
           ref={inputRef}
           type="file"

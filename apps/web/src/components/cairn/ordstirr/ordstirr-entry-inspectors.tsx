@@ -28,7 +28,6 @@ import { toast } from 'sonner'
 import { Button } from '@/components/core/ui/button'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { ContextTabButton } from '@/components/core/ui/context-tab'
-import { InspectorChrome, InspectorChromeTitle } from '@/components/core/ui/inspector-chrome'
 import { SwitchField } from '@/components/core/ui/switch-field'
 import { useTerminology } from '@/hooks/use-terminology'
 import { getManifestTerms } from '@/lib/manifest-terminology'
@@ -568,9 +567,14 @@ export function OrdstirrCompanionInspector({
   if (!selected) {
     return (
       <div className="flex h-full flex-col">
-        <InspectorChrome>
-          <InspectorChromeTitle eyebrow={terms.companions} title="Inspector" />
-        </InspectorChrome>
+        <nav className="flex h-14 shrink-0 border-b border-border" aria-label="Inspector">
+          <ContextTabButton active className="flex-1 justify-center text-xs" disabled>
+            Details
+          </ContextTabButton>
+          <ContextTabButton active={false} className="flex-1 justify-center text-xs" disabled>
+            Photos
+          </ContextTabButton>
+        </nav>
         <div className="flex flex-1 items-center justify-center px-5 text-center text-sm text-muted-foreground">
           Select an entry on the canvas to edit.
         </div>
@@ -580,13 +584,6 @@ export function OrdstirrCompanionInspector({
 
   return (
     <div className="flex h-full flex-col">
-      <InspectorChrome>
-        <InspectorChromeTitle
-          eyebrow={terms.companions}
-          title={creating || isDraft ? `New ${terms.companions}` : selected.name || `Edit ${terms.companions}`}
-        />
-      </InspectorChrome>
-
       <nav className="flex h-14 shrink-0 border-b border-border" aria-label="Inspector">
         <ContextTabButton
           active={tab === 'details'}
@@ -607,9 +604,16 @@ export function OrdstirrCompanionInspector({
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
         {tab === 'details' ? (
           <>
-            <p className="text-xs text-muted-foreground">
-              Edit descriptions on the canvas. Metadata fields save here.
-            </p>
+            <div>
+              <p className="truncate text-sm font-semibold text-foreground">
+                {creating || isDraft
+                  ? `New ${terms.companions}`
+                  : selected.name || `Edit ${terms.companions}`}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Edit descriptions on the canvas. Metadata fields save here.
+              </p>
+            </div>
             <ManifestTextField
               label="Name"
               value={selected.name}

@@ -110,22 +110,144 @@ export function CalendarSkeleton() {
 
 export function OrdstirrPageSkeleton() {
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-6">
-        <Block className="h-5 w-28" />
-        <Block className="ml-auto h-7 w-20" />
+    <div className="flex min-h-0 flex-1 overflow-hidden">
+      <div className="hidden w-[260px] shrink-0 flex-col border-r border-border lg:flex">
+        <OrdstirrSectionsRailSkeleton />
       </div>
-      <div className="flex min-h-0 flex-1">
-        <div className="w-56 shrink-0 border-r border-border p-4 space-y-2">
-          {Array.from({ length: 7 }).map((_, i) => <Block key={i} className="h-8 w-full rounded" />)}
+      <OrdstirrCanvasSkeleton />
+    </div>
+  )
+}
+
+/** Canvas-only skeleton for the Ordstirr editor (rail provided separately). */
+export function OrdstirrCanvasSkeleton() {
+  return (
+    <div className="min-w-0 flex-1 space-y-6 overflow-hidden p-6">
+      <div className="flex items-center gap-4">
+        <Block className="h-20 w-20 shrink-0 rounded-full" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <Block className="h-6 w-48" />
+          <Block className="h-4 w-64 max-w-full" />
         </div>
-        <div className="flex-1 px-8 py-6 space-y-6">
-          <Block className="h-8 w-48" />
-          <div className="space-y-3">
-            {Array.from({ length: 4 }).map((_, i) => <Block key={i} className={cn('h-24 w-full rounded-lg', i % 2 === 1 && 'opacity-60')} />)}
+      </div>
+      <div className="space-y-3">
+        <Block className="h-4 w-24" />
+        <Block className="h-4 w-full max-w-xl" />
+        <Block className="h-4 w-5/6 max-w-lg" />
+        <Block className="h-28 w-full max-w-2xl" />
+      </div>
+      <div className="space-y-3">
+        <Block className="h-4 w-28" />
+        <Block className="h-16 w-full max-w-2xl" />
+        <Block className="h-16 w-full max-w-2xl" />
+      </div>
+    </div>
+  )
+}
+
+/** Sections rail skeleton matching editor Ordstirr rail chrome. */
+export function OrdstirrSectionsRailSkeleton() {
+  return (
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="flex h-14 min-h-14 max-h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
+        <Block className="h-4 w-24" />
+        <div className="flex items-center gap-0.5">
+          <Block className="h-7 w-7 rounded-md" />
+          <Block className="h-7 w-7 rounded-md" />
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 space-y-3 overflow-hidden px-2 py-3">
+        <Block className="mx-1 h-2.5 w-16" />
+        <RailListSkeleton rows={5} />
+        <div className="my-1 border-t border-border" />
+        <Block className="mx-1 h-2.5 w-20" />
+        <RailListSkeleton rows={3} />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Public Ordstirr canvas skeleton — keeps the real public sections rail;
+ * only the document column is pulsing.
+ */
+export function PublicOrdstirrCanvasSkeleton({
+  view = 'manifest',
+}: {
+  view?: 'manifest' | 'journey' | 'contact'
+}) {
+  if (view === 'contact') {
+    return (
+      <div className="flex min-h-0 flex-1 items-start justify-center overflow-hidden px-4 py-8">
+        <div className="flex w-full max-w-md flex-col gap-6 rounded-xl bg-muted/50 p-6">
+          <div className="flex items-center gap-4">
+            <Block className="h-16 w-16 shrink-0 rounded-full" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Block className="h-6 w-40" />
+              <Block className="h-3.5 w-56 max-w-full" />
+            </div>
+          </div>
+          <FormFieldsSkeleton fields={4} />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-6">
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Block className="h-20 w-20 shrink-0 rounded-full" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <Block className="h-7 w-48" />
+            <Block className="h-4 w-64 max-w-full" />
           </div>
         </div>
+        <div className="flex flex-wrap gap-4">
+          <Block className="h-4 w-28" />
+          <Block className="h-4 w-32" />
+          <Block className="h-4 w-24" />
+        </div>
       </div>
+      {view === 'journey' ? (
+        <>
+          <div className="space-y-3">
+            <Block className="h-5 w-28" />
+            <Block className="h-4 w-full" />
+            <Block className="h-4 w-5/6" />
+            <Block className="h-4 w-4/5" />
+          </div>
+          <div className="space-y-4">
+            <Block className="h-5 w-32" />
+            <Block className="h-64 w-full rounded-lg" />
+            <Block className="h-64 w-full rounded-lg" />
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="space-y-3">
+            <Block className="h-5 w-28" />
+            <div className="space-y-4 border-l-2 border-border pl-4">
+              <Block className="h-4 w-40" />
+              <Block className="h-3.5 w-56" />
+              <Block className="h-3.5 w-full max-w-lg" />
+            </div>
+            <div className="space-y-4 border-l-2 border-border pl-4">
+              <Block className="h-4 w-36" />
+              <Block className="h-3.5 w-48" />
+              <Block className="h-3.5 w-5/6 max-w-md" />
+            </div>
+          </div>
+          <div className="space-y-3">
+            <Block className="h-5 w-20" />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+              <Block className="h-28 w-full rounded-lg" />
+              <Block className="h-28 w-full rounded-lg" />
+              <Block className="h-28 w-full rounded-lg" />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

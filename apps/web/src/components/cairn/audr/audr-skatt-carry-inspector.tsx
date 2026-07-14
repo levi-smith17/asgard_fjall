@@ -162,7 +162,11 @@ export function AudrSkattCarryInspector({
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {sourceQuery.isLoading ? (
-          <p className="px-5 py-8 text-center text-sm text-muted-foreground">Loading…</p>
+          <div className="space-y-1 px-3 py-3">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <div key={index} className="h-10 animate-pulse rounded-md bg-muted" />
+            ))}
+          </div>
         ) : sourceItems.length === 0 ? (
           <p className="px-5 py-8 text-center text-sm text-muted-foreground">
             No {terms.budgets.toLowerCase()} in {sourceName}.

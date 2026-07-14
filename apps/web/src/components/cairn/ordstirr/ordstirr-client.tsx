@@ -2,7 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { OrdstirrPageSkeleton } from '@/components/core/ui/studio-skeletons'
+import {
+  OrdstirrCanvasSkeleton,
+  OrdstirrSectionsRailSkeleton,
+} from '@/components/core/ui/studio-skeletons'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
 import { CairnNotConfiguredNotice } from '@/components/cairn/cairn-not-configured'
 import { fetchCairnFullSettings, fetchCairnStatus } from '@/lib/cairn-api'
@@ -663,7 +666,9 @@ export function OrdstirrWorkspace() {
         />
       }
       rail={
-        configured && draft && !loading ? (
+        loading || !configured || !draft ? (
+          <OrdstirrSectionsRailSkeleton />
+        ) : (
           <OrdstirrSectionsRail
             groups={railGroups}
             activeSection={activeRailSection}
@@ -674,11 +679,11 @@ export function OrdstirrWorkspace() {
             onAddSection={handleRailAddSection}
             liveUrl={canvasView === 'journey' ? publicJourneyUrl : publicUrl}
           />
-        ) : undefined
+        )
       }
       canvas={
         loading ? (
-          <OrdstirrPageSkeleton />
+          <OrdstirrCanvasSkeleton />
         ) : !configured ? (
           <CairnNotConfiguredNotice />
         ) : !draft ? (

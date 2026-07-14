@@ -16,6 +16,7 @@ import { PublicOrdstirrSectionsRail } from '@/components/cairn/ordstirr/public-o
 import { GlobalSearchTrigger } from '@/components/core/command-palette/global-search-trigger'
 import { StudioContextBar } from '@/components/core/layout/studio-context-bar'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
+import { PublicOrdstirrCanvasSkeleton } from '@/components/core/ui/studio-skeletons'
 import { Avatar } from '@/components/core/ui/avatar'
 import { Button } from '@/components/core/ui/button'
 import { Input } from '@/components/core/ui/input'
@@ -795,11 +796,7 @@ export function PublicManifestPage({ view }: { view: PublicManifestView }) {
     navigate(`${publicManifestPath(username, targetView)}#${sectionId}`)
   }
 
-  let body: React.ReactNode = (
-    <div className="flex flex-1 items-center justify-center p-8 text-sm text-muted-foreground">
-      Loading…
-    </div>
-  )
+  let body: React.ReactNode = <PublicOrdstirrCanvasSkeleton view={view} />
 
   if (viewError) {
     body = (
