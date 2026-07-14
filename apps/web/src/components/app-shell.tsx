@@ -168,7 +168,7 @@ export function AppShell() {
           ) : (
             <div className="min-w-0 flex-1">{link}</div>
           )}
-          <ToolbarTooltip label={terms.publicViewGroup} placement={isNarrow ? 'right' : 'top'}>
+          <ToolbarTooltip label={terms.publicViewGroup} placement={isNarrow ? 'right' : 'above'}>
             {bookButton}
           </ToolbarTooltip>
         </li>
