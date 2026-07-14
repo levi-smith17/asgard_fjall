@@ -38,7 +38,7 @@ import {
 } from '@/lib/ordstirr-format'
 import { publicCompanionMediaUrl } from '@/lib/public-media-url'
 import {
-  buildPublicOrdstirrRailSections,
+  buildPublicOrdstirrRailGroups,
   type PublicOrdstirrRailSectionId,
   viewForPublicRailSection,
 } from '@/lib/public-ordstirr-rail'
@@ -736,10 +736,7 @@ export function PublicManifestPage({ view }: { view: PublicManifestView }) {
     retry: false,
   })
 
-  const railSections = useMemo(
-    () => buildPublicOrdstirrRailSections(terms, manifestQuery.data, journeyQuery.data),
-    [journeyQuery.data, manifestQuery.data, terms],
-  )
+  const railGroups = useMemo(() => buildPublicOrdstirrRailGroups(terms), [terms])
 
   useEffect(() => {
     const fromHash = hash.replace(/^#/, '') as PublicOrdstirrRailSectionId
@@ -748,9 +745,11 @@ export function PublicManifestPage({ view }: { view: PublicManifestView }) {
       scrollToSection(fromHash)
       return
     }
-    const firstOnPage = railSections.find((section) => section.view === view)
+    const firstOnPage = railGroups
+      .find((group) => group.id === view)
+      ?.sections[0]
     setActiveSection(firstOnPage?.id ?? null)
-  }, [hash, railSections, view])
+  }, [hash, railGroups, view])
 
   if (!username) return <Navigate to="/" replace />
 
@@ -803,7 +802,7 @@ export function PublicManifestPage({ view }: { view: PublicManifestView }) {
       }
       rail={
         <PublicOrdstirrSectionsRail
-          sections={railSections}
+          groups={railGroups}
           activeSection={activeSection}
           currentView={view}
           onSelectSection={handleSelectSection}

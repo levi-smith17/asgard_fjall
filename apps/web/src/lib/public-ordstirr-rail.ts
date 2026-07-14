@@ -11,7 +11,6 @@ import {
   PawPrint,
   ScrollText,
 } from 'lucide-react'
-import type { PublicJourneyData, PublicManifestData } from '@/lib/manifest-public-api'
 import type { PublicManifestView } from '@/lib/public-manifest-path'
 import type { Terms } from '@/lib/terminology'
 
@@ -33,7 +32,12 @@ export type PublicOrdstirrRailSection = {
   label: string
   icon: LucideIcon
   view: PublicManifestView
-  count: number | null
+}
+
+export type PublicOrdstirrRailGroup = {
+  id: PublicManifestView
+  label: string
+  sections: PublicOrdstirrRailSection[]
 }
 
 const MANIFEST_SECTION_META: Array<{
@@ -53,72 +57,36 @@ const MANIFEST_SECTION_META: Array<{
   { id: 'pathfinding', icon: Compass, termKey: 'pathfinding' },
 ]
 
-/** Ordered rail covering Ordstirr → Ferd Min → Ordsending. */
-export function buildPublicOrdstirrRailSections(
-  terms: Terms,
-  manifest: PublicManifestData | null | undefined,
-  journey: PublicJourneyData | null | undefined,
-): PublicOrdstirrRailSection[] {
-  const living = (journey?.companions ?? []).filter((companion) => !companion.passed)
-  const memorial = (journey?.companions ?? []).filter((companion) => Boolean(companion.passed))
-
-  const manifestCounts: Record<
-    Extract<
-      PublicOrdstirrRailSectionId,
-      'origins' | 'expeditions' | 'training' | 'gear' | 'landmarks' | 'summits' | 'pathfinding'
-    >,
-    number | null
-  > = {
-    origins: null,
-    expeditions: manifest?.expeditions.length ?? null,
-    training: manifest?.training.length ?? null,
-    gear: manifest?.gear.length ?? null,
-    landmarks: manifest?.landmarks.length ?? null,
-    summits: manifest?.summits.length ?? null,
-    pathfinding: manifest?.pathfinding.length ?? null,
-  }
-
-  const manifestSections = MANIFEST_SECTION_META.map((section) => ({
-    id: section.id,
-    label: String(terms[section.termKey]),
-    icon: section.icon,
-    view: 'manifest' as const,
-    count: manifestCounts[section.id],
-  }))
-
-  const journeySections: PublicOrdstirrRailSection[] = [
+/** Ordered rail groups: Ordstirr → Ferd Min → Ordsending. */
+export function buildPublicOrdstirrRailGroups(terms: Terms): PublicOrdstirrRailGroup[] {
+  return [
     {
-      id: 'bio',
-      label: terms.bio,
-      icon: ScrollText,
-      view: 'journey',
-      count: null,
+      id: 'manifest',
+      label: terms.manifest,
+      sections: MANIFEST_SECTION_META.map((section) => ({
+        id: section.id,
+        label: String(terms[section.termKey]),
+        icon: section.icon,
+        view: 'manifest' as const,
+      })),
     },
     {
-      id: 'companions',
-      label: terms.companions,
-      icon: PawPrint,
-      view: 'journey',
-      count: living.length || null,
+      id: 'journey',
+      label: terms.bio_button,
+      sections: [
+        { id: 'bio', label: terms.bio, icon: ScrollText, view: 'journey' },
+        { id: 'companions', label: terms.companions, icon: PawPrint, view: 'journey' },
+        { id: 'in-memoriam', label: terms.summit_reached, icon: Award, view: 'journey' },
+      ],
     },
     {
-      id: 'in-memoriam',
-      label: terms.summit_reached,
-      icon: Award,
-      view: 'journey',
-      count: memorial.length || null,
+      id: 'contact',
+      label: terms.contact,
+      sections: [
+        { id: 'ordsending', label: terms.contact, icon: Mail, view: 'contact' },
+      ],
     },
   ]
-
-  const contactSection: PublicOrdstirrRailSection = {
-    id: 'ordsending',
-    label: terms.contact,
-    icon: Mail,
-    view: 'contact',
-    count: null,
-  }
-
-  return [...manifestSections, ...journeySections, contactSection]
 }
 
 export function viewForPublicRailSection(
