@@ -67,8 +67,19 @@ export function AudrFilterBar({
       search.trim().length > 0 || markerFilter !== 'all' || sjodrFilter !== 'all' || groupBy !== 'run',
   )
 
+  const sjodrChipOptions = [
+    { value: 'all', label: `All ${terms.sjodr}` },
+    { value: AUDR_UNASSIGNED_SJODR, label: 'Unassigned' },
+    ...funds.map((fund) => ({ value: fund.id, label: fund.name })),
+  ]
+
   return (
-    <div className={cn(STUDIO_CONTEXT_BAR_CLASS, 'z-30')}>
+    <div
+      className={cn(
+        STUDIO_CONTEXT_BAR_CLASS,
+        'z-30 h-auto min-h-14 max-h-none flex-col items-stretch gap-2 py-2 sm:max-h-none',
+      )}
+    >
       <div className="flex w-full min-w-0 items-center gap-2">
         <span className="shrink-0 text-sm font-semibold text-foreground">{terms.expenses}</span>
         <StudioPagination
@@ -113,11 +124,7 @@ export function AudrFilterBar({
                   <Select
                     value={sjodrFilter}
                     onChange={onSjodrFilterChange}
-                    options={[
-                      { value: 'all', label: `All ${terms.sjodr}` },
-                      { value: AUDR_UNASSIGNED_SJODR, label: 'Unassigned' },
-                      ...funds.map((fund) => ({ value: fund.id, label: fund.name })),
-                    ]}
+                    options={sjodrChipOptions}
                   />
                 </FilterPaletteField>
                 <FilterPaletteField label="Group">
@@ -165,6 +172,33 @@ export function AudrFilterBar({
           </ToolbarTooltip>
         </div>
       </div>
+
+      {funds.length > 0 ? (
+        <div
+          className="flex w-full min-w-0 items-center gap-1.5 overflow-x-auto pb-0.5"
+          role="group"
+          aria-label={`Filter ${terms.budgets} by ${terms.sjodrSingular}`}
+        >
+          {sjodrChipOptions.map((option) => {
+            const active = sjodrFilter === option.value
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => onSjodrFilterChange(option.value)}
+                className={cn(
+                  'shrink-0 rounded-md border px-2.5 py-1 text-xs transition-colors',
+                  active
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground',
+                )}
+              >
+                {option.label}
+              </button>
+            )
+          })}
+        </div>
+      ) : null}
     </div>
   )
 }

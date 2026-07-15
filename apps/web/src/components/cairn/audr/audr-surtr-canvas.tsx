@@ -172,7 +172,7 @@ export function AudrSurtrCanvas({
 
                 return (
                   <div key={section.fundId ?? AUDR_UNASSIGNED_SJODR}>
-                    <div className="sticky top-0 z-[2] border-b border-border bg-background/95 px-4 py-2.5 backdrop-blur-sm sm:px-6">
+                    <div className="pointer-events-none sticky top-0 z-[2] border-b border-border bg-background/95 px-4 py-2.5 backdrop-blur-sm sm:px-6">
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-foreground">
@@ -310,7 +310,7 @@ function SkattGroupBlock({
     <div>
       <div
         className={cn(
-          'flex items-start gap-2 border-b border-border bg-muted/90 px-4 py-2 backdrop-blur-sm sm:px-6',
+          'pointer-events-none flex items-start gap-2 border-b border-border bg-muted/90 px-4 py-2 backdrop-blur-sm sm:px-6',
           stickyClassName,
         )}
       >
@@ -318,16 +318,21 @@ function SkattGroupBlock({
           type="button"
           data-inspectable
           onClick={() => {
-            if (cache) onSelectCache(cache.id)
+            if (cache?.id) onSelectCache(cache.id)
             else onSelectCacheMarker(markerId)
           }}
-          className="min-w-0 flex-1 text-left transition-colors hover:opacity-80"
+          className="pointer-events-auto min-w-0 flex-1 text-left transition-colors hover:opacity-80"
         >
           <div className="flex items-center justify-between gap-3">
-            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {label}
+            <span className="flex min-w-0 flex-wrap items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <span className="truncate">{label}</span>
               {groupBurns.length > 0 ? (
-                <span className="ml-2 font-normal normal-case">({groupBurns.length})</span>
+                <span className="font-normal normal-case">({groupBurns.length})</span>
+              ) : null}
+              {showFundBadge && cache?.fundId ? (
+                <span className="inline-flex max-w-[10rem] truncate rounded-full bg-background/80 px-1.5 py-0.5 text-[10px] font-normal normal-case tracking-normal text-muted-foreground">
+                  {fundNameById.get(cache.fundId) ?? 'Fund'}
+                </span>
               ) : null}
             </span>
             <div className="flex shrink-0 items-center gap-3">
@@ -360,7 +365,7 @@ function SkattGroupBlock({
           type="button"
           variant="outline"
           size="icon"
-          className="mt-0.5 h-9 w-9 shrink-0"
+          className="pointer-events-auto mt-0.5 h-9 w-9 shrink-0"
           title={`Add ${terms.expenseSingular}`}
           aria-label={`Add ${terms.expenseSingular}`}
           onClick={() => onAddBurn(markerId === 'uncategorized' ? undefined : markerId)}
