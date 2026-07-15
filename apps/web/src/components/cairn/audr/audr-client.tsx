@@ -22,6 +22,7 @@ import { totalEffectiveSkattUtilization } from '@/lib/audr-skatt-idunn'
 import { useTerms } from '@/hooks/use-terminology'
 import { AudrContextBar } from './audr-context-bar'
 import { AudrIdunnRail } from './audr-idunn-rail'
+import { AudrLaufarInspector } from './audr-laufar-inspector'
 import { AudrSurtrCanvas } from './audr-surtr-canvas'
 import { AudrInspector } from './audr-inspector'
 import type { AudrSelection } from './audr-types'
@@ -31,6 +32,10 @@ type CatalogState = {
   selectedId: string | null
   markerPath: string[]
   markerParent: string | null
+}
+
+type LaufarManageState = {
+  selectedId: string | null
 }
 
 export function AudrPageSkeleton() {
@@ -70,6 +75,7 @@ export function AudrClient() {
 
   const [selection, setSelection] = useState<AudrSelection | null>(null)
   const [catalog, setCatalog] = useState<CatalogState | null>(null)
+  const [laufarManage, setLaufarManage] = useState<LaufarManageState | null>(null)
   const [burnPage, setBurnPage] = useState(1)
 
   const markersQuery = useQuery({
@@ -194,18 +200,34 @@ export function AudrClient() {
 
   const clearSelection = useCallback(() => setSelection(null), [])
   const clearCatalog = useCallback(() => setCatalog(null), [])
+  const clearLaufarManage = useCallback(() => setLaufarManage(null), [])
+  const provisionsRootPath = useMemo(() => [terms.provisionsGroup], [terms.provisionsGroup])
 
   const openCatalog = useCallback(() => {
     setSelection(null)
-    setCatalog({ tab: 'greinar', selectedId: null, markerPath: [], markerParent: null })
+    setLaufarManage(null)
+    setCatalog({
+      tab: 'runir',
+      selectedId: null,
+      markerPath: provisionsRootPath,
+      markerParent: null,
+    })
+  }, [provisionsRootPath])
+
+  const openLaufarManage = useCallback(() => {
+    setSelection(null)
+    setCatalog(null)
+    setLaufarManage({ selectedId: null })
   }, [])
 
   const selectEntity = useCallback((next: AudrSelection) => {
     setCatalog(null)
+    setLaufarManage(null)
     setSelection(next)
   }, [])
 
-  const inspectorOpen = inspectorPinned || selection != null || catalog != null
+  const inspectorOpen =
+    inspectorPinned || selection != null || catalog != null || laufarManage != null
   const inspectorState = inspectorOpen ? 'open' : 'hint'
 
   const selectedBurn =
@@ -246,25 +268,47 @@ export function AudrClient() {
 
   const handleCanvasPointerDown = useCallback(
     (event: React.PointerEvent) => {
-      if (inspectorPinned || (selection == null && catalog == null)) return
+      if (inspectorPinned || (selection == null && catalog == null && laufarManage == null)) return
       const target = event.target as HTMLElement
       if (target.closest('[data-inspectable]')) return
       clearSelection()
       clearCatalog()
+      clearLaufarManage()
     },
-    [inspectorPinned, selection, catalog, clearSelection, clearCatalog],
+    [
+      inspectorPinned,
+      selection,
+      catalog,
+      laufarManage,
+      clearSelection,
+      clearCatalog,
+      clearLaufarManage,
+    ],
   )
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape' && !inspectorPinned && (selection || catalog)) {
+      if (
+        event.key === 'Escape' &&
+        !inspectorPinned &&
+        (selection || catalog || laufarManage)
+      ) {
         clearSelection()
         clearCatalog()
+        clearLaufarManage()
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [inspectorPinned, selection, catalog, clearSelection, clearCatalog])
+  }, [
+    inspectorPinned,
+    selection,
+    catalog,
+    laufarManage,
+    clearSelection,
+    clearCatalog,
+    clearLaufarManage,
+  ])
 
   const isLoading =
     markersQuery.isLoading ||
@@ -328,6 +372,7 @@ export function AudrClient() {
               setMarkerFilter('all')
             }}
             onBringSkatt={() => selectEntity({ kind: 'skatt-carry' })}
+            onManageLaufar={openLaufarManage}
             burns={burnItems}
             cacheUtilization={cacheUtilization}
             supplylines={skattSupplylines}
@@ -354,15 +399,22 @@ export function AudrClient() {
       inspectorState={inspectorState}
       inspectorHint={
         catalog
-          ? `${terms.greinar} & ${terms.runir}`
-          : `Select ${terms.expenses.toLowerCase()}, ${terms.subscriptions.toLowerCase()}, or ${terms.budgets.toLowerCase()} to inspect`
+          ? terms.runir
+          : laufarManage
+            ? `${terms.provisionsGroup} ${terms.laufar}`
+            : `Select ${terms.expenses.toLowerCase()}, ${terms.subscriptions.toLowerCase()}, or ${terms.budgets.toLowerCase()} to inspect`
       }
       inspector={
         catalog ? (
           <CairnCatalogInspector
             activeTab={catalog.tab}
             onTabChange={(tab) =>
-              setCatalog({ tab, selectedId: null, markerPath: [], markerParent: null })
+              setCatalog({
+                tab,
+                selectedId: null,
+                markerPath: provisionsRootPath,
+                markerParent: null,
+              })
             }
             trails={trails}
             markers={markers}
@@ -382,6 +434,18 @@ export function AudrClient() {
               setCatalog((current) =>
                 current ? { ...current, selectedId: null, markerParent: null } : current,
               )
+            }
+            lockedTab="runir"
+            rootMarkerPath={provisionsRootPath}
+          />
+        ) : laufarManage ? (
+          <AudrLaufarInspector
+            trails={trails}
+            markers={markers}
+            rootMarkerName={terms.provisionsGroup}
+            selectedId={laufarManage.selectedId}
+            onSelectId={(id) =>
+              setLaufarManage((current) => (current ? { ...current, selectedId: id } : current))
             }
           />
         ) : selection ? (

@@ -5,7 +5,7 @@ import { Button } from '@/components/core/ui/button'
 import { MarkerPicker } from '@/components/cairn/marker-picker'
 import { saveCairnCache } from '@/lib/cairn-api'
 import { useFormStatus } from '@/hooks/use-form-status'
-import type { CairnCacheUtilization } from '@/lib/cairn-types'
+import type { CairnCacheUtilization } from '@asgard/types'
 import { useTerms } from '@/hooks/use-terminology'
 import type { AudrSaveActionRef } from './inline-burn-form'
 
@@ -38,6 +38,11 @@ export function InlineCacheForm({
   const { saving, handleSubmit } = useFormStatus()
   const [markerId, setMarkerId] = useState(cache?.markerId ?? defaultMarkerId ?? '')
   const [limit, setLimit] = useState(cache?.limit != null ? String(cache.limit) : '')
+
+  useEffect(() => {
+    setMarkerId(cache?.markerId ?? defaultMarkerId ?? '')
+    setLimit(cache?.limit != null ? String(cache.limit) : '')
+  }, [cache?.id, defaultMarkerId])
 
   async function save() {
     if (!markerId || !limit) {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { CairnMarkerView, CairnTrailView, CairnWaypointView } from '@/lib/cairn-types'
+import type { CairnMarkerView, CairnTrailView, CairnWaypointView } from '@asgard/types'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { Input } from '@/components/core/ui/input'
 import {
@@ -39,6 +39,9 @@ export function WaypointInspector({
   onSave,
   onDelete,
   isSaving,
+  markerPickerInitialPath,
+  defaultMarkerIds,
+  showBack = false,
 }: {
   waypoint: CairnWaypointView | null
   isNew: boolean
@@ -48,15 +51,30 @@ export function WaypointInspector({
   onSave: (draft: WaypointDraft) => Promise<void>
   onDelete: () => Promise<void>
   isSaving: boolean
+  markerPickerInitialPath?: string[]
+  /** Applied once when creating a new lauf and no markers are set yet. */
+  defaultMarkerIds?: string[]
+  showBack?: boolean
 }) {
   const terms = useTerms()
-  const [draft, setDraft] = useState<WaypointDraft>(() => draftFromWaypoint(waypoint))
+  const [draft, setDraft] = useState<WaypointDraft>(() => {
+    const initial = draftFromWaypoint(waypoint)
+    if (isNew && defaultMarkerIds?.length && initial.markerIds.length === 0) {
+      return { ...initial, markerIds: defaultMarkerIds }
+    }
+    return initial
+  })
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [fetchingMeta, setFetchingMeta] = useState(false)
 
   useEffect(() => {
-    setDraft(draftFromWaypoint(waypoint))
-  }, [waypoint])
+    const next = draftFromWaypoint(waypoint)
+    if (isNew && defaultMarkerIds?.length && next.markerIds.length === 0) {
+      setDraft({ ...next, markerIds: defaultMarkerIds })
+      return
+    }
+    setDraft(next)
+  }, [waypoint, isNew, defaultMarkerIds])
 
   async function handleUrlBlur() {
     const url = draft.url.trim()
@@ -86,7 +104,9 @@ export function WaypointInspector({
     icon: marker.icon,
   }))
 
-  const headerTitle = isNew ? `New ${terms.laufarSingular}` : `Edit ${terms.laufarSingular}`
+  const headerTitle = isNew
+    ? `New ${terms.laufarSingular}`
+    : `Edit ${terms.laufarSingular}`
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -94,9 +114,9 @@ export function WaypointInspector({
         title={headerTitle}
         icon={ASGARD_ENTITY_ICONS.laufar}
         onBack={onClose}
-        showBack={false}
+        showBack={showBack}
       />
-      <div className="min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-4 py-4">
+      <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-4 py-4">
         <label className="block space-y-1.5">
           <span className="text-xs font-medium text-muted-foreground">Title</span>
           <Input
@@ -149,6 +169,7 @@ export function WaypointInspector({
               selected={draft.markerIds}
               onChange={setMarkerIds}
               placeholder={`Select ${terms.runir.toLowerCase()}`}
+              initialPath={markerPickerInitialPath}
             />
           </label>
         ) : null}

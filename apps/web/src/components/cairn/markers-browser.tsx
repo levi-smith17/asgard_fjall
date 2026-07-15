@@ -1,106 +1,374 @@
 import { useMemo } from 'react'
 import { ChevronLeft, ChevronRight, Plus, Tag } from 'lucide-react'
-import type { CairnMarkerView } from '@/lib/cairn-types'
+import type { CairnMarkerView } from '@asgard/types'
 import { Button } from '@/components/core/ui/button'
 import { FilterInput } from '@/components/core/ui/filter-input'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
-import { buildMarkerTree, getAllLeafIds, getAllLeaves, getNodesAtPath } from '@/lib/marker-groups'
+import {
+  buildMarkerTree,
+  getAllLeafIds,
+  getAllLeaves,
+  getNodesAtPath,
+} from '@/lib/marker-groups'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
 
-export type MarkerParentContext = { name: string; color: string; icon: string | null }
+export type MarkerParentContext = {
+  name: string
+  color: string
+  icon: string | null
+}
 
 export function MarkersBrowser({
-  markers, search, onSearchChange, groupPath, selectedId, onSelect, onNew, onNewSubmarker, onNavigateInto,
+  markers,
+  search,
+  onSearchChange,
+  groupPath,
+  selectedId,
+  onSelect,
+  onNew,
+  onNewSubmarker,
+  onNavigateInto,
+  rootPath = [],
 }: {
-  markers: CairnMarkerView[]; search: string; onSearchChange?: (v: string) => void; groupPath: string[]; selectedId: string | null; onSelect: (id: string) => void; onNew: () => void; onNewSubmarker: (parent: MarkerParentContext) => void; onNavigateInto: (path: string[]) => void
+  markers: CairnMarkerView[]
+  search: string
+  onSearchChange?: (value: string) => void
+  groupPath: string[]
+  selectedId: string | null
+  onSelect: (id: string) => void
+  onNew: () => void
+  onNewSubmarker: (parent: MarkerParentContext) => void
+  onNavigateInto: (path: string[]) => void
+  /** When set, navigation cannot go above this path (e.g. `['Provisions']`). */
+  rootPath?: string[]
 }) {
   const terms = useTerms()
   const tree = useMemo(() => buildMarkerTree(markers), [markers])
-  const markerMap = useMemo(() => new Map(markers.map((m) => [m.id, m])), [markers])
+  const markerMap = useMemo(() => new Map(markers.map((marker) => [marker.id, marker])), [markers])
   const currentNodes = useMemo(() => getNodesAtPath(tree, groupPath), [tree, groupPath])
   const allLeaves = useMemo(() => getAllLeaves(tree), [tree])
+  const canGoBack = groupPath.length > rootPath.length
+  const atRoot = rootPath.length > 0 && groupPath.length === rootPath.length
 
   const isSearching = search.trim().length > 0
   const searchResults = useMemo(() => {
     if (!isSearching) return []
     const query = search.toLowerCase()
-    return allLeaves.map(({ leaf }) => markerMap.get(leaf.id)).filter((m): m is CairnMarkerView => !!m && m.name.toLowerCase().includes(query))
-  }, [allLeaves, markerMap, search, isSearching])
+    const rootPrefix = rootPath.length > 0 ? `${rootPath.join('/')}/` : null
+    const rootName = rootPath.length > 0 ? rootPath.join('/') : null
+    return allLeaves
+      .map(({ leaf }) => markerMap.get(leaf.id))
+      .filter((marker): marker is CairnMarkerView => {
+        if (!marker || !marker.name.toLowerCase().includes(query)) return false
+        if (!rootName) return true
+        return marker.name === rootName || marker.name.startsWith(rootPrefix!)
+      })
+  }, [allLeaves, markerMap, search, isSearching, rootPath])
 
-  const currentGroupMarker = groupPath.length > 0 ? markers.find((m) => m.name === groupPath.join('/')) ?? null : null
+  const currentGroupMarker =
+    groupPath.length > 0 ? markers.find((marker) => marker.name === groupPath.join('/')) ?? null : null
   const groupMarkerCount = useMemo(() => getAllLeafIds(currentNodes).length, [currentNodes])
-  const countLabel = isSearching ? `${searchResults.length} result${searchResults.length === 1 ? '' : 's'}` : groupPath.length === 0 ? `${markers.length} total` : `${groupMarkerCount} total in ${groupPath[groupPath.length - 1]}`
+
+  const countLabel = isSearching
+    ? `${searchResults.length} result${searchResults.length === 1 ? '' : 's'}`
+    : groupPath.length === 0
+      ? `${markers.length} total`
+      : `${groupMarkerCount} total in ${groupPath[groupPath.length - 1]}`
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="shrink-0">
         <div className="flex items-center gap-2 border-b border-border px-4 py-2">
-          {groupPath.length > 0 ? (
-            <ToolbarTooltip label={`Back to ${groupPath.length === 1 ? `all ${terms.runir.toLowerCase()}` : groupPath[groupPath.length - 2]}`}>
-              <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => onNavigateInto(groupPath.slice(0, -1))}>
-                <ChevronLeft className="h-3.5 w-3.5" />
+          {canGoBack ? (
+            <ToolbarTooltip
+              label={`Back to ${
+                groupPath.length === rootPath.length + 1
+                  ? (groupPath[groupPath.length - 2] ?? rootPath[rootPath.length - 1])
+                  : groupPath[groupPath.length - 2]
+              }`}
+            >
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0"
+                onClick={() => onNavigateInto(groupPath.slice(0, -1))}
+              >
+                <ChevronLeft className="h-4 w-4" />
               </Button>
             </ToolbarTooltip>
           ) : null}
-          <span className="min-w-0 flex-1 truncate text-xs font-medium text-muted-foreground">
-            {groupPath.length > 0 ? groupPath.join(' / ') : `All ${terms.runir.toLowerCase()}`}
-          </span>
-          <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">{countLabel}</span>
-          <ToolbarTooltip label={currentGroupMarker ? `Add sub-${terms.runSingular.toLowerCase()} to ${currentGroupMarker.name}` : `New ${terms.runSingular.toLowerCase()}`}>
-            <Button type="button" size="icon" variant="secondary" className="h-7 w-7 shrink-0" onClick={() => {
-              if (currentGroupMarker) onNewSubmarker({ name: currentGroupMarker.name, color: currentGroupMarker.color, icon: currentGroupMarker.icon })
-              else onNew()
-            }} aria-label={`New ${terms.runSingular.toLowerCase()}`}>
-              <Plus className="h-3.5 w-3.5" aria-hidden />
+          <span className="flex-1 text-xs text-muted-foreground">{countLabel}</span>
+          <ToolbarTooltip
+            label={
+              groupPath.length === 0 && rootPath.length === 0
+                ? 'Add marker'
+                : `Add sub-marker in ${groupPath[groupPath.length - 1] ?? rootPath[rootPath.length - 1]}`
+            }
+          >
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0"
+              onClick={() => {
+                if (groupPath.length === 0 && rootPath.length === 0) {
+                  onNew()
+                  return
+                }
+                const path = groupPath.length > 0 ? groupPath : rootPath
+                onNewSubmarker({
+                  name: path.join('/'),
+                  color: currentGroupMarker?.color ?? '#6b7280',
+                  icon: currentGroupMarker?.icon ?? null,
+                })
+              }}
+            >
+              <Plus className="h-4 w-4" />
             </Button>
           </ToolbarTooltip>
         </div>
         {onSearchChange ? (
           <div className="border-b border-border px-3 py-2">
-            <FilterInput value={search} onChange={onSearchChange} placeholder={`Filter ${terms.runir.toLowerCase()}…`} />
+            <FilterInput value={search} onChange={onSearchChange} />
           </div>
         ) : null}
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto py-1">
-        {isSearching ? (
-          searchResults.length === 0 ? <p className="px-3 py-4 text-xs text-muted-foreground">No matches.</p> : (
+
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {markers.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center px-4 py-16 text-center">
+            <Tag className="mb-2 h-8 w-8 text-muted-foreground/40" aria-hidden />
+            <p className="text-sm text-muted-foreground">No markers yet.</p>
+            <button type="button" onClick={onNew} className="mt-1 text-sm text-primary hover:underline">
+              Create your first marker
+            </button>
+          </div>
+        ) : isSearching ? (
+          searchResults.length === 0 ? (
+            <p className="py-8 text-center text-xs text-muted-foreground">No results</p>
+          ) : (
             searchResults.map((marker) => (
-              <button key={marker.id} type="button" onClick={() => onSelect(marker.id)} className={cn('flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-muted-hover', selectedId === marker.id && 'bg-primary/10 text-primary')}>
-                <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: marker.color }} />
-                <span className="min-w-0 flex-1 truncate">{marker.name}</span>
-              </button>
+              <SearchResultRow
+                key={marker.id}
+                marker={marker}
+                isSelected={selectedId === marker.id}
+                onSelect={() => onSelect(marker.id)}
+                onAdd={() =>
+                  onNewSubmarker({ name: marker.name, color: marker.color, icon: marker.icon })
+                }
+              />
             ))
           )
-        ) : currentNodes.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-8 text-center">
-            <Tag className="h-5 w-5 text-muted-foreground/40" />
-            <p className="text-xs text-muted-foreground">No {terms.runir.toLowerCase()} yet</p>
+        ) : currentNodes.length === 0 && !(atRoot && currentGroupMarker) ? (
+          <div className="flex h-full flex-col items-center justify-center px-4 py-16 text-center">
+            <p className="text-sm text-muted-foreground">No markers in this group.</p>
+            <button
+              type="button"
+              onClick={() =>
+                onNewSubmarker({ name: groupPath.join('/'), color: '#6b7280', icon: null })
+              }
+              className="mt-1 text-sm text-primary hover:underline"
+            >
+              Add one
+            </button>
           </div>
         ) : (
-          currentNodes.map((node) =>
-            node.type === 'group' ? (
-              <div key={node.label} className="flex w-full items-center text-xs transition-colors hover:bg-muted/60">
-                {node.id ? (
-                  <button type="button" onClick={() => onSelect(node.id!)} className={cn('flex shrink-0 items-center gap-1.5 py-1.5 pl-3 pr-2', selectedId === node.id && 'text-primary')}>
-                    <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: node.color }} />
-                  </button>
-                ) : null}
-                <button type="button" onClick={() => onNavigateInto([...groupPath, node.label])} className={cn('flex min-w-0 flex-1 items-center gap-2.5 py-1.5 pr-3 text-left', !node.id && 'pl-3')}>
-                  <span className="flex-1 truncate font-medium">{node.label}</span>
-                  <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">{getAllLeafIds(node.children).length}</span>
-                  <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
-                </button>
-              </div>
-            ) : (
-              <button key={node.id} type="button" onClick={() => onSelect(node.id)} className={cn('flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:bg-muted-hover', selectedId === node.id && 'bg-primary/10 text-primary')}>
-                <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: node.color }} />
-                <span className="min-w-0 flex-1 truncate">{node.label}</span>
-              </button>
+          <>
+          {atRoot && currentGroupMarker ? (
+            <MarkerRow
+              key={`root-${currentGroupMarker.id}`}
+              label={currentGroupMarker.name.split('/').pop() ?? currentGroupMarker.name}
+              color={currentGroupMarker.color}
+              isSelected={selectedId === currentGroupMarker.id}
+              hasDrillIn={false}
+              onSelect={() => onSelect(currentGroupMarker.id)}
+              onDrillIn={() => {}}
+              onAdd={() =>
+                onNewSubmarker({
+                  name: currentGroupMarker.name,
+                  color: currentGroupMarker.color,
+                  icon: currentGroupMarker.icon ?? null,
+                })
+              }
+            />
+          ) : null}
+          {currentNodes.map((node) => {
+            const currentPath = [...groupPath, node.label]
+            if (node.type === 'group') {
+              if (node.id) {
+                return (
+                  <MarkerRow
+                    key={node.id}
+                    label={node.label}
+                    color={node.color!}
+                    isSelected={selectedId === node.id}
+                    hasDrillIn
+                    onSelect={() => onSelect(node.id!)}
+                    onDrillIn={() => onNavigateInto(currentPath)}
+                    onAdd={() =>
+                      onNewSubmarker({
+                        name: currentPath.join('/'),
+                        color: node.color!,
+                        icon: node.icon ?? null,
+                      })
+                    }
+                  />
+                )
+              }
+              return (
+                <GroupRow
+                  key={node.label}
+                  label={node.label}
+                  onDrillIn={() => onNavigateInto(currentPath)}
+                  onAdd={() =>
+                    onNewSubmarker({ name: currentPath.join('/'), color: '#6b7280', icon: null })
+                  }
+                />
+              )
+            }
+            return (
+              <MarkerRow
+                key={node.id}
+                label={node.label}
+                color={node.color}
+                isSelected={selectedId === node.id}
+                onSelect={() => onSelect(node.id)}
+                onAdd={() =>
+                  onNewSubmarker({ name: node.name, color: node.color, icon: node.icon ?? null })
+                }
+              />
             )
-          )
+          })}
+          </>
         )}
       </div>
+    </div>
+  )
+}
+
+function MarkerRow({
+  label,
+  color,
+  isSelected,
+  hasDrillIn = false,
+  onSelect,
+  onDrillIn,
+  onAdd,
+}: {
+  label: string
+  color: string
+  isSelected: boolean
+  hasDrillIn?: boolean
+  onSelect: () => void
+  onDrillIn?: () => void
+  onAdd: () => void
+}) {
+  return (
+    <div
+      className={cn(
+        'group flex items-center gap-2 border-b border-border px-4 py-2.5 transition-colors',
+        isSelected ? 'bg-primary/10' : 'hover:bg-muted/50',
+      )}
+    >
+      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+      <button
+        type="button"
+        onClick={onSelect}
+        className={cn('min-w-0 flex-1 truncate text-left text-sm', hasDrillIn && 'hover:opacity-70')}
+      >
+        {label}
+      </button>
+      <button
+        type="button"
+        onClick={onAdd}
+        className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100"
+        aria-label="Add sub-marker"
+      >
+        <Plus className="h-3.5 w-3.5" />
+      </button>
+      {hasDrillIn && onDrillIn ? (
+        <button
+          type="button"
+          onClick={onDrillIn}
+          className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          aria-label="Open group"
+        >
+          <ChevronRight className="h-3.5 w-3.5" />
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
+function GroupRow({
+  label,
+  onDrillIn,
+  onAdd,
+}: {
+  label: string
+  onDrillIn: () => void
+  onAdd: () => void
+}) {
+  return (
+    <div className="group flex items-center gap-2 border-b border-border px-4 py-2.5 transition-colors hover:bg-muted/50">
+      <span className="h-2 w-2 shrink-0 rounded-full bg-muted-foreground/30" />
+      <button type="button" onClick={onDrillIn} className="min-w-0 flex-1 truncate text-left text-sm font-medium">
+        {label}
+      </button>
+      <button
+        type="button"
+        onClick={onAdd}
+        className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100"
+        aria-label="Add sub-marker"
+      >
+        <Plus className="h-3.5 w-3.5" />
+      </button>
+      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+    </div>
+  )
+}
+
+function SearchResultRow({
+  marker,
+  isSelected,
+  onSelect,
+  onAdd,
+}: {
+  marker: CairnMarkerView
+  isSelected: boolean
+  onSelect: () => void
+  onAdd: () => void
+}) {
+  const segments = marker.name.split('/')
+  const label = segments[segments.length - 1]
+  const parentPath = segments.slice(0, -1).join(' / ')
+
+  return (
+    <div
+      className={cn(
+        'group flex items-center gap-2 border-b border-border px-4 py-2.5 transition-colors',
+        isSelected ? 'bg-primary/10' : 'hover:bg-muted/50 cursor-pointer',
+      )}
+      onClick={onSelect}
+    >
+      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: marker.color }} />
+      <div className="min-w-0 flex-1">
+        {parentPath ? <p className="truncate text-[10px] text-muted-foreground/60">{parentPath}</p> : null}
+        <p className="truncate text-sm">{label}</p>
+      </div>
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation()
+          onAdd()
+        }}
+        className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100"
+        aria-label="Add sub-marker"
+      >
+        <Plus className="h-3.5 w-3.5" />
+      </button>
     </div>
   )
 }

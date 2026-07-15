@@ -111,7 +111,7 @@ export function SogurPageOrderInspector({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <InspectorChrome>
         <InspectorChromeTitle eyebrow="Page order" title={bookName} />
       </InspectorChrome>
@@ -120,7 +120,7 @@ export function SogurPageOrderInspector({
         Drag pages to reorder this {terms.notesSingular.toLowerCase()}.
       </p>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={ids} strategy={verticalListSortingStrategy}>
             {logs.map((log, index) => (

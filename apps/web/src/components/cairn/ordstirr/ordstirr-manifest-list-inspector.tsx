@@ -123,11 +123,11 @@ export function OrdstirrManifestListInspector<T extends { id: string }>({
 
   if (!selected) {
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <InspectorChrome>
           <InspectorChromeTitle eyebrow={sectionLabel} title="Inspector" />
         </InspectorChrome>
-        <div className="flex flex-1 items-center justify-center px-5 text-center text-sm text-muted-foreground">
+        <div className="flex min-h-0 flex-1 items-center justify-center px-5 text-center text-sm text-muted-foreground">
           Select an entry on the canvas to edit.
         </div>
       </div>
@@ -135,7 +135,7 @@ export function OrdstirrManifestListInspector<T extends { id: string }>({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <InspectorChrome>
         <InspectorChromeTitle
           eyebrow={sectionLabel}
@@ -143,7 +143,7 @@ export function OrdstirrManifestListInspector<T extends { id: string }>({
         />
       </InspectorChrome>
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+      <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-5 py-4">
         <p className="text-xs text-muted-foreground">{helpText}</p>
         {renderFields(selected, updateSelected)}
       </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { CairnTrailView } from '@/lib/cairn-types'
+import type { CairnTrailView } from '@asgard/types'
 import { Input } from '@/components/core/ui/input'
 import { InspectorFormActions } from '@/components/core/ui/inspector-form-actions'
 import { Select } from '@/components/core/ui/select'
@@ -12,7 +12,7 @@ type GreinMode = 'existing' | 'new'
 export function SogurNewSagaInspector({
   greinar,
   onCreate,
-  onCancel: _onCancel,
+  onCancel,
   creating,
 }: {
   greinar: CairnTrailView[]
@@ -35,7 +35,7 @@ export function SogurNewSagaInspector({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <InspectorChrome>
         <InspectorChromeTitle
           eyebrow={`New ${terms.notesSingular.toLowerCase()}`}
@@ -43,7 +43,7 @@ export function SogurNewSagaInspector({
         />
       </InspectorChrome>
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+      <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-5 py-4">
         <p className="text-xs text-muted-foreground">
           Each {terms.greinSingular.toLowerCase()} can have one {terms.notesSingular.toLowerCase()}.
         </p>

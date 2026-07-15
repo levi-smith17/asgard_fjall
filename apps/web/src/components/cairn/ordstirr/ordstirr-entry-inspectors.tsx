@@ -39,6 +39,7 @@ import {
   ManifestTextField,
 } from './ordstirr-entry-fields'
 import { OrdstirrCompanionPhotosPanel } from './ordstirr-companion-photos-panel'
+import { todayMonthStartInputValue } from '@/lib/date-input'
 import { createDraftId, OrdstirrManifestListInspector } from './ordstirr-manifest-list-inspector'
 
 type ListInspectorProps<T extends { id: string }> = {
@@ -138,7 +139,7 @@ export function OrdstirrExpeditionInspector(props: ListInspectorProps<ManifestEx
         title: '',
         company: '',
         location: null,
-        startDate: new Date().toISOString(),
+        startDate: todayMonthStartInputValue(),
         endDate: null,
         current: false,
         description: null,
@@ -203,7 +204,7 @@ export function OrdstirrTrainingInspector(props: ListInspectorProps<ManifestTrai
         institution: '',
         degree: null,
         field: null,
-        startDate: new Date().toISOString(),
+        startDate: todayMonthStartInputValue(),
         endDate: null,
         current: false,
         description: null,
@@ -362,7 +363,7 @@ export function OrdstirrLandmarkInspector(props: ListInspectorProps<ManifestLand
             placeholder="https://github.com/…"
           />
           <ManifestDateRangeFields
-            startDate={item.startDate ?? new Date().toISOString()}
+            startDate={item.startDate ?? todayMonthStartInputValue()}
             endDate={item.endDate}
             current={item.current}
             onStartDateChange={(startDate) => update({ startDate })}
@@ -389,7 +390,7 @@ export function OrdstirrPathfindingInspector(props: ListInspectorProps<ManifestP
         organization: '',
         role: null,
         location: null,
-        startDate: new Date().toISOString(),
+        startDate: todayMonthStartInputValue(),
         endDate: null,
         current: false,
         description: null,
@@ -566,7 +567,7 @@ export function OrdstirrCompanionInspector({
 
   if (!selected) {
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <nav className="flex h-14 shrink-0 border-b border-border" aria-label="Inspector">
           <ContextTabButton active className="flex-1 justify-center text-xs" disabled>
             Details
@@ -575,7 +576,7 @@ export function OrdstirrCompanionInspector({
             Photos
           </ContextTabButton>
         </nav>
-        <div className="flex flex-1 items-center justify-center px-5 text-center text-sm text-muted-foreground">
+        <div className="flex min-h-0 flex-1 items-center justify-center px-5 text-center text-sm text-muted-foreground">
           Select an entry on the canvas to edit.
         </div>
       </div>
@@ -583,7 +584,7 @@ export function OrdstirrCompanionInspector({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <nav className="flex h-14 shrink-0 border-b border-border" aria-label="Inspector">
         <ContextTabButton
           active={tab === 'details'}
@@ -601,7 +602,7 @@ export function OrdstirrCompanionInspector({
         </ContextTabButton>
       </nav>
 
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
+      <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-5 py-4">
         {tab === 'details' ? (
           <>
             <div>

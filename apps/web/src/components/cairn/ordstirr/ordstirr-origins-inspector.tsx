@@ -19,12 +19,12 @@ export function OrdstirrOriginsInspector({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <InspectorChrome>
         <InspectorChromeTitle eyebrow={terms.origins} title="Contact & links" />
       </InspectorChrome>
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+      <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-5 py-4">
         <p className="text-xs text-muted-foreground">
           {terms.summary} and {terms.bio.toLowerCase()} edits live on the canvas. These fields update
           the header area.

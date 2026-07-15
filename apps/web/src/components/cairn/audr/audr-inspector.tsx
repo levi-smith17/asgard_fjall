@@ -7,7 +7,7 @@ import { deleteCairnBurn, deleteCairnCache, deleteCairnSupplyline } from '@/lib/
 import { markerShortLabel } from '@/lib/audr-format'
 import { useTerms } from '@/hooks/use-terminology'
 import type { Terms } from '@/lib/terminology'
-import type { CairnBurn, CairnCacheUtilization, CairnSupplyline } from '@/lib/cairn-types'
+import type { CairnBurn, CairnCacheUtilization, CairnSupplyline } from '@asgard/types'
 import type { AudrMarker, AudrSelection } from './audr-types'
 import { InlineBurnForm, type AudrSaveActionRef } from './inline-burn-form'
 import { InlineSupplylineForm } from './inline-supplyline-form'
@@ -103,9 +103,14 @@ export function AudrInspector({
         <InspectorChromeTitle eyebrow={audrInspectorKind(selection, terms)} title={title} />
       </InspectorChrome>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
         {showBurnForm ? (
           <InlineBurnForm
+            key={
+              selection.kind === 'burn'
+                ? selection.id
+                : `new-burn:${selection.kind === 'new-burn' ? (selection.markerId ?? '') : ''}`
+            }
             burn={burn}
             defaultMarkerId={selection.kind === 'new-burn' ? selection.markerId : undefined}
             tags={markers}
@@ -117,6 +122,11 @@ export function AudrInspector({
 
         {showSupplylineForm ? (
           <InlineSupplylineForm
+            key={
+              selection.kind === 'supplyline'
+                ? selection.id
+                : 'new-supplyline'
+            }
             supplyline={supplyline}
             tags={markers}
             formId={SUPPLYLINE_FORM_ID}
@@ -128,6 +138,13 @@ export function AudrInspector({
         {showCacheForm ? (
           <>
             <InlineCacheForm
+              key={
+                selection.kind === 'cache'
+                  ? selection.id
+                  : selection.kind === 'cache-marker'
+                    ? `cache-marker:${selection.markerId}`
+                    : `new-cache:${selection.kind === 'new-cache' ? (selection.markerId ?? '') : ''}`
+              }
               cache={cache}
               defaultMarkerId={
                 selection.kind === 'cache-marker'

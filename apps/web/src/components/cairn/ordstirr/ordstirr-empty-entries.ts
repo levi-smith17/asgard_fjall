@@ -7,6 +7,7 @@ import type {
   ManifestSummit,
   ManifestTraining,
 } from '@/lib/manifest-api'
+import { todayMonthStartInputValue } from '@/lib/date-input'
 import type { OrdstirrJourneySectionId, OrdstirrSectionId } from '@/lib/ordstirr-format'
 import { createDraftId } from './ordstirr-manifest-list-inspector'
 
@@ -33,7 +34,7 @@ export function createEmptyExpedition(id: string): ManifestExpedition {
     title: '',
     company: '',
     location: null,
-    startDate: new Date().toISOString(),
+    startDate: todayMonthStartInputValue(),
     endDate: null,
     current: false,
     description: null,
@@ -46,7 +47,7 @@ export function createEmptyTraining(id: string): ManifestTraining {
     institution: '',
     degree: null,
     field: null,
-    startDate: new Date().toISOString(),
+    startDate: todayMonthStartInputValue(),
     endDate: null,
     current: false,
     description: null,
@@ -92,7 +93,7 @@ export function createEmptyPathfinding(id: string): ManifestPathfinding {
     organization: '',
     role: null,
     location: null,
-    startDate: new Date().toISOString(),
+    startDate: todayMonthStartInputValue(),
     endDate: null,
     current: false,
     description: null,

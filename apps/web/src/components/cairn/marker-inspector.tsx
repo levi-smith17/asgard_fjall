@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { CairnMarkerView } from '@/lib/cairn-types'
+import type { CairnMarkerView } from '@asgard/types'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { Input } from '@/components/core/ui/input'
 import {
@@ -31,25 +31,31 @@ export function MarkerInspector({
   isSaving: boolean
 }) {
   const terms = useTerms()
+  const markerParts = marker?.name.split('/') ?? []
+  const derivedParent =
+    !isNew && !parentPrefix && markerParts.length > 1
+      ? markerParts.slice(0, -1).join('/')
+      : null
+  const effectiveParent = parentPrefix || derivedParent
   const [segment, setSegment] = useState(
-    parentPrefix ? '' : marker?.name.split('/').pop() ?? '',
+    effectiveParent ? (marker?.name.split('/').pop() ?? '') : (marker?.name ?? ''),
   )
   const [color, setColor] = useState(marker?.color ?? PRESET_COLORS[5])
   const [icon, setIcon] = useState(marker?.icon ?? '')
   const [deleteOpen, setDeleteOpen] = useState(false)
 
-  const fullName = parentPrefix ? `${parentPrefix}/${segment.trim()}` : segment.trim()
+  const fullName = effectiveParent ? `${effectiveParent}/${segment.trim()}` : segment.trim()
   const headerTitle = title ?? (isNew ? `New ${terms.runSingular}` : `Edit ${terms.runSingular}`)
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <InspectorFormHeader title={headerTitle} icon={ASGARD_ENTITY_ICONS.runir} onBack={onBack} />
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+      <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-4 py-4">
         <label className="block space-y-1.5">
           <span className="text-xs font-medium text-muted-foreground">Name</span>
-          {parentPrefix ? (
+          {effectiveParent ? (
             <div className="flex items-center gap-2">
-              <span className="shrink-0 text-xs text-muted-foreground">{parentPrefix}/</span>
+              <span className="shrink-0 text-xs text-muted-foreground">{effectiveParent}/</span>
               <Input value={segment} onChange={(event) => setSegment(event.target.value)} />
             </div>
           ) : (

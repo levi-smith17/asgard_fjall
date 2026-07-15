@@ -1,10 +1,9 @@
-import { NotebookPen, Plus } from 'lucide-react'
+import { NotebookPen, Plus, SlidersHorizontal } from 'lucide-react'
 import { Button } from '@/components/core/ui/button'
 import { FilterInput } from '@/components/core/ui/filter-input'
 import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { useTerms } from '@/hooks/use-terminology'
-import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import type { SogurLogbook } from '@/lib/sogur-format'
 import { cn } from '@/lib/utils'
 
@@ -57,7 +56,7 @@ export function SogurRail({
               onClick={onOpenCatalog}
               aria-label={`${terms.greinar} & ${terms.runir}`}
             >
-              <ASGARD_ENTITY_ICONS.greinar className="h-3.5 w-3.5" aria-hidden />
+              <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
             </button>
           </ToolbarTooltip>
           <ToolbarTooltip label={`Add ${terms.notesSingular}`}>

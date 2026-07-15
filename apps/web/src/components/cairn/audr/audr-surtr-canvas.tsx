@@ -11,7 +11,7 @@ import {
 import { effectiveSkattSpent, effectiveSkattUtilization } from '@/lib/audr-skatt-idunn'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
-import type { CairnBurn, CairnCacheUtilization, CairnSupplyline } from '@/lib/cairn-types'
+import type { CairnBurn, CairnCacheUtilization, CairnSupplyline } from '@asgard/types'
 import type { AudrMarker } from './audr-types'
 import { AudrBurnRow } from './audr-burn-row'
 import { AudrFilterBar } from './audr-filter-bar'
@@ -28,6 +28,7 @@ export function AudrSurtrCanvas({
   filtersActive,
   onClearFilters,
   onBringSkatt,
+  onManageLaufar,
   burns,
   cacheUtilization,
   supplylines,
@@ -54,6 +55,7 @@ export function AudrSurtrCanvas({
   filtersActive: boolean
   onClearFilters: () => void
   onBringSkatt: () => void
+  onManageLaufar: () => void
   burns: CairnBurn[]
   cacheUtilization: CairnCacheUtilization[]
   supplylines: CairnSupplyline[]
@@ -90,6 +92,7 @@ export function AudrSurtrCanvas({
         filtersActive={filtersActive}
         onClearFilters={onClearFilters}
         onBringSkatt={onBringSkatt}
+        onManageLaufar={onManageLaufar}
       />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

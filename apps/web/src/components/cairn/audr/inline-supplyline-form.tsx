@@ -7,7 +7,8 @@ import { MarkerPicker } from '@/components/cairn/marker-picker'
 import { saveCairnSupplyline } from '@/lib/cairn-api'
 import { useFormStatus } from '@/hooks/use-form-status'
 import { toMarkerId } from '@/lib/embedded-markers'
-import type { CairnSupplyline } from '@/lib/cairn-types'
+import type { CairnSupplyline } from '@asgard/types'
+import { toDateInputValue, todayDateInputValue } from '@/lib/date-input'
 import { useTerms } from '@/hooks/use-terminology'
 import type { AudrSaveActionRef } from './inline-burn-form'
 
@@ -18,10 +19,6 @@ const CYCLE_LABELS: Record<string, string> = {
   MONTHLY: 'Monthly',
   QUARTERLY: 'Quarterly',
   ANNUALLY: 'Annually',
-}
-
-function todayDateInputValue(): string {
-  return new Date().toISOString().split('T')[0]!
 }
 
 function normalizeOptionalUrl(value: string): string | null {
@@ -59,14 +56,32 @@ export function InlineSupplylineForm({
   const [name, setName] = useState(supplyline?.name ?? '')
   const [amount, setAmount] = useState(String(supplyline?.amount ?? 0))
   const [billingCycle, setBillingCycle] = useState(supplyline?.billingCycle ?? 'MONTHLY')
-  const [nextRenewal, setNextRenewal] = useState(
-    supplyline?.nextRenewal?.split('T')[0] ?? todayDateInputValue(),
+  const [nextRenewal, setNextRenewal] = useState(() =>
+    supplyline?.nextRenewal
+      ? toDateInputValue(supplyline.nextRenewal)
+      : todayDateInputValue(),
   )
   const [url, setUrl] = useState(supplyline?.url ?? '')
   const [notes, setNotes] = useState(supplyline?.notes ?? '')
   const [tagIds, setTagIds] = useState(
     (supplyline?.markers?.map((t) => toMarkerId(t)).filter(Boolean) as string[]) ?? [],
   )
+
+  useEffect(() => {
+    setName(supplyline?.name ?? '')
+    setAmount(String(supplyline?.amount ?? 0))
+    setBillingCycle(supplyline?.billingCycle ?? 'MONTHLY')
+    setNextRenewal(
+      supplyline?.nextRenewal
+        ? toDateInputValue(supplyline.nextRenewal)
+        : todayDateInputValue(),
+    )
+    setUrl(supplyline?.url ?? '')
+    setNotes(supplyline?.notes ?? '')
+    setTagIds(
+      (supplyline?.markers?.map((t) => toMarkerId(t)).filter(Boolean) as string[]) ?? [],
+    )
+  }, [supplyline?.id])
 
   async function save() {
     if (!name.trim()) {
@@ -117,7 +132,7 @@ export function InlineSupplylineForm({
   }
 
   const form = (
-    <form id={formId} onSubmit={onSubmit} className="space-y-4 px-5 py-4 text-sm">
+    <form id={formId} onSubmit={onSubmit} className="min-w-0 space-y-4 px-5 py-4 text-sm">
       <label className="block space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">Name</span>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
@@ -141,9 +156,14 @@ export function InlineSupplylineForm({
           options={BILLING_CYCLES.map((c) => ({ value: c, label: CYCLE_LABELS[c] }))}
         />
       </label>
-      <label className="block space-y-1.5">
+      <label className="block min-w-0 space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">Next renewal</span>
-        <Input type="date" value={nextRenewal} onChange={(e) => setNextRenewal(e.target.value)} />
+        <Input
+          type="date"
+          className="min-w-0 max-w-full"
+          value={nextRenewal}
+          onChange={(e) => setNextRenewal(e.target.value)}
+        />
       </label>
       <label className="block space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">{terms.runSingular}</span>

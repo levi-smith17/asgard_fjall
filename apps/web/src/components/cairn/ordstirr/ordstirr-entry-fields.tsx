@@ -2,6 +2,7 @@ import { Input } from '@/components/core/ui/input'
 import { RichEditor } from '@/components/core/ui/rich-editor'
 import { Select } from '@/components/core/ui/select'
 import { SwitchField } from '@/components/core/ui/switch-field'
+import { toMonthInputValue } from '@/lib/date-input'
 import type { ManifestGear } from '@/lib/manifest-api'
 
 export function ManifestTextField({
@@ -40,11 +41,12 @@ export function ManifestMonthField({
   onChange: (value: string | null) => void
 }) {
   return (
-    <label className="block space-y-1.5">
+    <label className="block min-w-0 space-y-1.5">
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
       <Input
         type="month"
-        value={value ? value.slice(0, 7) : ''}
+        className="min-w-0 max-w-full"
+        value={toMonthInputValue(value)}
         onChange={(event) =>
           onChange(event.target.value ? `${event.target.value}-01` : null)
         }

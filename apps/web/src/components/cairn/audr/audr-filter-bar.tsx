@@ -9,6 +9,7 @@ import { STUDIO_CONTEXT_BAR_CLASS } from '@/components/core/layout/studio-data-t
 import { StudioPagination } from '@/components/core/ui/studio-pagination'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { MarkerPicker } from '@/components/cairn/marker-picker'
+import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
 import type { AudrMarker } from './audr-types'
@@ -25,6 +26,7 @@ export function AudrFilterBar({
   filtersActive,
   onClearFilters,
   onBringSkatt,
+  onManageLaufar,
 }: {
   monthName: string
   onPrevMonth: () => void
@@ -37,8 +39,10 @@ export function AudrFilterBar({
   filtersActive: boolean
   onClearFilters: () => void
   onBringSkatt: () => void
+  onManageLaufar: () => void
 }) {
   const terms = useTerms()
+  const LaufarIcon = ASGARD_ENTITY_ICONS.laufar
   const [searchExpanded, setSearchExpanded] = useState(
     () => search.trim().length > 0 || markerFilter !== 'all',
   )
@@ -96,6 +100,16 @@ export function AudrFilterBar({
               aria-label={`Bring ${terms.budgets} forward`}
             >
               <Copy className="h-4 w-4" />
+            </button>
+          </ToolbarTooltip>
+          <ToolbarTooltip label={`${terms.provisionsGroup} ${terms.laufar}`}>
+            <button
+              type="button"
+              onClick={onManageLaufar}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted-hover hover:text-foreground"
+              aria-label={`Manage ${terms.provisionsGroup} ${terms.laufar}`}
+            >
+              <LaufarIcon className="h-4 w-4" />
             </button>
           </ToolbarTooltip>
         </div>

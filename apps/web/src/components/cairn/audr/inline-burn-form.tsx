@@ -11,7 +11,8 @@ import {
 } from '@/lib/cairn-api'
 import { useFormStatus } from '@/hooks/use-form-status'
 import { toMarkerId } from '@/lib/embedded-markers'
-import type { CairnBurn } from '@/lib/cairn-types'
+import type { CairnBurn } from '@asgard/types'
+import { toDateInputValue, todayDateInputValue } from '@/lib/date-input'
 import { useTerms } from '@/hooks/use-terminology'
 
 export type AudrSaveActionRef = MutableRefObject<(() => Promise<void>) | null>
@@ -42,7 +43,9 @@ export function InlineBurnForm({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [name, setName] = useState(burn?.name ?? '')
   const [amount, setAmount] = useState(String(burn?.amount ?? 0))
-  const [date, setDate] = useState(burn?.date?.split('T')[0] ?? new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(() =>
+    burn?.date ? toDateInputValue(burn.date) : todayDateInputValue(),
+  )
   const [notes, setNotes] = useState(burn?.notes ?? '')
   const [tagIds, setTagIds] = useState(
   () =>
@@ -54,6 +57,22 @@ export function InlineBurnForm({
   const [receiptViewUrl, setReceiptViewUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [dragging, setDragging] = useState(false)
+
+  // Rehydrate when the selected Surtr arrives/changes (mobile sheet often keeps the form mounted).
+  useEffect(() => {
+    setName(burn?.name ?? '')
+    setAmount(String(burn?.amount ?? 0))
+    setDate(burn?.date ? toDateInputValue(burn.date) : todayDateInputValue())
+    setNotes(burn?.notes ?? '')
+    setTagIds(
+      (burn?.markers?.map((t) => toMarkerId(t)).filter(Boolean) as string[]) ??
+        (defaultMarkerId ? [defaultMarkerId] : []),
+    )
+    setReceiptKey(burn?.receiptUrl ?? null)
+    setReceiptPreview(null)
+    setReceiptViewUrl(null)
+    // Intentionally keyed on id so background refetches do not wipe in-progress edits.
+  }, [burn?.id, defaultMarkerId])
 
   useEffect(() => {
     if (burn?.receiptUrl && !receiptPreview) {
@@ -117,7 +136,7 @@ export function InlineBurnForm({
   const receiptSrc = receiptPreview ?? receiptViewUrl
 
   const form = (
-    <form id={formId} onSubmit={onSubmit} className="space-y-4 px-5 py-4 text-sm">
+    <form id={formId} onSubmit={onSubmit} className="min-w-0 space-y-4 px-5 py-4 text-sm">
       <label className="block space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">Description</span>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Description" />
@@ -133,9 +152,14 @@ export function InlineBurnForm({
           onChange={(e) => setAmount(e.target.value)}
         />
       </label>
-      <label className="block space-y-1.5">
+      <label className="block min-w-0 space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">Date</span>
-        <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        <Input
+          type="date"
+          className="min-w-0 max-w-full"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
       </label>
       <label className="block space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">{terms.runSingular}</span>

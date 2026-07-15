@@ -4,7 +4,6 @@ import { InspectorHintRail } from './inspector-hint-rail'
 import { StudioMobileRailContext } from './studio-mobile-rail-context'
 import { StudioRailToggle } from './studio-rail-toggle'
 import { useMediaQuery } from '@/hooks/use-sidebar-collapsed'
-import { cn } from '@/lib/utils'
 
 export const INSPECTOR_PANEL_WIDTH = 300
 export const STUDIO_RAIL_WIDTH = 260
@@ -31,6 +30,8 @@ export function StudioLayout({
 }) {
   const inspectorOpen = inspectorState === 'open' && Boolean(inspector)
   const isDesktop = useMediaQuery('(min-width: 1024px)')
+  // Match Tailwind `md` — mount a single inspector tree (portal XOR side panel).
+  const isMdUp = useMediaQuery('(min-width: 768px)')
   const [desktopRailOpen, setDesktopRailOpen] = useState(true)
   const [mobileRailOpen, setMobileRailOpen] = useState(false)
 
@@ -50,15 +51,19 @@ export function StudioLayout({
     }
   }, [rail, railOpen, railLabel, setRailOpen])
 
+  const inspectorBody = inspectorOpen ? (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{inspector}</div>
+  ) : null
+
   const mobileInspector =
-    inspectorOpen && typeof document !== 'undefined'
+    inspectorOpen && !isMdUp && typeof document !== 'undefined' && inspectorBody
       ? createPortal(
-          <div className="fixed inset-x-0 bottom-0 z-[100] flex max-h-[50dvh] flex-col overflow-hidden rounded-t-xl border-t border-border bg-column-inspector pb-[env(safe-area-inset-bottom)] shadow-2xl md:hidden">
+          <div className="fixed inset-x-0 bottom-0 z-[100] flex max-h-[50dvh] flex-col overflow-hidden rounded-t-xl border-t border-border bg-column-inspector pb-[env(safe-area-inset-bottom)] shadow-2xl">
             {/*
               Keep overflow on the inspector's own body so chrome/headers stay fixed
               at the top of the sheet while content scrolls underneath.
             */}
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{inspector}</div>
+            {inspectorBody}
           </div>,
           document.body,
         )
@@ -108,14 +113,12 @@ export function StudioLayout({
               <InspectorHintRail message={inspectorHint} />
             </div>
           ) : null}
-          {inspectorOpen ? (
+          {inspectorOpen && isMdUp ? (
             <div
-              className={cn(
-                'relative hidden shrink-0 flex-col overflow-hidden border-l border-border bg-column-inspector md:flex',
-              )}
+              className="relative flex shrink-0 flex-col overflow-hidden border-l border-border bg-column-inspector"
               style={{ width: INSPECTOR_PANEL_WIDTH }}
             >
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{inspector}</div>
+              {inspectorBody}
             </div>
           ) : null}
         </div>
