@@ -96,7 +96,7 @@ type MultiSelectProps = {
   ariaLabel?: string
 }
 
-export function ToolbarMultiSelectDropdown({ values, options, onToggle, allLabel = 'All', className, fullWidth, menuAlign = 'start', iconOnly, icon, ariaLabel }: MultiSelectProps) {
+export function ToolbarMultiSelectDropdown({ values, options, onToggle, allLabel = 'All', className, fullWidth, menuAlign = 'end', iconOnly, icon, ariaLabel }: MultiSelectProps) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -111,8 +111,9 @@ export function ToolbarMultiSelectDropdown({ values, options, onToggle, allLabel
       const el = triggerRef.current
       if (!el) return
       const rect = el.getBoundingClientRect()
-      const left = menuAlign === 'end' ? rect.right - Math.max(rect.width, 136) : rect.left
-      setMenuPos({ top: rect.bottom + 4, left: Math.max(8, left) })
+      const width = Math.max(rect.width, 160)
+      const left = menuAlign === 'end' ? rect.right - width : rect.left
+      setMenuPos({ top: rect.bottom + 4, left: Math.max(8, Math.min(left, window.innerWidth - width - 8)) })
     }
     update()
     window.addEventListener('resize', update)
