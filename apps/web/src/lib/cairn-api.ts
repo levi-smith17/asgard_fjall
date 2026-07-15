@@ -566,7 +566,7 @@ export async function uploadCairnBurnReceipt(file: File): Promise<string> {
 
 export async function saveCairnCache(data: Record<string, unknown>): Promise<unknown> {
   const { id, ...rest } = data
-  const path = id ? `/cache/${id}` : '/cache'
+  const path = id ? `/cache/${encodeURIComponent(String(id))}` : '/cache'
   return cairnFetch(path, { method: id ? 'PUT' : 'POST', body: JSON.stringify(rest) })
 }
 
