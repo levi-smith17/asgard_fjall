@@ -29,8 +29,11 @@ export function ContextBarSearch({
   tooltipLabel?: string
   enabled?: boolean
   triggerIcon?: 'search' | 'filter'
+  /** Optional content shown under the expanded input without changing toolbar height. */
   expandedPanel?: React.ReactNode
+  /** Highlight the collapsed trigger when nested filters are active. */
   active?: boolean
+  /** Clears nested palette filters when the X button dismisses the control. */
   onClearAll?: () => void
 }) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -46,7 +49,9 @@ export function ContextBarSearch({
   useEffect(() => {
     if (!expanded) return
 
-    const collapse = () => onExpandedChange(false)
+    const collapse = () => {
+      onExpandedChange(false)
+    }
 
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target
@@ -93,21 +98,27 @@ export function ContextBarSearch({
 
   return (
     <div ref={rootRef} className="relative">
+      {/* In-flow width driver — keeps toolbar siblings shifting with the expand animation. */}
       <div
-        className={cn('h-9 transition-[width] duration-200 ease-out', expanded ? 'w-56' : 'w-9')}
+        className={cn(
+          'h-9 transition-[width] duration-200 ease-out',
+          expanded ? 'w-56' : 'w-9',
+        )}
         aria-hidden
       />
       <div
         className={cn(
-          'absolute right-0 top-0 z-50 overflow-hidden border bg-card transition-[width,max-height,border-color,border-radius,box-shadow] duration-200 ease-out',
+          // overflow-hidden clips nested Select menus (absolute, not portaled).
+          // Keep that only while collapsed; expanded palettes must overflow-visible.
+          'absolute right-0 top-0 z-50 border bg-card transition-[width,max-height,border-color,border-radius,box-shadow] duration-200 ease-out',
           expanded
             ? cn(
                 'w-56 border-border',
                 hasPanel
-                  ? 'max-h-[min(28rem,70vh)] rounded-md bg-card shadow-md'
-                  : 'max-h-9 rounded-md bg-input',
+                  ? 'max-h-[min(28rem,70vh)] overflow-visible rounded-md bg-card shadow-md'
+                  : 'max-h-9 overflow-hidden rounded-md bg-input',
               )
-            : 'w-9 max-h-9 rounded-md border-transparent bg-transparent shadow-none',
+            : 'w-9 max-h-9 overflow-hidden rounded-md border-transparent bg-transparent shadow-none',
         )}
       >
         <div className="flex h-9 items-center">
@@ -148,7 +159,9 @@ export function ContextBarSearch({
             </div>
           )}
         </div>
-        {hasPanel ? <div className="border-t border-border p-2">{expandedPanel}</div> : null}
+        {hasPanel ? (
+          <div className="border-t border-border p-2">{expandedPanel}</div>
+        ) : null}
       </div>
     </div>
   )
