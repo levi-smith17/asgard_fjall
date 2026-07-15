@@ -6,6 +6,7 @@ import { MarkerPicker } from '@/components/cairn/marker-picker'
 import { saveCairnCache } from '@/lib/cairn-api'
 import { useFormStatus } from '@/hooks/use-form-status'
 import type { CairnCacheUtilization } from '@/lib/cairn-types'
+import { getDefaultSjodrId } from '@/lib/audr-default-sjodr'
 import { useTerms } from '@/hooks/use-terminology'
 import type { AudrSaveActionRef } from './inline-burn-form'
 import { FundPicker } from './fund-picker'
@@ -39,12 +40,14 @@ export function InlineCacheForm({
   const { saving, handleSubmit } = useFormStatus()
   const [markerId, setMarkerId] = useState(cache?.markerId ?? defaultMarkerId ?? '')
   const [limit, setLimit] = useState(cache?.limit != null ? String(cache.limit) : '')
-  const [fundId, setFundId] = useState<string | null>(cache?.fundId ?? null)
+  const [fundId, setFundId] = useState<string | null>(
+    () => cache?.fundId ?? (cache ? null : getDefaultSjodrId()),
+  )
 
   useEffect(() => {
     setMarkerId(cache?.markerId ?? defaultMarkerId ?? '')
     setLimit(cache?.limit != null ? String(cache.limit) : '')
-    setFundId(cache?.fundId ?? null)
+    setFundId(cache?.fundId ?? (cache ? null : getDefaultSjodrId()))
   }, [cache?.id, defaultMarkerId])
 
   async function save() {

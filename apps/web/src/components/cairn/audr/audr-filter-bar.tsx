@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Copy, Wallet } from 'lucide-react'
+import { Copy } from 'lucide-react'
 import { ContextBarSearch } from '@/components/core/layout/context-bar-search'
 import {
   FilterPaletteField,
@@ -45,12 +45,13 @@ export function AudrFilterBar({
 }) {
   const terms = useTerms()
   const LaufarIcon = ASGARD_ENTITY_ICONS.laufar
+  const SjodrIcon = ASGARD_ENTITY_ICONS.sjodr
   const [searchExpanded, setSearchExpanded] = useState(
     () => search.trim().length > 0 || markerFilter !== 'all',
   )
 
   return (
-    <div className={cn(STUDIO_CONTEXT_BAR_CLASS)}>
+    <div className={cn(STUDIO_CONTEXT_BAR_CLASS, 'z-30')}>
       <div className="flex w-full min-w-0 items-center gap-2">
         <span className="shrink-0 text-sm font-semibold text-foreground">{terms.expenses}</span>
         <StudioPagination
@@ -111,7 +112,7 @@ export function AudrFilterBar({
               className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted-hover hover:text-foreground"
               aria-label={terms.sjodr}
             >
-              <Wallet className="h-4 w-4" />
+              <SjodrIcon className="h-4 w-4" />
             </button>
           </ToolbarTooltip>
           <ToolbarTooltip label={`Bring ${terms.budgets} Forward`}>

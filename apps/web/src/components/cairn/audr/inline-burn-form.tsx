@@ -13,6 +13,7 @@ import { useFormStatus } from '@/hooks/use-form-status'
 import { toMarkerId } from '@/lib/embedded-markers'
 import type { CairnBurn } from '@/lib/cairn-types'
 import { toDateInputValue, todayDateInputValue } from '@/lib/date-input'
+import { getDefaultSjodrId } from '@/lib/audr-default-sjodr'
 import { useTerms } from '@/hooks/use-terminology'
 import { FundPicker } from './fund-picker'
 
@@ -48,7 +49,9 @@ export function InlineBurnForm({
     burn?.date ? toDateInputValue(burn.date) : todayDateInputValue(),
   )
   const [notes, setNotes] = useState(burn?.notes ?? '')
-  const [fundId, setFundId] = useState<string | null>(burn?.fundId ?? null)
+  const [fundId, setFundId] = useState<string | null>(
+    () => burn?.fundId ?? (burn ? null : getDefaultSjodrId()),
+  )
   const [tagIds, setTagIds] = useState(
   () =>
     (burn?.markers?.map((t) => toMarkerId(t)).filter(Boolean) as string[]) ??
@@ -66,7 +69,7 @@ export function InlineBurnForm({
     setAmount(String(burn?.amount ?? 0))
     setDate(burn?.date ? toDateInputValue(burn.date) : todayDateInputValue())
     setNotes(burn?.notes ?? '')
-    setFundId(burn?.fundId ?? null)
+    setFundId(burn?.fundId ?? (burn ? null : getDefaultSjodrId()))
     setTagIds(
       (burn?.markers?.map((t) => toMarkerId(t)).filter(Boolean) as string[]) ??
         (defaultMarkerId ? [defaultMarkerId] : []),

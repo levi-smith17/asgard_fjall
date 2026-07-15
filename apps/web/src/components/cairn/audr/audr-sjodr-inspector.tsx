@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Wallet } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import type { CairnCacheUtilization, CairnSjodrView, CairnSupplyline } from '@/lib/cairn-types'
 import { Button } from '@/components/core/ui/button'
@@ -11,6 +11,7 @@ import {
   InspectorFormHeader,
 } from '@/components/core/ui/inspector-form-actions'
 import { InspectorChrome, InspectorChromeTitle } from '@/components/core/ui/inspector-chrome'
+import { SwitchField } from '@/components/core/ui/switch-field'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import {
   createCairnSjodr,
@@ -18,8 +19,14 @@ import {
   fetchCairnSjodr,
   updateCairnSjodr,
 } from '@/lib/cairn-api'
+import {
+  getDefaultSjodrId,
+  isDefaultSjodrId,
+  setDefaultSjodrId,
+} from '@/lib/audr-default-sjodr'
 import { audrFmt, skattUtilizationColor } from '@/lib/audr-format'
 import { effectiveSkattSpent, effectiveSkattUtilization } from '@/lib/audr-skatt-idunn'
+import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
 
@@ -40,6 +47,8 @@ export function AudrSjodrInspector({
 }) {
   const terms = useTerms()
   const queryClient = useQueryClient()
+  const SjodrIcon = ASGARD_ENTITY_ICONS.sjodr
+  const [defaultFundId, setDefaultFundIdState] = useState(() => getDefaultSjodrId())
 
   const sjodrQuery = useQuery({
     queryKey: ['cairn-sjodr'],
@@ -50,23 +59,42 @@ export function AudrSjodrInspector({
   const isNew = selectedId === 'new'
   const selected = !isNew && selectedId ? (funds.find((fund) => fund.id === selectedId) ?? null) : null
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ['cairn-sjodr'] })
+  const writeFunds = (next: CairnSjodrView[]) => {
+    queryClient.setQueryData<CairnSjodrView[]>(['cairn-sjodr'], next)
+  }
+
+  const invalidateAudr = () => {
     void queryClient.invalidateQueries({ queryKey: ['audr'] })
   }
 
   const saveMutation = useMutation({
-    mutationFn: async (draft: { name: string; description: string }) => {
+    mutationFn: async (draft: { name: string; description: string; isDefault: boolean }) => {
       const payload = {
         name: draft.name.trim(),
         description: draft.description.trim() || null,
       }
-      if (isNew) return createCairnSjodr(payload)
-      return updateCairnSjodr(selectedId!, payload)
+      const fund = isNew
+        ? await createCairnSjodr(payload)
+        : await updateCairnSjodr(selectedId!, payload)
+      return { fund, isDefault: draft.isDefault }
     },
-    onSuccess: () => {
+    onSuccess: ({ fund, isDefault }) => {
+      const existing = queryClient.getQueryData<CairnSjodrView[]>(['cairn-sjodr']) ?? []
+      const next = isNew
+        ? [...existing, fund].sort((a, b) =>
+            a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+          )
+        : existing.map((row) => (row.id === fund.id ? fund : row))
+      writeFunds(next)
+      if (isDefault) {
+        setDefaultSjodrId(fund.id)
+        setDefaultFundIdState(fund.id)
+      } else if (isDefaultSjodrId(fund.id)) {
+        setDefaultSjodrId(null)
+        setDefaultFundIdState(null)
+      }
       toast.success(isNew ? `${terms.sjodrSingular} created` : `${terms.sjodrSingular} saved`)
-      invalidate()
+      invalidateAudr()
       onSelectId(null)
     },
     onError: (error) =>
@@ -76,8 +104,14 @@ export function AudrSjodrInspector({
   const deleteMutation = useMutation({
     mutationFn: () => deleteCairnSjodr(selectedId!),
     onSuccess: () => {
+      const existing = queryClient.getQueryData<CairnSjodrView[]>(['cairn-sjodr']) ?? []
+      writeFunds(existing.filter((fund) => fund.id !== selectedId))
+      if (selectedId && isDefaultSjodrId(selectedId)) {
+        setDefaultSjodrId(null)
+        setDefaultFundIdState(null)
+      }
       toast.success(`${terms.sjodrSingular} deleted`)
-      invalidate()
+      invalidateAudr()
       onSelectId(null)
     },
     onError: (error) =>
@@ -89,6 +123,7 @@ export function AudrSjodrInspector({
       <SjodrForm
         fund={selected}
         isNew={isNew}
+        isDefault={isNew ? false : defaultFundId === selectedId}
         isSaving={saveMutation.isPending || deleteMutation.isPending}
         onBack={() => onSelectId(null)}
         onSave={async (draft) => {
@@ -125,11 +160,11 @@ export function AudrSjodrInspector({
         </ToolbarTooltip>
       </div>
       <div className="min-h-0 min-w-0 flex-1 space-y-2 overflow-y-auto overflow-x-hidden p-3">
-        {sjodrQuery.isLoading ? (
-          <p className="px-1 py-4 text-sm text-muted-foreground">Loading…</p>
+        {sjodrQuery.isPending && !sjodrQuery.data ? (
+          <SjodrListSkeleton />
         ) : funds.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
-            <Wallet className="mb-2 h-8 w-8 text-muted-foreground/40" aria-hidden />
+            <SjodrIcon className="mb-2 h-8 w-8 text-muted-foreground/40" aria-hidden />
             <p className="text-sm text-muted-foreground">No {terms.sjodr.toLowerCase()} yet.</p>
             <button
               type="button"
@@ -146,6 +181,7 @@ export function AudrSjodrInspector({
               fund={fund}
               month={month}
               year={year}
+              isDefault={defaultFundId === fund.id}
               caches={cacheUtilization.filter((cache) => cache.fundId === fund.id)}
               supplylines={supplylines.filter((line) => line.fundId === fund.id)}
               onEdit={() => onSelectId(fund.id)}
@@ -157,10 +193,24 @@ export function AudrSjodrInspector({
   )
 }
 
+function SjodrListSkeleton() {
+  return (
+    <div className="space-y-2" aria-hidden>
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div
+          key={index}
+          className="h-[104px] animate-pulse rounded-lg border border-border bg-muted/40"
+        />
+      ))}
+    </div>
+  )
+}
+
 function SjodrCard({
   fund,
   month,
   year,
+  isDefault,
   caches,
   supplylines,
   onEdit,
@@ -168,6 +218,7 @@ function SjodrCard({
   fund: CairnSjodrView
   month: number
   year: number
+  isDefault: boolean
   caches: CairnCacheUtilization[]
   supplylines: CairnSupplyline[]
   onEdit: () => void
@@ -197,7 +248,14 @@ function SjodrCard({
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-foreground">{fund.name}</p>
+          <div className="flex min-w-0 items-center gap-1.5">
+            <p className="truncate text-sm font-medium text-foreground">{fund.name}</p>
+            {isDefault ? (
+              <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                Default
+              </span>
+            ) : null}
+          </div>
           {fund.description ? (
             <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{fund.description}</p>
           ) : null}
@@ -231,6 +289,7 @@ function SjodrCard({
 function SjodrForm({
   fund,
   isNew,
+  isDefault: initialDefault,
   isSaving,
   onBack,
   onSave,
@@ -238,21 +297,23 @@ function SjodrForm({
 }: {
   fund: CairnSjodrView | null
   isNew: boolean
+  isDefault: boolean
   isSaving: boolean
   onBack: () => void
-  onSave: (draft: { name: string; description: string }) => Promise<void>
+  onSave: (draft: { name: string; description: string; isDefault: boolean }) => Promise<void>
   onDelete: () => Promise<void>
 }) {
   const terms = useTerms()
   const [name, setName] = useState(fund?.name ?? '')
   const [description, setDescription] = useState(fund?.description ?? '')
+  const [isDefault, setIsDefault] = useState(initialDefault)
   const [deleteOpen, setDeleteOpen] = useState(false)
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <InspectorFormHeader
         title={isNew ? `New ${terms.sjodrSingular}` : `Edit ${terms.sjodrSingular}`}
-        icon={Wallet}
+        icon={ASGARD_ENTITY_ICONS.sjodr}
         onBack={onBack}
         showBack
       />
@@ -271,6 +332,12 @@ function SjodrForm({
             className="flex w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </label>
+        <SwitchField
+          checked={isDefault}
+          onCheckedChange={setIsDefault}
+          label={`Default ${terms.sjodrSingular.toLowerCase()}`}
+          description={`Pre-select on new ${terms.expenses.toLowerCase()}, ${terms.subscriptions.toLowerCase()}, and ${terms.budgets.toLowerCase()}.`}
+        />
       </div>
       <InspectorFormActions
         isNew={isNew}
@@ -279,7 +346,7 @@ function SjodrForm({
         createLabel={`Create ${terms.sjodrSingular}`}
         saveLabel="Save"
         deleteLabel={`Delete ${terms.sjodrSingular.toLowerCase()}`}
-        onSave={() => void onSave({ name, description })}
+        onSave={() => void onSave({ name, description, isDefault })}
         showDelete={!isNew}
         onDelete={() => setDeleteOpen(true)}
         className="px-4"

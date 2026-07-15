@@ -292,7 +292,15 @@ export function AudrClient() {
         return
       }
       const target = event.target as HTMLElement
-      if (target.closest('[data-inspectable]')) return
+      // Toolbar / form controls sit on the canvas; ignore them so inspector
+      // switches (Laufar ↔ Sjodr) are not cleared by pointerdown before click.
+      if (
+        target.closest(
+          'a, button, input, select, textarea, label, [data-inspectable], [data-studio-portal], [role="listbox"], [role="option"]',
+        )
+      ) {
+        return
+      }
       clearSelection()
       clearCatalog()
       clearLaufarManage()
@@ -504,14 +512,7 @@ export function AudrClient() {
             targetMarkerIds={targetMarkerIds}
             onSaved={() => {
               refresh()
-              if (
-                selection.kind === 'new-burn' ||
-                selection.kind === 'new-supplyline' ||
-                selection.kind === 'new-cache' ||
-                selection.kind === 'cache-marker'
-              ) {
-                clearSelection()
-              }
+              clearSelection()
             }}
             onDeleted={() => {
               refresh()

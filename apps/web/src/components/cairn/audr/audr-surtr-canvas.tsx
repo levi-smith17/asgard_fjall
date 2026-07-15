@@ -117,7 +117,7 @@ export function AudrSurtrCanvas({
 
                 return (
                   <div key={markerId}>
-                    <div className="sticky top-0 z-10 flex items-start gap-2 border-b border-border bg-muted/90 px-4 py-2 backdrop-blur-sm sm:px-6">
+                    <div className="sticky top-0 z-[1] flex items-start gap-2 border-b border-border bg-muted/90 px-4 py-2 backdrop-blur-sm sm:px-6">
                       <button
                         type="button"
                         data-inspectable

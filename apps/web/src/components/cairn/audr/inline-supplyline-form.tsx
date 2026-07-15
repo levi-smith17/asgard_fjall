@@ -9,6 +9,7 @@ import { useFormStatus } from '@/hooks/use-form-status'
 import { toMarkerId } from '@/lib/embedded-markers'
 import type { CairnSupplyline } from '@/lib/cairn-types'
 import { toDateInputValue, todayDateInputValue } from '@/lib/date-input'
+import { getDefaultSjodrId } from '@/lib/audr-default-sjodr'
 import { useTerms } from '@/hooks/use-terminology'
 import type { AudrSaveActionRef } from './inline-burn-form'
 import { FundPicker } from './fund-picker'
@@ -64,7 +65,9 @@ export function InlineSupplylineForm({
   )
   const [url, setUrl] = useState(supplyline?.url ?? '')
   const [notes, setNotes] = useState(supplyline?.notes ?? '')
-  const [fundId, setFundId] = useState<string | null>(supplyline?.fundId ?? null)
+  const [fundId, setFundId] = useState<string | null>(
+    () => supplyline?.fundId ?? (supplyline ? null : getDefaultSjodrId()),
+  )
   const [tagIds, setTagIds] = useState(
     (supplyline?.markers?.map((t) => toMarkerId(t)).filter(Boolean) as string[]) ?? [],
   )
@@ -80,7 +83,7 @@ export function InlineSupplylineForm({
     )
     setUrl(supplyline?.url ?? '')
     setNotes(supplyline?.notes ?? '')
-    setFundId(supplyline?.fundId ?? null)
+    setFundId(supplyline?.fundId ?? (supplyline ? null : getDefaultSjodrId()))
     setTagIds(
       (supplyline?.markers?.map((t) => toMarkerId(t)).filter(Boolean) as string[]) ?? [],
     )
