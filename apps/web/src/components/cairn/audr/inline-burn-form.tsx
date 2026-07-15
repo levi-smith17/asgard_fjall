@@ -14,6 +14,7 @@ import { toMarkerId } from '@/lib/embedded-markers'
 import type { CairnBurn } from '@/lib/cairn-types'
 import { toDateInputValue, todayDateInputValue } from '@/lib/date-input'
 import { useTerms } from '@/hooks/use-terminology'
+import { FundPicker } from './fund-picker'
 
 export type AudrSaveActionRef = MutableRefObject<(() => Promise<void>) | null>
 
@@ -47,6 +48,7 @@ export function InlineBurnForm({
     burn?.date ? toDateInputValue(burn.date) : todayDateInputValue(),
   )
   const [notes, setNotes] = useState(burn?.notes ?? '')
+  const [fundId, setFundId] = useState<string | null>(burn?.fundId ?? null)
   const [tagIds, setTagIds] = useState(
   () =>
     (burn?.markers?.map((t) => toMarkerId(t)).filter(Boolean) as string[]) ??
@@ -64,6 +66,7 @@ export function InlineBurnForm({
     setAmount(String(burn?.amount ?? 0))
     setDate(burn?.date ? toDateInputValue(burn.date) : todayDateInputValue())
     setNotes(burn?.notes ?? '')
+    setFundId(burn?.fundId ?? null)
     setTagIds(
       (burn?.markers?.map((t) => toMarkerId(t)).filter(Boolean) as string[]) ??
         (defaultMarkerId ? [defaultMarkerId] : []),
@@ -115,6 +118,7 @@ export function InlineBurnForm({
         notes: notes || null,
         markerIds: tagIds,
         receiptUrl: receiptKey,
+        fundId,
       })
       onSaved()
     })
@@ -172,6 +176,7 @@ export function InlineBurnForm({
           initialPath={['Provisions']}
         />
       </label>
+      <FundPicker value={fundId} onChange={setFundId} />
       <label className="block space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">Notes</span>
         <Input

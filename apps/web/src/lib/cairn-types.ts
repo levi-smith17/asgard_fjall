@@ -115,6 +115,7 @@ export type CairnBurn = {
   date: string
   notes?: string | null
   receiptUrl?: string | null
+  fundId?: string | null
   markers: CairnMarkerJunction[]
 }
 
@@ -127,6 +128,7 @@ export type CairnSupplyline = {
   url?: string | null
   notes?: string | null
   active: boolean
+  fundId?: string | null
   markers: CairnMarkerJunction[]
 }
 
@@ -137,6 +139,27 @@ export type CairnCacheUtilization = {
   limit: number
   spent: number
   utilization: number
+  fundId?: string | null
+}
+
+export type CairnSjodr = {
+  pk: string
+  sk: string
+  name: string
+  description?: string | null
+  createdAt: string
+}
+
+export type CairnSjodrView = {
+  id: string
+  name: string
+  description: string | null
+  createdAt: string
+}
+
+export type SaveCairnSjodrRequest = {
+  name: string
+  description?: string | null
 }
 
 export type CairnUpcomingRenewal = {

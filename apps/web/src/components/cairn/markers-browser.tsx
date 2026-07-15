@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { ChevronLeft, ChevronRight, Plus, Tag } from 'lucide-react'
+import { ChevronLeft, Plus, Settings, Tag } from 'lucide-react'
 import type { CairnMarkerView } from '@/lib/cairn-types'
 import { Button } from '@/components/core/ui/button'
 import { FilterInput } from '@/components/core/ui/filter-input'
@@ -180,9 +180,9 @@ export function MarkersBrowser({
               label={currentGroupMarker.name.split('/').pop() ?? currentGroupMarker.name}
               color={currentGroupMarker.color}
               isSelected={selectedId === currentGroupMarker.id}
-              hasDrillIn={false}
-              onSelect={() => onSelect(currentGroupMarker.id)}
-              onDrillIn={() => {}}
+              canDrill={false}
+              onOpen={() => onSelect(currentGroupMarker.id)}
+              onEdit={() => onSelect(currentGroupMarker.id)}
               onAdd={() =>
                 onNewSubmarker({
                   name: currentGroupMarker.name,
@@ -202,9 +202,9 @@ export function MarkersBrowser({
                     label={node.label}
                     color={node.color!}
                     isSelected={selectedId === node.id}
-                    hasDrillIn
-                    onSelect={() => onSelect(node.id!)}
-                    onDrillIn={() => onNavigateInto(currentPath)}
+                    canDrill
+                    onOpen={() => onNavigateInto(currentPath)}
+                    onEdit={() => onSelect(node.id!)}
                     onAdd={() =>
                       onNewSubmarker({
                         name: currentPath.join('/'),
@@ -219,7 +219,7 @@ export function MarkersBrowser({
                 <GroupRow
                   key={node.label}
                   label={node.label}
-                  onDrillIn={() => onNavigateInto(currentPath)}
+                  onOpen={() => onNavigateInto(currentPath)}
                   onAdd={() =>
                     onNewSubmarker({ name: currentPath.join('/'), color: '#6b7280', icon: null })
                   }
@@ -232,7 +232,9 @@ export function MarkersBrowser({
                 label={node.label}
                 color={node.color}
                 isSelected={selectedId === node.id}
-                onSelect={() => onSelect(node.id)}
+                canDrill={false}
+                onOpen={() => onSelect(node.id)}
+                onEdit={() => onSelect(node.id)}
                 onAdd={() =>
                   onNewSubmarker({ name: node.name, color: node.color, icon: node.icon ?? null })
                 }
@@ -250,17 +252,17 @@ function MarkerRow({
   label,
   color,
   isSelected,
-  hasDrillIn = false,
-  onSelect,
-  onDrillIn,
+  canDrill,
+  onOpen,
+  onEdit,
   onAdd,
 }: {
   label: string
   color: string
   isSelected: boolean
-  hasDrillIn?: boolean
-  onSelect: () => void
-  onDrillIn?: () => void
+  canDrill: boolean
+  onOpen: () => void
+  onEdit: () => void
   onAdd: () => void
 }) {
   return (
@@ -273,8 +275,11 @@ function MarkerRow({
       <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
       <button
         type="button"
-        onClick={onSelect}
-        className={cn('min-w-0 flex-1 truncate text-left text-sm', hasDrillIn && 'hover:opacity-70')}
+        onClick={onOpen}
+        className={cn(
+          'min-w-0 flex-1 truncate text-left text-sm',
+          canDrill && 'font-medium',
+        )}
       >
         {label}
       </button>
@@ -286,33 +291,37 @@ function MarkerRow({
       >
         <Plus className="h-3.5 w-3.5" />
       </button>
-      {hasDrillIn && onDrillIn ? (
+      <ToolbarTooltip label="Edit">
         <button
           type="button"
-          onClick={onDrillIn}
+          onClick={onEdit}
           className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          aria-label="Open group"
+          aria-label={`Edit ${label}`}
         >
-          <ChevronRight className="h-3.5 w-3.5" />
+          <Settings className="h-3.5 w-3.5" />
         </button>
-      ) : null}
+      </ToolbarTooltip>
     </div>
   )
 }
 
 function GroupRow({
   label,
-  onDrillIn,
+  onOpen,
   onAdd,
 }: {
   label: string
-  onDrillIn: () => void
+  onOpen: () => void
   onAdd: () => void
 }) {
   return (
     <div className="group flex items-center gap-2 border-b border-border px-4 py-2.5 transition-colors hover:bg-muted/50">
       <span className="h-2 w-2 shrink-0 rounded-full bg-muted-foreground/30" />
-      <button type="button" onClick={onDrillIn} className="min-w-0 flex-1 truncate text-left text-sm font-medium">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="min-w-0 flex-1 truncate text-left text-sm font-medium"
+      >
         {label}
       </button>
       <button
@@ -323,7 +332,6 @@ function GroupRow({
       >
         <Plus className="h-3.5 w-3.5" />
       </button>
-      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
     </div>
   )
 }
@@ -367,6 +375,19 @@ function SearchResultRow({
       >
         <Plus className="h-3.5 w-3.5" />
       </button>
+      <ToolbarTooltip label="Edit">
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            onSelect()
+          }}
+          className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          aria-label={`Edit ${label}`}
+        >
+          <Settings className="h-3.5 w-3.5" />
+        </button>
+      </ToolbarTooltip>
     </div>
   )
 }

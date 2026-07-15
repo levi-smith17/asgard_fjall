@@ -29,6 +29,7 @@ export function AudrSurtrCanvas({
   onClearFilters,
   onBringSkatt,
   onManageLaufar,
+  onManageSjodr,
   burns,
   cacheUtilization,
   supplylines,
@@ -56,6 +57,7 @@ export function AudrSurtrCanvas({
   onClearFilters: () => void
   onBringSkatt: () => void
   onManageLaufar: () => void
+  onManageSjodr: () => void
   burns: CairnBurn[]
   cacheUtilization: CairnCacheUtilization[]
   supplylines: CairnSupplyline[]
@@ -93,6 +95,7 @@ export function AudrSurtrCanvas({
         onClearFilters={onClearFilters}
         onBringSkatt={onBringSkatt}
         onManageLaufar={onManageLaufar}
+        onManageSjodr={onManageSjodr}
       />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

@@ -6,10 +6,10 @@ import {
   InspectorFormActions,
   InspectorFormHeader,
 } from '@/components/core/ui/inspector-form-actions'
-import { MarkerColorSwatch, PRESET_COLORS } from '@/components/cairn/markers-list'
+import { MarkerColorField } from '@/components/cairn/marker-color-field'
+import { PRESET_COLORS } from '@/components/cairn/markers-list'
 import { useTerms } from '@/hooks/use-terminology'
 import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
-import { cn } from '@/lib/utils'
 
 export function MarkerInspector({
   marker,
@@ -40,8 +40,7 @@ export function MarkerInspector({
   const [segment, setSegment] = useState(
     effectiveParent ? (marker?.name.split('/').pop() ?? '') : (marker?.name ?? ''),
   )
-  const [color, setColor] = useState(marker?.color ?? PRESET_COLORS[5])
-  const [icon, setIcon] = useState(marker?.icon ?? '')
+  const [color, setColor] = useState(marker?.color ?? PRESET_COLORS[12])
   const [deleteOpen, setDeleteOpen] = useState(false)
 
   const fullName = effectiveParent ? `${effectiveParent}/${segment.trim()}` : segment.trim()
@@ -54,7 +53,7 @@ export function MarkerInspector({
         <label className="block space-y-1.5">
           <span className="text-xs font-medium text-muted-foreground">Name</span>
           {effectiveParent ? (
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <span className="shrink-0 text-xs text-muted-foreground">{effectiveParent}/</span>
               <Input value={segment} onChange={(event) => setSegment(event.target.value)} />
             </div>
@@ -67,34 +66,7 @@ export function MarkerInspector({
           )}
         </label>
 
-        <div className="space-y-2">
-          <span className="text-xs font-medium text-muted-foreground">Color</span>
-          <div className="flex flex-wrap gap-2">
-            {PRESET_COLORS.map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => setColor(preset)}
-                className={cn(
-                  'rounded-full border-2 p-0.5',
-                  color === preset ? 'border-primary' : 'border-transparent',
-                )}
-                aria-label={`Color ${preset}`}
-              >
-                <MarkerColorSwatch color={preset} />
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <label className="block space-y-1.5">
-          <span className="text-xs font-medium text-muted-foreground">Icon (optional)</span>
-          <Input
-            value={icon}
-            onChange={(event) => setIcon(event.target.value)}
-            placeholder="Tag"
-          />
-        </label>
+        <MarkerColorField color={color} onChange={setColor} />
       </div>
       <InspectorFormActions
         isNew={isNew}
@@ -107,7 +79,7 @@ export function MarkerInspector({
           void onSave({
             name: fullName,
             color,
-            icon: icon.trim() ? icon.trim() : null,
+            icon: marker?.icon ?? null,
           })
         }
         showDelete={!isNew}

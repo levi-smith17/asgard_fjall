@@ -8,11 +8,14 @@ import type {
   CairnMarker,
   CairnMarkerView,
   CairnProvisionsSummary,
+  CairnSjodr,
+  CairnSjodrView,
   CairnSupplyline,
   CairnTrail,
   CairnTrailView,
   CairnWaypoint,
   CairnWaypointMeta,
+  SaveCairnSjodrRequest,
   SaveCairnWaypointRequest,
 } from '@/lib/cairn-types'
 import { extractCairnId } from '@/lib/cairn-format'
@@ -271,6 +274,53 @@ export async function markCairnSignalRead(id: string): Promise<void> {
 
 export async function deleteCairnSignal(id: string): Promise<void> {
   await cairnFetch<void>(`/signals/${id}`, { method: 'DELETE' })
+}
+
+// ─── Sjodr (funds) ─────────────────────────────────────────────────────────
+
+export async function fetchCairnSjodr(): Promise<CairnSjodrView[]> {
+  const rows = await cairnFetch<CairnSjodr[]>('/sjodr')
+  return rows
+    .map((row) => ({
+      id: extractCairnId(row.sk),
+      name: row.name,
+      description: row.description ?? null,
+      createdAt: row.createdAt,
+    }))
+    .sort((left, right) => left.name.localeCompare(right.name, undefined, { sensitivity: 'base' }))
+}
+
+export async function createCairnSjodr(data: SaveCairnSjodrRequest): Promise<CairnSjodrView> {
+  const row = await cairnFetch<CairnSjodr>('/sjodr', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+  return {
+    id: extractCairnId(row.sk),
+    name: row.name,
+    description: row.description ?? null,
+    createdAt: row.createdAt,
+  }
+}
+
+export async function updateCairnSjodr(
+  id: string,
+  data: SaveCairnSjodrRequest,
+): Promise<CairnSjodrView> {
+  const row = await cairnFetch<CairnSjodr>(`/sjodr/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
+  return {
+    id: extractCairnId(row.sk),
+    name: row.name,
+    description: row.description ?? null,
+    createdAt: row.createdAt,
+  }
+}
+
+export async function deleteCairnSjodr(id: string): Promise<void> {
+  await cairnFetch<void>(`/sjodr/${id}`, { method: 'DELETE' })
 }
 
 // ─── Trails ────────────────────────────────────────────────────────────────

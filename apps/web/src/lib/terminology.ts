@@ -29,6 +29,11 @@ export type Terms = {
   subscriptionSingular: string
   budgets: string
   budgetSingular: string
+  /** Root Run/Marker name for Audr scoping (always "Provisions" in data). */
+  provisionsGroup: string
+  /** Audr funds (Asgard: Sjodr). */
+  sjodr: string
+  sjodrSingular: string
   // Cairn item types
   laufar: string
   laufarSingular: string
@@ -82,6 +87,9 @@ const ASGARD: Terms = {
   subscriptionSingular: 'Idunn',
   budgets: 'Skatt',
   budgetSingular: 'Skatt',
+  provisionsGroup: 'Provisions',
+  sjodr: 'Sjodr',
+  sjodrSingular: 'Sjodr',
   laufar: 'Laufar',
   laufarSingular: 'Lauf',
   greinar: 'Greinar',
@@ -133,6 +141,9 @@ const CAIRN: Terms = {
   subscriptionSingular: 'Supplyline',
   budgets: 'Cache',
   budgetSingular: 'Cache',
+  provisionsGroup: 'Provisions',
+  sjodr: 'Funds',
+  sjodrSingular: 'Fund',
   laufar: 'Waypoints',
   laufarSingular: 'Waypoint',
   greinar: 'Trails',
@@ -184,6 +195,9 @@ const STANDARD: Terms = {
   subscriptionSingular: 'Subscription',
   budgets: 'Budgets',
   budgetSingular: 'Budget',
+  provisionsGroup: 'Provisions',
+  sjodr: 'Funds',
+  sjodrSingular: 'Fund',
   laufar: 'Tasks',
   laufarSingular: 'Task',
   greinar: 'Groups',

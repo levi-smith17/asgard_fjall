@@ -11,6 +11,7 @@ import type { CairnSupplyline } from '@/lib/cairn-types'
 import { toDateInputValue, todayDateInputValue } from '@/lib/date-input'
 import { useTerms } from '@/hooks/use-terminology'
 import type { AudrSaveActionRef } from './inline-burn-form'
+import { FundPicker } from './fund-picker'
 
 const BILLING_CYCLES = ['WEEKLY', 'BIWEEKLY', 'MONTHLY', 'QUARTERLY', 'ANNUALLY'] as const
 const CYCLE_LABELS: Record<string, string> = {
@@ -63,6 +64,7 @@ export function InlineSupplylineForm({
   )
   const [url, setUrl] = useState(supplyline?.url ?? '')
   const [notes, setNotes] = useState(supplyline?.notes ?? '')
+  const [fundId, setFundId] = useState<string | null>(supplyline?.fundId ?? null)
   const [tagIds, setTagIds] = useState(
     (supplyline?.markers?.map((t) => toMarkerId(t)).filter(Boolean) as string[]) ?? [],
   )
@@ -78,6 +80,7 @@ export function InlineSupplylineForm({
     )
     setUrl(supplyline?.url ?? '')
     setNotes(supplyline?.notes ?? '')
+    setFundId(supplyline?.fundId ?? null)
     setTagIds(
       (supplyline?.markers?.map((t) => toMarkerId(t)).filter(Boolean) as string[]) ?? [],
     )
@@ -109,6 +112,7 @@ export function InlineSupplylineForm({
           url: normalizedUrl,
           notes: notes.trim() || null,
           markerIds: tagIds,
+          fundId,
           active: supplyline?.active ?? true,
         })
         onSaved()
@@ -176,6 +180,7 @@ export function InlineSupplylineForm({
           initialPath={['Provisions']}
         />
       </label>
+      <FundPicker value={fundId} onChange={setFundId} />
       <label className="block space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">URL</span>
         <Input placeholder="Optional URL" value={url} onChange={(e) => setUrl(e.target.value)} />

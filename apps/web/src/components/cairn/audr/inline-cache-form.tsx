@@ -8,6 +8,7 @@ import { useFormStatus } from '@/hooks/use-form-status'
 import type { CairnCacheUtilization } from '@/lib/cairn-types'
 import { useTerms } from '@/hooks/use-terminology'
 import type { AudrSaveActionRef } from './inline-burn-form'
+import { FundPicker } from './fund-picker'
 
 interface Props {
   cache?: CairnCacheUtilization
@@ -38,10 +39,12 @@ export function InlineCacheForm({
   const { saving, handleSubmit } = useFormStatus()
   const [markerId, setMarkerId] = useState(cache?.markerId ?? defaultMarkerId ?? '')
   const [limit, setLimit] = useState(cache?.limit != null ? String(cache.limit) : '')
+  const [fundId, setFundId] = useState<string | null>(cache?.fundId ?? null)
 
   useEffect(() => {
     setMarkerId(cache?.markerId ?? defaultMarkerId ?? '')
     setLimit(cache?.limit != null ? String(cache.limit) : '')
+    setFundId(cache?.fundId ?? null)
   }, [cache?.id, defaultMarkerId])
 
   async function save() {
@@ -56,6 +59,7 @@ export function InlineCacheForm({
         limit: parseFloat(limit),
         month,
         year,
+        fundId,
       })
       onSaved()
     })
@@ -87,6 +91,7 @@ export function InlineCacheForm({
           initialPath={['Provisions']}
         />
       </label>
+      <FundPicker value={fundId} onChange={setFundId} />
       <label className="block space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">Monthly limit</span>
         <Input

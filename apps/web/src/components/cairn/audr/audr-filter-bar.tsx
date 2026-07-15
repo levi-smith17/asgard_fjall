@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Copy } from 'lucide-react'
+import { Copy, Wallet } from 'lucide-react'
 import { ContextBarSearch } from '@/components/core/layout/context-bar-search'
 import {
   FilterPaletteField,
@@ -27,6 +27,7 @@ export function AudrFilterBar({
   onClearFilters,
   onBringSkatt,
   onManageLaufar,
+  onManageSjodr,
 }: {
   monthName: string
   onPrevMonth: () => void
@@ -40,6 +41,7 @@ export function AudrFilterBar({
   onClearFilters: () => void
   onBringSkatt: () => void
   onManageLaufar: () => void
+  onManageSjodr: () => void
 }) {
   const terms = useTerms()
   const LaufarIcon = ASGARD_ENTITY_ICONS.laufar
@@ -92,6 +94,26 @@ export function AudrFilterBar({
               ) : undefined
             }
           />
+          <ToolbarTooltip label={`Audr ${terms.laufar}`}>
+            <button
+              type="button"
+              onClick={onManageLaufar}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted-hover hover:text-foreground"
+              aria-label={`Manage Audr ${terms.laufar}`}
+            >
+              <LaufarIcon className="h-4 w-4" />
+            </button>
+          </ToolbarTooltip>
+          <ToolbarTooltip label={terms.sjodr}>
+            <button
+              type="button"
+              onClick={onManageSjodr}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted-hover hover:text-foreground"
+              aria-label={terms.sjodr}
+            >
+              <Wallet className="h-4 w-4" />
+            </button>
+          </ToolbarTooltip>
           <ToolbarTooltip label={`Bring ${terms.budgets} Forward`}>
             <button
               type="button"
@@ -100,16 +122,6 @@ export function AudrFilterBar({
               aria-label={`Bring ${terms.budgets} forward`}
             >
               <Copy className="h-4 w-4" />
-            </button>
-          </ToolbarTooltip>
-          <ToolbarTooltip label={`Provisions ${terms.laufar}`}>
-            <button
-              type="button"
-              onClick={onManageLaufar}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted-hover hover:text-foreground"
-              aria-label={`Manage Provisions ${terms.laufar}`}
-            >
-              <LaufarIcon className="h-4 w-4" />
             </button>
           </ToolbarTooltip>
         </div>

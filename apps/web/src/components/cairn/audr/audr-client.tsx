@@ -23,6 +23,7 @@ import { useTerms } from '@/hooks/use-terminology'
 import { AudrContextBar } from './audr-context-bar'
 import { AudrIdunnRail } from './audr-idunn-rail'
 import { AudrLaufarInspector } from './audr-laufar-inspector'
+import { AudrSjodrInspector } from './audr-sjodr-inspector'
 import { AudrSurtrCanvas } from './audr-surtr-canvas'
 import { AudrInspector } from './audr-inspector'
 import type { AudrSelection } from './audr-types'
@@ -34,7 +35,7 @@ type CatalogState = {
   markerParent: string | null
 }
 
-type LaufarManageState = {
+type PanelManageState = {
   selectedId: string | null
 }
 
@@ -75,7 +76,8 @@ export function AudrClient() {
 
   const [selection, setSelection] = useState<AudrSelection | null>(null)
   const [catalog, setCatalog] = useState<CatalogState | null>(null)
-  const [laufarManage, setLaufarManage] = useState<LaufarManageState | null>(null)
+  const [laufarManage, setLaufarManage] = useState<PanelManageState | null>(null)
+  const [sjodrManage, setSjodrManage] = useState<PanelManageState | null>(null)
   const [burnPage, setBurnPage] = useState(1)
 
   const markersQuery = useQuery({
@@ -201,11 +203,13 @@ export function AudrClient() {
   const clearSelection = useCallback(() => setSelection(null), [])
   const clearCatalog = useCallback(() => setCatalog(null), [])
   const clearLaufarManage = useCallback(() => setLaufarManage(null), [])
-  const provisionsRootPath = useMemo(() => ['Provisions'], [])
+  const clearSjodrManage = useCallback(() => setSjodrManage(null), [])
+  const provisionsRootPath = useMemo(() => [terms.provisionsGroup], [terms.provisionsGroup])
 
   const openCatalog = useCallback(() => {
     setSelection(null)
     setLaufarManage(null)
+    setSjodrManage(null)
     setCatalog({
       tab: 'runir',
       selectedId: null,
@@ -217,17 +221,30 @@ export function AudrClient() {
   const openLaufarManage = useCallback(() => {
     setSelection(null)
     setCatalog(null)
+    setSjodrManage(null)
     setLaufarManage({ selectedId: null })
+  }, [])
+
+  const openSjodrManage = useCallback(() => {
+    setSelection(null)
+    setCatalog(null)
+    setLaufarManage(null)
+    setSjodrManage({ selectedId: null })
   }, [])
 
   const selectEntity = useCallback((next: AudrSelection) => {
     setCatalog(null)
     setLaufarManage(null)
+    setSjodrManage(null)
     setSelection(next)
   }, [])
 
   const inspectorOpen =
-    inspectorPinned || selection != null || catalog != null || laufarManage != null
+    inspectorPinned ||
+    selection != null ||
+    catalog != null ||
+    laufarManage != null ||
+    sjodrManage != null
   const inspectorState = inspectorOpen ? 'open' : 'hint'
 
   const selectedBurn =
@@ -268,21 +285,29 @@ export function AudrClient() {
 
   const handleCanvasPointerDown = useCallback(
     (event: React.PointerEvent) => {
-      if (inspectorPinned || (selection == null && catalog == null && laufarManage == null)) return
+      if (
+        inspectorPinned ||
+        (selection == null && catalog == null && laufarManage == null && sjodrManage == null)
+      ) {
+        return
+      }
       const target = event.target as HTMLElement
       if (target.closest('[data-inspectable]')) return
       clearSelection()
       clearCatalog()
       clearLaufarManage()
+      clearSjodrManage()
     },
     [
       inspectorPinned,
       selection,
       catalog,
       laufarManage,
+      sjodrManage,
       clearSelection,
       clearCatalog,
       clearLaufarManage,
+      clearSjodrManage,
     ],
   )
 
@@ -291,11 +316,12 @@ export function AudrClient() {
       if (
         event.key === 'Escape' &&
         !inspectorPinned &&
-        (selection || catalog || laufarManage)
+        (selection || catalog || laufarManage || sjodrManage)
       ) {
         clearSelection()
         clearCatalog()
         clearLaufarManage()
+        clearSjodrManage()
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -305,9 +331,11 @@ export function AudrClient() {
     selection,
     catalog,
     laufarManage,
+    sjodrManage,
     clearSelection,
     clearCatalog,
     clearLaufarManage,
+    clearSjodrManage,
   ])
 
   const isLoading =
@@ -373,6 +401,7 @@ export function AudrClient() {
             }}
             onBringSkatt={() => selectEntity({ kind: 'skatt-carry' })}
             onManageLaufar={openLaufarManage}
+            onManageSjodr={openSjodrManage}
             burns={burnItems}
             cacheUtilization={cacheUtilization}
             supplylines={skattSupplylines}
@@ -401,8 +430,10 @@ export function AudrClient() {
         catalog
           ? terms.runir
           : laufarManage
-            ? `Provisions ${terms.laufar}`
-            : `Select ${terms.expenses.toLowerCase()}, ${terms.subscriptions.toLowerCase()}, or ${terms.budgets.toLowerCase()} to inspect`
+            ? `Audr ${terms.laufar}`
+            : sjodrManage
+              ? terms.sjodr
+              : `Select ${terms.expenses.toLowerCase()}, ${terms.subscriptions.toLowerCase()}, or ${terms.budgets.toLowerCase()} to inspect`
       }
       inspector={
         catalog ? (
@@ -442,10 +473,21 @@ export function AudrClient() {
           <AudrLaufarInspector
             trails={trails}
             markers={markers}
-            rootMarkerName="Provisions"
+            rootMarkerName={terms.provisionsGroup}
             selectedId={laufarManage.selectedId}
             onSelectId={(id) =>
               setLaufarManage((current) => (current ? { ...current, selectedId: id } : current))
+            }
+          />
+        ) : sjodrManage ? (
+          <AudrSjodrInspector
+            month={month}
+            year={year}
+            cacheUtilization={cacheUtilization}
+            supplylines={skattSupplylines}
+            selectedId={sjodrManage.selectedId}
+            onSelectId={(id) =>
+              setSjodrManage((current) => (current ? { ...current, selectedId: id } : current))
             }
           />
         ) : selection ? (

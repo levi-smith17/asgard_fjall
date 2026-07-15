@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
+import { ExternalLink, Plus, Settings } from 'lucide-react'
 import { toast } from 'sonner'
 import type { CairnMarkerView, CairnTrailView, CairnWaypointView } from '@/lib/cairn-types'
 import { WaypointInspector, type WaypointDraft } from '@/components/cairn/waypoint-inspector'
@@ -21,6 +21,12 @@ import { cn, includesFoldedSearch } from '@/lib/utils'
 
 function isUnderRoot(markerName: string, root: string) {
   return markerName === root || markerName.startsWith(`${root}/`)
+}
+
+function normalizeHref(url: string): string {
+  const trimmed = url.trim()
+  if (!trimmed) return ''
+  return trimmed.includes('://') ? trimmed : `https://${trimmed}`
 }
 
 export function AudrLaufarInspector({
@@ -127,9 +133,7 @@ export function AudrLaufarInspector({
         trails={trails}
         markers={markers.filter((marker) => isUnderRoot(marker.name, rootMarkerName))}
         markerPickerInitialPath={[rootMarkerName]}
-        defaultMarkerIds={
-          isNew && rootMarker ? [rootMarker.id] : undefined
-        }
+        defaultMarkerIds={isNew && rootMarker ? [rootMarker.id] : undefined}
         showBack
         onClose={() => onSelectId(null)}
         onSave={async (draft) => {
@@ -146,15 +150,12 @@ export function AudrLaufarInspector({
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <InspectorChrome>
-        <InspectorChromeTitle
-          eyebrow={terms.laufar}
-          title={`${rootMarkerName} ${terms.laufar}`}
-        />
+        <InspectorChromeTitle eyebrow={terms.laufar} title={`Audr ${terms.laufar}`} />
       </InspectorChrome>
       <div className="border-b border-border px-4 py-3">
         <p className="text-xs leading-relaxed text-muted-foreground">
           Manage {terms.laufar.toLowerCase()} tagged with {rootMarkerName} or a nested{' '}
-          {terms.runSingular.toLowerCase()}.
+          {terms.runSingular.toLowerCase()}. Click a card to open the link.
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
@@ -177,9 +178,9 @@ export function AudrLaufarInspector({
           </Button>
         </ToolbarTooltip>
       </div>
-      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
+      <div className="min-h-0 min-w-0 flex-1 space-y-2 overflow-y-auto overflow-x-hidden p-3">
         {waypointsQuery.isLoading ? (
-          <p className="px-4 py-6 text-sm text-muted-foreground">Loading…</p>
+          <p className="px-1 py-4 text-sm text-muted-foreground">Loading…</p>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
             <LaufarIcon className="mb-2 h-8 w-8 text-muted-foreground/40" aria-hidden />
@@ -195,51 +196,86 @@ export function AudrLaufarInspector({
             </button>
           </div>
         ) : (
-          <ul>
-            {filtered.map((waypoint) => (
-              <LaufarRow
-                key={waypoint.id}
-                waypoint={waypoint}
-                selected={selectedId === waypoint.id}
-                onSelect={() => onSelectId(waypoint.id)}
-              />
-            ))}
-          </ul>
+          filtered.map((waypoint) => (
+            <LaufarCard
+              key={waypoint.id}
+              waypoint={waypoint}
+              onOpenLink={() => {
+                const href = normalizeHref(waypoint.url)
+                if (href) window.open(href, '_blank', 'noopener,noreferrer')
+              }}
+              onEdit={() => onSelectId(waypoint.id)}
+            />
+          ))
         )}
       </div>
     </div>
   )
 }
 
-function LaufarRow({
+function LaufarCard({
   waypoint,
-  selected,
-  onSelect,
+  onOpenLink,
+  onEdit,
 }: {
   waypoint: CairnWaypointView
-  selected: boolean
-  onSelect: () => void
+  onOpenLink: () => void
+  onEdit: () => void
 }) {
   return (
-    <li>
+    <div className="relative rounded-lg border border-border bg-card text-left transition-colors hover:border-primary/40">
       <button
         type="button"
-        onClick={onSelect}
-        className={cn(
-          'flex w-full items-start gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-muted-hover',
-          selected && 'bg-primary/10 text-primary',
-        )}
+        onClick={onOpenLink}
+        className="flex w-full items-start gap-2.5 p-3 pr-10 text-left"
       >
         {waypoint.favicon ? (
-          <img src={waypoint.favicon} alt="" className="mt-0.5 h-4 w-4 shrink-0 rounded-sm" />
+          <img src={waypoint.favicon} alt="" className="mt-0.5 h-5 w-5 shrink-0 rounded-sm" />
         ) : (
-          <span className="mt-0.5 h-4 w-4 shrink-0 rounded-sm bg-muted" aria-hidden />
+          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground">
+            <ExternalLink className="h-3 w-3" aria-hidden />
+          </span>
         )}
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-medium">{waypoint.title || waypoint.url}</span>
-          <span className="block truncate text-xs text-muted-foreground">{waypoint.url}</span>
+          <span className="block truncate text-sm font-medium text-foreground">
+            {waypoint.title || waypoint.url}
+          </span>
+          <span className="mt-0.5 block truncate text-xs text-muted-foreground">{waypoint.url}</span>
+          {waypoint.markers.length > 0 ? (
+            <span className="mt-1.5 flex flex-wrap gap-1">
+              {waypoint.markers.slice(0, 3).map((marker) => (
+                <span
+                  key={marker.id}
+                  className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                >
+                  <span
+                    className="h-1.5 w-1.5 rounded-full"
+                    style={{ backgroundColor: marker.color }}
+                    aria-hidden
+                  />
+                  {marker.name.split('/').pop()}
+                </span>
+              ))}
+            </span>
+          ) : null}
         </span>
       </button>
-    </li>
+      <ToolbarTooltip label="Edit">
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            onEdit()
+          }}
+          className={cn(
+            'absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-md',
+            'text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
+          )}
+          aria-label={`Edit ${waypoint.title || waypoint.url}`}
+        >
+          <Settings className="h-3.5 w-3.5" aria-hidden />
+        </button>
+      </ToolbarTooltip>
+    </div>
   )
 }
