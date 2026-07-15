@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { ChevronLeft, ChevronRight, Plus, Tag } from 'lucide-react'
-import type { CairnMarkerView } from '@asgard/types'
+import type { CairnMarkerView } from '@/lib/cairn-types'
 import { Button } from '@/components/core/ui/button'
 import { FilterInput } from '@/components/core/ui/filter-input'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
@@ -10,7 +10,6 @@ import {
   getAllLeaves,
   getNodesAtPath,
 } from '@/lib/marker-groups'
-import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
 
 export type MarkerParentContext = {
@@ -43,7 +42,6 @@ export function MarkersBrowser({
   /** When set, navigation cannot go above this path (e.g. `['Provisions']`). */
   rootPath?: string[]
 }) {
-  const terms = useTerms()
   const tree = useMemo(() => buildMarkerTree(markers), [markers])
   const markerMap = useMemo(() => new Map(markers.map((marker) => [marker.id, marker])), [markers])
   const currentNodes = useMemo(() => getNodesAtPath(tree, groupPath), [tree, groupPath])

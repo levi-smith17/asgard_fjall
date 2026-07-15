@@ -11,7 +11,7 @@ import {
 } from '@/lib/cairn-api'
 import { useFormStatus } from '@/hooks/use-form-status'
 import { toMarkerId } from '@/lib/embedded-markers'
-import type { CairnBurn } from '@asgard/types'
+import type { CairnBurn } from '@/lib/cairn-types'
 import { toDateInputValue, todayDateInputValue } from '@/lib/date-input'
 import { useTerms } from '@/hooks/use-terminology'
 

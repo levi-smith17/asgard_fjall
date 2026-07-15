@@ -102,12 +102,12 @@ export function AudrFilterBar({
               <Copy className="h-4 w-4" />
             </button>
           </ToolbarTooltip>
-          <ToolbarTooltip label={`${terms.provisionsGroup} ${terms.laufar}`}>
+          <ToolbarTooltip label={`Provisions ${terms.laufar}`}>
             <button
               type="button"
               onClick={onManageLaufar}
               className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted-hover hover:text-foreground"
-              aria-label={`Manage ${terms.provisionsGroup} ${terms.laufar}`}
+              aria-label={`Manage Provisions ${terms.laufar}`}
             >
               <LaufarIcon className="h-4 w-4" />
             </button>

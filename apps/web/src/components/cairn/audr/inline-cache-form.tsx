@@ -5,7 +5,7 @@ import { Button } from '@/components/core/ui/button'
 import { MarkerPicker } from '@/components/cairn/marker-picker'
 import { saveCairnCache } from '@/lib/cairn-api'
 import { useFormStatus } from '@/hooks/use-form-status'
-import type { CairnCacheUtilization } from '@asgard/types'
+import type { CairnCacheUtilization } from '@/lib/cairn-types'
 import { useTerms } from '@/hooks/use-terminology'
 import type { AudrSaveActionRef } from './inline-burn-form'
 

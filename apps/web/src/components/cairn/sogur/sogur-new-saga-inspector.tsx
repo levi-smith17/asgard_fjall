@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { CairnTrailView } from '@asgard/types'
+import type { CairnTrailView } from '@/lib/cairn-types'
 import { Input } from '@/components/core/ui/input'
 import { InspectorFormActions } from '@/components/core/ui/inspector-form-actions'
 import { Select } from '@/components/core/ui/select'
@@ -12,7 +12,7 @@ type GreinMode = 'existing' | 'new'
 export function SogurNewSagaInspector({
   greinar,
   onCreate,
-  onCancel,
+  onCancel: _onCancel,
   creating,
 }: {
   greinar: CairnTrailView[]

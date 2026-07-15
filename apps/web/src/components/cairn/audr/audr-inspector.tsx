@@ -7,7 +7,7 @@ import { deleteCairnBurn, deleteCairnCache, deleteCairnSupplyline } from '@/lib/
 import { markerShortLabel } from '@/lib/audr-format'
 import { useTerms } from '@/hooks/use-terminology'
 import type { Terms } from '@/lib/terminology'
-import type { CairnBurn, CairnCacheUtilization, CairnSupplyline } from '@asgard/types'
+import type { CairnBurn, CairnCacheUtilization, CairnSupplyline } from '@/lib/cairn-types'
 import type { AudrMarker, AudrSelection } from './audr-types'
 import { InlineBurnForm, type AudrSaveActionRef } from './inline-burn-form'
 import { InlineSupplylineForm } from './inline-supplyline-form'

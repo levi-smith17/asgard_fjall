@@ -11,7 +11,7 @@ import {
 import { effectiveSkattSpent, effectiveSkattUtilization } from '@/lib/audr-skatt-idunn'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
-import type { CairnBurn, CairnCacheUtilization, CairnSupplyline } from '@asgard/types'
+import type { CairnBurn, CairnCacheUtilization, CairnSupplyline } from '@/lib/cairn-types'
 import type { AudrMarker } from './audr-types'
 import { AudrBurnRow } from './audr-burn-row'
 import { AudrFilterBar } from './audr-filter-bar'

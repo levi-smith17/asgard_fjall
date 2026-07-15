@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { CairnTrailView } from '@asgard/types'
+import type { CairnTrailView } from '@/lib/cairn-types'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { Input } from '@/components/core/ui/input'
 import {

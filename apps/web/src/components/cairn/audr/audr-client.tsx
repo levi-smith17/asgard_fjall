@@ -201,7 +201,7 @@ export function AudrClient() {
   const clearSelection = useCallback(() => setSelection(null), [])
   const clearCatalog = useCallback(() => setCatalog(null), [])
   const clearLaufarManage = useCallback(() => setLaufarManage(null), [])
-  const provisionsRootPath = useMemo(() => [terms.provisionsGroup], [terms.provisionsGroup])
+  const provisionsRootPath = useMemo(() => ['Provisions'], [])
 
   const openCatalog = useCallback(() => {
     setSelection(null)
@@ -401,7 +401,7 @@ export function AudrClient() {
         catalog
           ? terms.runir
           : laufarManage
-            ? `${terms.provisionsGroup} ${terms.laufar}`
+            ? `Provisions ${terms.laufar}`
             : `Select ${terms.expenses.toLowerCase()}, ${terms.subscriptions.toLowerCase()}, or ${terms.budgets.toLowerCase()} to inspect`
       }
       inspector={
@@ -442,7 +442,7 @@ export function AudrClient() {
           <AudrLaufarInspector
             trails={trails}
             markers={markers}
-            rootMarkerName={terms.provisionsGroup}
+            rootMarkerName="Provisions"
             selectedId={laufarManage.selectedId}
             onSelectId={(id) =>
               setLaufarManage((current) => (current ? { ...current, selectedId: id } : current))

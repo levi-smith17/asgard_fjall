@@ -13,7 +13,7 @@ import { audrFmt } from '@/lib/audr-format'
 import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
-import type { CairnSupplyline } from '@asgard/types'
+import type { CairnSupplyline } from '@/lib/cairn-types'
 
 const CYCLE_LABELS: Record<string, string> = {
   WEEKLY: 'Wk',
