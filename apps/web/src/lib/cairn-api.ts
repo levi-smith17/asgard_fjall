@@ -497,12 +497,14 @@ export type CairnBurnQueryParams = {
   page?: number
   search?: string
   markerId?: string
+  fundId?: string
 }
 
 export async function fetchCairnBurnPage(params: CairnBurnQueryParams): Promise<CairnBurnPage> {
   const qs = new URLSearchParams({ month: String(params.month), year: String(params.year), page: String(params.page ?? 1) })
   if (params.search) qs.set('search', params.search)
   if (params.markerId) qs.set('markerId', params.markerId)
+  if (params.fundId) qs.set('fundId', params.fundId)
   return cairnFetch<CairnBurnPage>(`/burn?${qs}`)
 }
 

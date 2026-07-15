@@ -12,12 +12,18 @@ import {
   fetchCairnBurnPage,
   fetchCairnMarkers,
   fetchCairnProvisionsSummary,
+  fetchCairnSjodr,
   fetchCairnSupplylinesFiltered,
   fetchCairnTrails,
 } from '@/lib/cairn-api'
 import { daysUntilRenewal } from '@/lib/cairn-supplyline-renewal'
 import { toMarkerView, toTrailView } from '@/lib/cairn-format'
-import { monthYearLabel, shiftMonth } from '@/lib/audr-format'
+import {
+  monthYearLabel,
+  shiftMonth,
+  type AudrCanvasGroupBy,
+} from '@/lib/audr-format'
+import { loadAudrCanvasGroupBy, saveAudrCanvasGroupBy } from '@/lib/audr-group-by'
 import { totalEffectiveSkattUtilization } from '@/lib/audr-skatt-idunn'
 import { useTerms } from '@/hooks/use-terminology'
 import { AudrContextBar } from './audr-context-bar'
@@ -69,9 +75,12 @@ export function AudrClient() {
   const [year, setYear] = useState(now.getFullYear())
   const [search, setSearch] = useState('')
   const [markerFilter, setMarkerFilter] = useState('all')
+  const [sjodrFilter, setSjodrFilter] = useState('all')
+  const [groupBy, setGroupBy] = useState<AudrCanvasGroupBy>(() => loadAudrCanvasGroupBy())
   const [idunnActiveFilter, setIdunnActiveFilter] = useState('true')
   const debouncedSearch = useDebounce(search, 300)
-  const surtrFiltersActive = search !== '' || markerFilter !== 'all'
+  const surtrFiltersActive =
+    search !== '' || markerFilter !== 'all' || sjodrFilter !== 'all'
   const idunnFiltersActive = idunnActiveFilter !== 'true'
 
   const [selection, setSelection] = useState<AudrSelection | null>(null)
@@ -97,7 +106,7 @@ export function AudrClient() {
   })
 
   const burnQuery = useQuery({
-    queryKey: ['audr', 'burn', month, year, burnPage, debouncedSearch, markerFilter],
+    queryKey: ['audr', 'burn', month, year, burnPage, debouncedSearch, markerFilter, sjodrFilter],
     queryFn: () =>
       fetchCairnBurnPage({
         month,
@@ -105,8 +114,14 @@ export function AudrClient() {
         page: burnPage,
         search: debouncedSearch || undefined,
         markerId: markerFilter !== 'all' ? markerFilter : undefined,
+        fundId: sjodrFilter !== 'all' ? sjodrFilter : undefined,
       }),
     placeholderData: keepPreviousData,
+  })
+
+  const sjodrQuery = useQuery({
+    queryKey: ['cairn-sjodr'],
+    queryFn: fetchCairnSjodr,
   })
 
   const supplylinesQuery = useQuery({
@@ -126,7 +141,7 @@ export function AudrClient() {
 
   useEffect(() => {
     setBurnPage(1)
-  }, [month, year, debouncedSearch, markerFilter])
+  }, [month, year, debouncedSearch, markerFilter, sjodrFilter])
 
   const markers = useMemo(
     () => (markersQuery.data ?? []).map(toMarkerView).sort((a, b) => a.name.localeCompare(b.name)),
@@ -401,11 +416,20 @@ export function AudrClient() {
             onSearchChange={setSearch}
             markerFilter={markerFilter}
             onMarkerFilterChange={setMarkerFilter}
+            sjodrFilter={sjodrFilter}
+            onSjodrFilterChange={setSjodrFilter}
+            groupBy={groupBy}
+            onGroupByChange={(value) => {
+              setGroupBy(value)
+              saveAudrCanvasGroupBy(value)
+            }}
             markers={audrMarkers}
+            funds={sjodrQuery.data ?? []}
             filtersActive={surtrFiltersActive}
             onClearFilters={() => {
               setSearch('')
               setMarkerFilter('all')
+              setSjodrFilter('all')
             }}
             onBringSkatt={() => selectEntity({ kind: 'skatt-carry' })}
             onManageLaufar={openLaufarManage}

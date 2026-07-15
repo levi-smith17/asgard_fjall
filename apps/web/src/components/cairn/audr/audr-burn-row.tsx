@@ -10,10 +10,13 @@ export function AudrBurnRow({
   burn,
   selected,
   onSelect,
+  fundLabel,
 }: {
   burn: CairnBurn
   selected: boolean
   onSelect: () => void
+  /** When string, show fund badge; when null, show muted Unassigned; when undefined, hide. */
+  fundLabel?: string | null
 }) {
   return (
     <button
@@ -34,6 +37,11 @@ export function AudrBurnRow({
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="truncate text-sm font-medium">{burn.name}</span>
+          {fundLabel !== undefined ? (
+            <span className="inline-flex max-w-[10rem] truncate rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+              {fundLabel ?? 'Unassigned'}
+            </span>
+          ) : null}
           {burn.markers.map((entry, i) => {
             const marker = toDisplayMarker(entry)
             if (!marker) return null
