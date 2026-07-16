@@ -24,7 +24,11 @@ output "lan_url" {
 }
 
 output "cloudfront_aliases" {
-  value = compact([var.domain, var.lan_domain])
+  value = compact(concat([var.domain, var.lan_domain], var.apex_domains))
+}
+
+output "apex_urls" {
+  value = [for host in var.apex_domains : "https://${host}"]
 }
 
 output "github_actions_setup" {

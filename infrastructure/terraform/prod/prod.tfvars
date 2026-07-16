@@ -1,5 +1,6 @@
 domain             = "asgard.levismith.us"
 lan_domain         = "fjall.levismith.us"
+apex_domains       = ["levismith.us", "www.levismith.us"]
 webauthn_rp_id     = "levismith.us"
 hosted_zone_name   = "levismith.us"
 github_repo        = "levi-smith17/asgard_fjall"

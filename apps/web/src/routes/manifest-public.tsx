@@ -729,8 +729,16 @@ function scrollToSection(sectionId: PublicOrdstirrRailSectionId) {
   })
 }
 
-export function PublicManifestPage({ view }: { view: PublicManifestView }) {
-  const { username } = useParams<{ username: string }>()
+export function PublicManifestPage({
+  view,
+  username: usernameProp,
+}: {
+  view: PublicManifestView
+  /** When set (apex Ordstirr), skip the URL username param. */
+  username?: string
+}) {
+  const { username: usernameParam } = useParams<{ username: string }>()
+  const username = usernameProp ?? usernameParam
   // Public Ordstirr is Standard-only (never Asgard / Cairn labels).
   const terms = termsFor('STANDARD')
   const navigate = useNavigate()

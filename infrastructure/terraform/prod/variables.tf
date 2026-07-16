@@ -47,6 +47,12 @@ variable "lan_domain" {
   default     = "fjall.levismith.us"
 }
 
+variable "apex_domains" {
+  description = "Public Ordstirr apex hostnames (ACM SAN + CloudFront alias + Route53 A/AAAA)."
+  type        = list(string)
+  default     = ["levismith.us", "www.levismith.us"]
+}
+
 variable "webauthn_rp_id" {
   description = "WebAuthn RP ID shared across Fjall hostnames (must be a parent of each origin host)."
   type        = string

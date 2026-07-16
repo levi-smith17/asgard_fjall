@@ -13,6 +13,7 @@ import { StjornurPage } from '@/routes/stjornur'
 import { ThingPage } from '@/routes/thing'
 import { PublicManifestPage } from '@/routes/manifest-public'
 import { ThreadPage } from '@/routes/thread'
+import { APEX_ORDSTIRR_USERNAME, isApexOrdstirrHost } from '@/lib/apex-ordstirr'
 import { publicManifestPath, type PublicManifestView } from '@/lib/public-manifest-path'
 
 function LegacyPublicManifestRedirect({ view }: { view: PublicManifestView }) {
@@ -21,12 +22,9 @@ function LegacyPublicManifestRedirect({ view }: { view: PublicManifestView }) {
   return <Navigate to={publicManifestPath(username, view)} replace />
 }
 
-export function App() {
+function PublicSurfaces() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-
-      {/* Public surfaces — no passkey gate; Ordstirr uses Standard terms only. */}
+    <>
       <Route path="/ordstirr/:username" element={<PublicManifestPage view="manifest" />} />
       <Route path="/ordstirr/:username/ferd" element={<PublicManifestPage view="journey" />} />
       <Route
@@ -43,7 +41,31 @@ export function App() {
         element={<LegacyPublicManifestRedirect view="contact" />}
       />
       <Route path="/thread/:token" element={<ThreadPage />} />
+    </>
+  )
+}
 
+/** Apex `levismith.us` — public Ordstirr only (Standard terms). */
+function ApexOrdstirrApp() {
+  const username = APEX_ORDSTIRR_USERNAME
+  return (
+    <Routes>
+      <Route path="/" element={<PublicManifestPage view="manifest" username={username} />} />
+      <Route path="/ferd" element={<PublicManifestPage view="journey" username={username} />} />
+      <Route path="/ordsending" element={<PublicManifestPage view="contact" username={username} />} />
+      <Route path="/journey" element={<Navigate to="/ferd" replace />} />
+      <Route path="/contact" element={<Navigate to="/ordsending" replace />} />
+      {PublicSurfaces()}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
+
+function AppShellRoutes() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      {PublicSurfaces()}
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
           <Route path="/" element={<HlidskjalfPage />} />
@@ -63,4 +85,9 @@ export function App() {
       <Route path="*" element={<Navigate to="/hlidskjalf" replace />} />
     </Routes>
   )
+}
+
+export function App() {
+  if (isApexOrdstirrHost()) return <ApexOrdstirrApp />
+  return <AppShellRoutes />
 }

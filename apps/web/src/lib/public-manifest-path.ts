@@ -1,3 +1,5 @@
+import { APEX_ORDSTIRR_USERNAME, isApexOrdstirrHost } from '@/lib/apex-ordstirr'
+
 export type PublicManifestView = 'manifest' | 'journey' | 'contact'
 
 export type PublicManifestPathMatch = {
@@ -5,17 +7,34 @@ export type PublicManifestPathMatch = {
   view: PublicManifestView
 }
 
-/** In-app Asgard public paths (not Cairn `/manifest/.../journey|contact`). */
+/** In-app Asgard public paths (apex uses short `/`, `/ferd`, `/ordsending`). */
 export function publicManifestPath(
   username: string,
   view: PublicManifestView = 'manifest',
 ): string {
+  if (isApexOrdstirrHost() && username === APEX_ORDSTIRR_USERNAME) {
+    if (view === 'journey') return '/ferd'
+    if (view === 'contact') return '/ordsending'
+    return '/'
+  }
   if (view === 'journey') return `/ordstirr/${username}/ferd`
   if (view === 'contact') return `/ordstirr/${username}/ordsending`
   return `/ordstirr/${username}`
 }
 
 export function parsePublicManifestPath(pathname: string): PublicManifestPathMatch | null {
+  if (isApexOrdstirrHost()) {
+    if (pathname === '/' || pathname === '') {
+      return { username: APEX_ORDSTIRR_USERNAME, view: 'manifest' }
+    }
+    if (pathname === '/ferd' || pathname === '/journey') {
+      return { username: APEX_ORDSTIRR_USERNAME, view: 'journey' }
+    }
+    if (pathname === '/ordsending' || pathname === '/contact') {
+      return { username: APEX_ORDSTIRR_USERNAME, view: 'contact' }
+    }
+  }
+
   const asgard = pathname.match(/^\/ordstirr\/([^/]+)(?:\/(ferd|ordsending))?\/?$/)
   if (asgard?.[1]) {
     const segment = asgard[2]

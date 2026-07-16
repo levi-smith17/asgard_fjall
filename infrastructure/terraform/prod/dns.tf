@@ -32,3 +32,31 @@ resource "aws_route53_record" "web_aaaa" {
 # Intentionally no public A/AAAA for var.lan_domain (fjall.levismith.us).
 # ACM validation CNAMEs above still publish for the SAN; LAN clients resolve
 # via Pi-hole → CloudFront (see docs/asgard-fjall.md / pipeline-bootstrap).
+
+resource "aws_route53_record" "apex_a" {
+  for_each = toset(var.apex_domains)
+  provider = aws.dns
+  zone_id  = data.aws_route53_zone.public.zone_id
+  name     = each.value
+  type     = "A"
+
+  alias {
+    name                   = module.cloudfront.cloudfront_domain_name
+    zone_id                = "Z2FDTNDATAQYW2"
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_route53_record" "apex_aaaa" {
+  for_each = toset(var.apex_domains)
+  provider = aws.dns
+  zone_id  = data.aws_route53_zone.public.zone_id
+  name     = each.value
+  type     = "AAAA"
+
+  alias {
+    name                   = module.cloudfront.cloudfront_domain_name
+    zone_id                = "Z2FDTNDATAQYW2"
+    evaluate_target_health = false
+  }
+}
