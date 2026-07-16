@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { buildSync } from 'esbuild'
 import { execSync } from 'node:child_process'
 import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -7,17 +8,15 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
-const DIST = join(ROOT, 'dist')
 const TMP = join(ROOT, '.deploy-tmp')
 const ENVIRONMENT = process.env.ENVIRONMENT ?? 'prod'
 const NAME_PREFIX = process.env.LAMBDA_NAME_PREFIX ?? `asgard-fjall-${ENVIRONMENT}`
-const MONO_ROOT = join(ROOT, '../..')
 
 const functions = process.argv.slice(2)
 
 if (functions.length === 0) {
   console.error('Usage: node scripts/deploy.mjs <feature/method> [<feature/method> ...]')
-  console.error('Example: node scripts/deploy.mjs health/get auth/authorizer auth/context')
+  console.error('Example: node scripts/deploy.mjs profile/get settings/get')
   process.exit(1)
 }
 
@@ -35,12 +34,13 @@ for (const fn of functions) {
   }
 
   const functionName = `${NAME_PREFIX}-${feature}-${method}`
+  const entry = join(ROOT, 'functions', feature, method, 'handler.ts')
+  const outDir = join(TMP, feature, method)
+  const outfile = join(outDir, 'handler.js')
   const zipPath = join(TMP, `${feature}-${method}.zip`)
-  const handlerDir = join(DIST, feature, method)
-  const sharedDir = join(DIST, 'shared')
 
-  if (!existsSync(handlerDir)) {
-    console.error(`Handler not found: ${handlerDir} (run pnpm --filter @asgard-fjall/api build first)`)
+  if (!existsSync(entry)) {
+    console.error(`Handler not found: ${entry}`)
     failed = true
     continue
   }
@@ -48,26 +48,21 @@ for (const fn of functions) {
   console.log(`\nDeploying ${functionName}...`)
 
   try {
-    const zipParts = [`${feature}/${method}`]
-    if (existsSync(sharedDir)) zipParts.push('shared')
-    execSync(`cd ${DIST} && zip -r ${zipPath} ${zipParts.join(' ')}`, { stdio: 'inherit' })
+    mkdirSync(outDir, { recursive: true })
+    buildSync({
+      entryPoints: [entry],
+      bundle: true,
+      platform: 'node',
+      target: 'node22',
+      format: 'cjs',
+      outfile,
+      sourcemap: false,
+      logLevel: 'warning',
+    })
 
-    if (fn === 'auth/authorizer') {
-      const josePaths = [
-        join(ROOT, 'node_modules/jose'),
-        join(MONO_ROOT, 'node_modules/jose'),
-      ]
-      const joseDir = josePaths.find((p) => existsSync(p))
-      if (!joseDir) {
-        console.error('jose not found — run pnpm install before deploying auth/authorizer')
-        failed = true
-        continue
-      }
-      const modulesRoot = dirname(joseDir)
-      execSync(`cd ${dirname(modulesRoot)} && zip -rq ${zipPath} node_modules/jose`, {
-        stdio: 'inherit',
-      })
-    }
+    execSync(`cd ${TMP} && zip -r ${zipPath} ${feature}/${method}/handler.js`, {
+      stdio: 'inherit',
+    })
 
     const profile = process.env.AWS_PROFILE ? `--profile ${process.env.AWS_PROFILE}` : ''
     const region = process.env.AWS_REGION ?? 'us-east-2'

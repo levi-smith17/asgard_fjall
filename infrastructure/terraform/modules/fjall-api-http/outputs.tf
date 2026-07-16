@@ -10,16 +10,8 @@ output "api_domain" {
   value = var.api_domain
 }
 
-output "health_function_name" {
-  value = aws_lambda_function.main["health-get"].function_name
-}
-
-output "authorizer_function_name" {
-  value = aws_lambda_function.main["auth-authorizer"].function_name
-}
-
-output "auth_context_function_name" {
-  value = aws_lambda_function.main["auth-context"].function_name
+output "function_names" {
+  value = { for key, fn in aws_lambda_function.main : key => fn.function_name }
 }
 
 output "stage_name" {

@@ -1,3 +1,4 @@
+import { createRemoteJWKSet, jwtVerify } from 'jose'
 import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb'
 import type {
   APIGatewayRequestAuthorizerEventV2,
@@ -10,19 +11,7 @@ const region = process.env.AWS_REGION ?? 'us-east-2'
 const userPoolId = process.env.COGNITO_USER_POOL_ID
 const clientId = process.env.COGNITO_CLIENT_ID
 
-type JoseModule = typeof import('jose')
-type JoseJwks = ReturnType<JoseModule['createRemoteJWKSet']>
-
-let josePromise: Promise<JoseModule> | null = null
-let jwks: JoseJwks | null = null
-
-async function loadJose(): Promise<JoseModule> {
-  if (!josePromise) {
-    // tsc downlevels `import('jose')` to require() under CommonJS; use native import instead.
-    josePromise = new Function('return import("jose")')() as Promise<JoseModule>
-  }
-  return josePromise
-}
+let jwks: ReturnType<typeof createRemoteJWKSet> | null = null
 
 function extractBearerToken(event: APIGatewayRequestAuthorizerEventV2): string | null {
   const fromHeader = parseBearerToken(
@@ -55,16 +44,14 @@ async function verifyJwt(token: string): Promise<{ sub: string; email?: string }
     throw new Error('Cognito env vars missing')
   }
 
-  const jose = await loadJose()
-
   if (!jwks) {
-    jwks = jose.createRemoteJWKSet(
+    jwks = createRemoteJWKSet(
       new URL(`https://cognito-idp.${region}.amazonaws.com/${userPoolId}/.well-known/jwks.json`),
     )
   }
 
   const issuer = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}`
-  const { payload } = await jose.jwtVerify(token, jwks, {
+  const { payload } = await jwtVerify(token, jwks, {
     issuer,
     audience: clientId,
   })

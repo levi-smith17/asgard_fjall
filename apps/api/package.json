@@ -7,9 +7,12 @@
     "deploy": "node scripts/deploy.mjs",
     "deploy:health": "node scripts/deploy.mjs health/get",
     "deploy:auth": "node scripts/deploy.mjs auth/authorizer auth/context",
-    "deploy:core": "node scripts/deploy.mjs health/get auth/authorizer auth/context"
+    "deploy:profile": "node scripts/deploy.mjs profile/get",
+    "deploy:settings": "node scripts/deploy.mjs settings/get settings/update settings/delete-account settings/api-token-get settings/api-token-create settings/api-token-revoke",
+    "deploy:core": "node scripts/deploy.mjs health/get auth/authorizer auth/context profile/get settings/get settings/update settings/delete-account settings/api-token-get settings/api-token-create settings/api-token-revoke"
   },
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.787.0",
     "@aws-sdk/client-dynamodb": "^3.787.0",
     "@aws-sdk/lib-dynamodb": "^3.787.0",
     "jose": "^6.0.11"
@@ -17,6 +20,7 @@
   "devDependencies": {
     "@types/aws-lambda": "^8.10.149",
     "@types/node": "^22.15.21",
+    "esbuild": "^0.28.1",
     "typescript": "^5.8.3"
   }
 }

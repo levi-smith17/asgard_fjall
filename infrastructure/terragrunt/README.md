@@ -33,7 +33,7 @@ apps/api/                      # Lambda handlers (tsc → zip deploy)
 | `prod/api` | GitHub OIDC deploy role (`lambda:UpdateFunctionCode` on `asgard-fjall-prod-*`) |
 | `prod/api-dns` | Regional ACM + DNS validation |
 | `prod/api-data` | DynamoDB table `asgard-fjall-prod` + read/write IAM policies |
-| `prod/api-http` | Health + REQUEST authorizer + `GET /auth/context`, custom domain |
+| `prod/api-http` | HTTP API + Lambdas + custom domain (`/health`, auth, profile, settings) |
 
 Auth today validates JWTs against **Cairn prod Cognito** (IDs in `env.hcl`). New Cognito
 in the asgard account lands at data cutover (passkey re-enroll).

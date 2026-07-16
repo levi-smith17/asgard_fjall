@@ -43,6 +43,11 @@ variable "lambda_read_policy_arn" {
   type        = string
 }
 
+variable "lambda_write_policy_arn" {
+  description = "IAM policy ARN granting DynamoDB read/write."
+  type        = string
+}
+
 variable "aws_region" {
   type    = string
   default = "us-east-2"
