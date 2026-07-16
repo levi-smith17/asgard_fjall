@@ -1,0 +1,73 @@
+import { BatchGetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb'
+import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda'
+import { dynamo, TABLE_NAME } from '../../shared/db'
+import { getPk } from '../../shared/auth'
+import { toApiGatewayResponse, noContent, badRequest, notFound, serverError } from '../../shared/response'
+
+export const handler = async (
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
+): Promise<APIGatewayProxyResultV2> => {
+  try {
+    const outpostId = event.pathParameters?.outpostId
+    const resourceId = event.pathParameters?.resourceId
+
+    if (!outpostId || !resourceId) {
+      return toApiGatewayResponse(badRequest('Missing outpostId or resourceId'))
+    }
+
+    const body = JSON.parse(event.body ?? '{}')
+
+    if (typeof body.onsite !== 'boolean') {
+      return toApiGatewayResponse(badRequest('onsite is required and must be a boolean'))
+    }
+
+    // Step 1: Fetch the global resource to get name and abbreviation
+    const resourceResult = await dynamo.send(
+      new BatchGetCommand({
+        RequestItems: {
+          [TABLE_NAME]: {
+            Keys: [{ pk: 'SF#RESOURCE', sk: `RESOURCE#${resourceId}` }],
+          },
+        },
+      }),
+    )
+
+    const resourceItem = resourceResult.Responses?.[TABLE_NAME]?.[0]
+
+    if (!resourceItem) {
+      return toApiGatewayResponse(notFound('Resource not found'))
+    }
+
+    const pk = getPk(event)
+
+    const supplies = Array.isArray(body.supplies) ? body.supplies : []
+
+    // Step 2: Upsert the resource entry on the outpost
+    await dynamo.send(
+      new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: { pk, sk: `SF#FACILITY#${outpostId}` },
+        UpdateExpression: 'SET #resources.#rid = :value',
+        ExpressionAttributeNames: {
+          '#resources': 'resources',
+          '#rid': resourceId,
+        },
+        ExpressionAttributeValues: {
+          ':value': {
+            resourceId,
+            name: resourceItem.name,
+            abbreviation: resourceItem.abbreviation,
+            onsite: body.onsite,
+            origin: body.origin ?? false,
+            supplies: body.onsite ? [] : supplies,
+          },
+        },
+      }),
+    )
+
+    return toApiGatewayResponse(noContent())
+  } catch (err) {
+    console.error(err)
+    return toApiGatewayResponse(serverError())
+  }
+}

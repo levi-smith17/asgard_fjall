@@ -526,6 +526,118 @@ locals {
       policy    = "write"
     }
 
+    # Stjornur (Cairn's starfield) — supply-chain network planner. Outposts stay on facility keys per product plan.
+    stjornur-networks-get = {
+      route_key = "GET /stjornur/networks"
+      memory    = 128
+      policy    = "read"
+    }
+    stjornur-network-create = {
+      route_key = "POST /stjornur/networks"
+      memory    = 128
+      policy    = "write"
+    }
+    stjornur-network-update = {
+      route_key = "PUT /stjornur/networks/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    stjornur-network-delete = {
+      route_key = "DELETE /stjornur/networks/{id}"
+      memory    = 256
+      policy    = "write"
+    }
+    stjornur-outposts-get = {
+      route_key = "GET /stjornur/outposts"
+      memory    = 256
+      policy    = "read"
+    }
+    stjornur-outpost-create = {
+      route_key = "POST /stjornur/outposts"
+      memory    = 128
+      policy    = "write"
+    }
+    stjornur-outpost-update = {
+      route_key = "PUT /stjornur/outposts/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    stjornur-outpost-delete = {
+      route_key = "DELETE /stjornur/outposts/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    stjornur-outpost-position = {
+      route_key = "PATCH /stjornur/outposts/{id}/position"
+      memory    = 128
+      policy    = "write"
+    }
+    stjornur-outpost-resource-upsert = {
+      route_key = "PUT /stjornur/outposts/{outpostId}/resources/{resourceId}"
+      memory    = 128
+      policy    = "write"
+    }
+    stjornur-outpost-resource-delete = {
+      route_key = "DELETE /stjornur/outposts/{outpostId}/resources/{resourceId}"
+      memory    = 128
+      policy    = "write"
+    }
+    stjornur-resources-get = {
+      route_key = "GET /stjornur/resources"
+      memory    = 128
+      policy    = "read"
+    }
+    stjornur-resource-create = {
+      route_key = "POST /stjornur/resources"
+      memory    = 128
+      policy    = "write"
+    }
+    stjornur-resource-update = {
+      route_key = "PUT /stjornur/resources/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    stjornur-resource-delete = {
+      route_key = "DELETE /stjornur/resources/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    stjornur-systems-get = {
+      route_key = "GET /stjornur/systems"
+      memory    = 128
+      policy    = "read"
+    }
+    stjornur-system-create = {
+      route_key = "POST /stjornur/systems"
+      memory    = 128
+      policy    = "write"
+    }
+    stjornur-system-update = {
+      route_key = "PUT /stjornur/systems/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    stjornur-system-delete = {
+      route_key = "DELETE /stjornur/systems/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    stjornur-system-planet-create = {
+      route_key = "POST /stjornur/systems/{id}/planets"
+      memory    = 128
+      policy    = "write"
+    }
+    stjornur-system-planet-update = {
+      route_key = "PUT /stjornur/systems/{id}/planets/{planetId}"
+      memory    = 128
+      policy    = "write"
+    }
+    stjornur-system-planet-delete = {
+      route_key = "DELETE /stjornur/systems/{id}/planets/{planetId}"
+      memory    = 128
+      policy    = "write"
+    }
+
     # Hlidskjalf (Cairn's basecamp) — dashboard aggregate reads.
     hlidskjalf-get = {
       route_key = "GET /hlidskjalf"

@@ -25,7 +25,8 @@
     "deploy:search": "node scripts/deploy.mjs search/get",
     "deploy:comms": "node scripts/deploy.mjs sendibod/get sendibod/reply sendibod/mark-read sendibod/delete sendibod/public-thread-get sendibod/public-thread-reply sogur/get sogur/create sogur/update sogur/delete sogur/upload-url nidjatal/kin-get nidjatal/kin-create nidjatal/kin-update nidjatal/kin-delete search/get",
     "deploy:dagatal": "node scripts/deploy.mjs dagatal/events-get dagatal/calendars-create dagatal/calendars-update dagatal/calendars-delete dagatal/subscriptions-create dagatal/subscriptions-update dagatal/subscriptions-delete",
-    "deploy:hlidskjalf": "node scripts/deploy.mjs hlidskjalf/get hlidskjalf/sidebar hlidskjalf/trail-waypoints"
+    "deploy:hlidskjalf": "node scripts/deploy.mjs hlidskjalf/get hlidskjalf/sidebar hlidskjalf/trail-waypoints",
+    "deploy:stjornur": "node scripts/deploy.mjs stjornur/networks-get stjornur/network-create stjornur/network-update stjornur/network-delete stjornur/outposts-get stjornur/outpost-create stjornur/outpost-update stjornur/outpost-delete stjornur/outpost-position stjornur/outpost-resource-upsert stjornur/outpost-resource-delete stjornur/resources-get stjornur/resource-create stjornur/resource-update stjornur/resource-delete stjornur/systems-get stjornur/system-create stjornur/system-update stjornur/system-delete stjornur/system-planet-create stjornur/system-planet-update stjornur/system-planet-delete"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.787.0",
