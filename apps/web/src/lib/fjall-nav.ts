@@ -6,6 +6,7 @@ import {
   NotebookPen,
   Rocket,
   ScrollText,
+  TreePine,
   Wallet,
   type LucideIcon,
 } from 'lucide-react'
@@ -25,6 +26,7 @@ export type FjallNavItem = {
 const ASGARD_SORT_LABEL: Record<string, keyof Terms> = {
   audr: 'provisions',
   dagatal: 'calendar',
+  nidjatal: 'nidjatal',
   ordstirr: 'resume',
   sendibod: 'messages',
   sogur: 'notes',
@@ -43,6 +45,7 @@ export function getFjallNavItems(terms: Terms): FjallNavItem[] {
   const rest: FjallNavItem[] = [
     { key: 'audr', label: terms.provisions, href: '/audr', icon: Wallet },
     { key: 'dagatal', label: terms.calendar, href: '/dagatal', icon: CalendarDays },
+    { key: 'nidjatal', label: terms.nidjatal, href: '/nidjatal', icon: TreePine },
     { key: 'ordstirr', label: terms.resume, href: '/ordstirr', icon: ScrollText },
     { key: 'sendibod', label: terms.messages, href: '/sendibod', icon: MessageSquare },
     { key: 'sogur', label: terms.notes, href: '/sogur', icon: NotebookPen },

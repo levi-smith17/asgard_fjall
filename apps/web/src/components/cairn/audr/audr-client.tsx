@@ -23,6 +23,7 @@ import {
   shiftMonth,
   type AudrCanvasGroupBy,
 } from '@/lib/audr-format'
+import { resolveAudrMarkerRootPath } from '@/lib/audr-marker-root'
 import { loadAudrCanvasGroupBy, saveAudrCanvasGroupBy } from '@/lib/audr-group-by'
 import { totalEffectiveSkattUtilization } from '@/lib/audr-skatt-idunn'
 import { useTerms } from '@/hooks/use-terminology'
@@ -219,7 +220,10 @@ export function AudrClient() {
   const clearCatalog = useCallback(() => setCatalog(null), [])
   const clearLaufarManage = useCallback(() => setLaufarManage(null), [])
   const clearSjodrManage = useCallback(() => setSjodrManage(null), [])
-  const provisionsRootPath = useMemo(() => [terms.provisionsGroup], [terms.provisionsGroup])
+  const provisionsRootPath = useMemo(
+    () => resolveAudrMarkerRootPath(markers),
+    [markers],
+  )
 
   const openCatalog = useCallback(() => {
     setSelection(null)
@@ -521,7 +525,7 @@ export function AudrClient() {
           <AudrLaufarInspector
             trails={trails}
             markers={markers}
-            rootMarkerName={terms.provisionsGroup}
+            rootMarkerName={provisionsRootPath[0] ?? terms.provisionsGroup}
             selectedId={laufarManage.selectedId}
             onSelectId={(id) =>
               setLaufarManage((current) => (current ? { ...current, selectedId: id } : current))

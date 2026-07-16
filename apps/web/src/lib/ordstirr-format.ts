@@ -92,15 +92,17 @@ export function manifestPublicUrl(
   customDomain?: string | null,
 ): string | null {
   if (!username?.trim()) return null
-  const path = `/manifest/${username.trim()}`
+  const user = username.trim()
+  const path = `/ordstirr/${user}`
   const domain = customDomain?.trim()
   if (domain) {
     const base = (domain.startsWith('http') ? domain : `https://${domain}`).replace(/\/$/, '')
-    // Custom domain may already be a full public URL.
-    if (/\/manifest(\/|$)/i.test(base)) return base
+    // Custom domain may already be a full public URL (legacy /manifest or /ordstirr).
+    if (/\/(manifest|ordstirr)(\/|$)/i.test(base)) return base
     return `${base}${path}`
   }
-  return `https://cairn.ing${path}`
+  // Apex personal site serves public Ordstirr only.
+  return `https://levismith.us${path}`
 }
 
 export function manifestPublicJourneyUrl(
@@ -109,7 +111,11 @@ export function manifestPublicJourneyUrl(
 ): string | null {
   const manifest = manifestPublicUrl(username, customDomain)
   if (!manifest) return null
-  return `${manifest.replace(/\/$/, '')}/journey`
+  if (/\/ferd\/?$/i.test(manifest)) return manifest
+  if (/\/journey\/?$/i.test(manifest)) {
+    return manifest.replace(/\/journey\/?$/i, '/ferd')
+  }
+  return `${manifest.replace(/\/$/, '')}/ferd`
 }
 
 export function formatManifestMonth(date: string | Date | null | undefined): string {

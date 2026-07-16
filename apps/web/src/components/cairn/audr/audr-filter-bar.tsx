@@ -116,7 +116,7 @@ export function AudrFilterBar({
                       singleSelect
                       toolbar
                       placeholder={`All ${terms.runir}`}
-                      initialPath={['Provisions']}
+                      initialPath={['Audr']}
                     />
                   </FilterPaletteField>
                 ) : null}

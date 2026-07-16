@@ -270,7 +270,7 @@ function HlidskjalfSnapshots() {
                 {label}
               </span>
               <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
-                Connect Cairn to load snapshots
+                Connect data to load snapshots
               </p>
             </div>
           ))
@@ -596,8 +596,8 @@ export function HlidskjalfPage() {
   const [inspectorPinned, setInspectorPinned] = useInspectorPinned()
 
   const laufarId = searchParams.get('laufar')
-  const cairnTab = (searchParams.get('cairn') as CairnCatalogTab | null) ?? null
-  const cairnId = searchParams.get('cairnId')
+  const catalogTab = (searchParams.get('catalog') as CairnCatalogTab | null) ?? null
+  const catalogId = searchParams.get('catalogId')
   const markerPath = parseMarkerPath(searchParams.get('markerPath'))
   const markerParent = searchParams.get('markerParent')
 
@@ -619,7 +619,7 @@ export function HlidskjalfPage() {
 
   const cairnErrorProps = useMemo(() => {
     const error = waypointsQuery.error ?? trailsQuery.error ?? markersQuery.error
-    return cairnQueryErrorProps(error, 'Cairn request failed')
+    return cairnQueryErrorProps(error, 'Data request failed')
   }, [markersQuery.error, trailsQuery.error, waypointsQuery.error])
 
   const trails = useMemo(
@@ -716,8 +716,8 @@ export function HlidskjalfPage() {
   const clearCairnSelection = useCallback(() => {
     patchParams((params) => {
       params.delete('laufar')
-      params.delete('cairn')
-      params.delete('cairnId')
+      params.delete('catalog')
+      params.delete('catalogId')
       params.delete('markerPath')
       params.delete('markerParent')
     })
@@ -727,8 +727,8 @@ export function HlidskjalfPage() {
     (id: string) => {
       patchParams((params) => {
         params.set('laufar', id)
-        params.delete('cairn')
-        params.delete('cairnId')
+        params.delete('catalog')
+        params.delete('catalogId')
         params.delete('markerPath')
         params.delete('markerParent')
       })
@@ -739,9 +739,9 @@ export function HlidskjalfPage() {
   const openCairnCatalog = useCallback(
     (tab: CairnCatalogTab = 'greinar') => {
       patchParams((params) => {
-        params.set('cairn', tab)
+        params.set('catalog', tab)
         params.delete('laufar')
-        params.delete('cairnId')
+        params.delete('catalogId')
         params.delete('markerPath')
         params.delete('markerParent')
       })
@@ -752,8 +752,8 @@ export function HlidskjalfPage() {
   const startAddCairnEntity = useCallback(
     (tab: CairnCatalogTab) => {
       patchParams((params) => {
-        params.set('cairn', tab)
-        params.set('cairnId', 'new')
+        params.set('catalog', tab)
+        params.set('catalogId', 'new')
         params.delete('laufar')
         params.delete('markerPath')
         params.delete('markerParent')
@@ -835,7 +835,7 @@ export function HlidskjalfPage() {
       ),
   })
 
-  const cairnInspectorOpen = laufarId != null || cairnTab != null
+  const cairnInspectorOpen = laufarId != null || catalogTab != null
   const inspectorOpen = inspectorPinned || cairnInspectorOpen
   const inspectorState = inspectorOpen ? 'open' : 'hint'
 
@@ -843,7 +843,7 @@ export function HlidskjalfPage() {
     (waypointsQuery.isError || trailsQuery.isError || markersQuery.isError) &&
     !waypointsQuery.isLoading
       ? cairnErrorProps.isConfigError || cairnErrorProps.isTokenError
-        ? (cairnErrorProps.detail ?? 'Cairn is not configured.')
+        ? (cairnErrorProps.detail ?? 'Data API is not configured.')
         : 'Could not load laufar.'
       : null
 
@@ -885,40 +885,40 @@ export function HlidskjalfPage() {
       }
       inspectorState={inspectorState}
       inspectorHint={
-        cairnTab
+        catalogTab
           ? `${terms.greinar} & ${terms.runir}`
           : laufarId
             ? terms.laufar
             : `Select a ${terms.laufarSingular.toLowerCase()}`
       }
       inspector={
-        cairnTab ? (
+        catalogTab ? (
           <CairnCatalogInspector
-            activeTab={cairnTab}
+            activeTab={catalogTab}
             onTabChange={(tab) => {
               patchParams((params) => {
-                params.set('cairn', tab)
-                params.delete('cairnId')
+                params.set('catalog', tab)
+                params.delete('catalogId')
                 params.delete('markerPath')
                 params.delete('markerParent')
               })
             }}
             trails={trails}
             markers={markers}
-            selectedId={cairnId}
+            selectedId={catalogId}
             markerPath={markerPath}
             markerParent={markerParent}
             onSelectId={(id) => {
               patchParams((params) => {
-                if (id) params.set('cairnId', id)
-                else params.delete('cairnId')
+                if (id) params.set('catalogId', id)
+                else params.delete('catalogId')
               })
             }}
             onMarkerPathChange={(path) => {
               patchParams((params) => {
                 if (path.length) params.set('markerPath', path.join('/'))
                 else params.delete('markerPath')
-                params.delete('cairnId')
+                params.delete('catalogId')
               })
             }}
             onMarkerParentChange={(parent) => {
@@ -929,7 +929,7 @@ export function HlidskjalfPage() {
             }}
             onClearSelection={() => {
               patchParams((params) => {
-                params.delete('cairnId')
+                params.delete('catalogId')
                 params.delete('markerParent')
               })
             }}

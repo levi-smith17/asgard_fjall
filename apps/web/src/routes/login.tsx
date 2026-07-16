@@ -78,7 +78,7 @@ export function LoginPage() {
     try {
       await auth.signInCognito(cognitoEmail.trim(), cognitoPassword)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Cairn sign-in failed')
+      setError(err instanceof Error ? err.message : 'Data sign-in failed')
     } finally {
       setSubmitting(false)
     }
@@ -94,7 +94,7 @@ export function LoginPage() {
             {passkeysConfigured
               ? 'Sign in with your passkey'
               : passkeysConfigured === null
-                ? 'Passkey auth offline — connect Cairn below or start apps/auth'
+                ? 'Passkey auth offline — connect data session below or start apps/auth'
                 : 'Register your first passkey'}
           </p>
         </div>
@@ -139,7 +139,7 @@ export function LoginPage() {
         {auth.cognitoConfigured ? (
           <form onSubmit={(e) => void handleCognitoConnect(e)} className="space-y-3 border-t border-border pt-4">
             <p className="text-xs text-muted-foreground">
-              Cairn API session (Bearer). Needed for live data after the passkey gate.
+              Data API session (Bearer). Needed for live data after the passkey gate.
             </p>
             <Input
               type="email"
@@ -158,7 +158,7 @@ export function LoginPage() {
               onChange={(e) => setCognitoPassword(e.target.value)}
             />
             <Button type="submit" variant="outline" className="w-full" disabled={submitting}>
-              {submitting ? 'Connecting…' : 'Connect Cairn'}
+              {submitting ? 'Connecting…' : 'Connect data'}
             </Button>
           </form>
         ) : null}

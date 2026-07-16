@@ -13,7 +13,6 @@ import {
 } from 'lucide-react'
 import { OrdstirrGearChart } from '@/components/cairn/ordstirr/ordstirr-gear-chart'
 import { PublicOrdstirrSectionsRail } from '@/components/cairn/ordstirr/public-ordstirr-sections-rail'
-import { GlobalSearchTrigger } from '@/components/core/command-palette/global-search-trigger'
 import { StudioContextBar } from '@/components/core/layout/studio-context-bar'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
 import { PublicOrdstirrCanvasSkeleton } from '@/components/core/ui/studio-skeletons'
@@ -22,7 +21,7 @@ import { Button } from '@/components/core/ui/button'
 import { Input } from '@/components/core/ui/input'
 import { Label } from '@/components/core/ui/label'
 import { RichTextContent } from '@/components/core/ui/rich-text-content'
-import { useTerminology } from '@/hooks/use-terminology'
+import { termsFor } from '@/lib/terminology'
 import type { ManifestGear } from '@/lib/manifest-api'
 import {
   fetchPublicContact,
@@ -319,7 +318,8 @@ function CompanionBlock({
 }
 
 function ManifestView({ data }: { data: PublicManifestData }) {
-  const { terms } = useTerminology()
+  // Public Ordstirr is Standard-only (never Asgard / Cairn labels).
+  const terms = termsFor('STANDARD')
   const wayfarer = data.wayfarer
   const initials = wayfarer.name?.slice(0, 2) ?? wayfarer.email?.[0] ?? '?'
   const avatar = wayfarer.image ?? wayfarer.avatar ?? null
@@ -507,7 +507,8 @@ function ManifestView({ data }: { data: PublicManifestData }) {
 }
 
 function JourneyView({ data }: { data: PublicJourneyData }) {
-  const { terms } = useTerminology()
+  // Public Ordstirr is Standard-only (never Asgard / Cairn labels).
+  const terms = termsFor('STANDARD')
   const wayfarer = data.wayfarer
   const initials = wayfarer.name?.slice(0, 2) ?? wayfarer.email?.[0] ?? '?'
   const avatar = wayfarer.image ?? wayfarer.avatar ?? null
@@ -714,7 +715,8 @@ function scrollToSection(sectionId: PublicOrdstirrRailSectionId) {
 
 export function PublicManifestPage({ view }: { view: PublicManifestView }) {
   const { username } = useParams<{ username: string }>()
-  const { terms } = useTerminology()
+  // Public Ordstirr is Standard-only (never Asgard / Cairn labels).
+  const terms = termsFor('STANDARD')
   const navigate = useNavigate()
   const { hash } = useLocation()
   const title = pageTitle(view, terms)
@@ -826,7 +828,7 @@ export function PublicManifestPage({ view }: { view: PublicManifestView }) {
     <StudioLayout
       railLabel="Sections"
       contextBar={
-        <StudioContextBar aria-label={title} title={title} actions={<GlobalSearchTrigger />} />
+        <StudioContextBar aria-label={title} title={title} actions={null} />
       }
       rail={
         <PublicOrdstirrSectionsRail

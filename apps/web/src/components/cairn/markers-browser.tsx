@@ -39,7 +39,7 @@ export function MarkersBrowser({
   onNew: () => void
   onNewSubmarker: (parent: MarkerParentContext) => void
   onNavigateInto: (path: string[]) => void
-  /** When set, navigation cannot go above this path (e.g. `['Provisions']`). */
+  /** When set, navigation cannot go above this path (e.g. `['Audr']`). */
   rootPath?: string[]
 }) {
   const tree = useMemo(() => buildMarkerTree(markers), [markers])

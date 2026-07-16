@@ -11,6 +11,10 @@ export type Terms = {
   notes: string
   notesSingular: string
   starfield: string
+  /** Nidjatal — genealogy app (Asgard: Nidjatal). */
+  nidjatal: string
+  nidjatalPerson: string
+  nidjatalPersonPlural: string
   /** Lattic Forge — external app (Asgard: Völundr). */
   forge: string
   settings: string
@@ -29,7 +33,7 @@ export type Terms = {
   subscriptionSingular: string
   budgets: string
   budgetSingular: string
-  /** Root Run/Marker name for Audr scoping (always "Provisions" in data). */
+  /** Root Run/Marker name for Audr scoping (data root path). */
   provisionsGroup: string
   /** Audr funds (Asgard: Sjodr). */
   sjodr: string
@@ -74,6 +78,9 @@ const ASGARD: Terms = {
   notes: 'Sögur',
   notesSingular: 'Saga',
   starfield: 'Stjörnur',
+  nidjatal: 'Nidjatal',
+  nidjatalPerson: 'Ættingi',
+  nidjatalPersonPlural: 'Ættingjar',
   forge: 'Völundr',
   settings: 'Thing',
   account: 'Heiti',
@@ -87,7 +94,7 @@ const ASGARD: Terms = {
   subscriptionSingular: 'Idunn',
   budgets: 'Skatt',
   budgetSingular: 'Skatt',
-  provisionsGroup: 'Provisions',
+  provisionsGroup: 'Audr',
   sjodr: 'Sjodr',
   sjodrSingular: 'Sjodr',
   laufar: 'Laufar',
@@ -117,60 +124,6 @@ const ASGARD: Terms = {
   summit_reached: 'Bautasteinn',
 }
 
-const CAIRN: Terms = {
-  productName: 'Cairn',
-  productSubtitle: 'Fjall',
-  dashboard: 'Basecamp',
-  provisions: 'Provisions',
-  calendar: 'Itinerary',
-  messages: 'Signals',
-  resume: 'Manifest',
-  notes: 'Logbook',
-  notesSingular: 'Log',
-  starfield: 'Night Sky',
-  forge: 'Lattic Forge',
-  settings: 'Compass',
-  account: 'Trail Register',
-  privacy: 'Solitude',
-  cache: 'Resupply',
-  platformGroup: 'Platform',
-  publicViewGroup: 'Public View',
-  expenses: 'Burn',
-  expenseSingular: 'Burn',
-  subscriptions: 'Supplylines',
-  subscriptionSingular: 'Supplyline',
-  budgets: 'Cache',
-  budgetSingular: 'Cache',
-  provisionsGroup: 'Provisions',
-  sjodr: 'Funds',
-  sjodrSingular: 'Fund',
-  laufar: 'Waypoints',
-  laufarSingular: 'Waypoint',
-  greinar: 'Trails',
-  greinSingular: 'Trail',
-  runir: 'Markers',
-  runSingular: 'Marker',
-  spjald: 'Tile',
-  spjold: 'Tiles',
-  unassigned: 'Unplaced',
-  manifest: 'Manifest',
-  origins: 'Origins',
-  expeditions: 'Expeditions',
-  training: 'Training',
-  gear: 'Gear',
-  landmarks: 'Landmarks',
-  summits: 'Summits',
-  pathfinding: 'Pathfinding',
-  summary: 'Summary',
-  headline: 'Headline',
-  location: 'Location',
-  bio: 'Field Notes',
-  bio_button: 'My Journey',
-  contact: 'Contact',
-  companions: 'Companions',
-  summit_reached: 'Summit Reached',
-}
-
 const STANDARD: Terms = {
   productName: 'Asgard',
   productSubtitle: 'Fjall',
@@ -182,6 +135,9 @@ const STANDARD: Terms = {
   notes: 'Notes',
   notesSingular: 'Note',
   starfield: 'Starfield',
+  nidjatal: 'Genealogy',
+  nidjatalPerson: 'Person',
+  nidjatalPersonPlural: 'People',
   forge: 'Lattic Forge',
   settings: 'Settings',
   account: 'Account',
@@ -195,7 +151,7 @@ const STANDARD: Terms = {
   subscriptionSingular: 'Subscription',
   budgets: 'Budgets',
   budgetSingular: 'Budget',
-  provisionsGroup: 'Provisions',
+  provisionsGroup: 'Audr',
   sjodr: 'Funds',
   sjodrSingular: 'Fund',
   laufar: 'Tasks',
@@ -230,7 +186,9 @@ const STORAGE_KEY = 'fjall_terminology_style'
 export function loadTerminologyStyle(): TerminologyStyle {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw === 'CAIRN' || raw === 'STANDARD' || raw === 'ASGARD') return raw
+    // Cairn style removed from Fjall UI — map legacy preference to Standard.
+    if (raw === 'CAIRN') return 'STANDARD'
+    if (raw === 'STANDARD' || raw === 'ASGARD') return raw
   } catch {
     // ignore
   }
@@ -247,16 +205,17 @@ export function saveTerminologyStyle(style: TerminologyStyle) {
 
 export function termsFor(style: TerminologyStyle): Terms {
   switch (style) {
-    case 'CAIRN':
-      return CAIRN
     case 'STANDARD':
+      return STANDARD
+    case 'CAIRN':
+      // Legacy: treat as Standard on Fjall (Cairn pack not user-facing).
       return STANDARD
     default:
       return ASGARD
   }
 }
 
-/** Public UI cycles Standard ↔ Asgard only; CAIRN remains available behind the scenes. */
+/** Public UI cycles Standard ↔ Asgard only. */
 export function nextTerminologyStyle(current: TerminologyStyle): TerminologyStyle {
   if (current === 'STANDARD') return 'ASGARD'
   return 'STANDARD'

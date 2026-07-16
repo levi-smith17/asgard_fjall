@@ -2,7 +2,7 @@ import { CairnApiError } from '@/lib/cairn-client'
 import { cn } from '@/lib/utils'
 
 export function CairnNotConfiguredNotice({
-  title = 'Cairn not configured',
+  title = 'Data API not configured',
   detail,
   layout = 'centered',
   className,
@@ -14,7 +14,7 @@ export function CairnNotConfiguredNotice({
 }) {
   const hint =
     detail ??
-    'Sign in with your Cairn Cognito account. Fjall calls https://api.cairn.ing with your session token — there is no separate Cairn API token to configure.'
+    'Sign in with your Cognito account for live data. Fjall calls the data API with your session token — there is no separate API token to configure.'
 
   return (
     <div
@@ -46,9 +46,9 @@ export function cairnQueryErrorProps(error: unknown, fallback: string) {
   return {
     title: apiError?.message ?? (error instanceof Error ? error.message : fallback),
     detail: isConfigError
-      ? 'Cairn is unreachable or not configured.'
+      ? 'The data API is unreachable or not configured.'
       : isTokenError
-        ? 'Sign in with Cognito to access Cairn.'
+        ? 'Sign in with Cognito to access live data.'
         : undefined,
     isConfigError,
     isTokenError,

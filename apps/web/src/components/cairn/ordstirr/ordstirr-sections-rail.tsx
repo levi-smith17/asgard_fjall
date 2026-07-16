@@ -62,9 +62,9 @@ export function OrdstirrSectionsRail<T extends string>({
         <StudioRailTitle icon={Section}>Sections</StudioRailTitle>
         <div className="flex items-center gap-0.5">
           {liveUrl ? (
-            <ToolbarTooltip label="Live on Cairn">
+            <ToolbarTooltip label="Live profile">
               <Button asChild variant="ghost" size="icon" className="h-7 w-7">
-                <a href={liveUrl} target="_blank" rel="noopener noreferrer" aria-label="Live on Cairn">
+                <a href={liveUrl} target="_blank" rel="noopener noreferrer" aria-label="Live profile">
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </Button>

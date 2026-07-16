@@ -9,8 +9,8 @@ export function CairnToolbar({ description, onRefresh, isRefreshing, leading }: 
       description={description}
       leading={leading}
       trailing={
-        <ToolbarTooltip label="Refresh from Cairn">
-          <button type="button" className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted-hover hover:text-foreground" onClick={onRefresh} aria-label="Refresh from Cairn">
+        <ToolbarTooltip label="Refresh data">
+          <button type="button" className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted-hover hover:text-foreground" onClick={onRefresh} aria-label="Refresh data">
             <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} aria-hidden />
           </button>
         </ToolbarTooltip>
