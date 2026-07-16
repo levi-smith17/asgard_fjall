@@ -12,6 +12,6 @@ variable "pitr_enabled" {
 }
 
 variable "private_media_allowed_origins" {
-  description = "CORS allowlist for the private media bucket (presigned PUT/GET from Asgard web origins)."
+  description = "CORS allowlist for private and public media buckets (presigned PUT/GET from Asgard web origins)."
   type        = list(string)
 }

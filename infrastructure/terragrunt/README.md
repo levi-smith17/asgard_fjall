@@ -15,13 +15,15 @@ infrastructure/
       env.hcl
       api/terragrunt.hcl       # GitHub OIDC role for Lambda code deploys
       api-dns/terragrunt.hcl   # regional ACM for api.asgard.levismith.us
-      api-data/terragrunt.hcl  # DynamoDB + lambda read/write IAM
+      api-data/terragrunt.hcl  # DynamoDB + media buckets + lambda IAM
+      api-media/terragrunt.hcl # media.asgard.levismith.us CloudFront + ACM
       api-http/terragrunt.hcl  # HTTP API + Lambdas + custom domain
   terraform/
     modules/
       fjall-api-foundation/
       fjall-api-dns/
       fjall-api-data/
+      fjall-api-media/
       fjall-api-http/
 apps/api/                      # Lambda handlers (tsc → zip deploy)
 ```
@@ -32,8 +34,9 @@ apps/api/                      # Lambda handlers (tsc → zip deploy)
 |-------|----------------|
 | `prod/api` | GitHub OIDC deploy role (`lambda:UpdateFunctionCode` on `asgard-fjall-prod-*`) |
 | `prod/api-dns` | Regional ACM + DNS validation |
-| `prod/api-data` | DynamoDB table `asgard-fjall-prod` + read/write IAM policies |
-| `prod/api-http` | HTTP API + Lambdas (`/health`, auth, profile, thing, laufar, greinar, runir) |
+| `prod/api-data` | DynamoDB `asgard-fjall-prod`, private + public media buckets, IAM |
+| `prod/api-media` | CloudFront + us-east-1 ACM + R53 for `media.asgard.levismith.us` |
+| `prod/api-http` | HTTP API + Lambdas + custom domain |
 
 Auth today validates JWTs against **Cairn prod Cognito** (IDs in `env.hcl`). New Cognito
 in the asgard account lands at data cutover (passkey re-enroll).
@@ -42,6 +45,7 @@ in the asgard account lands at data cutover (passkey re-enroll).
 
 ```bash
 cd infrastructure/terragrunt/prod/api-data && terragrunt apply
+cd ../api-media && terragrunt apply
 cd ../api-http && terragrunt apply
 
 pnpm --filter @asgard-fjall/api build
@@ -56,4 +60,5 @@ AWS_PROFILE=asgard pnpm --filter @asgard-fjall/api deploy:core
 | Terragrunt API foundation | `asgard-fjall/terragrunt/prod/api/terraform.tfstate` |
 | Terragrunt API DNS | `asgard-fjall/terragrunt/prod/api-dns/terraform.tfstate` |
 | Terragrunt API data | `asgard-fjall/terragrunt/prod/api-data/terraform.tfstate` |
+| Terragrunt API media | `asgard-fjall/terragrunt/prod/api-media/terraform.tfstate` |
 | Terragrunt API HTTP | `asgard-fjall/terragrunt/prod/api-http/terraform.tfstate` |

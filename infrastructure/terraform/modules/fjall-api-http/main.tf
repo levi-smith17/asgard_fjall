@@ -13,6 +13,13 @@ locals {
     var.s3_private_media_bucket_name != null ? {
       S3_PRIVATE_MEDIA_BUCKET = var.s3_private_media_bucket_name
     } : {},
+    var.s3_public_media_bucket_name != null ? {
+      S3_PUBLIC_MEDIA_BUCKET = var.s3_public_media_bucket_name
+    } : {},
+    var.media_cdn_url != null && var.media_cdn_url != "" ? {
+      MEDIA_CDN_URL               = var.media_cdn_url
+      CLOUDFRONT_PUBLIC_MEDIA_URL = var.media_cdn_url
+    } : {},
   )
 
   # Public routes (no authorizer).

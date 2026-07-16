@@ -7,6 +7,7 @@ locals {
 
   # API hostname + public zone (zone itself stays in cairn-prod).
   api_domain       = "api.asgard.levismith.us"
+  media_domain     = "media.asgard.levismith.us"
   hosted_zone_name = "levismith.us"
   dns_aws_profile  = "cairn-prod"
 

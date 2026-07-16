@@ -34,6 +34,14 @@ output "private_media_bucket_arn" {
   value = aws_s3_bucket.private_media.arn
 }
 
+output "public_media_bucket_name" {
+  value = aws_s3_bucket.public_media.bucket
+}
+
+output "public_media_bucket_arn" {
+  value = aws_s3_bucket.public_media.arn
+}
+
 output "lambda_s3_policy_arn" {
   value = aws_iam_policy.lambda_s3_media.arn
 }

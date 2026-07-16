@@ -59,8 +59,20 @@ variable "s3_private_media_bucket_name" {
   default     = null
 }
 
+variable "s3_public_media_bucket_name" {
+  description = "Public media S3 bucket name (Ordstirr companions). Wired into lambda_env when provided."
+  type        = string
+  default     = null
+}
+
+variable "media_cdn_url" {
+  description = "Public media CloudFront base URL (e.g. https://media.asgard.levismith.us)."
+  type        = string
+  default     = null
+}
+
 variable "lambda_s3_policy_arn" {
-  description = "IAM policy ARN granting S3 access to the private media bucket, attached to routes with s3_access = true."
+  description = "IAM policy ARN granting S3 access to private + public media buckets, attached to routes with s3_access = true."
   type        = string
   default     = null
 }

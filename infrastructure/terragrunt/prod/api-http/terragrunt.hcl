@@ -25,9 +25,19 @@ dependency "api_data" {
     lambda_read_policy_arn      = "arn:aws:iam::000000000000:policy/mock-read"
     lambda_write_policy_arn     = "arn:aws:iam::000000000000:policy/mock-write"
     private_media_bucket_name   = "asgard-fjall-prod-private-media"
+    public_media_bucket_name    = "asgard-fjall-prod-public-media"
     lambda_s3_policy_arn        = "arn:aws:iam::000000000000:policy/mock-s3-media"
     lambda_ssm_read_policy_arn  = "arn:aws:iam::000000000000:policy/mock-ssm-read"
     lambda_ssm_write_policy_arn = "arn:aws:iam::000000000000:policy/mock-ssm-write"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
+dependency "api_media" {
+  config_path = "../api-media"
+
+  mock_outputs = {
+    media_cdn_url = "https://media.asgard.levismith.us"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
@@ -63,6 +73,8 @@ inputs = {
   aws_region              = local.env.locals.aws_region
 
   s3_private_media_bucket_name = dependency.api_data.outputs.private_media_bucket_name
+  s3_public_media_bucket_name  = dependency.api_data.outputs.public_media_bucket_name
+  media_cdn_url                = dependency.api_media.outputs.media_cdn_url
   lambda_s3_policy_arn         = dependency.api_data.outputs.lambda_s3_policy_arn
 
   lambda_ssm_read_policy_arn  = dependency.api_data.outputs.lambda_ssm_read_policy_arn
