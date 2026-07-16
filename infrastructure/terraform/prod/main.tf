@@ -1,12 +1,14 @@
 module "auth" {
-  source         = "../modules/auth"
-  environment    = var.environment
-  managed_by     = var.managed_by
-  owner          = var.owner
-  project_name   = var.project_name
-  custom_domain  = var.domain
-  session_secret = var.fjall_session_secret
-  auth_email     = var.fjall_auth_email
+  source          = "../modules/auth"
+  environment     = var.environment
+  managed_by      = var.managed_by
+  owner           = var.owner
+  project_name    = var.project_name
+  custom_domain   = var.domain
+  additional_domains = compact([var.lan_domain])
+  webauthn_rp_id  = var.webauthn_rp_id
+  session_secret  = var.fjall_session_secret
+  auth_email      = var.fjall_auth_email
 }
 
 module "cloudfront" {
@@ -16,6 +18,7 @@ module "cloudfront" {
   owner              = var.owner
   project_name       = var.project_name
   custom_domain      = var.domain
+  additional_domains = compact([var.lan_domain])
   certificate_arn    = aws_acm_certificate_validation.cloudfront.certificate_arn
   auth_origin_domain = module.auth.function_url_domain
 }

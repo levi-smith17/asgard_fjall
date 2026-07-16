@@ -7,6 +7,12 @@ variable "custom_domain" {
   type = string
 }
 
+variable "additional_domains" {
+  description = "Extra CloudFront aliases (e.g. LAN-only fjall.levismith.us)."
+  type        = list(string)
+  default     = []
+}
+
 variable "environment" {
   type = string
 }

@@ -7,10 +7,11 @@ Repo: `levi-smith17/asgard_fjall`
 | Area | Choice |
 |------|--------|
 | URL | Public `asgard.levismith.us` → Fjall CloudFront (Terraform) |
-| LAN | Pi-hole `asgard.levismith.us` → private Asgard |
+| LAN Fjall | Pi-hole `fjall.levismith.us` → same CloudFront (no public DNS) |
+| LAN Shortcuts | Pi-hole `asgard.levismith.us` → private Asgard |
 | Backdoor | `ops.asgard.levismith.us` |
 | API data | Cairn only (`VITE_CAIRN_API_URL`) |
-| Gate auth | Passkeys; `fjall_session`; RP ID `asgard.levismith.us` |
+| Gate auth | Passkeys; `fjall_session`; RP ID `levismith.us` (shared across `asgard` + `fjall` hosts) |
 | Cairn auth | Cognito bearer in browser (preferred) **or** thin BFF later |
 | CI | `main` only |
 

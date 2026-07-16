@@ -10,6 +10,7 @@ allowed_origins = concat(
     "https://${var.domain}",
     module.cloudfront.cloudfront_url,
     "https://asgard.levismith.us",
+    "https://fjall.levismith.us",
   ],
   [for domain in var.manifest_web_domains : "https://${domain}"]
 )
@@ -22,7 +23,7 @@ Apply with Cairn prod Terraform.
 ## Auth
 
 **Option A — Cognito (no Fjall backend)**  
-- App client allowed callback / logout: `https://asgard.levismith.us`, `https://asgard.levismith.us/`  
+- App client allowed callback / logout: `https://asgard.levismith.us`, `https://fjall.levismith.us` (+ trailing-slash / localhost variants)  
 - Fjall stores tokens (memory / host-only cookie, not shared with `asgard_session`)  
 - `Authorization: Bearer <id_token>` on `api.cairn.ing`
 

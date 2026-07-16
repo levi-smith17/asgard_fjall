@@ -41,6 +41,18 @@ variable "domain" {
   default     = "asgard.levismith.us"
 }
 
+variable "lan_domain" {
+  description = "LAN/VPN-only Fjall hostname (CloudFront alias + ACM SAN; no public A/AAAA — Pi-hole only)."
+  type        = string
+  default     = "fjall.levismith.us"
+}
+
+variable "webauthn_rp_id" {
+  description = "WebAuthn RP ID shared across Fjall hostnames (must be a parent of each origin host)."
+  type        = string
+  default     = "levismith.us"
+}
+
 variable "hosted_zone_name" {
   description = "Route53 public hosted zone that contains var.domain."
   type        = string

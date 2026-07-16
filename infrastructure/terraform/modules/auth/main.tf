@@ -99,12 +99,13 @@ resource "aws_lambda_function" "auth" {
 
   environment {
     variables = {
-      FJALL_AUTH_TABLE       = aws_dynamodb_table.auth.name
-      FJALL_SESSION_SECRET   = var.session_secret
-      FJALL_WEBAUTHN_ORIGIN  = "https://${var.custom_domain}"
-      FJALL_WEBAUTHN_RP_ID   = var.custom_domain
-      FJALL_WEBAUTHN_RP_NAME = "Asgard Fjall"
-      FJALL_AUTH_EMAIL       = var.auth_email
+      FJALL_AUTH_TABLE        = aws_dynamodb_table.auth.name
+      FJALL_SESSION_SECRET    = var.session_secret
+      FJALL_WEBAUTHN_ORIGIN   = local.webauthn_origins[0]
+      FJALL_WEBAUTHN_ORIGINS  = local.webauthn_origins_csv
+      FJALL_WEBAUTHN_RP_ID    = var.webauthn_rp_id
+      FJALL_WEBAUTHN_RP_NAME  = "Asgard Fjall"
+      FJALL_AUTH_EMAIL        = var.auth_email
     }
   }
 
@@ -128,7 +129,7 @@ resource "aws_lambda_function_url" "auth" {
     allow_credentials = true
     allow_headers     = ["content-type"]
     allow_methods     = ["*"]
-    allow_origins     = ["https://${var.custom_domain}"]
+    allow_origins     = local.webauthn_origins
     max_age           = 86400
   }
 }

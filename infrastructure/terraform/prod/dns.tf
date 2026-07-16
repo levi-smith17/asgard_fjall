@@ -28,3 +28,7 @@ resource "aws_route53_record" "web_aaaa" {
     evaluate_target_health = false
   }
 }
+
+# Intentionally no public A/AAAA for var.lan_domain (fjall.levismith.us).
+# ACM validation CNAMEs above still publish for the SAN; LAN clients resolve
+# via Pi-hole → CloudFront (see docs/asgard-fjall.md / pipeline-bootstrap).

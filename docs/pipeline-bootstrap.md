@@ -5,7 +5,16 @@
 - [x] Skidbladnir Fjall tab: sections rail removed (Asgard `main`)
 - [x] Terraform applied in **asgard** account (S3, CloudFront, ACM, GitHub OIDC)
 - [x] Route53 `asgard.levismith.us` A/AAAA → CloudFront (zone in **cairn-prod**)
+- [x] ACM SAN + CloudFront alias for LAN-only `fjall.levismith.us` (no public A/AAAA)
 - [x] State: `s3://asgard-terraform-state-910896517350/asgard-fjall/prod/terraform.tfstate`
+
+## Pi-hole (you — LAN access to Fjall)
+
+| Type | Host | Value |
+|------|------|--------|
+| CNAME | `fjall.levismith.us` | `d1hipyvfzth0h0.cloudfront.net` |
+
+Leave `asgard.levismith.us` on LAN → RealmOps Traefik.
 
 ## You must do (GitHub — `gh` is not logged in on this machine)
 

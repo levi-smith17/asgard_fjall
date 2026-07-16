@@ -9,7 +9,7 @@ export const COGNITO_CLIENT_ID =
   import.meta.env.VITE_COGNITO_CLIENT_ID?.trim() || '4sqhce1qj85imq4sk8i9dei36d'
 
 export const WEBAUTHN_RP_ID =
-  import.meta.env.VITE_WEBAUTHN_RP_ID?.trim() || 'asgard.levismith.us'
+  import.meta.env.VITE_WEBAUTHN_RP_ID?.trim() || 'levismith.us'
 
 export const SESSION_COOKIE_NAME =
   import.meta.env.VITE_SESSION_COOKIE_NAME?.trim() || 'fjall_session'

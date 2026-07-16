@@ -12,13 +12,29 @@ export type SessionConfig = {
   user: SessionUser
   rpId: string
   rpName: string
+  /** Primary origin (cookie Secure flag + default). */
   origin: string
+  /** All allowed WebAuthn origins (asgard + LAN fjall, etc.). */
+  origins: string[]
+}
+
+function parseOrigins(env: NodeJS.ProcessEnv): string[] {
+  const fromList = (env.FJALL_WEBAUTHN_ORIGINS ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+  const primary = env.FJALL_WEBAUTHN_ORIGIN?.trim()
+  const merged = [...fromList]
+  if (primary && !merged.includes(primary)) merged.unshift(primary)
+  if (merged.length === 0) merged.push('https://asgard.levismith.us')
+  return merged
 }
 
 export function loadSessionConfig(env: NodeJS.ProcessEnv = process.env): SessionConfig {
   const sessionSecret = env.FJALL_SESSION_SECRET?.trim()
-  const origin = env.FJALL_WEBAUTHN_ORIGIN?.trim() || 'https://asgard.levismith.us'
-  const rpId = env.FJALL_WEBAUTHN_RP_ID?.trim() || new URL(origin).hostname
+  const origins = parseOrigins(env)
+  const origin = origins[0]
+  const rpId = env.FJALL_WEBAUTHN_RP_ID?.trim() || 'levismith.us'
   const rpName = env.FJALL_WEBAUTHN_RP_NAME?.trim() || 'Asgard Fjall'
   const email = env.FJALL_AUTH_EMAIL?.trim() || 'admin@local'
 
@@ -32,6 +48,7 @@ export function loadSessionConfig(env: NodeJS.ProcessEnv = process.env): Session
     rpId,
     rpName,
     origin,
+    origins,
   }
 }
 

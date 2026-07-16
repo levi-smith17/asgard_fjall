@@ -51,7 +51,7 @@ export function createWebAuthnService(config: SessionConfig, store: AuthStore) {
     const verification = await verifyRegistrationResponse({
       response,
       expectedChallenge,
-      expectedOrigin: config.origin,
+      expectedOrigin: config.origins,
       expectedRPID: config.rpId,
       requireUserVerification: false,
     })
@@ -99,7 +99,7 @@ export function createWebAuthnService(config: SessionConfig, store: AuthStore) {
     const verification = await verifyAuthenticationResponse({
       response,
       expectedChallenge,
-      expectedOrigin: config.origin,
+      expectedOrigin: config.origins,
       expectedRPID: config.rpId,
       credential: {
         id: credential.credentialId,
