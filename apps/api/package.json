@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "deploy": "node scripts/deploy.mjs",
+    "deploy:all": "node scripts/deploy.mjs --all",
     "deploy:health": "node scripts/deploy.mjs health/get",
     "deploy:auth": "node scripts/deploy.mjs auth/authorizer auth/context",
     "deploy:profile": "node scripts/deploy.mjs profile/get",

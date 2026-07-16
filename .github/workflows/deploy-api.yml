@@ -1,0 +1,48 @@
+name: Deploy API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/**'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/deploy-api.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: prod
+    env:
+      AWS_API_ROLE_ARN: ${{ secrets.AWS_API_ROLE_ARN }}
+      AWS_REGION: us-east-2
+      ENVIRONMENT: prod
+      LAMBDA_NAME_PREFIX: asgard-fjall-prod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Verify deploy config
+        run: |
+          if [ -z "$AWS_API_ROLE_ARN" ]; then
+            echo "Missing AWS_API_ROLE_ARN on Environment prod"
+            exit 1
+          fi
+          echo "Deploying Lambdas with role $AWS_API_ROLE_ARN"
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_API_ROLE_ARN }}
+          aws-region: us-east-2
+      - name: Deploy all Lambda handlers
+        run: pnpm --filter @asgard-fjall/api deploy:all

@@ -23,22 +23,33 @@ After adding the CNAME, open `https://fjall.levismith.us` on Wi‑Fi. Re-registe
 
 Create Environment **`prod`** on https://github.com/levi-smith17/asgard_fjall/settings/environments
 
-| Type | Name | Value |
-|------|------|--------|
-| **Secret** | `AWS_ROLE_ARN` | `arn:aws:iam::910896517350:role/asgard-fjall-prod-github-actions` |
-| **Variable** | `WEB_BUCKET` | `asgard-fjall-prod-web` |
-| **Variable** | `CLOUDFRONT_DISTRIBUTION_ID` | `E1FXGRYGFKZMQB` |
+| Type | Name | Value | Workflow |
+|------|------|--------|----------|
+| **Secret** | `AWS_ROLE_ARN` | `arn:aws:iam::910896517350:role/asgard-fjall-prod-github-actions` | Deploy Web |
+| **Secret** | `AWS_API_ROLE_ARN` | `arn:aws:iam::910896517350:role/asgard-fjall-prod-github-api-deploy` | Deploy API |
+| **Variable** | `WEB_BUCKET` | `asgard-fjall-prod-web` | Deploy Web |
+| **Variable** | `CLOUDFRONT_DISTRIBUTION_ID` | `E1FXGRYGFKZMQB` | Deploy Web |
 
 Or after `gh auth login`:
 
 ```bash
 gh secret set AWS_ROLE_ARN --env prod --repo levi-smith17/asgard_fjall \
   --body 'arn:aws:iam::910896517350:role/asgard-fjall-prod-github-actions'
+gh secret set AWS_API_ROLE_ARN --env prod --repo levi-smith17/asgard_fjall \
+  --body 'arn:aws:iam::910896517350:role/asgard-fjall-prod-github-api-deploy'
 gh variable set WEB_BUCKET --env prod --repo levi-smith17/asgard_fjall \
   --body 'asgard-fjall-prod-web'
 gh variable set CLOUDFRONT_DISTRIBUTION_ID --env prod --repo levi-smith17/asgard_fjall \
   --body 'E1FXGRYGFKZMQB'
 ```
+
+Workflows:
+
+| File | When | What |
+|------|------|------|
+| `ci.yml` | pull requests | lint / test / build |
+| `deploy-web.yml` | push to `main` (web paths) or manual | S3 sync + CloudFront invalidate |
+| `deploy-api.yml` | push to `main` (api paths) or manual | `pnpm --filter @asgard-fjall/api deploy:all` via OIDC |
 
 Then re-run the failed workflow (or push an empty commit on `main`).
 
@@ -49,7 +60,7 @@ Then re-run the failed workflow (or push an empty commit on `main`).
 1. Keep infra applies **local** (`AWS_PROFILE=asgard` + `cairn-prod` for DNS) — current recommendation, or
 2. Later: cross-account role in cairn-prod that the Asgard GitHub role can assume for Route53 only.
 
-Web **deploy** (build → S3 → invalidate) **is** in the pipeline once the env vars above are set.
+Web **deploy** (build → S3 → invalidate) and API **deploy** (esbuild → Lambda UpdateFunctionCode) are separate workflows once the env secrets above are set.
 
 ## Optional next (Cairn CORS / Cognito)
 

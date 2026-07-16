@@ -2,21 +2,37 @@
 
 import { buildSync } from 'esbuild'
 import { execSync } from 'node:child_process'
-import { existsSync, mkdirSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
+const FUNCTIONS_ROOT = join(ROOT, 'functions')
 const TMP = join(ROOT, '.deploy-tmp')
 const ENVIRONMENT = process.env.ENVIRONMENT ?? 'prod'
 const NAME_PREFIX = process.env.LAMBDA_NAME_PREFIX ?? `asgard-fjall-${ENVIRONMENT}`
 
-const functions = process.argv.slice(2)
+function discoverAllFunctions() {
+  const found = []
+  for (const feature of readdirSync(FUNCTIONS_ROOT, { withFileTypes: true })) {
+    if (!feature.isDirectory() || feature.name === 'shared') continue
+    const featureDir = join(FUNCTIONS_ROOT, feature.name)
+    for (const method of readdirSync(featureDir, { withFileTypes: true })) {
+      if (!method.isDirectory()) continue
+      const entry = join(featureDir, method.name, 'handler.ts')
+      if (existsSync(entry)) found.push(`${feature.name}/${method.name}`)
+    }
+  }
+  return found.sort()
+}
+
+const args = process.argv.slice(2)
+const functions = args.includes('--all') ? discoverAllFunctions() : args.filter((a) => a !== '--all')
 
 if (functions.length === 0) {
-  console.error('Usage: node scripts/deploy.mjs <feature/method> [<feature/method> ...]')
-  console.error('Example: node scripts/deploy.mjs profile/get settings/get')
+  console.error('Usage: node scripts/deploy.mjs <feature/method> [...] | --all')
+  console.error('Example: node scripts/deploy.mjs profile/get thing/get')
   process.exit(1)
 }
 

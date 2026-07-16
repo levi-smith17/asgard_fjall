@@ -16,7 +16,7 @@ Repo: `levi-smith17/asgard_fjall`
 | API data (today) | Cairn only (`VITE_CAIRN_API_URL`) until cutover |
 | Gate auth | Passkeys; `fjall_session`; RP ID `levismith.us` (shared across `asgard` + `fjall` hosts) |
 | Cairn auth | Cognito bearer in browser (preferred) **or** thin BFF later |
-| CI | `main` only; separate Fjall Web vs Fjall API workflows |
+| CI | `main` only; separate Fjall Web vs Fjall API workflows (`deploy-web.yml` / `deploy-api.yml`) |
 
 ## Cairn CORS / auth (owner: cairn-summit Terraform)
 
