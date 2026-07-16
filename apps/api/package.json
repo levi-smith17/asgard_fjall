@@ -5,7 +5,14 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "deploy": "node scripts/deploy.mjs",
-    "deploy:health": "node scripts/deploy.mjs health/get"
+    "deploy:health": "node scripts/deploy.mjs health/get",
+    "deploy:auth": "node scripts/deploy.mjs auth/authorizer auth/context",
+    "deploy:core": "node scripts/deploy.mjs health/get auth/authorizer auth/context"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.787.0",
+    "@aws-sdk/lib-dynamodb": "^3.787.0",
+    "jose": "^6.0.11"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.149",

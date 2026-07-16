@@ -8,22 +8,23 @@ export function ok<T>(data: T): ApiResponse<T> {
   return { statusCode: 200, data }
 }
 
-export function toApiGatewayResponse<T>(
-  response: ApiResponse<T>,
-): {
-  statusCode: number
-  headers: Record<string, string>
-  body: string
-} {
+export function serverError(message = 'Internal server error'): ApiResponse<never> {
+  return { statusCode: 500, error: message }
+}
+
+export function unauthorized(message = 'Unauthorized'): ApiResponse<never> {
+  return { statusCode: 401, error: message }
+}
+
+export function toApiGatewayResponse<T>(response: ApiResponse<T>) {
   return {
     statusCode: response.statusCode,
-    headers: { 'content-type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
     body: JSON.stringify(
-      response.error !== undefined
-        ? { error: response.error }
-        : response.data !== undefined
-          ? response.data
-          : {},
+      response.error ? { error: response.error } : { data: response.data },
     ),
   }
 }

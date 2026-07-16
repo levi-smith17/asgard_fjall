@@ -11,7 +11,15 @@ output "api_domain" {
 }
 
 output "health_function_name" {
-  value = aws_lambda_function.health.function_name
+  value = aws_lambda_function.main["health-get"].function_name
+}
+
+output "authorizer_function_name" {
+  value = aws_lambda_function.main["auth-authorizer"].function_name
+}
+
+output "auth_context_function_name" {
+  value = aws_lambda_function.main["auth-context"].function_name
 }
 
 output "stage_name" {

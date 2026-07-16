@@ -17,6 +17,16 @@ dependency "api_dns" {
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
+dependency "api_data" {
+  config_path = "../api-data"
+
+  mock_outputs = {
+    table_name             = "asgard-fjall-prod"
+    lambda_read_policy_arn = "arn:aws:iam::000000000000:policy/mock-read"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
 generate "dns_provider" {
   path      = "dns_provider.tf"
   if_exists = "overwrite_terragrunt"
@@ -34,11 +44,15 @@ terraform {
 }
 
 inputs = {
-  project_name     = local.env.locals.project_name
-  environment      = local.env.locals.environment
-  api_domain       = local.env.locals.api_domain
-  hosted_zone_name = local.env.locals.hosted_zone_name
-  certificate_arn  = dependency.api_dns.outputs.certificate_arn
-  allowed_origins  = local.env.locals.api_allowed_origins
-  aws_region       = local.env.locals.aws_region
+  project_name           = local.env.locals.project_name
+  environment            = local.env.locals.environment
+  api_domain             = local.env.locals.api_domain
+  hosted_zone_name       = local.env.locals.hosted_zone_name
+  certificate_arn        = dependency.api_dns.outputs.certificate_arn
+  allowed_origins        = local.env.locals.api_allowed_origins
+  cognito_user_pool_id   = local.env.locals.cognito_user_pool_id
+  cognito_client_id      = local.env.locals.cognito_client_id
+  dynamodb_table_name    = dependency.api_data.outputs.table_name
+  lambda_read_policy_arn = dependency.api_data.outputs.lambda_read_policy_arn
+  aws_region             = local.env.locals.aws_region
 }

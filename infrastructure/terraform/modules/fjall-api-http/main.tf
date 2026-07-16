@@ -1,25 +1,78 @@
 locals {
   name_prefix = "${var.project_name}-${var.environment}"
-}
 
-data "archive_file" "health_placeholder" {
-  type        = "zip"
-  output_path = "${path.module}/health-placeholder.zip"
-
-  source {
-    content  = <<-JS
-      exports.handler = async () => ({
-        statusCode: 200,
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ status: "ok", service: "asgard-fjall-api", placeholder: true }),
-      });
-    JS
-    filename = "health/get/handler.js"
+  lambda_env = {
+    ENVIRONMENT          = var.environment
+    SERVICE              = "asgard-fjall-api"
+    COGNITO_USER_POOL_ID = var.cognito_user_pool_id
+    COGNITO_CLIENT_ID    = var.cognito_client_id
+    DYNAMODB_TABLE       = var.dynamodb_table_name
   }
 }
 
-resource "aws_iam_role" "health" {
-  name = "${local.name_prefix}-health-get"
+moved {
+  from = aws_iam_role.health
+  to   = aws_iam_role.lambda["health-get"]
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.health_basic
+  to   = aws_iam_role_policy_attachment.lambda_basic["health-get"]
+}
+
+moved {
+  from = aws_lambda_function.health
+  to   = aws_lambda_function.main["health-get"]
+}
+
+moved {
+  from = data.archive_file.health_placeholder
+  to   = data.archive_file.placeholder["health-get"]
+}
+
+data "archive_file" "placeholder" {
+  for_each = {
+    health-get = {
+      path    = "health/get/handler.js"
+      body    = <<-JS
+        exports.handler = async () => ({
+          statusCode: 200,
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ status: "ok", service: "asgard-fjall-api", placeholder: true }),
+        });
+      JS
+    }
+    auth-authorizer = {
+      path = "auth/authorizer/handler.js"
+      body = <<-JS
+        exports.handler = async () => ({ isAuthorized: false });
+      JS
+    }
+    auth-context = {
+      path = "auth/context/handler.js"
+      body = <<-JS
+        exports.handler = async () => ({
+          statusCode: 503,
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ error: "Deploy apps/api auth/context" }),
+        });
+      JS
+    }
+  }
+
+  type        = "zip"
+  output_path = "${path.module}/placeholders/${each.key}.zip"
+
+  source {
+    content  = each.value.body
+    filename = each.value.path
+  }
+}
+
+resource "aws_iam_role" "lambda" {
+  for_each = toset(["health-get", "auth-authorizer", "auth-context"])
+
+  name = "${local.name_prefix}-${each.key}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -33,34 +86,44 @@ resource "aws_iam_role" "health" {
   })
 
   tags = {
-    Name = "${local.name_prefix}-health-get"
+    Name = "${local.name_prefix}-${each.key}"
   }
 }
 
-resource "aws_iam_role_policy_attachment" "health_basic" {
-  role       = aws_iam_role.health.name
+resource "aws_iam_role_policy_attachment" "lambda_basic" {
+  for_each = aws_iam_role.lambda
+
+  role       = each.value.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_lambda_function" "health" {
-  function_name    = "${local.name_prefix}-health-get"
-  role             = aws_iam_role.health.arn
-  handler          = "health/get/handler.handler"
+resource "aws_iam_role_policy_attachment" "authorizer_read" {
+  role       = aws_iam_role.lambda["auth-authorizer"].name
+  policy_arn = var.lambda_read_policy_arn
+}
+
+resource "aws_lambda_function" "main" {
+  for_each = {
+    health-get      = { handler = "health/get/handler.handler", timeout = 10, memory = 128 }
+    auth-authorizer = { handler = "auth/authorizer/handler.handler", timeout = 10, memory = 256 }
+    auth-context    = { handler = "auth/context/handler.handler", timeout = 10, memory = 128 }
+  }
+
+  function_name    = "${local.name_prefix}-${each.key}"
+  role             = aws_iam_role.lambda[each.key].arn
+  handler          = each.value.handler
   runtime          = "nodejs22.x"
-  filename         = data.archive_file.health_placeholder.output_path
-  source_code_hash = data.archive_file.health_placeholder.output_base64sha256
-  timeout          = 10
-  memory_size      = 128
+  filename         = data.archive_file.placeholder[each.key].output_path
+  source_code_hash = data.archive_file.placeholder[each.key].output_base64sha256
+  timeout          = each.value.timeout
+  memory_size      = each.value.memory
 
   environment {
-    variables = {
-      ENVIRONMENT = var.environment
-      SERVICE     = "asgard-fjall-api"
-    }
+    variables = local.lambda_env
   }
 
   tags = {
-    Name = "${local.name_prefix}-health-get"
+    Name = "${local.name_prefix}-${each.key}"
   }
 
   lifecycle {
@@ -84,6 +147,24 @@ resource "aws_apigatewayv2_api" "main" {
   }
 }
 
+resource "aws_apigatewayv2_authorizer" "request" {
+  api_id                            = aws_apigatewayv2_api.main.id
+  authorizer_type                   = "REQUEST"
+  authorizer_uri                    = aws_lambda_function.main["auth-authorizer"].invoke_arn
+  identity_sources                  = ["$request.header.Authorization"]
+  name                              = "${local.name_prefix}-request"
+  authorizer_payload_format_version = "2.0"
+  enable_simple_responses           = true
+}
+
+resource "aws_lambda_permission" "authorizer" {
+  statement_id  = "AllowAPIGatewayAuthorizer"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.main["auth-authorizer"].function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/authorizers/${aws_apigatewayv2_authorizer.request.id}"
+}
+
 resource "aws_apigatewayv2_stage" "main" {
   api_id      = aws_apigatewayv2_api.main.id
   name        = var.environment
@@ -97,7 +178,7 @@ resource "aws_apigatewayv2_stage" "main" {
 resource "aws_apigatewayv2_integration" "health" {
   api_id                 = aws_apigatewayv2_api.main.id
   integration_type       = "AWS_PROXY"
-  integration_uri        = aws_lambda_function.health.invoke_arn
+  integration_uri        = aws_lambda_function.main["health-get"].invoke_arn
   integration_method     = "POST"
   payload_format_version = "2.0"
 }
@@ -110,11 +191,35 @@ resource "aws_apigatewayv2_route" "health" {
 }
 
 resource "aws_lambda_permission" "health" {
-  statement_id  = "AllowApiGatewayInvoke"
+  statement_id  = "AllowApiGatewayInvokeHealth"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.health.function_name
+  function_name = aws_lambda_function.main["health-get"].function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*/health"
+}
+
+resource "aws_apigatewayv2_integration" "auth_context" {
+  api_id                 = aws_apigatewayv2_api.main.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.main["auth-context"].invoke_arn
+  integration_method     = "POST"
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "auth_context" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "GET /auth/context"
+  target             = "integrations/${aws_apigatewayv2_integration.auth_context.id}"
+  authorization_type = "CUSTOM"
+  authorizer_id      = aws_apigatewayv2_authorizer.request.id
+}
+
+resource "aws_lambda_permission" "auth_context" {
+  statement_id  = "AllowApiGatewayInvokeAuthContext"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.main["auth-context"].function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*/auth/context"
 }
 
 resource "aws_apigatewayv2_domain_name" "main" {

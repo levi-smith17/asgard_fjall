@@ -11,12 +11,13 @@ const DIST = join(ROOT, 'dist')
 const TMP = join(ROOT, '.deploy-tmp')
 const ENVIRONMENT = process.env.ENVIRONMENT ?? 'prod'
 const NAME_PREFIX = process.env.LAMBDA_NAME_PREFIX ?? `asgard-fjall-${ENVIRONMENT}`
+const MONO_ROOT = join(ROOT, '../..')
 
 const functions = process.argv.slice(2)
 
 if (functions.length === 0) {
   console.error('Usage: node scripts/deploy.mjs <feature/method> [<feature/method> ...]')
-  console.error('Example: node scripts/deploy.mjs health/get')
+  console.error('Example: node scripts/deploy.mjs health/get auth/authorizer auth/context')
   process.exit(1)
 }
 
@@ -50,6 +51,23 @@ for (const fn of functions) {
     const zipParts = [`${feature}/${method}`]
     if (existsSync(sharedDir)) zipParts.push('shared')
     execSync(`cd ${DIST} && zip -r ${zipPath} ${zipParts.join(' ')}`, { stdio: 'inherit' })
+
+    if (fn === 'auth/authorizer') {
+      const josePaths = [
+        join(ROOT, 'node_modules/jose'),
+        join(MONO_ROOT, 'node_modules/jose'),
+      ]
+      const joseDir = josePaths.find((p) => existsSync(p))
+      if (!joseDir) {
+        console.error('jose not found — run pnpm install before deploying auth/authorizer')
+        failed = true
+        continue
+      }
+      const modulesRoot = dirname(joseDir)
+      execSync(`cd ${dirname(modulesRoot)} && zip -rq ${zipPath} node_modules/jose`, {
+        stdio: 'inherit',
+      })
+    }
 
     const profile = process.env.AWS_PROFILE ? `--profile ${process.env.AWS_PROFILE}` : ''
     const region = process.env.AWS_REGION ?? 'us-east-2'
