@@ -8,6 +8,7 @@ locals {
       COGNITO_USER_POOL_ID = var.cognito_user_pool_id
       COGNITO_CLIENT_ID    = var.cognito_client_id
       DYNAMODB_TABLE       = var.dynamodb_table_name
+      WEB_URL              = var.web_url
     },
     var.s3_private_media_bucket_name != null ? {
       S3_PRIVATE_MEDIA_BUCKET = var.s3_private_media_bucket_name
@@ -32,6 +33,33 @@ locals {
       route_key = "POST /public/thread/{token}/reply"
       memory    = 128
       policy    = "write"
+    }
+
+    # Ordstirr (Cairn's manifest) public routes — résumé + companion journey pages, contact form.
+    ordstirr-public-get = {
+      route_key = "GET /public/ordstirr/{username}"
+      memory    = 256
+      policy    = "read"
+    }
+    ordstirr-public-journey = {
+      route_key = "GET /public/ordstirr/{username}/ferd"
+      memory    = 256
+      policy    = "read"
+    }
+    ordstirr-public-contact-get = {
+      route_key = "GET /public/ordstirr/{username}/ordsending"
+      memory    = 128
+      policy    = "read"
+    }
+    ordstirr-public-contact = {
+      route_key = "POST /public/ordstirr/{username}/ordsending"
+      memory    = 256
+      policy    = "write"
+    }
+    ordstirr-domain-lookup = {
+      route_key = "GET /domain-lookup"
+      memory    = 128
+      policy    = "read"
     }
   }
 
@@ -270,6 +298,135 @@ locals {
       policy    = "write"
     }
 
+    # Ordstirr (Cairn's manifest) — Asgard naming. Résumé/CV builder. Public routes live in public_routes.
+    ordstirr-get = {
+      route_key = "GET /ordstirr"
+      memory    = 256
+      policy    = "read"
+    }
+    ordstirr-origins-update = {
+      route_key = "PUT /ordstirr/origins"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-expeditions-create = {
+      route_key = "POST /ordstirr/expeditions"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-expeditions-update = {
+      route_key = "PUT /ordstirr/expeditions/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-expeditions-delete = {
+      route_key = "DELETE /ordstirr/expeditions/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-training-create = {
+      route_key = "POST /ordstirr/training"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-training-update = {
+      route_key = "PUT /ordstirr/training/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-training-delete = {
+      route_key = "DELETE /ordstirr/training/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-gear-create = {
+      route_key = "POST /ordstirr/gear"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-gear-update = {
+      route_key = "PUT /ordstirr/gear/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-gear-delete = {
+      route_key = "DELETE /ordstirr/gear/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-landmarks-create = {
+      route_key = "POST /ordstirr/landmarks"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-landmarks-update = {
+      route_key = "PUT /ordstirr/landmarks/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-landmarks-delete = {
+      route_key = "DELETE /ordstirr/landmarks/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-summits-create = {
+      route_key = "POST /ordstirr/summits"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-summits-update = {
+      route_key = "PUT /ordstirr/summits/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-summits-delete = {
+      route_key = "DELETE /ordstirr/summits/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-pathfinding-create = {
+      route_key = "POST /ordstirr/pathfinding"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-pathfinding-update = {
+      route_key = "PUT /ordstirr/pathfinding/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-pathfinding-delete = {
+      route_key = "DELETE /ordstirr/pathfinding/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-companions-create = {
+      route_key = "POST /ordstirr/companions"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-companions-update = {
+      route_key = "PUT /ordstirr/companions/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-companions-delete = {
+      route_key = "DELETE /ordstirr/companions/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    ordstirr-companions-media-upload = {
+      route_key = "POST /ordstirr/companions/upload-url"
+      memory    = 128
+      policy    = "write"
+      s3_access = true
+    }
+    ordstirr-companions-media-delete = {
+      route_key = "DELETE /ordstirr/companions/media"
+      memory    = 128
+      policy    = "write"
+      s3_access = true
+    }
+
     # Sögur (Cairn's logs) — Asgard naming.
     sogur-get = {
       route_key = "GET /sogur"
@@ -367,6 +524,23 @@ locals {
       route_key = "DELETE /dagatal-subscriptions/{id}"
       memory    = 128
       policy    = "write"
+    }
+
+    # Hlidskjalf (Cairn's basecamp) — dashboard aggregate reads.
+    hlidskjalf-get = {
+      route_key = "GET /hlidskjalf"
+      memory    = 256
+      policy    = "read"
+    }
+    hlidskjalf-sidebar = {
+      route_key = "GET /hlidskjalf/sidebar"
+      memory    = 256
+      policy    = "read"
+    }
+    hlidskjalf-trail-waypoints = {
+      route_key = "GET /hlidskjalf/trail-waypoints"
+      memory    = 256
+      policy    = "read"
     }
   }
 

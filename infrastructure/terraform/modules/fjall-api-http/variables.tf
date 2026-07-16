@@ -76,3 +76,9 @@ variable "lambda_ssm_write_policy_arn" {
   type        = string
   default     = null
 }
+
+variable "web_url" {
+  description = "Public web app base URL — used for thread links in Ordstirr/Sendibod contact emails."
+  type        = string
+  default     = "https://asgard.levismith.us"
+}

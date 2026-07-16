@@ -32,6 +32,10 @@ export function notFound(message = 'Not found'): ApiResponse<never> {
   return { statusCode: 404, error: message }
 }
 
+export function tooManyRequests(message = 'Too many requests'): ApiResponse<never> {
+  return { statusCode: 429, error: message }
+}
+
 export function serverError(message = 'Internal server error'): ApiResponse<never> {
   return { statusCode: 500, error: message }
 }
