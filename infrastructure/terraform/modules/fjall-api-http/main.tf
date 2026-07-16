@@ -1,13 +1,18 @@
 locals {
   name_prefix = "${var.project_name}-${var.environment}"
 
-  lambda_env = {
-    ENVIRONMENT          = var.environment
-    SERVICE              = "asgard-fjall-api"
-    COGNITO_USER_POOL_ID = var.cognito_user_pool_id
-    COGNITO_CLIENT_ID    = var.cognito_client_id
-    DYNAMODB_TABLE       = var.dynamodb_table_name
-  }
+  lambda_env = merge(
+    {
+      ENVIRONMENT          = var.environment
+      SERVICE              = "asgard-fjall-api"
+      COGNITO_USER_POOL_ID = var.cognito_user_pool_id
+      COGNITO_CLIENT_ID    = var.cognito_client_id
+      DYNAMODB_TABLE       = var.dynamodb_table_name
+    },
+    var.s3_private_media_bucket_name != null ? {
+      S3_PRIVATE_MEDIA_BUCKET = var.s3_private_media_bucket_name
+    } : {},
+  )
 
   # Public routes (no authorizer).
   public_routes = {
@@ -118,6 +123,116 @@ locals {
     runir-delete = {
       route_key = "DELETE /runir/{id}"
       memory    = 128
+      policy    = "write"
+    }
+
+    # Audr (Cairn's burn/supplylines/cache/sjodr) — Asgard naming.
+    surtr-get = {
+      route_key = "GET /surtr"
+      memory    = 256
+      policy    = "read"
+    }
+    surtr-create = {
+      route_key = "POST /surtr"
+      memory    = 128
+      policy    = "write"
+    }
+    surtr-update = {
+      route_key = "PUT /surtr/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    surtr-delete = {
+      route_key = "DELETE /surtr/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    surtr-receipt-url = {
+      route_key = "GET /surtr/receipt-url"
+      memory    = 128
+      policy    = "read"
+      s3_access = true
+    }
+    surtr-receipt-upload-url = {
+      route_key = "POST /surtr/receipt-upload-url"
+      memory    = 128
+      policy    = "none"
+      s3_access = true
+    }
+    surtr-receipt-delete = {
+      route_key = "DELETE /surtr/receipt-url"
+      memory    = 128
+      policy    = "write"
+      s3_access = true
+    }
+    idunn-get = {
+      route_key = "GET /idunn"
+      memory    = 256
+      policy    = "read"
+    }
+    idunn-create = {
+      route_key = "POST /idunn"
+      memory    = 128
+      policy    = "write"
+    }
+    idunn-update = {
+      route_key = "PUT /idunn/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    idunn-delete = {
+      route_key = "DELETE /idunn/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    idunn-summary = {
+      route_key = "GET /idunn/summary"
+      memory    = 256
+      policy    = "read"
+    }
+    skatt-get = {
+      route_key = "GET /skatt"
+      memory    = 128
+      policy    = "read"
+    }
+    skatt-create = {
+      route_key = "POST /skatt"
+      memory    = 128
+      policy    = "write"
+    }
+    skatt-update = {
+      route_key = "PUT /skatt/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    skatt-delete = {
+      route_key = "DELETE /skatt/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    skatt-carry-over = {
+      route_key = "POST /skatt/carry-over"
+      memory    = 128
+      policy    = "write"
+    }
+    sjodr-get = {
+      route_key = "GET /sjodr"
+      memory    = 128
+      policy    = "read"
+    }
+    sjodr-create = {
+      route_key = "POST /sjodr"
+      memory    = 128
+      policy    = "write"
+    }
+    sjodr-update = {
+      route_key = "PUT /sjodr/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    sjodr-delete = {
+      route_key = "DELETE /sjodr/{id}"
+      memory    = 256
       policy    = "write"
     }
   }
@@ -239,8 +354,18 @@ resource "aws_iam_role_policy_attachment" "lambda_data" {
     if cfg.policy == "read" || cfg.policy == "write"
   }
 
-  role = aws_iam_role.lambda[each.key].name
+  role       = aws_iam_role.lambda[each.key].name
   policy_arn = each.value == "write" ? var.lambda_write_policy_arn : var.lambda_read_policy_arn
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_s3_media" {
+  for_each = var.lambda_s3_policy_arn == null ? {} : {
+    for key, cfg in local.all_functions : key => cfg
+    if try(cfg.s3_access, false)
+  }
+
+  role       = aws_iam_role.lambda[each.key].name
+  policy_arn = var.lambda_s3_policy_arn
 }
 
 resource "aws_lambda_function" "main" {

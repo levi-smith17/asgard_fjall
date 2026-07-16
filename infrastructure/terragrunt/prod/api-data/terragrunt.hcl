@@ -11,7 +11,8 @@ terraform {
 }
 
 inputs = {
-  project_name = local.env.locals.project_name
-  environment  = local.env.locals.environment
-  pitr_enabled = true
+  project_name                  = local.env.locals.project_name
+  environment                   = local.env.locals.environment
+  pitr_enabled                  = true
+  private_media_allowed_origins = local.env.locals.api_allowed_origins
 }

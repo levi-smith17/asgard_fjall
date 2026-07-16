@@ -17,3 +17,15 @@ output "lambda_read_policy_arn" {
 output "lambda_write_policy_arn" {
   value = aws_iam_policy.lambda_write.arn
 }
+
+output "private_media_bucket_name" {
+  value = aws_s3_bucket.private_media.bucket
+}
+
+output "private_media_bucket_arn" {
+  value = aws_s3_bucket.private_media.arn
+}
+
+output "lambda_s3_policy_arn" {
+  value = aws_iam_policy.lambda_s3_media.arn
+}

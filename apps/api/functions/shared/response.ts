@@ -24,6 +24,10 @@ export function unauthorized(message = 'Unauthorized'): ApiResponse<never> {
   return { statusCode: 401, error: message }
 }
 
+export function forbidden(message = 'Forbidden'): ApiResponse<never> {
+  return { statusCode: 403, error: message }
+}
+
 export function notFound(message = 'Not found'): ApiResponse<never> {
   return { statusCode: 404, error: message }
 }

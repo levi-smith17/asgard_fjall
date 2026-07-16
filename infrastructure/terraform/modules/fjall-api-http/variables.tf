@@ -52,3 +52,15 @@ variable "aws_region" {
   type    = string
   default = "us-east-2"
 }
+
+variable "s3_private_media_bucket_name" {
+  description = "Private media S3 bucket name (Audr receipts). Wired into lambda_env when provided."
+  type        = string
+  default     = null
+}
+
+variable "lambda_s3_policy_arn" {
+  description = "IAM policy ARN granting S3 access to the private media bucket, attached to routes with s3_access = true."
+  type        = string
+  default     = null
+}

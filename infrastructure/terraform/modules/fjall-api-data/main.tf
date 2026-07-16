@@ -103,3 +103,77 @@ resource "aws_iam_policy" "lambda_write" {
   name   = "${local.name_prefix}-lambda-write"
   policy = data.aws_iam_policy_document.lambda_write.json
 }
+
+# ─── Private media bucket (Audr receipts — presigned reads/writes) ────────────
+
+resource "aws_s3_bucket" "private_media" {
+  bucket = "${local.name_prefix}-private-media"
+
+  tags = {
+    Name = "${local.name_prefix}-private-media"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "private_media" {
+  bucket                  = aws_s3_bucket.private_media.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "private_media" {
+  bucket = aws_s3_bucket.private_media.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_cors_configuration" "private_media" {
+  bucket = aws_s3_bucket.private_media.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT"]
+    allowed_origins = var.private_media_allowed_origins
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "private_media" {
+  bucket = aws_s3_bucket.private_media.id
+
+  rule {
+    id     = "abort-incomplete-multipart"
+    status = "Enabled"
+    filter {}
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 1
+    }
+  }
+}
+
+data "aws_iam_policy_document" "lambda_s3_media" {
+  statement {
+    sid    = "S3PrivateMedia"
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:ListBucket",
+    ]
+    resources = [
+      aws_s3_bucket.private_media.arn,
+      "${aws_s3_bucket.private_media.arn}/*",
+    ]
+  }
+}
+
+resource "aws_iam_policy" "lambda_s3_media" {
+  name   = "${local.name_prefix}-lambda-s3-media"
+  policy = data.aws_iam_policy_document.lambda_s3_media.json
+}

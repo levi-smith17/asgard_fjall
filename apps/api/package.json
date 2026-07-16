@@ -12,11 +12,18 @@
     "deploy:laufar": "node scripts/deploy.mjs laufar/get laufar/create laufar/update laufar/delete laufar/fetch-meta",
     "deploy:greinar": "node scripts/deploy.mjs greinar/get greinar/create greinar/update greinar/delete",
     "deploy:runir": "node scripts/deploy.mjs runir/get runir/create runir/update runir/delete",
-    "deploy:core": "node scripts/deploy.mjs health/get auth/authorizer auth/context profile/get thing/get thing/update thing/api-token-get thing/api-token-create thing/api-token-revoke laufar/get laufar/create laufar/update laufar/delete laufar/fetch-meta greinar/get greinar/create greinar/update greinar/delete runir/get runir/create runir/update runir/delete"
+    "deploy:surtr": "node scripts/deploy.mjs surtr/get surtr/create surtr/update surtr/delete surtr/receipt-url surtr/receipt-upload-url surtr/receipt-delete",
+    "deploy:idunn": "node scripts/deploy.mjs idunn/get idunn/create idunn/update idunn/delete idunn/summary",
+    "deploy:skatt": "node scripts/deploy.mjs skatt/get skatt/create skatt/update skatt/delete skatt/carry-over",
+    "deploy:sjodr": "node scripts/deploy.mjs sjodr/get sjodr/create sjodr/update sjodr/delete",
+    "deploy:core": "node scripts/deploy.mjs health/get auth/authorizer auth/context profile/get thing/get thing/update thing/api-token-get thing/api-token-create thing/api-token-revoke laufar/get laufar/create laufar/update laufar/delete laufar/fetch-meta greinar/get greinar/create greinar/update greinar/delete runir/get runir/create runir/update runir/delete",
+    "deploy:audr": "node scripts/deploy.mjs surtr/get surtr/create surtr/update surtr/delete surtr/receipt-url surtr/receipt-upload-url surtr/receipt-delete idunn/get idunn/create idunn/update idunn/delete idunn/summary skatt/get skatt/create skatt/update skatt/delete skatt/carry-over sjodr/get sjodr/create sjodr/update sjodr/delete"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.787.0",
+    "@aws-sdk/client-s3": "^3.787.0",
     "@aws-sdk/lib-dynamodb": "^3.787.0",
+    "@aws-sdk/s3-request-presigner": "^3.787.0",
     "jose": "^6.0.11"
   },
   "devDependencies": {

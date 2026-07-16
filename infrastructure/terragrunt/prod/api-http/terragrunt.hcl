@@ -21,9 +21,11 @@ dependency "api_data" {
   config_path = "../api-data"
 
   mock_outputs = {
-    table_name              = "asgard-fjall-prod"
-    lambda_read_policy_arn  = "arn:aws:iam::000000000000:policy/mock-read"
-    lambda_write_policy_arn = "arn:aws:iam::000000000000:policy/mock-write"
+    table_name                = "asgard-fjall-prod"
+    lambda_read_policy_arn    = "arn:aws:iam::000000000000:policy/mock-read"
+    lambda_write_policy_arn   = "arn:aws:iam::000000000000:policy/mock-write"
+    private_media_bucket_name = "asgard-fjall-prod-private-media"
+    lambda_s3_policy_arn      = "arn:aws:iam::000000000000:policy/mock-s3-media"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
@@ -57,4 +59,7 @@ inputs = {
   lambda_read_policy_arn  = dependency.api_data.outputs.lambda_read_policy_arn
   lambda_write_policy_arn = dependency.api_data.outputs.lambda_write_policy_arn
   aws_region              = local.env.locals.aws_region
+
+  s3_private_media_bucket_name = dependency.api_data.outputs.private_media_bucket_name
+  lambda_s3_policy_arn         = dependency.api_data.outputs.lambda_s3_policy_arn
 }
