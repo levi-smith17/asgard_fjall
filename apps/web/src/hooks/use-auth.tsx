@@ -8,7 +8,7 @@ import {
   signOut as cognitoSignOut,
   type AuthUser,
 } from '@/lib/cognito'
-import { setCairnAuthProvider } from '@/lib/cairn-client'
+import { setCairnAuthProvider } from '@/lib/data-client'
 import {
   fetchAuthStatus,
   fetchGateMe,

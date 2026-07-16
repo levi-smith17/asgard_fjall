@@ -4,18 +4,18 @@ import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { StarfieldSkeleton } from '@/components/core/ui/studio-skeletons'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
-import { CairnNotConfiguredNotice } from '@/components/cairn/cairn-not-configured'
+import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import {
   StarfieldClient,
   type StarfieldInspectorMode,
-} from '@/components/cairn/stjornur/starfield-client'
-import { StarfieldControlBar } from '@/components/cairn/stjornur/starfield-control-bar'
-import { StjornurContextBar } from '@/components/cairn/stjornur/stjornur-context-bar'
-import { StjornurNetworksRail } from '@/components/cairn/stjornur/stjornur-networks-rail'
+} from '@/components/apps/stjornur/starfield-client'
+import { StarfieldControlBar } from '@/components/apps/stjornur/starfield-control-bar'
+import { StjornurContextBar } from '@/components/apps/stjornur/stjornur-context-bar'
+import { StjornurNetworksRail } from '@/components/apps/stjornur/stjornur-networks-rail'
 import { TooltipProvider } from '@/components/core/ui/tooltip'
 import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
-import { fetchCairnStatus } from '@/lib/cairn-api'
-import { fetchStarfieldData } from '@/lib/cairn-starfield-api'
+import { fetchCairnStatus } from '@/lib/data-api'
+import { fetchStarfieldData } from '@/lib/stjornur-api'
 
 function networkIdFromSk(sk: string): string {
   return sk.replace(/^SF#NETWORK#/, '')
@@ -150,7 +150,7 @@ export function StjornurPage() {
           loading ? (
             <StarfieldSkeleton />
           ) : !configured ? (
-            <CairnNotConfiguredNotice />
+            <DataNotConfiguredNotice />
           ) : (
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <div

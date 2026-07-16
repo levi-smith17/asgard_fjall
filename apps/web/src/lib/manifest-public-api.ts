@@ -1,4 +1,4 @@
-import { cairnFetch } from '@/lib/cairn-client'
+import { cairnFetch } from '@/lib/data-client'
 
 export type PublicManifestData = {
   wayfarer: {

@@ -1,15 +1,26 @@
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CalendarDays, Shield, User } from 'lucide-react'
+import { Bookmark, CalendarDays, KeyRound, Monitor, NotebookPen, Shield, User } from 'lucide-react'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
 import { ThingAccountSettings } from '@/components/thing/thing-account-settings'
+import { ThingAppearanceSettings } from '@/components/thing/thing-appearance-settings'
 import { ThingContextBar } from '@/components/thing/thing-context-bar'
+import { ThingIntegrationsSettings } from '@/components/thing/thing-integrations-settings'
 import { ThingItinerarySettings } from '@/components/thing/thing-itinerary-settings'
+import { ThingLogSettings } from '@/components/thing/thing-log-settings'
 import { ThingPrivacySettings } from '@/components/thing/thing-privacy-settings'
 import { ThingSectionsRail } from '@/components/thing/thing-sections-rail'
+import { ThingWaypointSettings } from '@/components/thing/thing-waypoint-settings'
 import { useTerms } from '@/hooks/use-terminology'
 
-type ThingSection = 'account' | 'privacy' | 'dagatal'
+type ThingSection =
+  | 'account'
+  | 'appearance'
+  | 'privacy'
+  | 'integrations'
+  | 'dagatal'
+  | 'sogur'
+  | 'hlidskjalf'
 
 function ThingSectionShell({
   title,
@@ -37,15 +48,26 @@ export function ThingPage() {
     () =>
       [
         { id: 'account' as const, label: terms.account, icon: User },
+        { id: 'appearance' as const, label: 'Appearance', icon: Monitor },
         { id: 'privacy' as const, label: terms.privacy, icon: Shield },
+        { id: 'integrations' as const, label: 'Integrations', icon: KeyRound },
         { id: 'dagatal' as const, label: terms.calendar, icon: CalendarDays },
+        { id: 'sogur' as const, label: terms.notes, icon: NotebookPen },
+        { id: 'hlidskjalf' as const, label: terms.laufar, icon: Bookmark },
       ] satisfies Array<{ id: ThingSection; label: string; icon: typeof User }>,
     [terms],
   )
   const [searchParams, setSearchParams] = useSearchParams()
   const sectionParam = searchParams.get('section')
   const activeSection: ThingSection =
-    sectionParam === 'privacy' || sectionParam === 'dagatal' ? sectionParam : 'account'
+    sectionParam === 'appearance' ||
+    sectionParam === 'privacy' ||
+    sectionParam === 'integrations' ||
+    sectionParam === 'dagatal' ||
+    sectionParam === 'sogur' ||
+    sectionParam === 'hlidskjalf'
+      ? sectionParam
+      : 'account'
 
   function setSection(section: ThingSection) {
     const params = new URLSearchParams(searchParams.toString())
@@ -77,12 +99,40 @@ export function ThingPage() {
             >
               <ThingItinerarySettings />
             </ThingSectionShell>
+          ) : activeSection === 'appearance' ? (
+            <ThingSectionShell
+              title="Appearance"
+              description="Layout defaults and formatting preferences."
+            >
+              <ThingAppearanceSettings />
+            </ThingSectionShell>
           ) : activeSection === 'privacy' ? (
             <ThingSectionShell title={terms.privacy} description="Manifest visibility and contact settings.">
               <ThingPrivacySettings />
             </ThingSectionShell>
+          ) : activeSection === 'integrations' ? (
+            <ThingSectionShell
+              title="Integrations"
+              description="Personal API tokens for trusted tools and automations."
+            >
+              <ThingIntegrationsSettings />
+            </ThingSectionShell>
+          ) : activeSection === 'sogur' ? (
+            <ThingSectionShell
+              title={terms.notes}
+              description={`${terms.notes} display and sorting preferences.`}
+            >
+              <ThingLogSettings />
+            </ThingSectionShell>
+          ) : activeSection === 'hlidskjalf' ? (
+            <ThingSectionShell
+              title={terms.laufar}
+              description={`${terms.laufar} display and behavior preferences.`}
+            >
+              <ThingWaypointSettings />
+            </ThingSectionShell>
           ) : (
-            <ThingSectionShell title={terms.account} description="Profile and Cairn account details.">
+            <ThingSectionShell title={terms.account} description="Profile and account details.">
               <ThingAccountSettings />
             </ThingSectionShell>
           )}

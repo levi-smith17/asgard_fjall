@@ -1,4 +1,4 @@
-import type { CairnBurn, CairnCacheUtilization, CairnSjodrView } from '@/lib/cairn-types'
+import type { CairnBurn, CairnCacheUtilization, CairnSjodrView } from '@/lib/data-types'
 import { markerDisplayName, toMarkerId } from '@/lib/embedded-markers'
 
 export const AUDR_UNASSIGNED_SJODR = 'unassigned'

@@ -11,8 +11,8 @@ import {
   Mail,
   MapPin,
 } from 'lucide-react'
-import { OrdstirrGearChart } from '@/components/cairn/ordstirr/ordstirr-gear-chart'
-import { PublicOrdstirrSectionsRail } from '@/components/cairn/ordstirr/public-ordstirr-sections-rail'
+import { OrdstirrGearChart } from '@/components/apps/ordstirr/ordstirr-gear-chart'
+import { PublicOrdstirrSectionsRail } from '@/components/apps/ordstirr/public-ordstirr-sections-rail'
 import { StudioContextBar } from '@/components/core/layout/studio-context-bar'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
 import { PublicOrdstirrCanvasSkeleton } from '@/components/core/ui/studio-skeletons'

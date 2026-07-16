@@ -1,4 +1,4 @@
-import type { CairnLogView } from '@/lib/cairn-api'
+import type { CairnLogView } from '@/lib/data-api'
 
 export type SogurLogbook = {
   id: string

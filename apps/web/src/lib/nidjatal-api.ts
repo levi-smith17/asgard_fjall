@@ -1,4 +1,4 @@
-import { cairnFetch } from '@/lib/cairn-client'
+import { cairnFetch } from '@/lib/data-client'
 import type { NidjatalBloodline, NidjatalKin } from '@/lib/nidjatal-types'
 
 export interface NidjatalKinPayload {

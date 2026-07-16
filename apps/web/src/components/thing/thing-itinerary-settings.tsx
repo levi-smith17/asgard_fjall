@@ -9,7 +9,7 @@ import { PasswordInput } from '@/components/core/ui/password-input'
 import { Select } from '@/components/core/ui/select'
 import { Switch } from '@/components/core/ui/switch'
 import { ThingSettingRow } from '@/components/thing/thing-setting-row'
-import { CairnNotConfiguredNotice } from '@/components/cairn/cairn-not-configured'
+import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import {
   addCairnCalendarSubscription,
   addCairnICloudCalendar,
@@ -20,7 +20,7 @@ import {
   saveCairnItinerarySettings,
   updateCairnICloudCalendar,
   type CairnCalendarEntry,
-} from '@/lib/cairn-api'
+} from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 import { ASGARD_PRIMARY_HEX } from '@/lib/brand-colors'
 
@@ -298,7 +298,7 @@ export function ThingItinerarySettings() {
   }
 
   if (!statusQuery.data?.configured) {
-    return <CairnNotConfiguredNotice />
+    return <DataNotConfiguredNotice />
   }
 
   if (settingsQuery.isLoading || !itinerary) {

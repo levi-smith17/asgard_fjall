@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { TooltipProvider } from '@/components/core/ui/tooltip'
 import { StarfieldSkeleton } from '@/components/core/ui/studio-skeletons'
-import { CairnNotConfiguredNotice } from '@/components/cairn/cairn-not-configured'
-import { NidjatalClient, type NidjatalPanelState } from '@/components/cairn/nidjatal/nidjatal-client'
+import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
+import { NidjatalClient, type NidjatalPanelState } from '@/components/apps/nidjatal/nidjatal-client'
 import { useAuth } from '@/hooks/use-auth'
-import { fetchCairnProfile, fetchCairnStatus } from '@/lib/cairn-api'
+import { fetchCairnProfile, fetchCairnStatus } from '@/lib/data-api'
 import { fetchNidjatalKin } from '@/lib/nidjatal-api'
 import type { NidjatalKin } from '@/lib/nidjatal-types'
 
@@ -84,7 +84,7 @@ export function NidjatalPage() {
       {loading ? (
         <StarfieldSkeleton />
       ) : !configured ? (
-        <CairnNotConfiguredNotice />
+        <DataNotConfiguredNotice />
       ) : (
         <NidjatalClient
           kins={displayKins}

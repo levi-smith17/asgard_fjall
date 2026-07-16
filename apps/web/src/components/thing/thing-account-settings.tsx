@@ -6,12 +6,12 @@ import { Button } from '@/components/core/ui/button'
 import { Input } from '@/components/core/ui/input'
 import { Select } from '@/components/core/ui/select'
 import { ThingSettingRow } from '@/components/thing/thing-setting-row'
-import { CairnNotConfiguredNotice } from '@/components/cairn/cairn-not-configured'
+import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import {
   fetchCairnFullSettings,
   fetchCairnStatus,
   saveCairnAccountSettings,
-} from '@/lib/cairn-api'
+} from '@/lib/data-api'
 
 export function ThingAccountSettings() {
   const queryClient = useQueryClient()
@@ -63,7 +63,7 @@ export function ThingAccountSettings() {
   }
 
   if (!statusQuery.data?.configured) {
-    return <CairnNotConfiguredNotice />
+    return <DataNotConfiguredNotice />
   }
 
   if (settingsQuery.isLoading || !account) {

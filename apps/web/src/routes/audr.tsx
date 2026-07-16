@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { CairnNotConfiguredNotice } from '@/components/cairn/cairn-not-configured'
-import { AudrClient, AudrPageSkeleton } from '@/components/cairn/audr/audr-client'
-import { fetchCairnStatus } from '@/lib/cairn-api'
+import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
+import { AudrClient, AudrPageSkeleton } from '@/components/apps/audr/audr-client'
+import { fetchCairnStatus } from '@/lib/data-api'
 
 export function AudrPage() {
   const statusQuery = useQuery({
@@ -18,7 +18,7 @@ export function AudrPage() {
   }
 
   if (!configured) {
-    return <CairnNotConfiguredNotice />
+    return <DataNotConfiguredNotice />
   }
 
   return <AudrClient />

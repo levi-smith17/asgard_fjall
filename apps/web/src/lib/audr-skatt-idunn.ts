@@ -1,4 +1,4 @@
-import type { CairnCacheUtilization, CairnSupplyline } from '@/lib/cairn-types'
+import type { CairnCacheUtilization, CairnSupplyline } from '@/lib/data-types'
 import { toMarkerId } from '@/lib/embedded-markers'
 
 const MONTHLY_OR_LESS = new Set(['WEEKLY', 'BIWEEKLY', 'MONTHLY'])

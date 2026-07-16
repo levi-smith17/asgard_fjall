@@ -1,6 +1,6 @@
-import { cairnFetch } from '@/lib/cairn-client'
-import type { CairnExternalCalendarEvent } from '@/lib/cairn-types'
-import type { CairnCalendarSyncStatus } from '@/lib/cairn-api'
+import { cairnFetch } from '@/lib/data-client'
+import type { CairnExternalCalendarEvent } from '@/lib/data-types'
+import type { CairnCalendarSyncStatus } from '@/lib/data-api'
 import { parseCairnItineraryEventsPayload, reviveItineraryEvents } from '@/lib/dagatal-events'
 
 export type DagatalEventsResult = {

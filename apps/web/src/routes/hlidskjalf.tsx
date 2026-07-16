@@ -22,9 +22,9 @@ import {
 import {
   CairnCatalogInspector,
   type CairnCatalogTab,
-} from '@/components/cairn/cairn-catalog-inspector'
-import { cairnQueryErrorProps } from '@/components/cairn/cairn-not-configured'
-import { WaypointInspector } from '@/components/cairn/waypoint-inspector'
+} from '@/components/apps/catalog-inspector'
+import { dataQueryErrorProps } from '@/components/apps/data-not-configured'
+import { WaypointInspector } from '@/components/apps/waypoint-inspector'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
 import { HlidskjalfContextBar } from '@/components/hlidskjalf/hlidskjalf-context-bar'
 import {
@@ -48,8 +48,8 @@ import {
   fetchCairnTrails,
   fetchCairnWaypoints,
   updateCairnWaypoint,
-} from '@/lib/cairn-api'
-import { extractCairnId, toMarkerView, toTrailView, toWaypointView } from '@/lib/cairn-format'
+} from '@/lib/data-api'
+import { extractCairnId, toMarkerView, toTrailView, toWaypointView } from '@/lib/data-format'
 import { buildManifestSectionCards } from '@/lib/hlidskjalf-manifest-cards'
 import { fetchManifest } from '@/lib/manifest-api'
 import { getManifestTerms } from '@/lib/terminology'
@@ -619,7 +619,7 @@ export function HlidskjalfPage() {
 
   const cairnErrorProps = useMemo(() => {
     const error = waypointsQuery.error ?? trailsQuery.error ?? markersQuery.error
-    return cairnQueryErrorProps(error, 'Data request failed')
+    return dataQueryErrorProps(error, 'Data request failed')
   }, [markersQuery.error, trailsQuery.error, waypointsQuery.error])
 
   const trails = useMemo(

@@ -4,18 +4,19 @@ import { useSearchParams } from 'react-router-dom'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { RailListSkeleton, TableSkeleton } from '@/components/core/ui/studio-skeletons'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
-import { CairnNotConfiguredNotice } from '@/components/cairn/cairn-not-configured'
-import { SendibodContextBar } from '@/components/cairn/sendibod/sendibod-context-bar'
-import { SendibodFilterBar } from '@/components/cairn/sendibod/sendibod-filter-bar'
-import { SendibodSignalDetail } from '@/components/cairn/sendibod/sendibod-signal-detail'
-import { SendibodSignalList } from '@/components/cairn/sendibod/sendibod-signal-list'
+import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
+import { SendibodContextBar } from '@/components/apps/sendibod/sendibod-context-bar'
+import { SendibodFilterBar } from '@/components/apps/sendibod/sendibod-filter-bar'
+import { SendibodSignalDetail } from '@/components/apps/sendibod/sendibod-signal-detail'
+import { SendibodSignalList } from '@/components/apps/sendibod/sendibod-signal-list'
+import { SendibodSettingsForm } from '@/components/apps/sendibod/sendibod-settings-form'
 import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
 import {
   deleteCairnSignal,
   fetchCairnFullSettings,
   fetchCairnSignals,
   fetchCairnStatus,
-} from '@/lib/cairn-api'
+} from '@/lib/data-api'
 
 export function SendibodPage() {
   const queryClient = useQueryClient()
@@ -23,6 +24,7 @@ export function SendibodPage() {
   const [search, setSearch] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
   const [inspectorPinned, setInspectorPinned] = useInspectorPinned()
+  const [showSettings, setShowSettings] = useState(false)
 
   const clearSelection = useCallback(() => {
     setSearchParams((params) => {
@@ -133,13 +135,14 @@ export function SendibodPage() {
             unreadCount={signalsQuery.data ? unreadCount : undefined}
             inspectorPinned={inspectorPinned}
             onInspectorPinnedChange={setInspectorPinned}
+            onOpenSettings={() => setShowSettings(true)}
           />
         }
         canvas={
           statusQuery.isLoading ? (
             <TableSkeleton columns={3} rows={10} />
           ) : !configured ? (
-            <CairnNotConfiguredNotice />
+            <DataNotConfiguredNotice />
           ) : (
             <div className="flex h-full flex-col" onPointerDown={handleCanvasPointerDown}>
               <SendibodFilterBar
@@ -165,7 +168,21 @@ export function SendibodPage() {
         inspectorState={configured && !statusQuery.isLoading ? inspectorState : 'hidden'}
         inspectorHint="Select a message"
         inspector={
-          selectedSignal ? (
+          showSettings && settingsQuery.data?.signals ? (
+            <div className="flex h-full flex-col">
+              <div className="border-b border-border px-5 py-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Settings
+                </p>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+                <SendibodSettingsForm
+                  initialSettings={settingsQuery.data.signals}
+                  onDone={() => setShowSettings(false)}
+                />
+              </div>
+            </div>
+          ) : selectedSignal ? (
             <SendibodSignalDetail signal={selectedSignal} autoMarkRead={autoMarkRead} />
           ) : inspectorPinned ? (
             <div className="flex h-full flex-col">

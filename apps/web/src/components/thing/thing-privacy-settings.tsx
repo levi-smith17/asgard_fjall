@@ -5,14 +5,14 @@ import { FormFieldsSkeleton } from '@/components/core/ui/studio-skeletons'
 import { Button } from '@/components/core/ui/button'
 import { Select } from '@/components/core/ui/select'
 import { Switch } from '@/components/core/ui/switch'
-import { CairnNotConfiguredNotice } from '@/components/cairn/cairn-not-configured'
+import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import { ThingSettingRow } from '@/components/thing/thing-setting-row'
 import {
   fetchCairnFullSettings,
   fetchCairnStatus,
   saveCairnListedSetting,
   saveCairnPrivacySettings,
-} from '@/lib/cairn-api'
+} from '@/lib/data-api'
 
 export function ThingPrivacySettings() {
   const queryClient = useQueryClient()
@@ -63,7 +63,7 @@ export function ThingPrivacySettings() {
   }
 
   if (!statusQuery.data?.configured) {
-    return <CairnNotConfiguredNotice />
+    return <DataNotConfiguredNotice />
   }
 
   if (settingsQuery.isLoading || !privacy) {

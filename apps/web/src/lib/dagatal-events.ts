@@ -1,5 +1,5 @@
-import type { CairnExternalCalendarEvent } from '@/lib/cairn-types'
-import type { ICloudEventDisplay } from '@/components/cairn/dagatal/dagatal-types'
+import type { CairnExternalCalendarEvent } from '@/lib/data-types'
+import type { ICloudEventDisplay } from '@/components/apps/dagatal/dagatal-types'
 
 function localDateKey(date: Date): string {
   const year = date.getFullYear()

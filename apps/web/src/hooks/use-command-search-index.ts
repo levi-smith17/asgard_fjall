@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/use-auth'
 import { useDebounce } from '@/hooks/use-debounce'
 import { useTerminology } from '@/hooks/use-terminology'
-import { searchCairn, type CairnSearchResultType } from '@/lib/cairn-api'
+import { searchCairn, type CairnSearchResultType } from '@/lib/data-api'
 import { buildFjallNavigationEntries } from '@/lib/command-search/build-fjall-nav'
 import {
   hydrateRecentCommandSearch,
