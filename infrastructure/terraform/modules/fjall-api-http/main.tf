@@ -18,7 +18,7 @@ locals {
     }
   }
 
-  # Protected routes (REQUEST authorizer).
+  # Protected routes (REQUEST authorizer). Asgard terms only.
   protected_routes = {
     auth-context = {
       route_key = "GET /auth/context"
@@ -30,33 +30,93 @@ locals {
       memory    = 256
       policy    = "read"
     }
-    settings-get = {
-      route_key = "GET /settings"
+    thing-get = {
+      route_key = "GET /thing"
       memory    = 256
       policy    = "read"
     }
-    settings-update = {
-      route_key = "PUT /settings/{section}"
+    thing-update = {
+      route_key = "PUT /thing/{section}"
       memory    = 256
       policy    = "write"
     }
-    settings-delete-account = {
-      route_key = "DELETE /account"
-      memory    = 256
-      policy    = "write"
-    }
-    settings-api-token-get = {
-      route_key = "GET /settings/api-token"
+    thing-api-token-get = {
+      route_key = "GET /thing/api-token"
       memory    = 128
       policy    = "read"
     }
-    settings-api-token-create = {
-      route_key = "POST /settings/api-token"
+    thing-api-token-create = {
+      route_key = "POST /thing/api-token"
       memory    = 128
       policy    = "write"
     }
-    settings-api-token-revoke = {
-      route_key = "DELETE /settings/api-token"
+    thing-api-token-revoke = {
+      route_key = "DELETE /thing/api-token"
+      memory    = 128
+      policy    = "write"
+    }
+    laufar-get = {
+      route_key = "GET /laufar"
+      memory    = 256
+      policy    = "read"
+    }
+    laufar-create = {
+      route_key = "POST /laufar"
+      memory    = 256
+      policy    = "write"
+    }
+    laufar-update = {
+      route_key = "PUT /laufar/{id}"
+      memory    = 256
+      policy    = "write"
+    }
+    laufar-delete = {
+      route_key = "DELETE /laufar/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    laufar-fetch-meta = {
+      route_key = "GET /laufar/fetch-meta"
+      memory    = 256
+      policy    = "write"
+    }
+    greinar-get = {
+      route_key = "GET /greinar"
+      memory    = 128
+      policy    = "read"
+    }
+    greinar-create = {
+      route_key = "POST /greinar"
+      memory    = 128
+      policy    = "write"
+    }
+    greinar-update = {
+      route_key = "PUT /greinar/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    greinar-delete = {
+      route_key = "DELETE /greinar/{id}"
+      memory    = 256
+      policy    = "write"
+    }
+    runir-get = {
+      route_key = "GET /runir"
+      memory    = 256
+      policy    = "read"
+    }
+    runir-create = {
+      route_key = "POST /runir"
+      memory    = 128
+      policy    = "write"
+    }
+    runir-update = {
+      route_key = "PUT /runir/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    runir-delete = {
+      route_key = "DELETE /runir/{id}"
       memory    = 128
       policy    = "write"
     }

@@ -4,8 +4,8 @@ import { dynamo, TABLE_NAME } from '../../shared/db'
 import { getPk } from '../../shared/auth'
 import { badRequest, ok, serverError, toApiGatewayResponse } from '../../shared/response'
 
-const SETTINGS_SECTIONS = ['appearance', 'privacy', 'itinerary', 'waypoints', 'logs', 'signals'] as const
-type SettingsSection = (typeof SETTINGS_SECTIONS)[number]
+const THING_SECTIONS = ['appearance', 'privacy', 'dagatal', 'laufar', 'sogur', 'sendibod'] as const
+type ThingSection = (typeof THING_SECTIONS)[number]
 
 const ACCOUNT_FIELDS = [
   'name',
@@ -74,7 +74,7 @@ export const handler = async (
       return toApiGatewayResponse(ok(result.Attributes))
     }
 
-    if (!SETTINGS_SECTIONS.includes(section as SettingsSection)) {
+    if (!THING_SECTIONS.includes(section as ThingSection)) {
       return toApiGatewayResponse(badRequest(`Invalid section: ${section}`))
     }
 

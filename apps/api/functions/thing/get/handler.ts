@@ -7,29 +7,29 @@ import { ok, serverError, toApiGatewayResponse } from '../../shared/response'
 const DEFAULT_SETTINGS = {
   appearance: {
     sidebarDefault: 'EXPANDED',
-    defaultLandingPage: '/waypoints',
+    defaultLandingPage: '/laufar',
     dateFormat: 'MDY',
   },
   privacy: {
     manifestVisibility: 'PRIVATE',
     contactFormEnabled: false,
   },
-  itinerary: {
+  dagatal: {
     defaultView: 'MONTH',
     firstDayOfWeek: 'SUNDAY',
     defaultEventDuration: 60,
     showWeekNumbers: false,
   },
-  waypoints: {
+  laufar: {
     defaultSort: 'NEWEST',
     openInNewTab: true,
-    waypointsPerPage: 25,
+    laufarPerPage: 25,
   },
-  logs: {
-    logsPerPage: 25,
+  sogur: {
+    sogurPerPage: 25,
     defaultSort: 'NEWEST',
   },
-  signals: {
+  sendibod: {
     messagesPerPage: 25,
     autoMarkRead: true,
     autoRefreshInterval: 15,
@@ -68,17 +68,19 @@ export const handler = async (
     const profile = profileResult.Item ?? {}
     const settings = settingsResult.Item ?? {}
 
-    const signals = {
-      ...DEFAULT_SETTINGS.signals,
-      ...(settings.signals ?? {}),
+    const sendibod = {
+      ...DEFAULT_SETTINGS.sendibod,
+      ...(settings.sendibod ?? settings.signals ?? {}),
       browserNotifications:
+        settings.sendibod?.browserNotifications ??
         settings.signals?.browserNotifications ??
         settings.notifications?.browserNotifications ??
-        DEFAULT_SETTINGS.signals.browserNotifications,
+        DEFAULT_SETTINGS.sendibod.browserNotifications,
       notificationSound:
+        settings.sendibod?.notificationSound ??
         settings.signals?.notificationSound ??
         settings.notifications?.notificationSound ??
-        DEFAULT_SETTINGS.signals.notificationSound,
+        DEFAULT_SETTINGS.sendibod.notificationSound,
     }
 
     const calendars = (calendarsResult.Items ?? []).map(({ ssmPasswordPath: _omit, ...rest }) => ({
@@ -91,6 +93,10 @@ export const handler = async (
       id: String(item.sk).replace('ITINERARY_SUB#', ''),
     }))
 
+    const laufarStored = settings.laufar ?? settings.waypoints ?? {}
+    const sogurStored = settings.sogur ?? settings.logs ?? {}
+    const dagatalStored = settings.dagatal ?? settings.itinerary ?? {}
+
     return toApiGatewayResponse(
       ok({
         account: {
@@ -99,7 +105,6 @@ export const handler = async (
           username: profile.username ?? null,
           timeFormat: profile.timeFormat ?? 'TWELVE',
           listed: profile.listed ?? false,
-          // Asgard default until data cutover remaps Cairn profiles.
           defaultTerminology: profile.defaultTerminology ?? 'STANDARD',
           defaultTheme: profile.defaultTheme ?? 'SYSTEM',
           headline: profile.headline ?? null,
@@ -111,10 +116,19 @@ export const handler = async (
         },
         appearance: { ...DEFAULT_SETTINGS.appearance, ...(settings.appearance ?? {}) },
         privacy: { ...DEFAULT_SETTINGS.privacy, ...(settings.privacy ?? {}) },
-        itinerary: { ...DEFAULT_SETTINGS.itinerary, ...(settings.itinerary ?? {}) },
-        waypoints: { ...DEFAULT_SETTINGS.waypoints, ...(settings.waypoints ?? {}) },
-        logs: { ...DEFAULT_SETTINGS.logs, ...(settings.logs ?? {}) },
-        signals,
+        dagatal: { ...DEFAULT_SETTINGS.dagatal, ...dagatalStored },
+        laufar: {
+          ...DEFAULT_SETTINGS.laufar,
+          ...laufarStored,
+          laufarPerPage:
+            laufarStored.laufarPerPage ?? laufarStored.waypointsPerPage ?? DEFAULT_SETTINGS.laufar.laufarPerPage,
+        },
+        sogur: {
+          ...DEFAULT_SETTINGS.sogur,
+          ...sogurStored,
+          sogurPerPage: sogurStored.sogurPerPage ?? sogurStored.logsPerPage ?? DEFAULT_SETTINGS.sogur.sogurPerPage,
+        },
+        sendibod,
         calendars,
         calendarSubscriptions,
       }),
