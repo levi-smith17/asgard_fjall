@@ -9,6 +9,8 @@ export const SJODR_PREFIX = 'SJODR#'
 export const SENDIBOD_PREFIX = 'SENDIBOD#'
 export const SOGUR_PREFIX = 'SOGUR#'
 export const KIN_PREFIX = 'KIN#'
+export const DAGATAL_PREFIX = 'DAGATAL#'
+export const DAGATAL_SUB_PREFIX = 'DAGATAL_SUB#'
 
 export function laufSk(id: string): string {
   return `${LAUF_PREFIX}${id}`
@@ -54,6 +56,14 @@ export function sogurSk(id: string): string {
 
 export function kinSk(id: string): string {
   return `${KIN_PREFIX}${id}`
+}
+
+export function dagatalSk(id: string): string {
+  return `${DAGATAL_PREFIX}${id}`
+}
+
+export function dagatalSubSk(id: string): string {
+  return `${DAGATAL_SUB_PREFIX}${id}`
 }
 
 export function idFromSk(sk: string, prefix: string): string {

@@ -326,6 +326,48 @@ locals {
       memory    = 256
       policy    = "read"
     }
+
+    # Dagatal (Cairn's itinerary) — Asgard naming. CalDAV/ICS calendar sync.
+    dagatal-events-get = {
+      route_key  = "GET /dagatal/events"
+      memory     = 512
+      timeout    = 30
+      policy     = "read"
+      ssm_access = "read"
+    }
+    dagatal-calendars-create = {
+      route_key  = "POST /dagatal"
+      memory     = 128
+      policy     = "write"
+      ssm_access = "write"
+    }
+    dagatal-calendars-update = {
+      route_key  = "PUT /dagatal/{id}"
+      memory     = 128
+      policy     = "write"
+      ssm_access = "write"
+    }
+    dagatal-calendars-delete = {
+      route_key  = "DELETE /dagatal/{id}"
+      memory     = 128
+      policy     = "write"
+      ssm_access = "write"
+    }
+    dagatal-subscriptions-create = {
+      route_key = "POST /dagatal-subscriptions"
+      memory    = 128
+      policy    = "write"
+    }
+    dagatal-subscriptions-update = {
+      route_key = "PUT /dagatal-subscriptions/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    dagatal-subscriptions-delete = {
+      route_key = "DELETE /dagatal-subscriptions/{id}"
+      memory    = 128
+      policy    = "write"
+    }
   }
 
   authorizer = {
@@ -459,6 +501,26 @@ resource "aws_iam_role_policy_attachment" "lambda_s3_media" {
   policy_arn = var.lambda_s3_policy_arn
 }
 
+resource "aws_iam_role_policy_attachment" "lambda_ssm_read" {
+  for_each = var.lambda_ssm_read_policy_arn == null ? {} : {
+    for key, cfg in local.all_functions : key => cfg
+    if try(cfg.ssm_access, null) == "read"
+  }
+
+  role       = aws_iam_role.lambda[each.key].name
+  policy_arn = var.lambda_ssm_read_policy_arn
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_ssm_write" {
+  for_each = var.lambda_ssm_write_policy_arn == null ? {} : {
+    for key, cfg in local.all_functions : key => cfg
+    if try(cfg.ssm_access, null) == "write"
+  }
+
+  role       = aws_iam_role.lambda[each.key].name
+  policy_arn = var.lambda_ssm_write_policy_arn
+}
+
 resource "aws_lambda_function" "main" {
   for_each = local.all_functions
 
@@ -472,7 +534,7 @@ resource "aws_lambda_function" "main" {
   runtime          = "nodejs22.x"
   filename         = data.archive_file.placeholder[each.key].output_path
   source_code_hash = data.archive_file.placeholder[each.key].output_base64sha256
-  timeout          = 10
+  timeout          = try(each.value.timeout, 10)
   memory_size      = each.value.memory
 
   environment {

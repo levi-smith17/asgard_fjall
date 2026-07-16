@@ -3,6 +3,9 @@ locals {
   table_name  = local.name_prefix
 }
 
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
 resource "aws_dynamodb_table" "main" {
   name             = local.table_name
   billing_mode     = "PAY_PER_REQUEST"
@@ -102,6 +105,44 @@ resource "aws_iam_policy" "lambda_read" {
 resource "aws_iam_policy" "lambda_write" {
   name   = "${local.name_prefix}-lambda-write"
   policy = data.aws_iam_policy_document.lambda_write.json
+}
+
+# ─── SSM Parameter Store (Dagatal — per-user CalDAV app-password secrets) ─────
+
+locals {
+  ssm_dagatal_resource = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/asgard-fjall/users/*"
+}
+
+data "aws_iam_policy_document" "lambda_ssm_read" {
+  statement {
+    sid       = "SsmDagatalRead"
+    effect    = "Allow"
+    actions   = ["ssm:GetParameter"]
+    resources = [local.ssm_dagatal_resource]
+  }
+}
+
+data "aws_iam_policy_document" "lambda_ssm_write" {
+  statement {
+    sid    = "SsmDagatalWrite"
+    effect = "Allow"
+    actions = [
+      "ssm:GetParameter",
+      "ssm:PutParameter",
+      "ssm:DeleteParameter",
+    ]
+    resources = [local.ssm_dagatal_resource]
+  }
+}
+
+resource "aws_iam_policy" "lambda_ssm_read" {
+  name   = "${local.name_prefix}-lambda-ssm-read"
+  policy = data.aws_iam_policy_document.lambda_ssm_read.json
+}
+
+resource "aws_iam_policy" "lambda_ssm_write" {
+  name   = "${local.name_prefix}-lambda-ssm-write"
+  policy = data.aws_iam_policy_document.lambda_ssm_write.json
 }
 
 # ─── Private media bucket (Audr receipts — presigned reads/writes) ────────────

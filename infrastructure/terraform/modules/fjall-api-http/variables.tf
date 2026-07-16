@@ -64,3 +64,15 @@ variable "lambda_s3_policy_arn" {
   type        = string
   default     = null
 }
+
+variable "lambda_ssm_read_policy_arn" {
+  description = "IAM policy ARN granting SSM GetParameter access under /asgard-fjall/users/*, attached to routes with ssm_access = \"read\" or \"write\"."
+  type        = string
+  default     = null
+}
+
+variable "lambda_ssm_write_policy_arn" {
+  description = "IAM policy ARN granting SSM Get/Put/DeleteParameter access under /asgard-fjall/users/*, attached to routes with ssm_access = \"write\"."
+  type        = string
+  default     = null
+}
