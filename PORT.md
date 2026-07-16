@@ -22,7 +22,7 @@
 - Expanded terminology / `useTerms` with cycle chrome
 - Cognito defaults baked in `config.ts` (overridable via `VITE_*`)
 - Asgard-parity shell: narrow icon rail, tree brand + **Fjall** subtitle, overflow-hidden main + Valknut watermark
-- Dual palettes (`green` default + `fjall` gold) with light/dark theme
+- Dual palettes (`fjall` gold default + `green`) with light/dark theme
 - Command palette (⌘/Ctrl+K) + context-bar search triggers (Fjall routes + sign-in/out)
 - Public Ordstirr rail + companion media parity with RealmOps
 

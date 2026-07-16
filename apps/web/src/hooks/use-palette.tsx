@@ -12,7 +12,7 @@ export type ColorPalette = 'green' | 'fjall'
 
 const STORAGE_KEY = 'fjall:palette'
 
-const PALETTE_ORDER: ColorPalette[] = ['green', 'fjall']
+const PALETTE_ORDER: ColorPalette[] = ['fjall', 'green']
 
 const PALETTE_LABELS: Record<ColorPalette, string> = {
   green: 'Green',
@@ -31,7 +31,7 @@ function readStoredPalette(): ColorPalette {
   } catch {
     // ignore
   }
-  return 'green'
+  return 'fjall'
 }
 
 function applyFavicon(palette: ColorPalette) {
@@ -53,7 +53,7 @@ function applyPalette(palette: ColorPalette) {
   applyFavicon(palette)
 }
 
-/** Apply stored palette favicon before React mounts to avoid a flash of the default green icon. */
+/** Apply stored palette favicon before React mounts to avoid a flash of the wrong icon. */
 export function bootstrapPaletteFromStorage() {
   const palette = readStoredPalette()
   applyPalette(palette)

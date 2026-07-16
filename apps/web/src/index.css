@@ -2,54 +2,8 @@
 @plugin "@tailwindcss/typography";
 
 @layer base {
+  /* Gold is the default palette (login, public Ordstirr, first visit). */
   :root,
-  [data-palette='green'] {
-    --background: 152 10% 5.5%;
-    --foreground: 152 18% 93%;
-    --card: 152 8% 9%;
-    --card-foreground: 152 18% 93%;
-    --elevated: 152 8% 11%;
-    --border: 152 8% 16%;
-    --input: 152 8% 9%;
-    --muted: 152 8% 11%;
-    --muted-foreground: 152 12% 65%;
-    --muted-hover: 152 8% 13%;
-    --muted-selected: 92 38% 17%;
-    --primary: 92 72% 46%;
-    --primary-foreground: 222 20% 13%;
-    --secondary: 152 8% 9%;
-    --secondary-foreground: 152 18% 93%;
-    --ring: 92 72% 46%;
-    --destructive: 352 95% 52%;
-    --destructive-foreground: 0 0% 98%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 38 95% 78%;
-    --warning-muted: 38 55% 20%;
-    --success: 160 60% 45%;
-    --success-muted: 160 40% 92%;
-    --success-foreground: 160 50% 25%;
-    --info: 92 55% 55%;
-
-    --column-shell: 152 9% 6.5%;
-    --column-rail: 152 8% 9%;
-    --column-inspector: 152 8% 9%;
-    --sidebar-foreground: 152 12% 65%;
-    --sidebar-foreground-active: 92 72% 46%;
-    --sidebar-accent: 92 38% 17%;
-    --sidebar-border: 152 8% 16%;
-
-    --context-bar-height: 56px;
-    --header-height: 56px;
-    --alert-banner-height: 56px;
-    --sidebar-brand-height: 112px;
-    --sidebar-brand-height-collapsed: 56px;
-    --sidebar-width: 3.5rem;
-    --sidebar-width-expanded: 228px;
-    --scrollbar-thumb: hsl(152 8% 22%);
-    --scrollbar-thumb-hover: hsl(152 8% 30%);
-  }
-
-  /* Existing Fjall gold scheme (from pre-parity hex theme) as HSL channels */
   [data-palette='fjall'] {
     --background: 210 23% 8%;
     --foreground: 210 33% 93%;
@@ -96,45 +50,53 @@
     --scrollbar-thumb-hover: hsl(211 18% 32%);
   }
 
-  [data-theme='light'][data-palette='green'] {
-    --background: 150 20% 98%;
-    --foreground: 152 30% 12%;
-    --card: 0 0% 100%;
-    --card-foreground: 152 30% 12%;
-    --elevated: 150 15% 96%;
-    --border: 150 12% 88%;
-    --input: 0 0% 100%;
-    --muted: 150 12% 94%;
-    --muted-foreground: 152 10% 42%;
-    --muted-hover: 150 12% 91%;
-    --muted-selected: 92 45% 90%;
-    --primary: 92 65% 38%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 150 12% 94%;
-    --secondary-foreground: 152 30% 12%;
-    --ring: 92 65% 38%;
-    --destructive: 352 85% 48%;
+  [data-palette='green'] {
+    --background: 152 10% 5.5%;
+    --foreground: 152 18% 93%;
+    --card: 152 8% 9%;
+    --card-foreground: 152 18% 93%;
+    --elevated: 152 8% 11%;
+    --border: 152 8% 16%;
+    --input: 152 8% 9%;
+    --muted: 152 8% 11%;
+    --muted-foreground: 152 12% 65%;
+    --muted-hover: 152 8% 13%;
+    --muted-selected: 92 38% 17%;
+    --primary: 92 72% 46%;
+    --primary-foreground: 222 20% 13%;
+    --secondary: 152 8% 9%;
+    --secondary-foreground: 152 18% 93%;
+    --ring: 92 72% 46%;
+    --destructive: 352 95% 52%;
     --destructive-foreground: 0 0% 98%;
-    --warning: 38 92% 45%;
-    --warning-foreground: 38 80% 25%;
-    --warning-muted: 38 70% 92%;
-    --success: 160 55% 38%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 38 95% 78%;
+    --warning-muted: 38 55% 20%;
+    --success: 160 60% 45%;
     --success-muted: 160 40% 92%;
-    --success-foreground: 160 50% 22%;
-    --info: 92 50% 38%;
+    --success-foreground: 160 50% 25%;
+    --info: 92 55% 55%;
 
-    --column-shell: 150 18% 96%;
-    --column-rail: 0 0% 100%;
-    --column-inspector: 0 0% 100%;
-    --sidebar-foreground: 152 10% 42%;
-    --sidebar-foreground-active: 92 65% 32%;
-    --sidebar-accent: 92 45% 90%;
-    --sidebar-border: 150 12% 88%;
+    --column-shell: 152 9% 6.5%;
+    --column-rail: 152 8% 9%;
+    --column-inspector: 152 8% 9%;
+    --sidebar-foreground: 152 12% 65%;
+    --sidebar-foreground-active: 92 72% 46%;
+    --sidebar-accent: 92 38% 17%;
+    --sidebar-border: 152 8% 16%;
 
-    --scrollbar-thumb: hsl(150 12% 78%);
-    --scrollbar-thumb-hover: hsl(150 12% 68%);
+    --context-bar-height: 56px;
+    --header-height: 56px;
+    --alert-banner-height: 56px;
+    --sidebar-brand-height: 112px;
+    --sidebar-brand-height-collapsed: 56px;
+    --sidebar-width: 3.5rem;
+    --sidebar-width-expanded: 228px;
+    --scrollbar-thumb: hsl(152 8% 22%);
+    --scrollbar-thumb-hover: hsl(152 8% 30%);
   }
 
+  [data-theme='light'],
   [data-theme='light'][data-palette='fjall'] {
     --background: 40 20% 97%;
     --foreground: 210 25% 12%;
@@ -172,6 +134,45 @@
 
     --scrollbar-thumb: hsl(35 12% 76%);
     --scrollbar-thumb-hover: hsl(35 12% 66%);
+  }
+
+  [data-theme='light'][data-palette='green'] {
+    --background: 150 20% 98%;
+    --foreground: 152 30% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 152 30% 12%;
+    --elevated: 150 15% 96%;
+    --border: 150 12% 88%;
+    --input: 0 0% 100%;
+    --muted: 150 12% 94%;
+    --muted-foreground: 152 10% 42%;
+    --muted-hover: 150 12% 91%;
+    --muted-selected: 92 45% 90%;
+    --primary: 92 65% 38%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 150 12% 94%;
+    --secondary-foreground: 152 30% 12%;
+    --ring: 92 65% 38%;
+    --destructive: 352 85% 48%;
+    --destructive-foreground: 0 0% 98%;
+    --warning: 38 92% 45%;
+    --warning-foreground: 38 80% 25%;
+    --warning-muted: 38 70% 92%;
+    --success: 160 55% 38%;
+    --success-muted: 160 40% 92%;
+    --success-foreground: 160 50% 22%;
+    --info: 92 50% 38%;
+
+    --column-shell: 150 18% 96%;
+    --column-rail: 0 0% 100%;
+    --column-inspector: 0 0% 100%;
+    --sidebar-foreground: 152 10% 42%;
+    --sidebar-foreground-active: 92 65% 32%;
+    --sidebar-accent: 92 45% 90%;
+    --sidebar-border: 150 12% 88%;
+
+    --scrollbar-thumb: hsl(150 12% 78%);
+    --scrollbar-thumb-hover: hsl(150 12% 68%);
   }
 
   * {
