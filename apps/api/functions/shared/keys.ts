@@ -6,6 +6,9 @@ export const SURTR_PREFIX = 'SURTR#'
 export const IDUNN_PREFIX = 'IDUNN#'
 export const SKATT_PREFIX = 'SKATT#'
 export const SJODR_PREFIX = 'SJODR#'
+export const SENDIBOD_PREFIX = 'SENDIBOD#'
+export const SOGUR_PREFIX = 'SOGUR#'
+export const KIN_PREFIX = 'KIN#'
 
 export function laufSk(id: string): string {
   return `${LAUF_PREFIX}${id}`
@@ -34,6 +37,23 @@ export function skattSk(runId: string, month: number | string, year: number | st
 
 export function sjodrSk(id: string): string {
   return `${SJODR_PREFIX}${id}`
+}
+
+export function sendibodSk(id: string): string {
+  return `${SENDIBOD_PREFIX}${id}`
+}
+
+/** Composite sort key: SENDIBOD#{signalId}#REPLY#{replyId} (mirrors Cairn's SIGNAL#{id}#REPLY#{replyId}). */
+export function sendibodReplySk(signalId: string, replyId: string): string {
+  return `${SENDIBOD_PREFIX}${signalId}#REPLY#${replyId}`
+}
+
+export function sogurSk(id: string): string {
+  return `${SOGUR_PREFIX}${id}`
+}
+
+export function kinSk(id: string): string {
+  return `${KIN_PREFIX}${id}`
 }
 
 export function idFromSk(sk: string, prefix: string): string {

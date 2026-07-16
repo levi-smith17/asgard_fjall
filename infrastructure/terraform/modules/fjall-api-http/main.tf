@@ -21,6 +21,18 @@ locals {
       memory    = 128
       policy    = "none"
     }
+
+    # Sendibod public thread endpoints (email-reply links — no JWT, gated by TOKEN pk).
+    sendibod-public-thread-get = {
+      route_key = "GET /public/thread/{token}"
+      memory    = 128
+      policy    = "read"
+    }
+    sendibod-public-thread-reply = {
+      route_key = "POST /public/thread/{token}/reply"
+      memory    = 128
+      policy    = "write"
+    }
   }
 
   # Protected routes (REQUEST authorizer). Asgard terms only.
@@ -234,6 +246,85 @@ locals {
       route_key = "DELETE /sjodr/{id}"
       memory    = 256
       policy    = "write"
+    }
+
+    # Sendibod (Cairn's signals) — Asgard naming. Public thread routes live in public_routes.
+    sendibod-get = {
+      route_key = "GET /sendibod"
+      memory    = 256
+      policy    = "read"
+    }
+    sendibod-reply = {
+      route_key = "POST /sendibod/{id}/reply"
+      memory    = 128
+      policy    = "write"
+    }
+    sendibod-mark-read = {
+      route_key = "PUT /sendibod/{id}/read"
+      memory    = 128
+      policy    = "write"
+    }
+    sendibod-delete = {
+      route_key = "DELETE /sendibod/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+
+    # Sögur (Cairn's logs) — Asgard naming.
+    sogur-get = {
+      route_key = "GET /sogur"
+      memory    = 256
+      policy    = "read"
+    }
+    sogur-create = {
+      route_key = "POST /sogur"
+      memory    = 128
+      policy    = "write"
+    }
+    sogur-update = {
+      route_key = "PUT /sogur/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    sogur-delete = {
+      route_key = "DELETE /sogur/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    sogur-upload-url = {
+      route_key = "POST /sogur/upload-url"
+      memory    = 128
+      policy    = "write"
+      s3_access = true
+    }
+
+    # Nidjatal (Cairn's headwaters) — Asgard naming.
+    nidjatal-kin-get = {
+      route_key = "GET /nidjatal/kin"
+      memory    = 256
+      policy    = "read"
+    }
+    nidjatal-kin-create = {
+      route_key = "POST /nidjatal/kin"
+      memory    = 128
+      policy    = "write"
+    }
+    nidjatal-kin-update = {
+      route_key = "PUT /nidjatal/kin/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    nidjatal-kin-delete = {
+      route_key = "DELETE /nidjatal/kin/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+
+    # Search — greenfield remapped Dynamo prefixes.
+    search-get = {
+      route_key = "GET /search"
+      memory    = 256
+      policy    = "read"
     }
   }
 
