@@ -8,6 +8,18 @@ importers:
 
   .: {}
 
+  apps/api:
+    devDependencies:
+      '@types/aws-lambda':
+        specifier: ^8.10.149
+        version: 8.10.162
+      '@types/node':
+        specifier: ^22.15.21
+        version: 22.20.1
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+
   apps/auth:
     dependencies:
       '@aws-sdk/client-dynamodb':

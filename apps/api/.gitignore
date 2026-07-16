@@ -1,0 +1,4 @@
+dist/
+.deploy-tmp/
+node_modules/
+*.zip

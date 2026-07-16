@@ -1,6 +1,7 @@
 # Terragrunt (Phase C)
 
-Greenfield Asgard-account stacks for Fjall cloud API / media. The existing
+Greenfield Asgard-account stacks for the Fjall cloud API. Runtime is **Lambda +
+HTTP API Gateway** (no containers / ECR). The existing
 `infrastructure/terraform/prod` root (static web + passkey auth + CloudFront)
 stays as-is until a deliberate state migration.
 
@@ -9,52 +10,49 @@ stays as-is until a deliberate state migration.
 ```text
 infrastructure/
   terragrunt/
-    root.hcl                 # remote state + provider generation
+    root.hcl
     prod/
-      env.hcl                # account / region / tags / api hostname
-      api/terragrunt.hcl     # ECR + GitHub OIDC deploy role
-      api-dns/terragrunt.hcl # regional ACM + DNS validation
+      env.hcl
+      api/terragrunt.hcl       # GitHub OIDC role for Lambda code deploys
+      api-dns/terragrunt.hcl   # regional ACM for api.asgard.levismith.us
+      api-http/terragrunt.hcl  # health Lambda + HTTP API + custom domain
   terraform/
     modules/
-      fjall-api-foundation/  # ECR + deploy role
-      fjall-api-dns/         # api.asgard.levismith.us cert
-    prod/                    # live web root (unchanged)
+      fjall-api-foundation/
+      fjall-api-dns/
+      fjall-api-http/
+apps/api/                      # Lambda handlers (tsc → zip deploy)
 ```
 
 ## Slices
 
-### `prod/api` (done)
+| Stack | What it owns |
+|-------|----------------|
+| `prod/api` | GitHub OIDC deploy role (`lambda:UpdateFunctionCode` on `asgard-fjall-prod-*`) |
+| `prod/api-dns` | Regional ACM + DNS validation |
+| `prod/api-http` | Health Lambda, HTTP API, `GET /health`, custom domain + Route53 alias |
 
-- ECR repository `asgard-fjall-prod-api`
-- IAM role for future GitHub Actions **Fjall API** deploys (OIDC, scoped to that ECR)
-
-### `prod/api-dns` (this)
-
-- Regional ACM certificate for `api.asgard.levismith.us` (us-east-2)
-- DNS validation CNAMEs in the cairn-prod `levismith.us` zone (profile `cairn-prod`)
-- No public A/AAAA yet — alias lands with the API Gateway / load balancer slice
-
-Next: pick API runtime (container vs Lambda), then wire custom domain + alias.
+Next: Cognito/authorizer, DynamoDB, port Cairn handlers, then cutover clients to
+`https://api.asgard.levismith.us`.
 
 ## Usage
 
 ```bash
-cd infrastructure/terragrunt/prod/api
-terragrunt init && terragrunt apply
+# Infra (asgard + cairn-prod profiles)
+cd infrastructure/terragrunt/prod/api && terragrunt apply
+cd ../api-dns && terragrunt apply
+cd ../api-http && terragrunt apply
 
-cd ../api-dns
-terragrunt init && terragrunt apply
+# App code
+pnpm --filter @asgard-fjall/api build
+AWS_PROFILE=asgard pnpm --filter @asgard-fjall/api deploy:health
 ```
-
-Requires AWS profiles:
-
-- `asgard` — compute / ACM in the asgard account
-- `cairn-prod` — Route53 for `levismith.us` (same as the web Terraform root)
 
 ## State
 
-| Stack | Bucket | Key prefix |
-|-------|--------|------------|
-| Legacy web | `asgard-terraform-state-910896517350` | `asgard-fjall/prod/terraform.tfstate` |
-| Terragrunt API foundation | same bucket | `asgard-fjall/terragrunt/prod/api/terraform.tfstate` |
-| Terragrunt API DNS | same bucket | `asgard-fjall/terragrunt/prod/api-dns/terraform.tfstate` |
+| Stack | Key prefix |
+|-------|------------|
+| Legacy web | `asgard-fjall/prod/terraform.tfstate` |
+| Terragrunt API foundation | `asgard-fjall/terragrunt/prod/api/terraform.tfstate` |
+| Terragrunt API DNS | `asgard-fjall/terragrunt/prod/api-dns/terraform.tfstate` |
+| Terragrunt API HTTP | `asgard-fjall/terragrunt/prod/api-http/terraform.tfstate` |

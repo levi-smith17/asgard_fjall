@@ -11,7 +11,7 @@ Repo: `levi-smith17/asgard_fjall`
 | LAN Shortcuts | Pi-hole `asgard.levismith.us` → private Asgard |
 | Backdoor | `ops.asgard.levismith.us` |
 | Apex | `levismith.us` / `www` → public Ordstirr (Standard terms) |
-| API (Phase C) | Greenfield Terragrunt → `api.asgard.levismith.us` (scaffold under `infrastructure/terragrunt`) |
+| API (Phase C) | Lambda + HTTP API Gateway via Terragrunt → `api.asgard.levismith.us` |
 | Media (Phase C) | `media.asgard.levismith.us` (after storage/CDN contract) |
 | API data (today) | Cairn only (`VITE_CAIRN_API_URL`) until cutover |
 | Gate auth | Passkeys; `fjall_session`; RP ID `levismith.us` (shared across `asgard` + `fjall` hosts) |

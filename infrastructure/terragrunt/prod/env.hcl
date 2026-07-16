@@ -10,6 +10,14 @@ locals {
   hosted_zone_name = "levismith.us"
   dns_aws_profile  = "cairn-prod"
 
+  api_allowed_origins = [
+    "https://asgard.levismith.us",
+    "https://fjall.levismith.us",
+    "https://levismith.us",
+    "https://www.levismith.us",
+    "http://localhost:5180",
+  ]
+
   common_tags = {
     project     = "asgard-fjall"
     environment = "prod"
