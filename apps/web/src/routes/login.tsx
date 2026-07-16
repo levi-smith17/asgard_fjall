@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { KeyRound, Loader2 } from 'lucide-react'
+import { AsgardTreeIcon } from '@/components/core/brand/asgard-tree-icon'
+import { AsgardWordmark } from '@/components/core/brand/asgard-wordmark'
 import { Button } from '@/components/core/ui/button'
 import { Input } from '@/components/core/ui/input'
 import { useAuth } from '@/hooks/use-auth'
@@ -87,9 +89,14 @@ export function LoginPage() {
   return (
     <div className="flex min-h-full items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-sm space-y-6 rounded-xl border border-border bg-card p-6 shadow-sm">
-        <div className="space-y-2 text-center">
-          <p className="text-3xl font-bold tracking-[0.28em] text-primary uppercase">Asgard</p>
-          <p className="text-sm uppercase tracking-[0.22em] text-muted-foreground">Fjall</p>
+        <div className="flex flex-col items-center gap-3 text-center">
+          <AsgardTreeIcon className="h-16 w-auto" />
+          <div className="space-y-1.5 leading-none">
+            <AsgardWordmark className="text-foreground" />
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground">
+              Fjall
+            </p>
+          </div>
           <p className="text-sm text-muted-foreground">
             {passkeysConfigured
               ? 'Sign in with your passkey'
