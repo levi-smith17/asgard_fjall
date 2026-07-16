@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { OrdstirrGearChart } from '@/components/apps/ordstirr/ordstirr-gear-chart'
 import { PublicOrdstirrSectionsRail } from '@/components/apps/ordstirr/public-ordstirr-sections-rail'
+import { PublicSurface } from '@/components/core/layout/public-surface'
 import { StudioContextBar } from '@/components/core/layout/studio-context-bar'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
 import { PublicOrdstirrCanvasSkeleton } from '@/components/core/ui/studio-skeletons'
@@ -334,7 +335,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
   }, {})
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-12 px-6 py-6">
+    <div className="manifest-page mx-auto flex max-w-3xl flex-col gap-12 px-6 py-6 print:mx-0 print:max-w-none print:px-0 print:pb-0">
       <div id="origins" className="flex scroll-mt-6 flex-col gap-6">
         <div className="flex items-center gap-4">
           <Avatar
@@ -357,7 +358,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
           <RichTextContent html={data.origins.summary} className="text-muted-foreground" />
         ) : null}
 
-        <div className="flex justify-end">
+        <div className="flex justify-end print:hidden">
           <Button asChild variant="outline" size="sm">
             <Link to={publicManifestPath(wayfarer.username, 'journey')}>{terms.bio_button}</Link>
           </Button>
@@ -403,13 +404,28 @@ function ManifestView({ data }: { data: PublicManifestData }) {
       {data.gear.length > 0 ? (
         <section id="gear" className="scroll-mt-6">
           <SectionHeading title={terms.gear} />
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 print:hidden">
             {Object.entries(grouped).map(([category, items]) => (
               <OrdstirrGearChart
                 key={category}
                 category={category}
                 items={items as ManifestGear[]}
               />
+            ))}
+          </div>
+          <div className="hidden print:flex print:flex-wrap print:gap-x-8 print:gap-y-4">
+            {Object.entries(grouped).map(([category, items]) => (
+              <div key={category} className="flex flex-col gap-1">
+                <p className="text-sm font-semibold">{category}</p>
+                <ul className="m-0 flex list-none flex-col gap-0.5 p-0 text-sm text-muted-foreground">
+                  {items.map((item) => (
+                    <li key={item.id}>
+                      {item.name}
+                      {item.level ? ` — ${item.level}` : ''}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
           </div>
         </section>
@@ -517,7 +533,7 @@ function JourneyView({ data }: { data: PublicJourneyData }) {
   const memorial = companions.filter((c) => Boolean(c.passed))
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-12 px-6 py-6">
+    <div className="manifest-page mx-auto flex max-w-3xl flex-col gap-12 px-6 py-6 print:mx-0 print:max-w-none print:px-0 print:pb-0">
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-4">
           <Avatar
@@ -825,20 +841,33 @@ export function PublicManifestPage({ view }: { view: PublicManifestView }) {
   }
 
   return (
-    <StudioLayout
-      railLabel="Sections"
-      contextBar={
-        <StudioContextBar aria-label={title} title={title} actions={null} />
-      }
-      rail={
-        <PublicOrdstirrSectionsRail
-          groups={railGroups}
-          activeSection={activeSection}
-          currentView={view}
-          onSelectSection={handleSelectSection}
-        />
-      }
-      canvas={<div className="min-h-0 flex-1 overflow-y-auto" data-public-ordstirr-scroll>{body}</div>}
-    />
+    <PublicSurface>
+      <StudioLayout
+        railLabel="Sections"
+        contextBar={
+          <div className="print:hidden">
+            <StudioContextBar aria-label={title} title={title} actions={null} />
+          </div>
+        }
+        rail={
+          <div className="flex h-full min-h-0 flex-col print:hidden">
+            <PublicOrdstirrSectionsRail
+              groups={railGroups}
+              activeSection={activeSection}
+              currentView={view}
+              onSelectSection={handleSelectSection}
+            />
+          </div>
+        }
+        canvas={
+          <div
+            className="min-h-0 flex-1 overflow-y-auto print:overflow-visible"
+            data-public-ordstirr-scroll
+          >
+            {body}
+          </div>
+        }
+      />
+    </PublicSurface>
   )
 }

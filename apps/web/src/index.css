@@ -335,3 +335,43 @@
   color: hsl(var(--muted-foreground));
   font-size: 10px;
 }
+
+@media print {
+  @page {
+    margin: 0.75in;
+  }
+
+  [data-public-surface],
+  [data-public-surface] * {
+    overflow: visible !important;
+  }
+
+  [data-public-surface] {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  /* Keep section headings attached to their content */
+  .manifest-page h2 {
+    break-after: avoid;
+  }
+
+  .manifest-page a[href^='http']::after,
+  .manifest-page a[href^='https']::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.8em;
+    color: #555;
+    font-weight: normal;
+  }
+
+  .manifest-page a[href^='/']::after {
+    content: '' !important;
+  }
+
+  .manifest-page hr,
+  .manifest-page [role='separator'] {
+    border-color: #4e6a24;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

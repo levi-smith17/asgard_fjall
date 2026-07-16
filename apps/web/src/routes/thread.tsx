@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle, Send } from 'lucide-react'
 import { Avatar } from '@/components/core/ui/avatar'
 import { Button } from '@/components/core/ui/button'
+import { PublicSurface } from '@/components/core/layout/public-surface'
 import { StudioContextBar } from '@/components/core/layout/studio-context-bar'
 import { RichTextContent } from '@/components/core/ui/rich-text-content'
 import { getThread, sendThreadReply } from '@/lib/thread-api'
@@ -151,22 +152,24 @@ export function ThreadPage() {
     : '?'
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background text-foreground">
-      <StudioContextBar
-        aria-label={terms.messages}
-        title={terms.messages}
-        actions={
-          wayfarer.username ? (
-            <Link
-              to={publicManifestPath(wayfarer.username)}
-              className="px-2 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-            >
-              View {wayfarer.name ?? wayfarer.username}&apos;s {terms.resume.toLowerCase()}
-            </Link>
-          ) : undefined
-        }
-      />
-      <div className="min-h-0 flex-1 overflow-y-auto">
+    <PublicSurface>
+      <div className="print:hidden">
+        <StudioContextBar
+          aria-label={terms.messages}
+          title={terms.messages}
+          actions={
+            wayfarer.username ? (
+              <Link
+                to={publicManifestPath(wayfarer.username)}
+                className="px-2 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              >
+                View {wayfarer.name ?? wayfarer.username}&apos;s {terms.resume.toLowerCase()}
+              </Link>
+            ) : undefined
+          }
+        />
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto print:overflow-visible">
         <div className="mx-auto flex max-w-2xl flex-col gap-8 px-4 pb-12 sm:px-6">
           <div className="flex items-center gap-4 pt-8">
             <Avatar
@@ -253,6 +256,6 @@ export function ThreadPage() {
           )}
         </div>
       </div>
-    </div>
+    </PublicSurface>
   )
 }
