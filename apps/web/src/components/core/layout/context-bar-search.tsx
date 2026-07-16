@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Filter, Search, X } from 'lucide-react'
 import { Input } from '@/components/core/ui/input'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
@@ -7,6 +7,9 @@ import { cn } from '@/lib/utils'
 function isInsideStudioPortal(target: EventTarget | null): boolean {
   return target instanceof Element && Boolean(target.closest('[data-studio-portal]'))
 }
+
+const PANEL_WIDTH_PX = 224 // w-56
+const VIEWPORT_MARGIN_PX = 12
 
 export function ContextBarSearch({
   expanded,
@@ -41,10 +44,47 @@ export function ContextBarSearch({
   const TriggerIcon = triggerIcon === 'filter' ? Filter : Search
   const hasPanel = Boolean(expandedPanel)
   const triggerActive = active || query.trim().length > 0
+  /** Extra `right` inset (px) so the expanded palette stays inside the viewport on mobile. */
+  const [rightInset, setRightInset] = useState(0)
 
   useEffect(() => {
     if (expanded) inputRef.current?.focus()
   }, [expanded])
+
+  useLayoutEffect(() => {
+    if (!expanded || !hasPanel) {
+      setRightInset(0)
+      return
+    }
+
+    const update = () => {
+      const root = rootRef.current
+      if (!root) return
+      const isMobile = window.matchMedia('(max-width: 639px)').matches
+      if (!isMobile) {
+        setRightInset(0)
+        return
+      }
+      const rect = root.getBoundingClientRect()
+      const width = Math.min(PANEL_WIDTH_PX, window.innerWidth - VIEWPORT_MARGIN_PX * 2)
+      // Align panel right to the trigger right, then pull left until fully on-screen.
+      let panelRight = Math.min(rect.right, window.innerWidth - VIEWPORT_MARGIN_PX)
+      let panelLeft = panelRight - width
+      if (panelLeft < VIEWPORT_MARGIN_PX) {
+        panelLeft = VIEWPORT_MARGIN_PX
+        panelRight = panelLeft + width
+      }
+      setRightInset(Math.max(0, rect.right - panelRight))
+    }
+
+    update()
+    window.addEventListener('resize', update)
+    window.addEventListener('scroll', update, true)
+    return () => {
+      window.removeEventListener('resize', update)
+      window.removeEventListener('scroll', update, true)
+    }
+  }, [expanded, hasPanel])
 
   useEffect(() => {
     if (!expanded) return
@@ -107,6 +147,7 @@ export function ContextBarSearch({
         aria-hidden
       />
       <div
+        style={rightInset > 0 ? { right: rightInset } : undefined}
         className={cn(
           // overflow-hidden clips nested Select menus (absolute, not portaled).
           // Keep that only while collapsed; expanded palettes must overflow-visible.
@@ -159,7 +200,7 @@ export function ContextBarSearch({
             </div>
           )}
         </div>
-        {hasPanel ? (
+        {hasPanel && expanded ? (
           <div className="border-t border-border p-2">{expandedPanel}</div>
         ) : null}
       </div>

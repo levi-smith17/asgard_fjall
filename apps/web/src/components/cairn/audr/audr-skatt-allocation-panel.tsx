@@ -1,5 +1,5 @@
 import { MarkerBadge } from '@/components/cairn/marker-badge'
-import { toDisplayMarker, toMarkerId } from '@/lib/embedded-markers'
+import { liveMarkersById, toDisplayMarker, toMarkerId } from '@/lib/embedded-markers'
 import { audrFmt, skattUtilizationColor } from '@/lib/audr-format'
 import {
   effectiveSkattSpent,
@@ -11,6 +11,7 @@ import {
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
 import type { CairnBurn, CairnCacheUtilization, CairnSupplyline } from '@/lib/cairn-types'
+import type { AudrMarker } from './audr-types'
 
 const CYCLE_LABELS: Record<string, string> = {
   WEEKLY: 'Wk',
@@ -24,12 +25,15 @@ export function AudrSkattAllocationPanel({
   cache,
   burns,
   supplylines,
+  markers = [],
 }: {
   cache: CairnCacheUtilization
   burns: CairnBurn[]
   supplylines: CairnSupplyline[]
+  markers?: AudrMarker[]
 }) {
   const terms = useTerms()
+  const liveById = liveMarkersById(markers)
   const idunnLines = supplylines.filter(
     (line) =>
       line.active &&
@@ -124,7 +128,7 @@ export function AudrSkattAllocationPanel({
                   <p className="truncate font-medium text-foreground">{line.name}</p>
                   <div className="mt-0.5 flex flex-wrap gap-1">
                     {line.markers.map((entry, index) => {
-                      const marker = toDisplayMarker(entry)
+                      const marker = toDisplayMarker(entry, liveById)
                       if (!marker) return null
                       return <MarkerBadge key={marker.id ?? index} marker={marker} />
                     })}

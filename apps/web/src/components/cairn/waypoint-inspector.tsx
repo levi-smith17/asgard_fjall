@@ -41,6 +41,7 @@ export function WaypointInspector({
   isSaving,
   markerPickerInitialPath,
   defaultMarkerIds,
+  lockedTrailId,
   showBack = false,
 }: {
   waypoint: CairnWaypointView | null
@@ -54,27 +55,35 @@ export function WaypointInspector({
   markerPickerInitialPath?: string[]
   /** Applied once when creating a new lauf and no markers are set yet. */
   defaultMarkerIds?: string[]
+  /** When set, Grein is fixed to this trail and the selector is hidden. */
+  lockedTrailId?: string
   showBack?: boolean
 }) {
   const terms = useTerms()
   const [draft, setDraft] = useState<WaypointDraft>(() => {
     const initial = draftFromWaypoint(waypoint)
-    if (isNew && defaultMarkerIds?.length && initial.markerIds.length === 0) {
-      return { ...initial, markerIds: defaultMarkerIds }
+    const withTrail = lockedTrailId ? { ...initial, trailId: lockedTrailId } : initial
+    if (isNew && defaultMarkerIds?.length && withTrail.markerIds.length === 0) {
+      return { ...withTrail, markerIds: defaultMarkerIds }
     }
-    return initial
+    return withTrail
   })
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [fetchingMeta, setFetchingMeta] = useState(false)
 
   useEffect(() => {
     const next = draftFromWaypoint(waypoint)
-    if (isNew && defaultMarkerIds?.length && next.markerIds.length === 0) {
-      setDraft({ ...next, markerIds: defaultMarkerIds })
+    const withTrail = lockedTrailId ? { ...next, trailId: lockedTrailId } : next
+    if (isNew && defaultMarkerIds?.length && withTrail.markerIds.length === 0) {
+      setDraft({ ...withTrail, markerIds: defaultMarkerIds })
       return
     }
-    setDraft(next)
-  }, [waypoint, isNew, defaultMarkerIds])
+    setDraft(withTrail)
+  }, [waypoint, isNew, defaultMarkerIds, lockedTrailId])
+
+  const lockedTrail = lockedTrailId
+    ? (trails.find((trail) => trail.id === lockedTrailId) ?? null)
+    : null
 
   async function handleUrlBlur() {
     const url = draft.url.trim()
@@ -148,18 +157,27 @@ export function WaypointInspector({
           />
         </label>
 
-        <label className="block space-y-1.5">
-          <span className="text-xs font-medium text-muted-foreground">{terms.greinar}</span>
-          <Select
-            value={draft.trailId}
-            onChange={(trailId) => setDraft({ ...draft, trailId })}
-            placeholder={terms.unassigned}
-            options={[
-              { value: '', label: terms.unassigned },
-              ...trails.map((trail) => ({ value: trail.id, label: trail.name })),
-            ]}
-          />
-        </label>
+        {lockedTrailId ? (
+          <div className="block space-y-1.5">
+            <span className="text-xs font-medium text-muted-foreground">{terms.greinar}</span>
+            <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-foreground">
+              {lockedTrail?.name ?? terms.provisionsGroup}
+            </p>
+          </div>
+        ) : (
+          <label className="block space-y-1.5">
+            <span className="text-xs font-medium text-muted-foreground">{terms.greinar}</span>
+            <Select
+              value={draft.trailId}
+              onChange={(trailId) => setDraft({ ...draft, trailId })}
+              placeholder={terms.unassigned}
+              options={[
+                { value: '', label: terms.unassigned },
+                ...trails.map((trail) => ({ value: trail.id, label: trail.name })),
+              ]}
+            />
+          </label>
+        )}
 
         {markers.length > 0 ? (
           <label className="block min-w-0 space-y-1.5">

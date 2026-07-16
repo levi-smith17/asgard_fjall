@@ -147,6 +147,7 @@ export type CairnSjodr = {
   sk: string
   name: string
   description?: string | null
+  color?: string | null
   createdAt: string
 }
 
@@ -154,12 +155,14 @@ export type CairnSjodrView = {
   id: string
   name: string
   description: string | null
+  color: string | null
   createdAt: string
 }
 
 export type SaveCairnSjodrRequest = {
   name: string
   description?: string | null
+  color?: string | null
 }
 
 export type CairnUpcomingRenewal = {

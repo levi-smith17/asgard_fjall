@@ -3,6 +3,7 @@ import { ImagePlus, Loader2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Input } from '@/components/core/ui/input'
 import { Button } from '@/components/core/ui/button'
+import { DatePicker } from '@/components/core/ui/date-picker'
 import { MarkerPicker } from '@/components/cairn/marker-picker'
 import {
   fetchCairnBurnReceiptUrl,
@@ -161,12 +162,7 @@ export function InlineBurnForm({
       </label>
       <label className="block min-w-0 space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">Date</span>
-        <Input
-          type="date"
-          className="min-w-0 max-w-full"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
+        <DatePicker value={date} onChange={setDate} />
       </label>
       <label className="block space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">{terms.runSingular}</span>

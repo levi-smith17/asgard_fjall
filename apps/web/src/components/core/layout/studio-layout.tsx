@@ -58,10 +58,10 @@ export function StudioLayout({
   const mobileInspector =
     inspectorOpen && !isMdUp && typeof document !== 'undefined' && inspectorBody
       ? createPortal(
-          <div className="fixed inset-x-0 bottom-0 z-[100] flex max-h-[50dvh] flex-col overflow-hidden rounded-t-xl border-t border-border bg-column-inspector pb-[env(safe-area-inset-bottom)] shadow-2xl">
+          <div className="fixed inset-x-0 bottom-0 z-[100] flex h-[50dvh] max-h-[50dvh] flex-col overflow-hidden rounded-t-xl border-t border-border bg-column-inspector pb-[env(safe-area-inset-bottom)] shadow-2xl">
             {/*
-              Keep overflow on the inspector's own body so chrome/headers stay fixed
-              at the top of the sheet while content scrolls underneath.
+              Definite height (not only max-height) so inspector chrome stays fixed
+              and the body flex child can scroll inside the sheet.
             */}
             {inspectorBody}
           </div>,

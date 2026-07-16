@@ -1,8 +1,11 @@
 import {
   Bookmark,
+  Flame,
   Folder,
   Landmark,
   LayoutGrid,
+  PiggyBank,
+  Repeat,
   Shapes,
   Tag,
   type LucideIcon,
@@ -16,6 +19,9 @@ export const ASGARD_ENTITY_ICONS = {
   gerdir: Shapes,
   spjald: LayoutGrid,
   sjodr: Landmark,
+  surtr: Flame,
+  idunn: Repeat,
+  skatt: PiggyBank,
 } as const satisfies Record<string, LucideIcon>
 
 export type AsgardEntityIconKey = keyof typeof ASGARD_ENTITY_ICONS

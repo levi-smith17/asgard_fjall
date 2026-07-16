@@ -8,6 +8,8 @@ export type SelectOption = {
   label: string
   description?: string
   disabled?: boolean
+  /** Optional swatch rendered directly after the label. */
+  color?: string | null
 }
 
 export type SelectProps = {
@@ -20,6 +22,16 @@ export type SelectProps = {
   managed?: boolean
   className?: string
   id?: string
+}
+
+function OptionSwatch({ color }: { color: string }) {
+  return (
+    <span
+      className="inline-block h-2 w-2 shrink-0 rounded-full"
+      style={{ backgroundColor: color }}
+      aria-hidden
+    />
+  )
 }
 
 export function Select({
@@ -134,7 +146,10 @@ export function Select({
                       option.disabled && 'cursor-not-allowed opacity-50',
                     )}
                   >
-                    <span>{option.label}</span>
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <span className="truncate">{option.label}</span>
+                      {option.color ? <OptionSwatch color={option.color} /> : null}
+                    </span>
                     {option.description ? (
                       <span className="mt-0.5 text-xs font-normal text-muted-foreground">
                         {option.description}
@@ -169,8 +184,14 @@ export function Select({
           !isDisabled && 'hover:bg-muted/30',
         )}
       >
-        <span className={cn('truncate text-left', !selected && 'text-muted-foreground')}>
-          {selected?.label ?? placeholder}
+        <span
+          className={cn(
+            'flex min-w-0 flex-1 items-center gap-1.5 text-left',
+            !selected && 'text-muted-foreground',
+          )}
+        >
+          <span className="truncate">{selected?.label ?? placeholder}</span>
+          {selected?.color ? <OptionSwatch color={selected.color} /> : null}
         </span>
         <ChevronDown
           className={cn('h-4 w-4 shrink-0 opacity-70 transition-transform', open && 'rotate-180')}

@@ -16,6 +16,7 @@ import {
 } from '@/lib/cairn-api'
 import { toWaypointView } from '@/lib/cairn-format'
 import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
+import { liveMarkersById, withLiveMarker } from '@/lib/embedded-markers'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn, includesFoldedSearch } from '@/lib/utils'
 
@@ -46,6 +47,7 @@ export function AudrLaufarInspector({
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const LaufarIcon = ASGARD_ENTITY_ICONS.laufar
+  const liveById = useMemo(() => liveMarkersById(markers), [markers])
 
   const waypointsQuery = useQuery({
     queryKey: ['cairn-waypoints'],
@@ -53,6 +55,10 @@ export function AudrLaufarInspector({
   })
 
   const trailsById = useMemo(() => new Map(trails.map((trail) => [trail.id, trail])), [trails])
+  const provisionsTrail = useMemo(
+    () => trails.find((trail) => trail.name === rootMarkerName) ?? null,
+    [trails, rootMarkerName],
+  )
   const provisionsMarkerIds = useMemo(() => {
     return new Set(
       markers.filter((marker) => isUnderRoot(marker.name, rootMarkerName)).map((marker) => marker.id),
@@ -65,22 +71,30 @@ export function AudrLaufarInspector({
 
   const waypoints = useMemo(() => {
     const all = (waypointsQuery.data ?? []).map((waypoint) => toWaypointView(waypoint, trailsById))
-    return all.filter((waypoint) =>
-      waypoint.markers.some((marker) => provisionsMarkerIds.has(marker.id)),
-    )
+    return all
+      .filter((waypoint) =>
+        waypoint.markers.some((marker) => provisionsMarkerIds.has(marker.id)),
+      )
+      .sort((left, right) =>
+        left.title.localeCompare(right.title, undefined, { sensitivity: 'base' }),
+      )
   }, [waypointsQuery.data, trailsById, provisionsMarkerIds])
 
   const filtered = useMemo(() => {
     if (!search.trim()) return waypoints
-    return waypoints.filter((waypoint) => {
-      const haystack = [
-        waypoint.title,
-        waypoint.url,
-        waypoint.notes,
-        ...waypoint.markers.map((marker) => marker.name),
-      ].join(' ')
-      return includesFoldedSearch(haystack, search)
-    })
+    return waypoints
+      .filter((waypoint) => {
+        const haystack = [
+          waypoint.title,
+          waypoint.url,
+          waypoint.notes,
+          ...waypoint.markers.map((marker) => marker.name),
+        ].join(' ')
+        return includesFoldedSearch(haystack, search)
+      })
+      .sort((left, right) =>
+        left.title.localeCompare(right.title, undefined, { sensitivity: 'base' }),
+      )
   }, [waypoints, search])
 
   const isNew = selectedId === 'new'
@@ -95,11 +109,14 @@ export function AudrLaufarInspector({
 
   const saveMutation = useMutation({
     mutationFn: async (draft: WaypointDraft) => {
+      if (!provisionsTrail) {
+        throw new Error(`Create a "${rootMarkerName}" ${terms.greinSingular.toLowerCase()} first`)
+      }
       const payload = {
         title: draft.title.trim() || draft.url.trim(),
         url: draft.url.trim(),
         notes: draft.notes.trim() || undefined,
-        trailId: draft.trailId || null,
+        trailId: provisionsTrail.id,
         markerIds: draft.markerIds,
       }
       if (isNew) return createCairnWaypoint(payload)
@@ -134,6 +151,7 @@ export function AudrLaufarInspector({
         markers={markers.filter((marker) => isUnderRoot(marker.name, rootMarkerName))}
         markerPickerInitialPath={[rootMarkerName]}
         defaultMarkerIds={isNew && rootMarker ? [rootMarker.id] : undefined}
+        lockedTrailId={provisionsTrail?.id}
         showBack
         onClose={() => onSelectId(null)}
         onSave={async (draft) => {
@@ -150,64 +168,67 @@ export function AudrLaufarInspector({
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <InspectorChrome>
-        <InspectorChromeTitle eyebrow={terms.laufar} title={`Audr ${terms.laufar}`} />
+        <InspectorChromeTitle eyebrow="Audr" title={terms.laufar} />
       </InspectorChrome>
-      <div className="border-b border-border px-4 py-3">
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          Manage {terms.laufar.toLowerCase()} tagged with {rootMarkerName} or a nested{' '}
-          {terms.runSingular.toLowerCase()}. Click a card to open the link.
-        </p>
-      </div>
-      <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
-        <FilterInput
-          value={search}
-          onChange={setSearch}
-          placeholder={`Filter ${terms.laufar.toLowerCase()}…`}
-          className="min-w-0 flex-1"
-        />
-        <ToolbarTooltip label={`New ${terms.laufarSingular}`}>
-          <Button
-            type="button"
-            size="icon"
-            variant="secondary"
-            className="h-7 w-7 shrink-0"
-            onClick={() => onSelectId('new')}
-            aria-label={`New ${terms.laufarSingular}`}
-          >
-            <Plus className="h-3.5 w-3.5" aria-hidden />
-          </Button>
-        </ToolbarTooltip>
-      </div>
-      <div className="min-h-0 min-w-0 flex-1 space-y-2 overflow-y-auto overflow-x-hidden p-3">
-        {waypointsQuery.isLoading ? (
-          <p className="px-1 py-4 text-sm text-muted-foreground">Loading…</p>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
-            <LaufarIcon className="mb-2 h-8 w-8 text-muted-foreground/40" aria-hidden />
-            <p className="text-sm text-muted-foreground">
-              No {terms.laufar.toLowerCase()} tagged under {rootMarkerName}.
-            </p>
-            <button
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="border-b border-border px-4 py-3">
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Manage {terms.laufar.toLowerCase()} tagged with {rootMarkerName} or a nested{' '}
+            {terms.runSingular.toLowerCase()}. Click a card to open the link.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+          <FilterInput
+            value={search}
+            onChange={setSearch}
+            placeholder={`Filter ${terms.laufar.toLowerCase()}…`}
+            className="min-w-0 flex-1"
+          />
+          <ToolbarTooltip label={`New ${terms.laufarSingular}`}>
+            <Button
               type="button"
+              size="icon"
+              variant="secondary"
+              className="h-8 w-8 shrink-0"
               onClick={() => onSelectId('new')}
-              className="mt-1 text-sm text-primary hover:underline"
+              aria-label={`New ${terms.laufarSingular}`}
             >
-              Create one
-            </button>
-          </div>
-        ) : (
-          filtered.map((waypoint) => (
-            <LaufarCard
-              key={waypoint.id}
-              waypoint={waypoint}
-              onOpenLink={() => {
-                const href = normalizeHref(waypoint.url)
-                if (href) window.open(href, '_blank', 'noopener,noreferrer')
-              }}
-              onEdit={() => onSelectId(waypoint.id)}
-            />
-          ))
-        )}
+              <Plus className="h-4 w-4" aria-hidden />
+            </Button>
+          </ToolbarTooltip>
+        </div>
+        <div className="space-y-2 p-3">
+          {waypointsQuery.isLoading ? (
+            <p className="px-1 py-4 text-sm text-muted-foreground">Loading…</p>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+              <LaufarIcon className="mb-2 h-8 w-8 text-muted-foreground/40" aria-hidden />
+              <p className="text-sm text-muted-foreground">
+                No {terms.laufar.toLowerCase()} tagged under {rootMarkerName}.
+              </p>
+              <button
+                type="button"
+                onClick={() => onSelectId('new')}
+                className="mt-1 text-sm text-primary hover:underline"
+              >
+                Create one
+              </button>
+            </div>
+          ) : (
+            filtered.map((waypoint) => (
+              <LaufarCard
+                key={waypoint.id}
+                waypoint={waypoint}
+                liveById={liveById}
+                onOpenLink={() => {
+                  const href = normalizeHref(waypoint.url)
+                  if (href) window.open(href, '_blank', 'noopener,noreferrer')
+                }}
+                onEdit={() => onSelectId(waypoint.id)}
+              />
+            ))
+          )}
+        </div>
       </div>
     </div>
   )
@@ -215,10 +236,12 @@ export function AudrLaufarInspector({
 
 function LaufarCard({
   waypoint,
+  liveById,
   onOpenLink,
   onEdit,
 }: {
   waypoint: CairnWaypointView
+  liveById: ReturnType<typeof liveMarkersById>
   onOpenLink: () => void
   onEdit: () => void
 }) {
@@ -243,19 +266,22 @@ function LaufarCard({
           <span className="mt-0.5 block truncate text-xs text-muted-foreground">{waypoint.url}</span>
           {waypoint.markers.length > 0 ? (
             <span className="mt-1.5 flex flex-wrap gap-1">
-              {waypoint.markers.slice(0, 3).map((marker) => (
-                <span
-                  key={marker.id}
-                  className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
-                >
+              {waypoint.markers.slice(0, 3).map((marker) => {
+                const live = withLiveMarker(marker, liveById)
+                return (
                   <span
-                    className="h-1.5 w-1.5 rounded-full"
-                    style={{ backgroundColor: marker.color }}
-                    aria-hidden
-                  />
-                  {marker.name.split('/').pop()}
-                </span>
-              ))}
+                    key={live.id}
+                    className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                  >
+                    <span
+                      className="h-1.5 w-1.5 rounded-full"
+                      style={{ backgroundColor: live.color }}
+                      aria-hidden
+                    />
+                    {live.name.split('/').pop()}
+                  </span>
+                )
+              })}
             </span>
           ) : null}
         </span>

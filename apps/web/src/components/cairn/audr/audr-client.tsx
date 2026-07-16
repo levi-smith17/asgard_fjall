@@ -386,6 +386,20 @@ export function AudrClient() {
           inspectorPinned={inspectorPinned}
           onInspectorPinnedChange={setInspectorPinned}
           onAddBurn={() => selectEntity({ kind: 'new-burn' })}
+          onAddSupplyline={() => selectEntity({ kind: 'new-supplyline' })}
+          onAddCache={() => selectEntity({ kind: 'new-cache' })}
+          onManageSjodr={() => {
+            setSelection(null)
+            setCatalog(null)
+            setLaufarManage(null)
+            setSjodrManage({ selectedId: 'new' })
+          }}
+          onManageLaufar={() => {
+            setSelection(null)
+            setCatalog(null)
+            setSjodrManage(null)
+            setLaufarManage({ selectedId: 'new' })
+          }}
         />
       }
       rail={
@@ -394,6 +408,8 @@ export function AudrClient() {
         ) : (
           <AudrIdunnRail
             supplylines={supplylines}
+            funds={sjodrQuery.data ?? []}
+            markers={audrMarkers}
             selectedId={selectedSupplylineId}
             activeFilter={idunnActiveFilter}
             onActiveFilterChange={setIdunnActiveFilter}

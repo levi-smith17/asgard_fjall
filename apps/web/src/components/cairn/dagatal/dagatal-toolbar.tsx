@@ -1,4 +1,4 @@
-import { CalendarDays, Settings, RefreshCw } from 'lucide-react'
+import { CalendarDays, RefreshCw, Settings } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/core/ui/button'
 import { StudioPaginationNav } from '@/components/core/ui/studio-pagination'
@@ -52,14 +52,14 @@ export function DagatalToolbar({
   }
 
   const viewChips = (
-    <div className="flex shrink-0 items-center divide-x divide-border overflow-hidden rounded-md border border-border text-xs">
+    <div className="flex min-w-0 flex-1 items-center divide-x divide-border overflow-hidden rounded-md border border-border text-xs sm:flex-initial sm:shrink-0">
       {(Object.entries(viewLabels) as [CalendarView, string][]).map(([value, label]) => (
         <button
           key={value}
           type="button"
           onClick={() => onViewChange(value)}
           className={cn(
-            'px-2.5 py-1 transition-colors',
+            'flex-1 px-2.5 py-1 transition-colors sm:flex-initial',
             view === value
               ? 'bg-primary text-primary-foreground'
               : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground',
@@ -72,7 +72,7 @@ export function DagatalToolbar({
   )
 
   const modeChips = (
-    <div className="flex shrink-0 items-center divide-x divide-border overflow-hidden rounded-md border border-border text-xs">
+    <div className="flex min-w-0 flex-1 items-center divide-x divide-border overflow-hidden rounded-md border border-border text-xs sm:flex-initial sm:shrink-0">
       {MODE_OPTIONS.map((opt) => (
         <button
           key={opt.value}
@@ -80,7 +80,7 @@ export function DagatalToolbar({
           title={opt.tip}
           onClick={() => onCalendarModeChange(opt.value)}
           className={cn(
-            'px-2.5 py-1 transition-colors',
+            'flex-1 px-2.5 py-1 transition-colors sm:flex-initial',
             calendarMode === opt.value
               ? 'bg-primary text-primary-foreground'
               : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground',
@@ -122,7 +122,7 @@ export function DagatalToolbar({
         <button
           type="button"
           className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted-hover hover:text-foreground"
-          onClick={() => navigate(`/settings?section=dagatal`)}
+          onClick={() => navigate('/thing?section=dagatal')}
           aria-label="Dagatal settings"
         >
           <Settings className="h-4 w-4" />
@@ -154,7 +154,7 @@ export function DagatalToolbar({
       </div>
 
       <div className="flex min-w-0 items-center gap-1.5 sm:justify-end">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 sm:flex-initial sm:flex-nowrap">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:flex-initial sm:flex-nowrap">
           {viewChips}
           {modeChips}
         </div>

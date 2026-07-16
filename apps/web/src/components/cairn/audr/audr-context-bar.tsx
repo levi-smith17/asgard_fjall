@@ -1,7 +1,11 @@
 import { GlobalSearchTrigger } from '@/components/core/command-palette/global-search-trigger'
-import { ContextBarAddButton } from '@/components/core/ui/context-bar-add-button'
+import {
+  ContextBarSplitAddButton,
+  type ContextBarSplitAddItem,
+} from '@/components/core/ui/context-bar-add-button'
 import { ContextBarPinAndSync } from '@/components/core/ui/context-bar-pin-and-sync'
 import { StudioContextBar } from '@/components/core/layout/studio-context-bar'
+import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import { useTerms } from '@/hooks/use-terminology'
 import { audrFmt } from '@/lib/audr-format'
 import { cn } from '@/lib/utils'
@@ -14,6 +18,10 @@ export function AudrContextBar({
   inspectorPinned,
   onInspectorPinnedChange,
   onAddBurn,
+  onAddSupplyline,
+  onAddCache,
+  onManageSjodr,
+  onManageLaufar,
 }: {
   monthName: string
   summary?: {
@@ -27,8 +35,44 @@ export function AudrContextBar({
   inspectorPinned: boolean
   onInspectorPinnedChange: (pinned: boolean) => void
   onAddBurn: () => void
+  onAddSupplyline: () => void
+  onAddCache: () => void
+  onManageSjodr: () => void
+  onManageLaufar: () => void
 }) {
   const terms = useTerms()
+
+  const splitItems = (
+    [
+      {
+        id: 'idunn',
+        label: `Add ${terms.subscriptionSingular}`,
+        icon: ASGARD_ENTITY_ICONS.idunn,
+        onSelect: onAddSupplyline,
+      },
+      {
+        id: 'laufar',
+        label: `Add ${terms.laufarSingular}`,
+        icon: ASGARD_ENTITY_ICONS.laufar,
+        onSelect: onManageLaufar,
+      },
+      {
+        id: 'sjodr',
+        label: `Add ${terms.sjodrSingular}`,
+        icon: ASGARD_ENTITY_ICONS.sjodr,
+        onSelect: onManageSjodr,
+      },
+      {
+        id: 'skatt',
+        label: `Add ${terms.budgetSingular}`,
+        icon: ASGARD_ENTITY_ICONS.skatt,
+        onSelect: onAddCache,
+      },
+    ] satisfies ContextBarSplitAddItem[]
+  ).sort((left, right) =>
+    left.label.localeCompare(right.label, undefined, { sensitivity: 'base' }),
+  )
+
   return (
     <StudioContextBar
       aria-label="Audr context"
@@ -36,17 +80,17 @@ export function AudrContextBar({
       subtitle={`${monthName} · ${terms.expenses}, ${terms.subscriptions}, & ${terms.budgets}`}
       metadata={
         summary ? (
-          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <div className="hidden min-w-0 flex-wrap items-center gap-1.5 md:flex">
             <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-xs text-primary">
               {audrFmt(summary.totalBurn)} {terms.expenses.toLowerCase()}
             </span>
-            <span className="hidden shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground sm:inline">
+            <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
               {audrFmt(summary.monthlySupplylineCost)} {terms.subscriptions.toLowerCase()}
             </span>
             {skattUtilizationPct != null ? (
               <span
                 className={cn(
-                  'hidden shrink-0 rounded-full px-2 py-0.5 text-xs md:inline',
+                  'shrink-0 rounded-full px-2 py-0.5 text-xs',
                   skattUtilizationPct >= 100
                     ? 'bg-destructive/15 text-destructive'
                     : skattUtilizationPct >= 80
@@ -72,9 +116,11 @@ export function AudrContextBar({
             pinned={inspectorPinned}
             onPinnedChange={onInspectorPinnedChange}
           />
-          <ContextBarAddButton
+          <ContextBarSplitAddButton
             label={`Add ${terms.expenseSingular}`}
             onClick={onAddBurn}
+            menuLabel="More Audr create options"
+            items={splitItems}
           />
         </>
       }

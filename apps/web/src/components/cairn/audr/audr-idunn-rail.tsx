@@ -6,14 +6,16 @@ import { Switch } from '@/components/core/ui/switch'
 import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { MarkerBadge } from '@/components/cairn/marker-badge'
-import { toDisplayMarker } from '@/lib/embedded-markers'
+import { liveMarkersById, toDisplayMarker } from '@/lib/embedded-markers'
 import { toggleCairnSupplylineActive } from '@/lib/cairn-api'
 import { daysUntilRenewal, getEffectiveNextRenewal } from '@/lib/cairn-supplyline-renewal'
 import { audrFmt } from '@/lib/audr-format'
 import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
-import type { CairnSupplyline } from '@/lib/cairn-types'
+import type { CairnSjodrView, CairnSupplyline } from '@/lib/cairn-types'
+import { resolveSjodrColor } from '@/lib/sjodr-color'
+import type { AudrMarker } from './audr-types'
 
 const CYCLE_LABELS: Record<string, string> = {
   WEEKLY: 'Wk',
@@ -25,6 +27,8 @@ const CYCLE_LABELS: Record<string, string> = {
 
 export function AudrIdunnRail({
   supplylines,
+  funds,
+  markers = [],
   selectedId,
   activeFilter,
   onActiveFilterChange,
@@ -36,6 +40,8 @@ export function AudrIdunnRail({
   onRefresh,
 }: {
   supplylines: CairnSupplyline[]
+  funds: CairnSjodrView[]
+  markers?: AudrMarker[]
   selectedId: string | null
   activeFilter: string
   onActiveFilterChange: (value: string) => void
@@ -47,6 +53,8 @@ export function AudrIdunnRail({
   onRefresh: () => void
 }) {
   const terms = useTerms()
+  const fundById = new Map(funds.map((fund) => [fund.id, fund]))
+  const liveById = liveMarkersById(markers)
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="flex h-14 min-h-14 max-h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
@@ -114,6 +122,20 @@ export function AudrIdunnRail({
               <li key={supplyline.id}>
                 <AudrIdunnRailCard
                   supplyline={supplyline}
+                  liveById={liveById}
+                  fundColor={
+                    supplyline.fundId
+                      ? resolveSjodrColor(
+                          supplyline.fundId,
+                          fundById.get(supplyline.fundId)?.color,
+                        )
+                      : null
+                  }
+                  fundName={
+                    supplyline.fundId
+                      ? (fundById.get(supplyline.fundId)?.name ?? undefined)
+                      : undefined
+                  }
                   selected={selectedId === supplyline.id}
                   onSelect={() => onSelect(supplyline.id)}
                   onToggleActive={onRefresh}
@@ -129,11 +151,17 @@ export function AudrIdunnRail({
 
 function AudrIdunnRailCard({
   supplyline,
+  liveById,
+  fundColor,
+  fundName,
   selected,
   onSelect,
   onToggleActive,
 }: {
   supplyline: CairnSupplyline
+  liveById: ReturnType<typeof liveMarkersById>
+  fundColor?: string | null
+  fundName?: string
   selected: boolean
   onSelect: () => void
   onToggleActive: () => void
@@ -169,6 +197,14 @@ function AudrIdunnRailCard({
       <button type="button" onClick={onSelect} className="min-w-0 flex-1 text-left">
         <div className={cn('flex items-center gap-1.5', href && 'pr-6')}>
           <span className="truncate text-sm font-medium text-foreground">{supplyline.name}</span>
+          {fundColor ? (
+            <span
+              className="inline-block h-2 w-2 shrink-0 rounded-full"
+              style={{ backgroundColor: fundColor }}
+              title={fundName}
+              aria-label={fundName}
+            />
+          ) : null}
           {renewingSoon ? (
             <Badge className="border-amber-500/30 bg-amber-500/10 px-1 py-0 text-[10px] text-amber-700 dark:text-amber-400">
               {daysUntil}d
@@ -177,7 +213,7 @@ function AudrIdunnRailCard({
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-1">
           {supplyline.markers.map((entry, i) => {
-            const marker = toDisplayMarker(entry)
+            const marker = toDisplayMarker(entry, liveById)
             if (!marker) return null
             return <MarkerBadge key={marker.id ?? i} marker={marker} />
           })}

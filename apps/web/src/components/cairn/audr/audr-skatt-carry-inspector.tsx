@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ListChecks } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/core/ui/button'
+import { StudioPagination } from '@/components/core/ui/studio-pagination'
+import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { fetchCairnProvisionsSummary } from '@/lib/cairn-api'
 import {
   carryOverCairnCacheToMonth,
@@ -114,53 +116,57 @@ export function AudrSkattCarryInspector({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <InspectorChrome>
-        <InspectorChromeTitle eyebrow={terms.budgets} title="Bring forward" />
+        <InspectorChromeTitle
+          eyebrow="Audr"
+          title={`Bring ${terms.budgetSingular} Forward`}
+        />
       </InspectorChrome>
 
-      <p className="shrink-0 border-b border-border px-5 py-3 text-xs text-muted-foreground">
-        Select entries from a source month to copy into {targetName}.
-      </p>
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
+        <p className="border-b border-border px-5 py-3 text-xs text-muted-foreground">
+          Select entries from a source month to copy into {targetName}.
+        </p>
 
-      <div className="shrink-0 space-y-2 border-b border-border px-5 py-3">
-        <div className="flex h-8 w-full items-center gap-0.5 rounded-md border border-border">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 shrink-0"
-            onClick={() => {
+        <div className="flex items-center gap-2 border-b border-border px-5 py-3">
+          <StudioPagination
+            className="min-w-0 flex-1"
+            aria-label="Source month"
+            label={sourceName}
+            onPrev={() => {
               const prev = shiftMonth(sourceMonth, sourceYear, -1)
               setSourceMonth(prev.month)
               setSourceYear(prev.year)
             }}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="min-w-0 flex-1 text-center text-sm font-medium">{sourceName}</span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 shrink-0"
-            onClick={() => {
+            onNext={() => {
               const next = shiftMonth(sourceMonth, sourceYear, 1)
               setSourceMonth(next.month)
               setSourceYear(next.year)
             }}
-            disabled={
-              sourceYear > targetYear ||
-              (sourceYear === targetYear && sourceMonth >= targetMonth)
+            canGoPrev
+            canGoNext={
+              !(
+                sourceYear > targetYear ||
+                (sourceYear === targetYear && sourceMonth >= targetMonth)
+              )
             }
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+            prevLabel="Previous month"
+            nextLabel="Next month"
+          />
+          <ToolbarTooltip label="Select all">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={selectAllSelectable}
+              disabled={selectableItems.length === 0 || carrying}
+              aria-label="Select all"
+            >
+              <ListChecks className="h-4 w-4" />
+            </Button>
+          </ToolbarTooltip>
         </div>
-        <Button type="button" variant="outline" className="h-8 w-full text-xs" onClick={selectAllSelectable}>
-          Select all
-        </Button>
-      </div>
 
-      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
         {sourceQuery.isLoading ? (
           <div className="space-y-1 px-3 py-3">
             {Array.from({ length: 5 }).map((_, index) => (

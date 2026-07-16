@@ -45,7 +45,9 @@ export function HlidskjalfContextBar({
                 icon: ASGARD_ENTITY_ICONS.runir,
                 onSelect: onAddRunir,
               },
-            ]}
+            ].sort((left, right) =>
+              left.label.localeCompare(right.label, undefined, { sensitivity: 'base' }),
+            )}
           />
         </>
       }

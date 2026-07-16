@@ -19,6 +19,7 @@ import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
 import type { CairnSjodrView } from '@/lib/cairn-types'
 import type { AudrMarker } from './audr-types'
+import { resolveSjodrColor } from '@/lib/sjodr-color'
 
 export function AudrFilterBar({
   monthName,
@@ -67,19 +68,18 @@ export function AudrFilterBar({
       search.trim().length > 0 || markerFilter !== 'all' || sjodrFilter !== 'all' || groupBy !== 'run',
   )
 
-  const sjodrChipOptions = [
+  const sjodrOptions = [
     { value: 'all', label: `All ${terms.sjodr}` },
     { value: AUDR_UNASSIGNED_SJODR, label: 'Unassigned' },
-    ...funds.map((fund) => ({ value: fund.id, label: fund.name })),
+    ...funds.map((fund) => ({
+      value: fund.id,
+      label: fund.name,
+      color: resolveSjodrColor(fund.id, fund.color),
+    })),
   ]
 
   return (
-    <div
-      className={cn(
-        STUDIO_CONTEXT_BAR_CLASS,
-        'z-30 h-auto min-h-14 max-h-none flex-col items-stretch gap-2 py-2 sm:max-h-none',
-      )}
-    >
+    <div className={cn(STUDIO_CONTEXT_BAR_CLASS, 'z-30')}>
       <div className="flex w-full min-w-0 items-center gap-2">
         <span className="shrink-0 text-sm font-semibold text-foreground">{terms.expenses}</span>
         <StudioPagination
@@ -124,7 +124,7 @@ export function AudrFilterBar({
                   <Select
                     value={sjodrFilter}
                     onChange={onSjodrFilterChange}
-                    options={sjodrChipOptions}
+                    options={sjodrOptions}
                   />
                 </FilterPaletteField>
                 <FilterPaletteField label="Group">
@@ -172,33 +172,6 @@ export function AudrFilterBar({
           </ToolbarTooltip>
         </div>
       </div>
-
-      {funds.length > 0 ? (
-        <div
-          className="flex w-full min-w-0 items-center gap-1.5 overflow-x-auto pb-0.5"
-          role="group"
-          aria-label={`Filter ${terms.budgets} by ${terms.sjodrSingular}`}
-        >
-          {sjodrChipOptions.map((option) => {
-            const active = sjodrFilter === option.value
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => onSjodrFilterChange(option.value)}
-                className={cn(
-                  'shrink-0 rounded-md border px-2.5 py-1 text-xs transition-colors',
-                  active
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border bg-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground',
-                )}
-              >
-                {option.label}
-              </button>
-            )
-          })}
-        </div>
-      ) : null}
     </div>
   )
 }

@@ -1,23 +1,30 @@
 import { Receipt } from 'lucide-react'
 import { MarkerBadge } from '@/components/cairn/marker-badge'
-import { toDisplayMarker } from '@/lib/embedded-markers'
+import { liveMarkersById, toDisplayMarker } from '@/lib/embedded-markers'
 import { fetchCairnBurnReceiptUrl } from '@/lib/cairn-api'
 import { audrFmt } from '@/lib/audr-format'
 import { cn } from '@/lib/utils'
 import type { CairnBurn } from '@/lib/cairn-types'
+import type { AudrMarker } from './audr-types'
 
 export function AudrBurnRow({
   burn,
   selected,
   onSelect,
-  fundLabel,
+  fundColor,
+  fundName,
+  markers = [],
 }: {
   burn: CairnBurn
   selected: boolean
   onSelect: () => void
-  /** When string, show fund badge; when null, show muted Unassigned; when undefined, hide. */
-  fundLabel?: string | null
+  /** Colored Sjodr swatch after the name; omit to hide. */
+  fundColor?: string | null
+  fundName?: string
+  markers?: AudrMarker[]
 }) {
+  const liveById = liveMarkersById(markers)
+
   return (
     <button
       type="button"
@@ -37,13 +44,16 @@ export function AudrBurnRow({
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="truncate text-sm font-medium">{burn.name}</span>
-          {fundLabel !== undefined ? (
-            <span className="inline-flex max-w-[10rem] truncate rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-              {fundLabel ?? 'Unassigned'}
-            </span>
+          {fundColor ? (
+            <span
+              className="inline-block h-2 w-2 shrink-0 rounded-full"
+              style={{ backgroundColor: fundColor }}
+              title={fundName}
+              aria-label={fundName}
+            />
           ) : null}
           {burn.markers.map((entry, i) => {
-            const marker = toDisplayMarker(entry)
+            const marker = toDisplayMarker(entry, liveById)
             if (!marker) return null
             return <MarkerBadge key={marker.id ?? i} marker={marker} />
           })}

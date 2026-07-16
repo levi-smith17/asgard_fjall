@@ -2,6 +2,7 @@ import { useState, useId, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Input } from '@/components/core/ui/input'
 import { Button } from '@/components/core/ui/button'
+import { DatePicker } from '@/components/core/ui/date-picker'
 import { Select } from '@/components/core/ui/select'
 import { MarkerPicker } from '@/components/cairn/marker-picker'
 import { saveCairnSupplyline } from '@/lib/cairn-api'
@@ -165,12 +166,7 @@ export function InlineSupplylineForm({
       </label>
       <label className="block min-w-0 space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">Next renewal</span>
-        <Input
-          type="date"
-          className="min-w-0 max-w-full"
-          value={nextRenewal}
-          onChange={(e) => setNextRenewal(e.target.value)}
-        />
+        <DatePicker value={nextRenewal} onChange={setNextRenewal} />
       </label>
       <label className="block space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">{terms.runSingular}</span>

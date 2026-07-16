@@ -60,3 +60,29 @@ export function toMonthInputValue(
   if (/^\d{4}-\d{2}/.test(iso) && !iso.includes('T')) return iso.slice(0, 7)
   return monthInputValueInTimeZone(new Date(iso), timeZone)
 }
+
+/** Parse YYYY-MM-DD into a local Date (no UTC shift). */
+export function parseDateInputValue(value: string | null | undefined): Date | undefined {
+  if (!value) return undefined
+  const trimmed = value.trim()
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return undefined
+  const [year, month, day] = trimmed.split('-').map(Number)
+  if (!year || !month || !day) return undefined
+  const date = new Date(year, month - 1, day)
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return undefined
+  }
+  return date
+}
+
+/** Format a local Date as YYYY-MM-DD (no UTC shift). */
+export function formatDateInputValue(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}

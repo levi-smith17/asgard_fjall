@@ -285,6 +285,7 @@ export async function fetchCairnSjodr(): Promise<CairnSjodrView[]> {
       id: extractCairnId(row.sk),
       name: row.name,
       description: row.description ?? null,
+      color: row.color?.trim() || null,
       createdAt: row.createdAt,
     }))
     .sort((left, right) => left.name.localeCompare(right.name, undefined, { sensitivity: 'base' }))
@@ -299,6 +300,7 @@ export async function createCairnSjodr(data: SaveCairnSjodrRequest): Promise<Cai
     id: extractCairnId(row.sk),
     name: row.name,
     description: row.description ?? null,
+    color: row.color?.trim() || null,
     createdAt: row.createdAt,
   }
 }
@@ -315,6 +317,7 @@ export async function updateCairnSjodr(
     id: extractCairnId(row.sk),
     name: row.name,
     description: row.description ?? null,
+    color: row.color?.trim() || null,
     createdAt: row.createdAt,
   }
 }

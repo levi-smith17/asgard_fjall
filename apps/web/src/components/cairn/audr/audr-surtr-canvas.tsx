@@ -22,6 +22,7 @@ import type {
   CairnSjodrView,
   CairnSupplyline,
 } from '@/lib/cairn-types'
+import { resolveSjodrColor } from '@/lib/sjodr-color'
 import type { AudrMarker } from './audr-types'
 import { AudrBurnRow } from './audr-burn-row'
 import { AudrFilterBar } from './audr-filter-bar'
@@ -95,6 +96,9 @@ export function AudrSurtrCanvas({
 }) {
   const terms = useTerms()
   const fundNameById = new Map(funds.map((fund) => [fund.id, fund.name]))
+  const fundColorById = new Map(
+    funds.map((fund) => [fund.id, resolveSjodrColor(fund.id, fund.color)]),
+  )
 
   const filteredCaches = filterAudrBySjodr(cacheUtilization, sjodrFilter)
   const filteredBurns =
@@ -175,8 +179,17 @@ export function AudrSurtrCanvas({
                     <div className="pointer-events-none sticky top-0 z-[2] border-b border-border bg-background/95 px-4 py-2.5 backdrop-blur-sm sm:px-6">
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-foreground">
-                            {section.fundName}
+                          <p className="flex min-w-0 items-center gap-1.5 text-sm font-semibold text-foreground">
+                            <span className="truncate">{section.fundName}</span>
+                            {section.fundId && fundColorById.get(section.fundId) ? (
+                              <span
+                                className="inline-block h-2 w-2 shrink-0 rounded-full"
+                                style={{
+                                  backgroundColor: fundColorById.get(section.fundId),
+                                }}
+                                aria-hidden
+                              />
+                            ) : null}
                           </p>
                           <p className="text-[11px] text-muted-foreground">
                             {section.groups.length} {terms.budgets.toLowerCase()}
@@ -222,6 +235,7 @@ export function AudrSurtrCanvas({
                         supplylines={supplylines}
                         selectedBurnId={selectedBurnId}
                         fundNameById={fundNameById}
+                        fundColorById={fundColorById}
                         showFundBadge={false}
                         stickyClassName=""
                         onSelectBurn={onSelectBurn}
@@ -244,6 +258,7 @@ export function AudrSurtrCanvas({
                   supplylines={supplylines}
                   selectedBurnId={selectedBurnId}
                   fundNameById={fundNameById}
+                  fundColorById={fundColorById}
                   showFundBadge
                   stickyClassName="sticky top-0 z-[1]"
                   onSelectBurn={onSelectBurn}
@@ -279,6 +294,7 @@ function SkattGroupBlock({
   supplylines,
   selectedBurnId,
   fundNameById,
+  fundColorById,
   showFundBadge,
   stickyClassName,
   onSelectBurn,
@@ -291,6 +307,7 @@ function SkattGroupBlock({
   supplylines: CairnSupplyline[]
   selectedBurnId: string | null
   fundNameById: Map<string, string>
+  fundColorById: Map<string, string>
   showFundBadge: boolean
   stickyClassName: string
   onSelectBurn: (id: string) => void
@@ -305,6 +322,10 @@ function SkattGroupBlock({
   const spent = cache ? effectiveSkattSpent(cache, supplylines) : 0
   const pct = cache ? effectiveSkattUtilization(cache, supplylines) : 0
   const hasSkatt = cache != null
+  const cacheFundColor =
+    showFundBadge && cache?.fundId ? fundColorById.get(cache.fundId) : undefined
+  const cacheFundName =
+    showFundBadge && cache?.fundId ? fundNameById.get(cache.fundId) : undefined
 
   return (
     <div>
@@ -326,13 +347,16 @@ function SkattGroupBlock({
           <div className="flex items-center justify-between gap-3">
             <span className="flex min-w-0 flex-wrap items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               <span className="truncate">{label}</span>
+              {cacheFundColor ? (
+                <span
+                  className="inline-block h-2 w-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: cacheFundColor }}
+                  title={cacheFundName}
+                  aria-label={cacheFundName}
+                />
+              ) : null}
               {groupBurns.length > 0 ? (
                 <span className="font-normal normal-case">({groupBurns.length})</span>
-              ) : null}
-              {showFundBadge && cache?.fundId ? (
-                <span className="inline-flex max-w-[10rem] truncate rounded-full bg-background/80 px-1.5 py-0.5 text-[10px] font-normal normal-case tracking-normal text-muted-foreground">
-                  {fundNameById.get(cache.fundId) ?? 'Fund'}
-                </span>
               ) : null}
             </span>
             <div className="flex shrink-0 items-center gap-3">
@@ -381,9 +405,13 @@ function SkattGroupBlock({
               burn={burn}
               selected={selectedBurnId === burn.id}
               onSelect={() => onSelectBurn(burn.id)}
-              fundLabel={
+              markers={markers}
+              fundColor={
+                showFundBadge && burn.fundId ? (fundColorById.get(burn.fundId) ?? null) : undefined
+              }
+              fundName={
                 showFundBadge && burn.fundId
-                  ? (fundNameById.get(burn.fundId) ?? 'Fund')
+                  ? (fundNameById.get(burn.fundId) ?? undefined)
                   : undefined
               }
             />

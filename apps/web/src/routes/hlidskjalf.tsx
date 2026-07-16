@@ -627,6 +627,15 @@ export function HlidskjalfPage() {
     [trailsQuery.data],
   )
   const trailsById = useMemo(() => new Map(trails.map((trail) => [trail.id, trail])), [trails])
+  const provisionsTrailId = useMemo(
+    () => trails.find((trail) => trail.name === terms.provisionsGroup)?.id ?? null,
+    [trails, terms.provisionsGroup],
+  )
+  /** Greinar available on Hlidskjalf — Provisions is managed on Audr. */
+  const hlidskjalfTrails = useMemo(
+    () => (provisionsTrailId ? trails.filter((trail) => trail.id !== provisionsTrailId) : trails),
+    [trails, provisionsTrailId],
+  )
   const markers = useMemo(
     () => (markersQuery.data ?? []).map(toMarkerView).sort((a, b) => a.name.localeCompare(b.name)),
     [markersQuery.data],
@@ -634,6 +643,10 @@ export function HlidskjalfPage() {
 
   const waypoints = useMemo(() => {
     let all = (waypointsQuery.data ?? []).map((waypoint) => toWaypointView(waypoint, trailsById))
+
+    if (provisionsTrailId) {
+      all = all.filter((waypoint) => waypoint.trailId !== provisionsTrailId)
+    }
 
     if (greinFilterId === LAUFAR_UNASSIGNED_GREIN) {
       all = all.filter((waypoint) => !waypoint.trailId)
@@ -656,7 +669,14 @@ export function HlidskjalfPage() {
       ].join(' ')
       return includesFoldedSearch(haystack, laufarFilter)
     })
-  }, [greinFilterId, laufarFilter, runirFilterId, trailsById, waypointsQuery.data])
+  }, [
+    greinFilterId,
+    laufarFilter,
+    provisionsTrailId,
+    runirFilterId,
+    trailsById,
+    waypointsQuery.data,
+  ])
 
   const laufarGroups = useMemo(() => {
     const byTrail = new Map<string, typeof waypoints>()
@@ -755,6 +775,12 @@ export function HlidskjalfPage() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [dismissInspector])
 
+  useEffect(() => {
+    if (provisionsTrailId && greinFilterId === provisionsTrailId) {
+      setGreinFilterId(LAUFAR_FILTER_ALL)
+    }
+  }, [greinFilterId, provisionsTrailId])
+
   const handleCanvasPointerDown = (event: React.PointerEvent) => {
     if (inspectorPinned) return
     const target = event.target as HTMLElement
@@ -843,7 +869,7 @@ export function HlidskjalfPage() {
           onGreinFilterChange={setGreinFilterId}
           runirFilterId={runirFilterId}
           onRunirFilterChange={setRunirFilterId}
-          trails={trails}
+          trails={hlidskjalfTrails}
           markers={markers}
           onInspect={selectLaufar}
           onOpenUrl={(url) => window.open(url, '_blank', 'noopener,noreferrer')}
@@ -912,7 +938,7 @@ export function HlidskjalfPage() {
           <WaypointInspector
             waypoint={selectedWaypoint}
             isNew={isNewLaufar}
-            trails={trails}
+            trails={hlidskjalfTrails}
             markers={markers}
             onClose={clearCairnSelection}
             onSave={async (values) => {

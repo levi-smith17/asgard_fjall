@@ -100,7 +100,7 @@ export function AudrInspector({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <InspectorChrome>
-        <InspectorChromeTitle eyebrow={audrInspectorKind(selection, terms)} title={title} />
+        <InspectorChromeTitle eyebrow="Audr" title={title} />
       </InspectorChrome>
 
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
@@ -167,6 +167,7 @@ export function AudrInspector({
                   cache={cache}
                   burns={skattMarkerBurns}
                   supplylines={skattSupplylines}
+                  markers={markers}
                 />
               </>
             ) : null}
@@ -323,24 +324,6 @@ export function AudrInspector({
       ) : null}
     </div>
   )
-}
-
-function audrInspectorKind(selection: AudrSelection, terms: Terms): string {
-  switch (selection.kind) {
-    case 'new-burn':
-    case 'burn':
-      return terms.expenses
-    case 'new-supplyline':
-    case 'supplyline':
-      return terms.subscriptions
-    case 'new-cache':
-    case 'cache':
-    case 'cache-marker':
-    case 'skatt-carry':
-      return terms.budgets
-    default:
-      return terms.provisions
-  }
 }
 
 function inspectorTitle(

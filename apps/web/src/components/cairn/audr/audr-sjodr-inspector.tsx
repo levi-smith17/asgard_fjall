@@ -11,6 +11,8 @@ import {
   InspectorFormHeader,
 } from '@/components/core/ui/inspector-form-actions'
 import { InspectorChrome, InspectorChromeTitle } from '@/components/core/ui/inspector-chrome'
+import { MarkerColorField } from '@/components/cairn/marker-color-field'
+import { PRESET_COLORS } from '@/components/cairn/markers-list'
 import { SwitchField } from '@/components/core/ui/switch-field'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import {
@@ -29,6 +31,7 @@ import { effectiveSkattSpent, effectiveSkattUtilization } from '@/lib/audr-skatt
 import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
+import { resolveSjodrColor } from '@/lib/sjodr-color'
 
 export function AudrSjodrInspector({
   month,
@@ -68,10 +71,16 @@ export function AudrSjodrInspector({
   }
 
   const saveMutation = useMutation({
-    mutationFn: async (draft: { name: string; description: string; isDefault: boolean }) => {
+    mutationFn: async (draft: {
+      name: string
+      description: string
+      color: string
+      isDefault: boolean
+    }) => {
       const payload = {
         name: draft.name.trim(),
         description: draft.description.trim() || null,
+        color: draft.color.trim() || null,
       }
       const fund = isNew
         ? await createCairnSjodr(payload)
@@ -139,55 +148,57 @@ export function AudrSjodrInspector({
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <InspectorChrome>
-        <InspectorChromeTitle eyebrow={terms.provisions} title={terms.sjodr} />
+        <InspectorChromeTitle eyebrow="Audr" title={terms.sjodr} />
       </InspectorChrome>
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-4 py-3">
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          Group {terms.budgets}, {terms.subscriptions}, and {terms.expenses} under named{' '}
-          {terms.sjodr.toLowerCase()}.
-        </p>
-        <ToolbarTooltip label={`New ${terms.sjodrSingular}`}>
-          <Button
-            type="button"
-            size="icon"
-            variant="secondary"
-            className="h-7 w-7 shrink-0"
-            onClick={() => onSelectId('new')}
-            aria-label={`New ${terms.sjodrSingular}`}
-          >
-            <Plus className="h-3.5 w-3.5" aria-hidden />
-          </Button>
-        </ToolbarTooltip>
-      </div>
-      <div className="min-h-0 min-w-0 flex-1 space-y-2 overflow-y-auto overflow-x-hidden p-3">
-        {sjodrQuery.isPending && !sjodrQuery.data ? (
-          <SjodrListSkeleton />
-        ) : funds.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
-            <SjodrIcon className="mb-2 h-8 w-8 text-muted-foreground/40" aria-hidden />
-            <p className="text-sm text-muted-foreground">No {terms.sjodr.toLowerCase()} yet.</p>
-            <button
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Group {terms.budgets}, {terms.subscriptions}, and {terms.expenses} under named{' '}
+            {terms.sjodr.toLowerCase()}.
+          </p>
+          <ToolbarTooltip label={`New ${terms.sjodrSingular}`}>
+            <Button
               type="button"
+              size="icon"
+              variant="secondary"
+              className="h-7 w-7 shrink-0"
               onClick={() => onSelectId('new')}
-              className="mt-1 text-sm text-primary hover:underline"
+              aria-label={`New ${terms.sjodrSingular}`}
             >
-              Create one
-            </button>
-          </div>
-        ) : (
-          funds.map((fund) => (
-            <SjodrCard
-              key={fund.id}
-              fund={fund}
-              month={month}
-              year={year}
-              isDefault={defaultFundId === fund.id}
-              caches={cacheUtilization.filter((cache) => cache.fundId === fund.id)}
-              supplylines={supplylines.filter((line) => line.fundId === fund.id)}
-              onEdit={() => onSelectId(fund.id)}
-            />
-          ))
-        )}
+              <Plus className="h-3.5 w-3.5" aria-hidden />
+            </Button>
+          </ToolbarTooltip>
+        </div>
+        <div className="space-y-2 p-3">
+          {sjodrQuery.isPending && !sjodrQuery.data ? (
+            <SjodrListSkeleton />
+          ) : funds.length === 0 ? (
+            <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+              <SjodrIcon className="mb-2 h-8 w-8 text-muted-foreground/40" aria-hidden />
+              <p className="text-sm text-muted-foreground">No {terms.sjodr.toLowerCase()} yet.</p>
+              <button
+                type="button"
+                onClick={() => onSelectId('new')}
+                className="mt-1 text-sm text-primary hover:underline"
+              >
+                Create one
+              </button>
+            </div>
+          ) : (
+            funds.map((fund) => (
+              <SjodrCard
+                key={fund.id}
+                fund={fund}
+                month={month}
+                year={year}
+                isDefault={defaultFundId === fund.id}
+                caches={cacheUtilization.filter((cache) => cache.fundId === fund.id)}
+                supplylines={supplylines.filter((line) => line.fundId === fund.id)}
+                onEdit={() => onSelectId(fund.id)}
+              />
+            ))
+          )}
+        </div>
       </div>
     </div>
   )
@@ -250,6 +261,11 @@ function SjodrCard({
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-1.5">
             <p className="truncate text-sm font-medium text-foreground">{fund.name}</p>
+            <span
+              className="inline-block h-2 w-2 shrink-0 rounded-full"
+              style={{ backgroundColor: resolveSjodrColor(fund.id, fund.color) }}
+              aria-hidden
+            />
             {isDefault ? (
               <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
                 Default
@@ -300,12 +316,20 @@ function SjodrForm({
   isDefault: boolean
   isSaving: boolean
   onBack: () => void
-  onSave: (draft: { name: string; description: string; isDefault: boolean }) => Promise<void>
+  onSave: (draft: {
+    name: string
+    description: string
+    color: string
+    isDefault: boolean
+  }) => Promise<void>
   onDelete: () => Promise<void>
 }) {
   const terms = useTerms()
   const [name, setName] = useState(fund?.name ?? '')
   const [description, setDescription] = useState(fund?.description ?? '')
+  const [color, setColor] = useState(() =>
+    fund ? resolveSjodrColor(fund.id, fund.color) : PRESET_COLORS[12]!,
+  )
   const [isDefault, setIsDefault] = useState(initialDefault)
   const [deleteOpen, setDeleteOpen] = useState(false)
 
@@ -332,6 +356,7 @@ function SjodrForm({
             className="flex w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </label>
+        <MarkerColorField color={color} onChange={setColor} />
         <SwitchField
           checked={isDefault}
           onCheckedChange={setIsDefault}
@@ -346,7 +371,7 @@ function SjodrForm({
         createLabel={`Create ${terms.sjodrSingular}`}
         saveLabel="Save"
         deleteLabel={`Delete ${terms.sjodrSingular.toLowerCase()}`}
-        onSave={() => void onSave({ name, description, isDefault })}
+        onSave={() => void onSave({ name, description, color, isDefault })}
         showDelete={!isNew}
         onDelete={() => setDeleteOpen(true)}
         className="px-4"
