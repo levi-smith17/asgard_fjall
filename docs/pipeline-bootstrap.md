@@ -6,6 +6,7 @@
 - [x] Terraform applied in **asgard** account (S3, CloudFront, ACM, GitHub OIDC)
 - [x] Route53 `asgard.levismith.us` A/AAAA → CloudFront (zone in **cairn-prod**)
 - [x] ACM SAN + CloudFront alias for LAN-only `fjall.levismith.us` (no public A/AAAA)
+- [x] Apex `levismith.us` / `www.levismith.us` → Fjall CloudFront (public Ordstirr)
 - [x] State: `s3://asgard-terraform-state-910896517350/asgard-fjall/prod/terraform.tfstate`
 
 ## Pi-hole (you — LAN access to Fjall)
@@ -14,7 +15,9 @@
 |------|------|--------|
 | CNAME | `fjall.levismith.us` | `d1hipyvfzth0h0.cloudfront.net` |
 
-Leave `asgard.levismith.us` on LAN → RealmOps Traefik.
+Leave `asgard.levismith.us` on LAN → RealmOps Traefik (`192.168.89.56`).
+
+After adding the CNAME, open `https://fjall.levismith.us` on Wi‑Fi. Re-register a passkey once if an older one was bound only to `asgard.levismith.us` (RP ID is now `levismith.us`).
 
 ## You must do (GitHub — `gh` is not logged in on this machine)
 
