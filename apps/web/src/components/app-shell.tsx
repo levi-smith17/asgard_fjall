@@ -102,8 +102,8 @@ export function AppShell() {
     const Icon = item.icon
     const active = navItemActive(pathname, item.key, item.href, item.external)
     const itemClass = cn(
-      'flex w-full items-center rounded-lg text-base font-medium transition-colors',
-      isNarrow ? 'justify-center px-0 py-2.5' : 'justify-start gap-2.5 px-3 py-2.5',
+      'flex w-full items-center rounded-lg text-sm font-medium transition-colors',
+      isNarrow ? 'justify-center px-0 py-2.5' : 'justify-start gap-2.5 px-3 py-2',
       active
         ? 'bg-sidebar-accent text-sidebar-foreground-active'
         : 'text-sidebar-foreground hover:bg-muted-hover hover:text-foreground',
@@ -111,7 +111,7 @@ export function AppShell() {
 
     const content = (
       <>
-        <Icon className="h-5 w-5 shrink-0" aria-hidden />
+        <Icon className="h-[1.125rem] w-[1.125rem] shrink-0" aria-hidden />
         {!isNarrow ? (
           <>
             <span className="truncate">{item.label}</span>
@@ -146,14 +146,14 @@ export function AppShell() {
             to={publicOrdstirrHref}
             aria-label={terms.publicViewGroup}
             className={cn(
-              'flex w-full items-center rounded-lg text-base font-medium transition-colors',
+              'flex w-full items-center rounded-lg text-sm font-medium transition-colors',
               'justify-center px-0 py-2.5',
               publicViewActive
                 ? 'bg-sidebar-accent text-sidebar-foreground-active'
                 : 'text-sidebar-foreground hover:bg-muted-hover hover:text-foreground',
             )}
           >
-            <BookOpen className="h-5 w-5 shrink-0" aria-hidden />
+            <BookOpen className="h-[1.125rem] w-[1.125rem] shrink-0" aria-hidden />
           </Link>
         )
 
@@ -177,13 +177,13 @@ export function AppShell() {
               to={publicOrdstirrHref}
               aria-label={terms.publicViewGroup}
               className={cn(
-                'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-base font-medium transition-colors',
+                'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-medium transition-colors',
                 publicViewActive
                   ? 'bg-sidebar-accent text-sidebar-foreground-active'
                   : 'text-sidebar-foreground hover:bg-muted-hover hover:text-foreground',
               )}
             >
-              <BookOpen className="h-5 w-5 shrink-0" aria-hidden />
+              <BookOpen className="h-[1.125rem] w-[1.125rem] shrink-0" aria-hidden />
             </Link>
           </ToolbarTooltip>
         </li>

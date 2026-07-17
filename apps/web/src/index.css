@@ -45,7 +45,7 @@
     --sidebar-brand-height: 112px;
     --sidebar-brand-height-collapsed: 112px;
     --sidebar-width: 3.5rem;
-    --sidebar-width-expanded: 260px;
+    --sidebar-width-expanded: 228px;
     --scrollbar-thumb: hsl(211 18% 24%);
     --scrollbar-thumb-hover: hsl(211 18% 32%);
   }
@@ -91,7 +91,7 @@
     --sidebar-brand-height: 112px;
     --sidebar-brand-height-collapsed: 112px;
     --sidebar-width: 3.5rem;
-    --sidebar-width-expanded: 260px;
+    --sidebar-width-expanded: 228px;
     --scrollbar-thumb: hsl(152 8% 22%);
     --scrollbar-thumb-hover: hsl(152 8% 30%);
   }
