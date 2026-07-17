@@ -32,12 +32,60 @@ export type PublicOrdstirrRailSection = {
   label: string
   icon: LucideIcon
   view: PublicManifestView
+  /** URL hash slug (Standard English terms). */
+  hash: string
 }
 
 export type PublicOrdstirrRailGroup = {
   id: PublicManifestView
   label: string
   sections: PublicOrdstirrRailSection[]
+}
+
+/** Public URL hashes always use Standard English slugs (never Asgard/Cairn terms). */
+export const PUBLIC_SECTION_HASH_BY_ID: Record<PublicOrdstirrRailSectionId, string> = {
+  origins: 'about',
+  expeditions: 'work-experience',
+  training: 'education',
+  gear: 'skills',
+  landmarks: 'projects',
+  summits: 'achievements',
+  pathfinding: 'volunteering',
+  bio: 'bio',
+  companions: 'pets',
+  'in-memoriam': 'in-memoriam',
+  ordsending: 'contact',
+}
+
+/** Legacy internal ids + Standard slugs both resolve for deep links. */
+const HASH_ALIASES: Record<string, PublicOrdstirrRailSectionId> = {
+  ...Object.fromEntries(
+    (Object.entries(PUBLIC_SECTION_HASH_BY_ID) as Array<[PublicOrdstirrRailSectionId, string]>).map(
+      ([id, hash]) => [hash, id],
+    ),
+  ),
+  origins: 'origins',
+  expeditions: 'expeditions',
+  training: 'training',
+  gear: 'gear',
+  landmarks: 'landmarks',
+  summits: 'summits',
+  pathfinding: 'pathfinding',
+  bio: 'bio',
+  companions: 'companions',
+  'in-memoriam': 'in-memoriam',
+  ordsending: 'ordsending',
+  contact: 'ordsending',
+}
+
+export function publicSectionHash(sectionId: PublicOrdstirrRailSectionId): string {
+  return PUBLIC_SECTION_HASH_BY_ID[sectionId]
+}
+
+export function sectionIdFromPublicHash(hash: string): PublicOrdstirrRailSectionId | null {
+  const key = hash.replace(/^#/, '').trim().toLowerCase()
+  if (!key) return null
+  return HASH_ALIASES[key] ?? null
 }
 
 const MANIFEST_SECTION_META: Array<{
@@ -68,22 +116,47 @@ export function buildPublicOrdstirrRailGroups(terms: Terms): PublicOrdstirrRailG
         label: String(terms[section.termKey]),
         icon: section.icon,
         view: 'manifest' as const,
+        hash: PUBLIC_SECTION_HASH_BY_ID[section.id],
       })),
     },
     {
       id: 'journey',
       label: terms.bio_button,
       sections: [
-        { id: 'bio', label: terms.bio, icon: ScrollText, view: 'journey' },
-        { id: 'companions', label: terms.companions, icon: PawPrint, view: 'journey' },
-        { id: 'in-memoriam', label: terms.summit_reached, icon: Award, view: 'journey' },
+        {
+          id: 'bio',
+          label: terms.bio,
+          icon: ScrollText,
+          view: 'journey',
+          hash: PUBLIC_SECTION_HASH_BY_ID.bio,
+        },
+        {
+          id: 'companions',
+          label: terms.companions,
+          icon: PawPrint,
+          view: 'journey',
+          hash: PUBLIC_SECTION_HASH_BY_ID.companions,
+        },
+        {
+          id: 'in-memoriam',
+          label: terms.summit_reached,
+          icon: Award,
+          view: 'journey',
+          hash: PUBLIC_SECTION_HASH_BY_ID['in-memoriam'],
+        },
       ],
     },
     {
       id: 'contact',
       label: terms.contact,
       sections: [
-        { id: 'ordsending', label: terms.contact, icon: Mail, view: 'contact' },
+        {
+          id: 'ordsending',
+          label: terms.contact,
+          icon: Mail,
+          view: 'contact',
+          hash: PUBLIC_SECTION_HASH_BY_ID.ordsending,
+        },
       ],
     },
   ]

@@ -3,8 +3,16 @@ import { AsgardWordmark } from '@/components/core/brand/asgard-wordmark'
 import { useTerminology } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
 
-export function AsgardSidebarBrand({ narrow }: { narrow: boolean }) {
+export function AsgardSidebarBrand({
+  narrow,
+  subtitle,
+}: {
+  narrow: boolean
+  /** Overrides the product subtitle (e.g. public profile name). */
+  subtitle?: string
+}) {
   const { terms } = useTerminology()
+  const subtitleText = subtitle ?? terms.productSubtitle
 
   return (
     <div
@@ -26,7 +34,7 @@ export function AsgardSidebarBrand({ narrow }: { narrow: boolean }) {
             <AsgardWordmark className="text-primary" />
           )}
           <p className="mt-2 text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground">
-            {terms.productSubtitle}
+            {subtitleText}
           </p>
         </div>
       ) : null}

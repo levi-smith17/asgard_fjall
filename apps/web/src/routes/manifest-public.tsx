@@ -22,10 +22,12 @@ import { Button } from '@/components/core/ui/button'
 import { Input } from '@/components/core/ui/input'
 import { Label } from '@/components/core/ui/label'
 import { RichTextContent } from '@/components/core/ui/rich-text-content'
+import { useMediaQuery } from '@/hooks/use-sidebar-collapsed'
 import { usePalette } from '@/hooks/use-palette'
 import { useTheme } from '@/hooks/use-theme'
+import { useTerminology } from '@/hooks/use-terminology'
 import { isApexOrdstirrHost } from '@/lib/apex-ordstirr'
-import { termsFor } from '@/lib/terminology'
+import { termsFor, type Terms } from '@/lib/terminology'
 import type { ManifestGear } from '@/lib/manifest-api'
 import {
   fetchPublicContact,
@@ -45,6 +47,8 @@ import {
 import { publicCompanionMediaUrl } from '@/lib/public-media-url'
 import {
   buildPublicOrdstirrRailGroups,
+  publicSectionHash,
+  sectionIdFromPublicHash,
   type PublicOrdstirrRailSectionId,
   viewForPublicRailSection,
 } from '@/lib/public-ordstirr-rail'
@@ -321,9 +325,7 @@ function CompanionBlock({
   )
 }
 
-function ManifestView({ data }: { data: PublicManifestData }) {
-  // Public Ordstirr is Standard-only (never Asgard / Cairn labels).
-  const terms = termsFor('STANDARD')
+function ManifestView({ data, terms }: { data: PublicManifestData; terms: Terms }) {
   const wayfarer = data.wayfarer
   const initials = wayfarer.name?.slice(0, 2) ?? wayfarer.email?.[0] ?? '?'
   const avatar = wayfarer.image ?? wayfarer.avatar ?? null
@@ -339,7 +341,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
 
   return (
     <div className="manifest-page mx-auto flex max-w-3xl flex-col gap-12 px-6 py-6 print:mx-0 print:max-w-none print:px-0 print:pb-0">
-      <div id="origins" className="flex scroll-mt-6 flex-col gap-6">
+      <div id="about" className="flex scroll-mt-6 flex-col gap-6">
         <div className="flex items-center gap-4">
           <Avatar
             src={avatar}
@@ -369,7 +371,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
       </div>
 
       {expeditions.length > 0 ? (
-        <section id="expeditions" className="scroll-mt-6">
+        <section id="work-experience" className="scroll-mt-6">
           <SectionHeading title={terms.expeditions} />
           <div className="flex flex-col gap-6">
             {expeditions.map((exp) => (
@@ -387,7 +389,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
       ) : null}
 
       {data.training.length > 0 ? (
-        <section id="training" className="scroll-mt-6">
+        <section id="education" className="scroll-mt-6">
           <SectionHeading title={terms.training} />
           <div className="flex flex-col gap-6">
             {data.training.map((item) => (
@@ -405,7 +407,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
       ) : null}
 
       {data.gear.length > 0 ? (
-        <section id="gear" className="scroll-mt-6">
+        <section id="skills" className="scroll-mt-6">
           <SectionHeading title={terms.gear} />
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 print:hidden">
             {Object.entries(grouped).map(([category, items]) => (
@@ -435,7 +437,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
       ) : null}
 
       {data.landmarks.length > 0 ? (
-        <section id="landmarks" className="scroll-mt-6">
+        <section id="projects" className="scroll-mt-6">
           <SectionHeading title={terms.landmarks} />
           <div className="flex flex-col gap-4 sm:hidden">
             {data.landmarks.map((landmark) => (
@@ -462,7 +464,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
       ) : null}
 
       {summits.length > 0 ? (
-        <section id="summits" className="scroll-mt-6">
+        <section id="achievements" className="scroll-mt-6">
           <SectionHeading title={terms.summits} />
           <div className="flex flex-col gap-4">
             {summits.map((summit) => (
@@ -505,7 +507,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
       ) : null}
 
       {data.pathfinding.length > 0 ? (
-        <section id="pathfinding" className="scroll-mt-6">
+        <section id="volunteering" className="scroll-mt-6">
           <SectionHeading title={terms.pathfinding} />
           <div className="flex flex-col gap-6">
             {data.pathfinding.map((item) => (
@@ -525,9 +527,7 @@ function ManifestView({ data }: { data: PublicManifestData }) {
   )
 }
 
-function JourneyView({ data }: { data: PublicJourneyData }) {
-  // Public Ordstirr is Standard-only (never Asgard / Cairn labels).
-  const terms = termsFor('STANDARD')
+function JourneyView({ data, terms }: { data: PublicJourneyData; terms: Terms }) {
   const wayfarer = data.wayfarer
   const initials = wayfarer.name?.slice(0, 2) ?? wayfarer.email?.[0] ?? '?'
   const avatar = wayfarer.image ?? wayfarer.avatar ?? null
@@ -564,7 +564,7 @@ function JourneyView({ data }: { data: PublicJourneyData }) {
       ) : null}
 
       {living.length > 0 ? (
-        <section id="companions" className="scroll-mt-6">
+        <section id="pets" className="scroll-mt-6">
           <SectionHeading title={terms.companions} />
           <div className="flex flex-col gap-8">
             {living.map((companion) => (
@@ -698,7 +698,7 @@ function ContactView({
 
   return (
     <div
-      id="ordsending"
+      id="contact"
       className="flex min-h-0 flex-1 scroll-mt-6 items-start justify-center overflow-y-auto px-4 py-8"
     >
       <div className="flex w-full max-w-md flex-col gap-6 rounded-xl bg-muted/50 p-6">
@@ -727,8 +727,9 @@ function pageTitle(
 }
 
 function scrollToSection(sectionId: PublicOrdstirrRailSectionId) {
+  const hash = publicSectionHash(sectionId)
   window.requestAnimationFrame(() => {
-    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   })
 }
 
@@ -743,8 +744,10 @@ export function PublicManifestPage({
   const { username: usernameParam } = useParams<{ username: string }>()
   const username = usernameProp ?? usernameParam
   const isApex = Boolean(usernameProp) || isApexOrdstirrHost()
-  // Public Ordstirr is Standard-only (never Asgard / Cairn labels).
-  const terms = termsFor('STANDARD')
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
+  const { terminology } = useTerminology()
+  // True public (apex) is Standard-only; embedded Almenningr follows app terminology.
+  const terms = isApex ? termsFor('STANDARD') : termsFor(terminology)
   const navigate = useNavigate()
   const { hash } = useLocation()
   const title = pageTitle(view, terms)
@@ -815,7 +818,7 @@ export function PublicManifestPage({
   ])
 
   useEffect(() => {
-    const fromHash = hash.replace(/^#/, '') as PublicOrdstirrRailSectionId
+    const fromHash = sectionIdFromPublicHash(hash)
     if (fromHash === 'bio') {
       // Keep selection, but land at the top of Ferd Min rather than #bio.
       setActiveSection('bio')
@@ -868,7 +871,7 @@ export function PublicManifestPage({
       scrollToSection(sectionId)
       return
     }
-    navigate(`${publicManifestPath(username, targetView)}#${sectionId}`)
+    navigate(`${publicManifestPath(username, targetView)}#${publicSectionHash(sectionId)}`)
   }
 
   let body: React.ReactNode = <PublicOrdstirrCanvasSkeleton view={view} />
@@ -880,9 +883,9 @@ export function PublicManifestPage({
       </div>
     )
   } else if (view === 'manifest' && manifestQuery.data) {
-    body = <ManifestView data={manifestQuery.data} />
+    body = <ManifestView data={manifestQuery.data} terms={terms} />
   } else if (view === 'journey' && journeyQuery.data) {
-    body = <JourneyView data={journeyQuery.data} />
+    body = <JourneyView data={journeyQuery.data} terms={terms} />
   } else if (view === 'contact' && contactQuery.data) {
     body = (
       <ContactView
@@ -893,9 +896,56 @@ export function PublicManifestPage({
     )
   }
 
-  const layout = (
+  const layout = isApex ? (
+    <div className="flex min-h-0 flex-1 overflow-hidden">
+      {isDesktop ? (
+        <aside className="relative z-40 flex w-[var(--sidebar-width-expanded)] shrink-0 flex-col border-r border-sidebar-border bg-column-shell print:hidden">
+          <PublicOrdstirrSectionsRail
+            groups={railGroups}
+            activeSection={activeSection}
+            currentView={view}
+            onSelectSection={handleSelectSection}
+            variant="sidebar"
+            brandName={brandName}
+          />
+        </aside>
+      ) : null}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <StudioLayout
+          railLabel={brandName}
+          contextBar={
+            <div className="print:hidden">
+              <StudioContextBar aria-label={title} title={title} actions={null} />
+            </div>
+          }
+          rail={
+            isDesktop ? undefined : (
+              <div className="flex h-full min-h-0 flex-col">
+                <PublicOrdstirrSectionsRail
+                  groups={railGroups}
+                  activeSection={activeSection}
+                  currentView={view}
+                  onSelectSection={handleSelectSection}
+                  variant="sidebar"
+                  brandName={brandName}
+                />
+              </div>
+            )
+          }
+          canvas={
+            <div
+              className="min-h-0 flex-1 overflow-y-auto print:overflow-visible"
+              data-public-ordstirr-scroll
+            >
+              {body}
+            </div>
+          }
+        />
+      </div>
+    </div>
+  ) : (
     <StudioLayout
-      railLabel={isApex ? brandName : 'Sections'}
+      railLabel="Sections"
       contextBar={
         <div className="print:hidden">
           <StudioContextBar aria-label={title} title={title} actions={null} />
@@ -908,8 +958,7 @@ export function PublicManifestPage({
             activeSection={activeSection}
             currentView={view}
             onSelectSection={handleSelectSection}
-            variant={isApex ? 'sidebar' : 'rail'}
-            brandName={brandName}
+            variant="rail"
           />
         </div>
       }

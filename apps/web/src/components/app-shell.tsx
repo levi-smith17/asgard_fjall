@@ -14,6 +14,7 @@ import {
 import { AsgardSidebarBrand } from '@/components/core/brand/asgard-sidebar-brand'
 import { CommandPaletteDialog } from '@/components/core/command-palette/command-palette-dialog'
 import { ValknutWatermark } from '@/components/core/icons/valknut-watermark'
+import { SidebarFooterFlyout } from '@/components/core/shell/sidebar-footer-flyout'
 import { SidebarNavGroupFlyout } from '@/components/core/shell/sidebar-nav-group-flyout'
 import { Avatar } from '@/components/core/ui/avatar'
 import { Button } from '@/components/core/ui/button'
@@ -100,7 +101,7 @@ export function AppShell() {
     const active = navItemActive(pathname, item.key, item.href, item.external)
     const itemClass = cn(
       'flex w-full items-center rounded-lg text-sm font-medium transition-colors',
-      isNarrow ? 'justify-center px-0 py-2.5' : 'justify-start gap-2.5 px-3 py-2',
+      isNarrow ? 'h-full justify-center px-0 py-2.5' : 'justify-start gap-2.5 px-3 py-2',
       active
         ? 'bg-sidebar-accent text-sidebar-foreground-active'
         : 'text-sidebar-foreground hover:bg-muted-hover hover:text-foreground',
@@ -137,43 +138,39 @@ export function AppShell() {
     )
 
     if (item.key === 'ordstirr' && publicOrdstirrHref) {
-      const bookButton = (
+      const bookLink = (
         <Link
           to={publicOrdstirrHref}
           aria-label={terms.publicViewGroup}
           className={cn(
-            'flex shrink-0 items-center justify-center rounded-lg transition-colors',
-            isNarrow ? 'h-8 w-8' : 'h-9 w-9',
+            'flex w-full items-center rounded-lg text-sm font-medium transition-colors',
+            isNarrow ? 'h-full justify-center px-0 py-2.5' : 'justify-start gap-2.5 px-3 py-2',
             publicViewActive
               ? 'bg-sidebar-accent text-sidebar-foreground-active'
               : 'text-sidebar-foreground hover:bg-muted-hover hover:text-foreground',
           )}
         >
-          <BookOpen className="h-[1.125rem] w-[1.125rem]" aria-hidden />
+          <BookOpen className="h-[1.125rem] w-[1.125rem] shrink-0" aria-hidden />
+          {!isNarrow ? <span className="truncate">{terms.publicViewGroup}</span> : null}
         </Link>
       )
 
       return (
-        <li
-          key={item.key}
-          className={cn(
-            isNarrow ? 'flex w-full flex-col gap-0.5' : 'flex items-center gap-0.5',
-          )}
-        >
+        <li key={item.key} className="flex w-full flex-col gap-0.5">
           {isNarrow ? (
             <ToolbarTooltip label={item.label} placement="right" className="w-full">
               {link}
             </ToolbarTooltip>
           ) : (
-            <div className="min-w-0 flex-1">{link}</div>
+            link
           )}
-          <ToolbarTooltip
-            label={terms.publicViewGroup}
-            placement={isNarrow ? 'right' : 'above'}
-            className={isNarrow ? 'w-full justify-center' : undefined}
-          >
-            {bookButton}
-          </ToolbarTooltip>
+          {isNarrow ? (
+            <ToolbarTooltip label={terms.publicViewGroup} placement="right" className="w-full">
+              {bookLink}
+            </ToolbarTooltip>
+          ) : (
+            bookLink
+          )}
         </li>
       )
     }
@@ -200,22 +197,29 @@ export function AppShell() {
         <aside className="relative z-40 flex w-[var(--sidebar-width)] shrink-0 flex-col border-r border-sidebar-border bg-column-shell transition-[width] duration-200 ease-out">
           <AsgardSidebarBrand narrow={isNarrow} />
 
-          <nav className={cn('flex-1 overflow-y-auto py-3', isNarrow ? 'px-1.5' : 'px-2 py-4')}>
+          <nav className={cn('flex-1 overflow-y-auto', isNarrow ? 'px-1.5' : 'px-2 py-4')}>
             {groups.map((group, groupIndex) => {
               const collapseToFlyout = useGroupFlyouts && !group.neverCollapse
               return (
-                <div key={group.id}>
+                <div
+                  key={group.id}
+                  className={cn(
+                    group.id === 'overview' &&
+                      isNarrow &&
+                      'flex h-14 max-h-14 items-center',
+                  )}
+                >
                   {groupIndex > 0 ? (
                     <div
                       className={cn(
                         'border-t border-sidebar-border',
-                        isNarrow ? '-mx-1.5 my-3' : '-mx-2 my-4',
+                        isNarrow ? '-mx-1.5 my-2' : '-mx-2 my-4',
                       )}
                     />
                   ) : null}
 
                   {collapseToFlyout ? (
-                    <ul className="space-y-0.5">
+                    <ul className="w-full space-y-0.5">
                       <li>
                         <SidebarNavGroupFlyout
                           items={group.items.map((item) => ({
@@ -236,7 +240,14 @@ export function AppShell() {
                           {group.label}
                         </p>
                       ) : null}
-                      <ul className="space-y-0.5">{group.items.map((item) => renderNavLink(item))}</ul>
+                      <ul
+                        className={cn(
+                          'w-full space-y-0.5',
+                          group.id === 'overview' && isNarrow && 'h-full',
+                        )}
+                      >
+                        {group.items.map((item) => renderNavLink(item))}
+                      </ul>
                     </>
                   )}
                 </div>
@@ -244,101 +255,78 @@ export function AppShell() {
             })}
           </nav>
 
-          <div className={cn('border-t border-sidebar-border py-3', isNarrow ? 'px-2' : 'px-3')}>
+          <div className={cn('border-t border-sidebar-border py-2', isNarrow ? 'px-1.5' : 'px-3 py-3')}>
             {isNarrow ? (
-              <div className="flex flex-col items-center gap-1">
-                <ToolbarTooltip label={terms.messages} placement="right">
-                  <Button
-                    asChild
-                    variant="secondary"
-                    size="icon"
-                    className={cn(
-                      'relative h-8 w-8',
-                      sendibodActive &&
-                        'bg-sidebar-accent text-sidebar-foreground-active hover:bg-sidebar-accent',
-                    )}
-                  >
-                    <Link
-                      to="/sendibod"
-                      aria-label={
-                        unreadMessageCount > 0
-                          ? `${terms.messages} — ${unreadMessageCount} unread`
-                          : terms.messages
-                      }
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                      {unreadMessageCount > 0 ? (
-                        <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+              <SidebarFooterFlyout
+                triggerLabel={displayName}
+                trigger={
+                  <span className="relative">
+                    <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
+                    {unreadMessageCount > 0 ? (
+                      <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                        {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+                      </span>
+                    ) : null}
+                  </span>
+                }
+                items={[
+                  {
+                    key: 'sendibod',
+                    label: terms.messages,
+                    to: '/sendibod',
+                    active: sendibodActive,
+                    icon: <MessageSquare className="h-4 w-4" />,
+                    badge:
+                      unreadMessageCount > 0 ? (
+                        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground tabular-nums">
                           {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
                         </span>
-                      ) : null}
-                    </Link>
-                  </Button>
-                </ToolbarTooltip>
-                <ToolbarTooltip label={toggleTooltip} placement="right">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={cycleTerminology}
-                    aria-label={toggleTooltip}
-                  >
-                    <BookType className="h-4 w-4" />
-                  </Button>
-                </ToolbarTooltip>
-                <ToolbarTooltip label={paletteTooltip} placement="right">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={cyclePalette}
-                    aria-label={paletteTooltip}
-                  >
-                    <Palette className="h-4 w-4" />
-                  </Button>
-                </ToolbarTooltip>
-                <ToolbarTooltip label={themeLabel} placement="right">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={toggleTheme}
-                    aria-label={themeLabel}
-                  >
-                    {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                  </Button>
-                </ToolbarTooltip>
-                <ToolbarTooltip label={terms.settings} placement="right">
-                  <Button
-                    asChild
-                    variant="secondary"
-                    size="icon"
-                    className={cn(
-                      'h-8 w-8',
-                      pathname.startsWith('/thing') &&
-                        'bg-sidebar-accent text-sidebar-foreground-active hover:bg-sidebar-accent',
-                    )}
-                  >
-                    <Link to="/thing" aria-label={terms.settings}>
-                      <Settings className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </ToolbarTooltip>
-                <div className="mt-2 -mx-2 self-stretch border-t border-sidebar-border pt-2">
-                  <div className="flex justify-center">
-                    <ToolbarTooltip label={displayName} placement="right">
-                      <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
-                    </ToolbarTooltip>
+                      ) : null,
+                  },
+                  {
+                    key: 'terminology',
+                    label: toggleTooltip,
+                    icon: <BookType className="h-4 w-4" />,
+                    onSelect: cycleTerminology,
+                  },
+                  {
+                    key: 'palette',
+                    label: paletteTooltip,
+                    icon: <Palette className="h-4 w-4" />,
+                    onSelect: cyclePalette,
+                  },
+                  {
+                    key: 'theme',
+                    label: themeLabel,
+                    icon:
+                      theme === 'dark' ? (
+                        <Sun className="h-4 w-4" />
+                      ) : (
+                        <Moon className="h-4 w-4" />
+                      ),
+                    onSelect: toggleTheme,
+                  },
+                  {
+                    key: 'settings',
+                    label: terms.settings,
+                    to: '/thing',
+                    active: pathname.startsWith('/thing'),
+                    icon: <Settings className="h-4 w-4" />,
+                  },
+                ]}
+                footer={
+                  <div className="min-w-0 text-left text-sm leading-tight">
+                    <p className="truncate font-medium text-foreground">{displayName}</p>
+                    {displayEmail ? (
+                      <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
+                    ) : null}
                   </div>
-                </div>
-              </div>
+                }
+              />
             ) : (
               <>
                 <div className="grid w-full grid-cols-5 gap-1">
-                  <ToolbarTooltip label={terms.messages}>
+                  <ToolbarTooltip label={terms.messages} className="w-full">
                     <Button
                       asChild
                       variant="secondary"
@@ -366,7 +354,7 @@ export function AppShell() {
                       </Link>
                     </Button>
                   </ToolbarTooltip>
-                  <ToolbarTooltip label={toggleTooltip}>
+                  <ToolbarTooltip label={toggleTooltip} className="w-full">
                     <Button
                       type="button"
                       variant="secondary"
@@ -378,7 +366,7 @@ export function AppShell() {
                       <BookType className="h-4 w-4" />
                     </Button>
                   </ToolbarTooltip>
-                  <ToolbarTooltip label={paletteTooltip}>
+                  <ToolbarTooltip label={paletteTooltip} className="w-full">
                     <Button
                       type="button"
                       variant="secondary"
@@ -390,7 +378,7 @@ export function AppShell() {
                       <Palette className="h-4 w-4" />
                     </Button>
                   </ToolbarTooltip>
-                  <ToolbarTooltip label={themeLabel}>
+                  <ToolbarTooltip label={themeLabel} className="w-full">
                     <Button
                       type="button"
                       variant="secondary"
@@ -402,7 +390,7 @@ export function AppShell() {
                       {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                     </Button>
                   </ToolbarTooltip>
-                  <ToolbarTooltip label={terms.settings}>
+                  <ToolbarTooltip label={terms.settings} className="w-full">
                     <Button
                       asChild
                       variant="secondary"

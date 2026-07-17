@@ -153,7 +153,7 @@ export function SidebarNavGroupFlyout({
 
                   if (item.key === 'ordstirr' && publicPath) {
                     return (
-                      <div key={item.key} className="flex items-stretch">
+                      <div key={item.key} className="flex flex-col">
                         {!item.enabled ? (
                           <div className={className} role="menuitem" aria-disabled>
                             <Icon className="h-4 w-4 shrink-0" aria-hidden />
@@ -170,22 +170,21 @@ export function SidebarNavGroupFlyout({
                             <span className="truncate">{item.label}</span>
                           </Link>
                         )}
-                        <ToolbarTooltip label={publicViewLabel}>
-                          <Link
-                            to={publicPath}
-                            role="menuitem"
-                            aria-label={publicViewLabel}
-                            onClick={() => setOpen(false)}
-                            className={cn(
-                              'flex items-center px-2.5 transition-colors',
-                              publicActive
-                                ? 'bg-primary/10 text-primary'
-                                : 'text-muted-foreground hover:bg-muted-hover hover:text-foreground',
-                            )}
-                          >
-                            <BookOpen className="h-4 w-4" aria-hidden />
-                          </Link>
-                        </ToolbarTooltip>
+                        <Link
+                          to={publicPath}
+                          role="menuitem"
+                          aria-label={publicViewLabel}
+                          onClick={() => setOpen(false)}
+                          className={cn(
+                            'flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2 text-left text-sm font-medium transition-colors',
+                            publicActive
+                              ? 'bg-primary/10 text-primary'
+                              : 'text-foreground hover:bg-muted-hover',
+                          )}
+                        >
+                          <BookOpen className="h-4 w-4 shrink-0" aria-hidden />
+                          <span className="truncate">{publicViewLabel}</span>
+                        </Link>
                       </div>
                     )
                   }

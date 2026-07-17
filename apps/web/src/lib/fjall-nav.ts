@@ -1,11 +1,11 @@
 import {
   Anvil,
+  Bolt,
   CalendarDays,
   LayoutDashboard,
   NotebookPen,
   Rocket,
   ScrollText,
-  Sparkles,
   TreePine,
   UserRound,
   Wallet,
@@ -65,7 +65,7 @@ export function getFjallNavGroups(terms: Terms): FjallNavGroup[] {
     {
       id: 'extras',
       label: terms.fjallExtrasGroup,
-      icon: Sparkles,
+      icon: Bolt,
       items: [
         { key: 'nidjatal', label: terms.nidjatal, href: '/nidjatal', icon: TreePine },
         { key: 'stjornur', label: terms.starfield, href: '/stjornur', icon: Rocket },
