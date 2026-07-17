@@ -58,7 +58,7 @@ import { cn } from '@/lib/utils'
 function SectionHeading({ title }: { title: string }) {
   return (
     <div className="mb-4 flex items-center gap-4">
-      <h2 className="shrink-0 text-lg font-semibold">{title}</h2>
+      <h2 className="shrink-0 text-xl font-semibold">{title}</h2>
       <div className="h-px flex-1 bg-border" />
     </div>
   )
@@ -82,13 +82,13 @@ function TimelineEntry({
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="font-medium">{title}</p>
-          {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
-          {location ? <p className="text-sm text-muted-foreground">{location}</p> : null}
+          {subtitle ? <p className="text-muted-foreground">{subtitle}</p> : null}
+          {location ? <p className="text-muted-foreground">{location}</p> : null}
         </div>
-        <span className="shrink-0 text-sm text-muted-foreground">{range}</span>
+        <span className="shrink-0 text-base text-muted-foreground">{range}</span>
       </div>
       {description ? (
-        <RichTextContent html={description} className="text-sm text-muted-foreground" />
+        <RichTextContent html={description} className="text-muted-foreground" />
       ) : null}
     </div>
   )
@@ -106,7 +106,7 @@ function ContactLinks({
   // Visitor-facing English — do not use Ordsending/terminology for this CTA.
   const label = `Contact ${name ?? username}`
   return (
-    <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+    <div className="flex flex-wrap gap-4 text-base text-muted-foreground">
       {origins?.location ? (
         <div className="flex items-center gap-1">
           <MapPin className="h-4 w-4" aria-hidden />
@@ -204,12 +204,12 @@ function LandmarkCard({
       </div>
       <div ref={innerRef} className={cn('relative', !expanded && 'max-h-48 overflow-hidden')}>
         {landmark.startDate ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground">
             {formatManifestDateRange(landmark.startDate, landmark.endDate, landmark.current)}
           </p>
         ) : null}
         {landmark.description ? (
-          <RichTextContent html={landmark.description} className="text-sm text-muted-foreground" />
+          <RichTextContent html={landmark.description} className="text-muted-foreground" />
         ) : null}
         {!expanded && overflows ? (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-secondary to-transparent" />
@@ -318,7 +318,7 @@ function CompanionBlock({
     <div className="flex flex-col gap-3">
       <div>
         <h3 className="font-medium">{companion.name}</h3>
-        {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
+        {subtitle ? <p className="text-muted-foreground">{subtitle}</p> : null}
       </div>
       <CompanionMediaCarousel companion={companion} />
     </div>
@@ -340,7 +340,7 @@ function ManifestView({ data, terms }: { data: PublicManifestData; terms: Terms 
   }, {})
 
   return (
-    <div className="manifest-page mx-auto flex max-w-3xl flex-col gap-12 px-6 py-6 print:mx-0 print:max-w-none print:px-0 print:pb-0">
+    <div className="manifest-page mx-auto flex max-w-3xl flex-col gap-12 px-6 py-8 text-base print:mx-0 print:max-w-none print:px-0 print:pb-0">
       <div id="intro" className="flex scroll-mt-6 flex-col gap-6">
         <div className="flex items-center gap-4">
           <Avatar
@@ -421,8 +421,8 @@ function ManifestView({ data, terms }: { data: PublicManifestData; terms: Terms 
           <div className="hidden print:flex print:flex-wrap print:gap-x-8 print:gap-y-4">
             {Object.entries(grouped).map(([category, items]) => (
               <div key={category} className="flex flex-col gap-1">
-                <p className="text-sm font-semibold">{category}</p>
-                <ul className="m-0 flex list-none flex-col gap-0.5 p-0 text-sm text-muted-foreground">
+                <p className="text-base font-semibold">{category}</p>
+                <ul className="m-0 flex list-none flex-col gap-0.5 p-0 text-base text-muted-foreground">
                   {items.map((item) => (
                     <li key={item.id}>
                       {item.name}
@@ -485,11 +485,11 @@ function ManifestView({ data, terms }: { data: PublicManifestData; terms: Terms 
                       ) : null}
                     </p>
                     {summit.issuer ? (
-                      <p className="text-sm text-muted-foreground">{summit.issuer}</p>
+                      <p className="text-muted-foreground">{summit.issuer}</p>
                     ) : null}
                   </div>
                   {summit.date ? (
-                    <span className="shrink-0 text-sm text-muted-foreground">
+                    <span className="shrink-0 text-base text-muted-foreground">
                       {formatManifestDate(summit.date)}
                     </span>
                   ) : null}
@@ -497,7 +497,7 @@ function ManifestView({ data, terms }: { data: PublicManifestData; terms: Terms 
                 {summit.description ? (
                   <RichTextContent
                     html={summit.description}
-                    className="text-sm text-muted-foreground"
+                    className="text-muted-foreground"
                   />
                 ) : null}
               </div>
@@ -536,7 +536,7 @@ function JourneyView({ data, terms }: { data: PublicJourneyData; terms: Terms })
   const memorial = companions.filter((c) => Boolean(c.passed))
 
   return (
-    <div className="manifest-page mx-auto flex max-w-3xl flex-col gap-12 px-6 py-6 print:mx-0 print:max-w-none print:px-0 print:pb-0">
+    <div className="manifest-page mx-auto flex max-w-3xl flex-col gap-12 px-6 py-8 text-base print:mx-0 print:max-w-none print:px-0 print:pb-0">
       <div className="flex flex-col gap-6">
         <div className="flex items-center gap-4">
           <Avatar

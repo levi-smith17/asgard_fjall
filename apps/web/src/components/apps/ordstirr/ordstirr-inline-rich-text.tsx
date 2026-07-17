@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 import { useOrdstirrRichText } from './ordstirr-rich-text-context'
 
 const inlineEditorClass =
-  'w-full border-0 px-0 py-1 shadow-none outline-none ring-0 prose prose-sm max-w-none text-muted-foreground dark:prose-invert prose-p:my-1 prose-headings:my-2 prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground focus:outline-none focus:ring-0'
+  'w-full border-0 px-0 py-1 shadow-none outline-none ring-0 prose prose-base max-w-none text-muted-foreground dark:prose-invert prose-p:my-1 prose-headings:my-2 prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground focus:outline-none focus:ring-0'
 
 export function OrdstirrInlineRichText({
   value,

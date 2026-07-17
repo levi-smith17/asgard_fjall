@@ -6,6 +6,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts'
+import { usePalette, type ColorPalette } from '@/hooks/use-palette'
 import type { ManifestGear } from '@/lib/manifest-api'
 
 type GearLevel = NonNullable<ManifestGear['level']>
@@ -22,17 +23,32 @@ const levelLabel: Record<GearLevel, string> = {
   ADVANCED: 'Advanced',
   EXPERT: 'Expert',
 }
-const levelFill: Record<GearLevel, string> = {
+
+/** Green palette ramp (matches historic chart fills). */
+const greenLevelFill: Record<GearLevel, string> = {
   BEGINNER: '#dce9b5',
   INTERMEDIATE: '#8aaa52',
   ADVANCED: '#4e6a24',
   EXPERT: '#2e4110',
 }
+
+/** Gold (fjall) palette ramp — amber tones aligned with --primary. */
+const goldLevelFill: Record<GearLevel, string> = {
+  BEGINNER: '#f0e0b8',
+  INTERMEDIATE: '#d4b06a',
+  ADVANCED: '#b0893a',
+  EXPERT: '#6b4f1a',
+}
+
 const levelLabelFill: Record<GearLevel, string> = {
   BEGINNER: '#000000',
   INTERMEDIATE: '#000000',
   ADVANCED: '#ffffff',
   EXPERT: '#ffffff',
+}
+
+function levelFillForPalette(palette: ColorPalette): Record<GearLevel, string> {
+  return palette === 'fjall' ? goldLevelFill : greenLevelFill
 }
 
 export function OrdstirrGearChart({
@@ -46,6 +62,8 @@ export function OrdstirrGearChart({
   selectedEntryId?: string | null
   onSelectItem?: (id: string) => void
 }) {
+  const { palette } = usePalette()
+  const levelFill = levelFillForPalette(palette)
   const withLevel = items.filter((item): item is ManifestGear & { level: GearLevel } => item.level != null)
   const data = withLevel.map((item) => ({
     id: item.id,

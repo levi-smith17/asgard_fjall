@@ -45,11 +45,13 @@ function PublicSidebarFooter() {
           </Button>
         </ToolbarTooltip>
       </div>
-      <p className="mt-3 flex items-center justify-center gap-2 px-0.5 text-center text-[11px] leading-snug text-muted-foreground">
-        <span>Built on project Asgard</span>
-        <span className="h-3 w-px shrink-0 bg-sidebar-border" aria-hidden />
-        <span>© 2026</span>
-      </p>
+      <div className="mt-3 -mx-3 border-t border-sidebar-border pt-3">
+        <p className="flex items-center justify-center gap-2 px-3 text-center text-[11px] leading-snug text-muted-foreground">
+          <span>Built on project Asgard</span>
+          <span className="h-3 w-px shrink-0 bg-sidebar-border" aria-hidden />
+          <span>© 2026</span>
+        </p>
+      </div>
     </div>
   )
 }
