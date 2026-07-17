@@ -107,7 +107,7 @@ function SectionList({
                     type="button"
                     onClick={() => onSelectSection(section.id)}
                     className={cn(
-                      'flex w-full items-center justify-start gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors',
+                      'flex w-full items-center justify-start gap-2.5 rounded-lg px-3 py-2.5 text-left text-base font-medium transition-colors',
                       active
                         ? sidebarStyle
                           ? 'bg-sidebar-accent text-sidebar-foreground-active'
@@ -119,7 +119,7 @@ function SectionList({
                     )}
                   >
                     <Icon
-                      className="h-[1.125rem] w-[1.125rem] shrink-0 opacity-70"
+                      className="h-5 w-5 shrink-0 opacity-70"
                       aria-hidden
                     />
                     <span className="truncate">{section.label}</span>
