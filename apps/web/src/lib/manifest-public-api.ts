@@ -9,6 +9,7 @@ export type PublicManifestData = {
     avatar?: string | null
     defaultTerminology: 'CAIRN' | 'STANDARD' | 'ASGARD'
     defaultTheme: 'LIGHT' | 'DARK' | 'SYSTEM'
+    defaultPalette?: 'green' | 'fjall' | null
   }
   origins: {
     headline: string | null
@@ -100,6 +101,7 @@ export type PublicContactData = {
     image: string | null
     defaultTerminology: 'CAIRN' | 'STANDARD' | 'ASGARD'
     defaultTheme: 'LIGHT' | 'DARK' | 'SYSTEM'
+    defaultPalette?: 'green' | 'fjall' | null
   }
 }
 

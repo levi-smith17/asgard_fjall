@@ -80,6 +80,8 @@ export type CairnFullSettings = {
     sidebarDefault: 'EXPANDED' | 'COLLAPSED'
     defaultLandingPage: string
     dateFormat: 'MDY' | 'DMY' | 'YMD'
+    publicDefaultTheme: 'SYSTEM' | 'LIGHT' | 'DARK'
+    publicDefaultPalette: 'fjall' | 'green'
   }
   privacy: {
     manifestVisibility: 'PUBLIC' | 'UNLISTED' | 'PRIVATE'

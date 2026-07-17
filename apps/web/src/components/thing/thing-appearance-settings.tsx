@@ -34,6 +34,8 @@ export function ThingAppearanceSettings() {
   const [defaultLandingPage, setDefaultLandingPage] = useState('/hlidskjalf')
   const [dateFormat, setDateFormat] = useState<'MDY' | 'DMY' | 'YMD'>('MDY')
   const [timeFormat, setTimeFormat] = useState<'TWELVE' | 'TWENTYFOUR'>('TWELVE')
+  const [publicDefaultTheme, setPublicDefaultTheme] = useState<'SYSTEM' | 'LIGHT' | 'DARK'>('SYSTEM')
+  const [publicDefaultPalette, setPublicDefaultPalette] = useState<'fjall' | 'green'>('fjall')
 
   useEffect(() => {
     if (!appearance || !account) return
@@ -41,12 +43,20 @@ export function ThingAppearanceSettings() {
     setDefaultLandingPage(appearance.defaultLandingPage === '/waypoints' ? '/hlidskjalf' : appearance.defaultLandingPage)
     setDateFormat(appearance.dateFormat)
     setTimeFormat(account.timeFormat)
+    setPublicDefaultTheme(appearance.publicDefaultTheme ?? 'SYSTEM')
+    setPublicDefaultPalette(appearance.publicDefaultPalette ?? 'fjall')
   }, [appearance, account])
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       await Promise.all([
-        saveCairnAppearanceSettings({ sidebarDefault, defaultLandingPage, dateFormat }),
+        saveCairnAppearanceSettings({
+          sidebarDefault,
+          defaultLandingPage,
+          dateFormat,
+          publicDefaultTheme,
+          publicDefaultPalette,
+        }),
         saveCairnAccountSettings({
           name: account?.name ?? null,
           image: account?.image ?? null,
@@ -100,6 +110,43 @@ export function ThingAppearanceSettings() {
               onChange={setDefaultLandingPage}
               options={LANDING_PAGES}
               className="w-40"
+            />
+          }
+        />
+      </div>
+
+      <div className="space-y-5 border-t border-border pt-8">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Public profile
+        </p>
+        <ThingSettingRow
+          label="Public default theme"
+          description="Theme visitors see on your public Ordstirr profile"
+          control={
+            <Select
+              value={publicDefaultTheme}
+              onChange={(value) => setPublicDefaultTheme(value as typeof publicDefaultTheme)}
+              options={[
+                { value: 'SYSTEM', label: 'System' },
+                { value: 'LIGHT', label: 'Light' },
+                { value: 'DARK', label: 'Dark' },
+              ]}
+              className="w-32"
+            />
+          }
+        />
+        <ThingSettingRow
+          label="Public default palette"
+          description="Color palette visitors see on your public Ordstirr profile"
+          control={
+            <Select
+              value={publicDefaultPalette}
+              onChange={(value) => setPublicDefaultPalette(value as typeof publicDefaultPalette)}
+              options={[
+                { value: 'fjall', label: 'Gold' },
+                { value: 'green', label: 'Green' },
+              ]}
+              className="w-32"
             />
           }
         />

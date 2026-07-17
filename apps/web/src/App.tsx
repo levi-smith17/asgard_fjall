@@ -65,7 +65,17 @@ function AppShellRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      {PublicSurfaces()}
+      {/* Ungated visitor thread; Almenningr is embedded under AppShell like RealmOps. */}
+      <Route path="/thread/:token" element={<ThreadPage />} />
+      <Route path="/manifest/:username" element={<LegacyPublicManifestRedirect view="manifest" />} />
+      <Route
+        path="/manifest/:username/journey"
+        element={<LegacyPublicManifestRedirect view="journey" />}
+      />
+      <Route
+        path="/manifest/:username/contact"
+        element={<LegacyPublicManifestRedirect view="contact" />}
+      />
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
           <Route path="/" element={<HlidskjalfPage />} />
@@ -75,6 +85,12 @@ function AppShellRoutes() {
           <Route path="/dagatal" element={<DagatalPage />} />
           <Route path="/nidjatal" element={<NidjatalPage />} />
           <Route path="/ordstirr" element={<OrdstirrPage />} />
+          <Route path="/ordstirr/:username" element={<PublicManifestPage view="manifest" />} />
+          <Route path="/ordstirr/:username/ferd" element={<PublicManifestPage view="journey" />} />
+          <Route
+            path="/ordstirr/:username/ordsending"
+            element={<PublicManifestPage view="contact" />}
+          />
           <Route path="/sogur" element={<SogurPage />} />
           <Route path="/stjornur" element={<StjornurPage />} />
           <Route path="/sendibod" element={<SendibodPage />} />

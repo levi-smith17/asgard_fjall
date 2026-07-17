@@ -9,6 +9,8 @@ const DEFAULT_SETTINGS = {
     sidebarDefault: 'EXPANDED',
     defaultLandingPage: '/laufar',
     dateFormat: 'MDY',
+    publicDefaultTheme: 'SYSTEM',
+    publicDefaultPalette: 'fjall',
   },
   privacy: {
     manifestVisibility: 'PRIVATE',

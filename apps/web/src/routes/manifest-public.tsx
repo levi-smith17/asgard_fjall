@@ -22,6 +22,9 @@ import { Button } from '@/components/core/ui/button'
 import { Input } from '@/components/core/ui/input'
 import { Label } from '@/components/core/ui/label'
 import { RichTextContent } from '@/components/core/ui/rich-text-content'
+import { usePalette } from '@/hooks/use-palette'
+import { useTheme } from '@/hooks/use-theme'
+import { isApexOrdstirrHost } from '@/lib/apex-ordstirr'
 import { termsFor } from '@/lib/terminology'
 import type { ManifestGear } from '@/lib/manifest-api'
 import {
@@ -739,12 +742,16 @@ export function PublicManifestPage({
 }) {
   const { username: usernameParam } = useParams<{ username: string }>()
   const username = usernameProp ?? usernameParam
+  const isApex = Boolean(usernameProp) || isApexOrdstirrHost()
   // Public Ordstirr is Standard-only (never Asgard / Cairn labels).
   const terms = termsFor('STANDARD')
   const navigate = useNavigate()
   const { hash } = useLocation()
   const title = pageTitle(view, terms)
+  const { setTheme } = useTheme()
+  const { setPalette } = usePalette()
   const [activeSection, setActiveSection] = useState<PublicOrdstirrRailSectionId | null>(null)
+  const [publicDefaultsApplied, setPublicDefaultsApplied] = useState(false)
 
   const manifestQuery = useQuery({
     queryKey: ['public-manifest', username],
@@ -768,6 +775,44 @@ export function PublicManifestPage({
   })
 
   const railGroups = useMemo(() => buildPublicOrdstirrRailGroups(terms), [terms])
+  const brandName =
+    manifestQuery.data?.wayfarer.name?.trim() ||
+    journeyQuery.data?.wayfarer.name?.trim() ||
+    'Levi Smith'
+
+  useEffect(() => {
+    if (!isApex) return
+    document.title = 'Levi Smith'
+    return () => {
+      document.title = 'Asgard Fjall'
+    }
+  }, [isApex])
+
+  useEffect(() => {
+    if (!isApex || publicDefaultsApplied) return
+    const wayfarer = manifestQuery.data?.wayfarer ?? journeyQuery.data?.wayfarer
+    if (!wayfarer) return
+
+    const themePref = wayfarer.defaultTheme
+    if (themePref === 'LIGHT') setTheme('light')
+    else if (themePref === 'DARK') setTheme('dark')
+    else if (themePref === 'SYSTEM') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      setTheme(prefersDark ? 'dark' : 'light')
+    }
+
+    const palettePref = wayfarer.defaultPalette
+    if (palettePref === 'green' || palettePref === 'fjall') setPalette(palettePref)
+
+    setPublicDefaultsApplied(true)
+  }, [
+    isApex,
+    journeyQuery.data?.wayfarer,
+    manifestQuery.data?.wayfarer,
+    publicDefaultsApplied,
+    setPalette,
+    setTheme,
+  ])
 
   useEffect(() => {
     const fromHash = hash.replace(/^#/, '') as PublicOrdstirrRailSectionId
@@ -848,34 +893,38 @@ export function PublicManifestPage({
     )
   }
 
-  return (
-    <PublicSurface>
-      <StudioLayout
-        railLabel="Sections"
-        contextBar={
-          <div className="print:hidden">
-            <StudioContextBar aria-label={title} title={title} actions={null} />
-          </div>
-        }
-        rail={
-          <div className="flex h-full min-h-0 flex-col print:hidden">
-            <PublicOrdstirrSectionsRail
-              groups={railGroups}
-              activeSection={activeSection}
-              currentView={view}
-              onSelectSection={handleSelectSection}
-            />
-          </div>
-        }
-        canvas={
-          <div
-            className="min-h-0 flex-1 overflow-y-auto print:overflow-visible"
-            data-public-ordstirr-scroll
-          >
-            {body}
-          </div>
-        }
-      />
-    </PublicSurface>
+  const layout = (
+    <StudioLayout
+      railLabel={isApex ? brandName : 'Sections'}
+      contextBar={
+        <div className="print:hidden">
+          <StudioContextBar aria-label={title} title={title} actions={null} />
+        </div>
+      }
+      rail={
+        <div className="flex h-full min-h-0 flex-col print:hidden">
+          <PublicOrdstirrSectionsRail
+            groups={railGroups}
+            activeSection={activeSection}
+            currentView={view}
+            onSelectSection={handleSelectSection}
+            variant={isApex ? 'sidebar' : 'rail'}
+            brandName={brandName}
+          />
+        </div>
+      }
+      canvas={
+        <div
+          className="min-h-0 flex-1 overflow-y-auto print:overflow-visible"
+          data-public-ordstirr-scroll
+        >
+          {body}
+        </div>
+      }
+    />
   )
+
+  // True public (apex) gets its own chrome + watermark; Almenningr is embedded in AppShell.
+  if (isApex) return <PublicSurface>{layout}</PublicSurface>
+  return layout
 }

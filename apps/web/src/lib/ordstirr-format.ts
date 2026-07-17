@@ -87,22 +87,35 @@ export function buildJourneySections(data: ManifestData, terms: ManifestTerms): 
   ]
 }
 
+const APEX_PUBLIC_ORIGIN = 'https://levismith.us'
+const APEX_PUBLIC_HOSTS = new Set(['levismith.us', 'www.levismith.us'])
+
+function isApexPublicOrigin(url: string): boolean {
+  try {
+    const host = new URL(url.startsWith('http') ? url : `https://${url}`).hostname.toLowerCase()
+    return APEX_PUBLIC_HOSTS.has(host)
+  } catch {
+    return false
+  }
+}
+
+/** External Live Profile URL — apex site root (not `/ordstirr/:user`). */
 export function manifestPublicUrl(
   username: string | null | undefined,
   customDomain?: string | null,
 ): string | null {
   if (!username?.trim()) return null
   const user = username.trim()
-  const path = `/ordstirr/${user}`
   const domain = customDomain?.trim()
   if (domain) {
     const base = (domain.startsWith('http') ? domain : `https://${domain}`).replace(/\/$/, '')
+    // Apex personal site is always served at the host root.
+    if (isApexPublicOrigin(base)) return APEX_PUBLIC_ORIGIN
     // Custom domain may already be a full public URL (legacy /manifest or /ordstirr).
     if (/\/(manifest|ordstirr)(\/|$)/i.test(base)) return base
-    return `${base}${path}`
+    return `${base}/ordstirr/${user}`
   }
-  // Apex personal site serves public Ordstirr only.
-  return `https://levismith.us${path}`
+  return APEX_PUBLIC_ORIGIN
 }
 
 export function manifestPublicJourneyUrl(
@@ -114,6 +127,14 @@ export function manifestPublicJourneyUrl(
   if (/\/ferd\/?$/i.test(manifest)) return manifest
   if (/\/journey\/?$/i.test(manifest)) {
     return manifest.replace(/\/journey\/?$/i, '/ferd')
+  }
+  if (isApexPublicOrigin(manifest)) {
+    try {
+      const { pathname } = new URL(manifest)
+      if (!pathname || pathname === '/') return `${APEX_PUBLIC_ORIGIN}/ferd`
+    } catch {
+      return `${APEX_PUBLIC_ORIGIN}/ferd`
+    }
   }
   return `${manifest.replace(/\/$/, '')}/ferd`
 }

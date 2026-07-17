@@ -58,8 +58,13 @@ export const handler = async (
                     name: profile.name ?? null,
                     email: profile.email ?? null,
                     image: profile.image ?? null,
-                    defaultTerminology: settings.defaultTerminology ?? 'CAIRN',
-                    defaultTheme: settings.defaultTheme ?? 'SYSTEM',
+                    defaultTerminology: settings.defaultTerminology ?? profile.defaultTerminology ?? 'STANDARD',
+                    defaultTheme:
+                        settings.appearance?.publicDefaultTheme ??
+                        settings.defaultTheme ??
+                        profile.defaultTheme ??
+                        'SYSTEM',
+                    defaultPalette: settings.appearance?.publicDefaultPalette ?? 'fjall',
                 },
                 origins: {
                     headline: profile.headline ?? null,

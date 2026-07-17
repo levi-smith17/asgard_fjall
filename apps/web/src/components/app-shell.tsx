@@ -19,6 +19,7 @@ import { Avatar } from '@/components/core/ui/avatar'
 import { Button } from '@/components/core/ui/button'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { useAuth } from '@/hooks/use-auth'
+import { useAppDocumentTitle } from '@/hooks/use-app-document-title'
 import { usePalette } from '@/hooks/use-palette'
 import { useSidebarCollapsed } from '@/hooks/use-sidebar-collapsed'
 import { useTerminology } from '@/hooks/use-terminology'
@@ -42,6 +43,7 @@ function navItemActive(pathname: string, key: string, href: string, external?: b
 export function AppShell() {
   const { pathname } = useLocation()
   const auth = useAuth()
+  useAppDocumentTitle()
   const { theme, toggleTheme } = useTheme()
   const { terms, style, cycleTerminology, toggleTooltip } = useTerminology()
   const { cyclePalette, toggleTooltip: paletteTooltip } = usePalette()
@@ -154,16 +156,22 @@ export function AppShell() {
       return (
         <li
           key={item.key}
-          className={cn(isNarrow ? 'flex flex-col items-center gap-0.5' : 'flex items-center gap-0.5')}
+          className={cn(
+            isNarrow ? 'flex w-full flex-col gap-0.5' : 'flex items-center gap-0.5',
+          )}
         >
           {isNarrow ? (
-            <ToolbarTooltip label={item.label} placement="right">
+            <ToolbarTooltip label={item.label} placement="right" className="w-full">
               {link}
             </ToolbarTooltip>
           ) : (
             <div className="min-w-0 flex-1">{link}</div>
           )}
-          <ToolbarTooltip label={terms.publicViewGroup} placement={isNarrow ? 'right' : 'above'}>
+          <ToolbarTooltip
+            label={terms.publicViewGroup}
+            placement={isNarrow ? 'right' : 'above'}
+            className={isNarrow ? 'w-full justify-center' : undefined}
+          >
             {bookButton}
           </ToolbarTooltip>
         </li>
