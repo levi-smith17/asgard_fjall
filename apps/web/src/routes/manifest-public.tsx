@@ -899,7 +899,7 @@ export function PublicManifestPage({
   const layout = isApex ? (
     <div className="flex min-h-0 flex-1 overflow-hidden">
       {isDesktop ? (
-        <aside className="relative z-40 flex w-[260px] shrink-0 flex-col border-r border-sidebar-border bg-column-shell print:hidden">
+        <aside className="relative z-40 flex w-[var(--sidebar-width-expanded)] shrink-0 flex-col border-r border-sidebar-border bg-column-shell print:hidden">
           <PublicOrdstirrSectionsRail
             groups={railGroups}
             activeSection={activeSection}

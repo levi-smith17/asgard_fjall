@@ -72,7 +72,8 @@ function SectionList({
   return (
     <div
       className={cn(
-        'min-h-0 flex-1 overflow-y-auto px-2 py-4',
+        'min-h-0 flex-1 overflow-y-auto',
+        sidebarStyle ? 'px-2 py-4' : 'px-2 py-3',
       )}
     >
       {groups.map((group, groupIndex) => (
@@ -90,8 +91,8 @@ function SectionList({
           ) : null}
           <p
             className={cn(
-              'mb-1 px-3 font-semibold uppercase tracking-wide text-muted-foreground',
-              sidebarStyle ? 'text-xs' : 'text-[10px]',
+              'mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground',
+              sidebarStyle ? 'px-3' : 'px-2',
             )}
           >
             {group.label}
@@ -107,7 +108,10 @@ function SectionList({
                     type="button"
                     onClick={() => onSelectSection(section.id)}
                     className={cn(
-                      'flex w-full items-center justify-start gap-2.5 rounded-lg px-3 py-2.5 text-left text-base font-medium transition-colors',
+                      'flex w-full items-center text-sm font-medium transition-colors',
+                      sidebarStyle
+                        ? 'justify-start gap-2.5 rounded-lg px-3 py-2'
+                        : 'gap-2 rounded-md px-2 py-1.5 text-left',
                       active
                         ? sidebarStyle
                           ? 'bg-sidebar-accent text-sidebar-foreground-active'
@@ -119,7 +123,10 @@ function SectionList({
                     )}
                   >
                     <Icon
-                      className="h-5 w-5 shrink-0 opacity-70"
+                      className={cn(
+                        'shrink-0 opacity-70',
+                        sidebarStyle ? 'h-[1.125rem] w-[1.125rem]' : 'h-3.5 w-3.5',
+                      )}
                       aria-hidden
                     />
                     <span className="truncate">{section.label}</span>
@@ -153,7 +160,7 @@ export function PublicOrdstirrSectionsRail({
   if (variant === 'sidebar') {
     return (
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-column-shell">
-        <AsgardSidebarBrand narrow={false} size="public" subtitle={brandName} />
+        <AsgardSidebarBrand narrow={false} subtitle={brandName} />
         <SectionList
           groups={groups}
           activeSection={activeSection}
