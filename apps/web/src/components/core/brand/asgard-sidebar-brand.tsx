@@ -26,13 +26,7 @@ export function AsgardSidebarBrand({
       <AsgardTreeIcon className={cn('w-auto', narrow ? 'h-9' : 'h-[4.5rem]')} />
       {!narrow ? (
         <div className="min-w-0 leading-none">
-          {terms.productName === 'Cairn' ? (
-            <span className="block text-base font-bold uppercase tracking-[0.34em] text-primary">
-              Cairn
-            </span>
-          ) : (
-            <AsgardWordmark className="text-primary" />
-          )}
+          <AsgardWordmark className="text-primary" />
           <p className="mt-2 text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground">
             {subtitleText}
           </p>

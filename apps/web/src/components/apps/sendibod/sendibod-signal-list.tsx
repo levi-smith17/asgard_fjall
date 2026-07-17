@@ -1,6 +1,6 @@
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/core/ui/button'
-import type { CairnSignal } from '@/lib/data-api'
+import type { FjallSignal } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 
 function formatWhen(iso: string) {
@@ -19,7 +19,7 @@ export function SendibodSignalList({
   onSelect,
   onDelete,
 }: {
-  signals: CairnSignal[]
+  signals: FjallSignal[]
   selectedId: string | null
   showSnippets: boolean
   onSelect: (id: string) => void

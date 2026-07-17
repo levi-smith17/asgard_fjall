@@ -26,7 +26,7 @@ import { usePalette } from '@/hooks/use-palette'
 import { useSidebarCollapsed } from '@/hooks/use-sidebar-collapsed'
 import { useTerminology } from '@/hooks/use-terminology'
 import { useTheme } from '@/hooks/use-theme'
-import { fetchCairnProfile, fetchCairnSignals, fetchCairnStatus } from '@/lib/data-api'
+import { fetchFjallProfile, fetchFjallSignals, fetchFjallStatus } from '@/lib/data-api'
 import { getFjallNavGroups } from '@/lib/fjall-nav'
 import { parsePublicManifestPath, publicManifestPath } from '@/lib/public-manifest-path'
 import { cn } from '@/lib/utils'
@@ -55,24 +55,24 @@ export function AppShell() {
   const themeLabel = themeToggleLabel(style, theme)
 
   const statusQuery = useQuery({
-    queryKey: ['cairn-status', auth.cairnUser?.id ?? 'anon'],
-    queryFn: fetchCairnStatus,
+    queryKey: ['fjall-status', auth.dataUser?.id ?? 'anon'],
+    queryFn: fetchFjallStatus,
     enabled: auth.status === 'authenticated',
     retry: false,
     staleTime: 60_000,
   })
 
   const profileQuery = useQuery({
-    queryKey: ['cairn-profile'],
-    queryFn: fetchCairnProfile,
-    enabled: Boolean(auth.cairnUser) && statusQuery.data?.configured === true,
+    queryKey: ['fjall-profile'],
+    queryFn: fetchFjallProfile,
+    enabled: Boolean(auth.dataUser) && statusQuery.data?.configured === true,
     retry: false,
     staleTime: 60_000,
   })
 
   const signalsQuery = useQuery({
-    queryKey: ['cairn-signals'],
-    queryFn: fetchCairnSignals,
+    queryKey: ['fjall-signals'],
+    queryFn: fetchFjallSignals,
     enabled: statusQuery.data?.configured === true,
     retry: false,
     staleTime: 60_000,
@@ -225,7 +225,7 @@ export function AppShell() {
                     />
                   ) : null}
 
-                  <div className={cn(isNarrow && group.id !== 'overview' && 'py-2')}>
+                  <div className={cn(isNarrow && 'py-2')}>
                     {collapseToFlyout ? (
                       <ul className="w-full space-y-0.5">
                         <li>
@@ -259,67 +259,74 @@ export function AppShell() {
             })}
           </nav>
 
-          <div className={cn('border-t border-sidebar-border py-2', isNarrow ? 'px-1.5' : 'px-3 py-3')}>
+          <div
+            className={cn(
+              'border-t border-sidebar-border',
+              isNarrow ? 'px-1.5 pt-2' : 'px-3 py-3',
+            )}
+          >
             {isNarrow ? (
               <div className="flex w-full flex-col items-center">
-                <SidebarFooterFlyout
-                  triggerLabel="More"
-                  trigger={
-                    <span className="relative">
-                      <MoreHorizontal className="h-4 w-4" aria-hidden />
-                      {unreadMessageCount > 0 ? (
-                        <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
-                          {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
-                        </span>
-                      ) : null}
-                    </span>
-                  }
-                  items={[
-                    {
-                      key: 'sendibod',
-                      label: terms.messages,
-                      to: '/sendibod',
-                      active: sendibodActive,
-                      icon: <MessageSquare className="h-4 w-4" />,
-                      badge:
-                        unreadMessageCount > 0 ? (
-                          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground tabular-nums">
+                <div className="w-full pb-2">
+                  <SidebarFooterFlyout
+                    triggerLabel="More"
+                    trigger={
+                      <span className="relative">
+                        <MoreHorizontal className="h-4 w-4" aria-hidden />
+                        {unreadMessageCount > 0 ? (
+                          <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
                             {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
                           </span>
-                        ) : null,
-                    },
-                    {
-                      key: 'terminology',
-                      label: toggleTooltip,
-                      icon: <BookType className="h-4 w-4" />,
-                      onSelect: cycleTerminology,
-                    },
-                    {
-                      key: 'palette',
-                      label: paletteTooltip,
-                      icon: <Palette className="h-4 w-4" />,
-                      onSelect: cyclePalette,
-                    },
-                    {
-                      key: 'theme',
-                      label: themeLabel,
-                      icon:
-                        theme === 'dark' ? (
-                          <Sun className="h-4 w-4" />
-                        ) : (
-                          <Moon className="h-4 w-4" />
-                        ),
-                      onSelect: toggleTheme,
-                    },
-                    {
-                      key: 'settings',
-                      label: terms.settings,
-                      to: '/thing',
-                      active: pathname.startsWith('/thing'),
-                      icon: <Settings className="h-4 w-4" />,
-                    },
-                  ]}
-                />
+                        ) : null}
+                      </span>
+                    }
+                    items={[
+                      {
+                        key: 'sendibod',
+                        label: terms.messages,
+                        to: '/sendibod',
+                        active: sendibodActive,
+                        icon: <MessageSquare className="h-4 w-4" />,
+                        badge:
+                          unreadMessageCount > 0 ? (
+                            <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground tabular-nums">
+                              {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+                            </span>
+                          ) : null,
+                      },
+                      {
+                        key: 'terminology',
+                        label: toggleTooltip,
+                        icon: <BookType className="h-4 w-4" />,
+                        onSelect: cycleTerminology,
+                      },
+                      {
+                        key: 'palette',
+                        label: paletteTooltip,
+                        icon: <Palette className="h-4 w-4" />,
+                        onSelect: cyclePalette,
+                      },
+                      {
+                        key: 'theme',
+                        label: themeLabel,
+                        icon:
+                          theme === 'dark' ? (
+                            <Sun className="h-4 w-4" />
+                          ) : (
+                            <Moon className="h-4 w-4" />
+                          ),
+                        onSelect: toggleTheme,
+                      },
+                      {
+                        key: 'settings',
+                        label: terms.settings,
+                        to: '/thing',
+                        active: pathname.startsWith('/thing'),
+                        icon: <Settings className="h-4 w-4" />,
+                      },
+                    ]}
+                  />
+                </div>
                 <div className="-mx-1.5 w-[calc(100%+0.75rem)] border-t border-sidebar-border">
                   <ToolbarTooltip label={displayName} placement="right" className="w-full">
                     <div className="flex w-full items-center justify-center px-0 py-2.5">

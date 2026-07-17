@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import {
-  CairnCatalogInspector,
-  type CairnCatalogTab,
+  FjallCatalogInspector,
+  type FjallCatalogTab,
 } from '@/components/apps/catalog-inspector'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
 import { RailCatalogSkeleton, TableSkeleton } from '@/components/core/ui/studio-skeletons'
 import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
 import { useDebounce } from '@/hooks/use-debounce'
 import {
-  fetchCairnBurnPage,
-  fetchCairnMarkers,
-  fetchCairnProvisionsSummary,
-  fetchCairnSjodr,
-  fetchCairnSupplylinesFiltered,
-  fetchCairnTrails,
+  fetchFjallBurnPage,
+  fetchFjallMarkers,
+  fetchProvisionsSummary,
+  fetchFjallSjodr,
+  fetchFjallSupplylinesFiltered,
+  fetchFjallTrails,
 } from '@/lib/data-api'
 import { daysUntilRenewal } from '@/lib/idunn-renewal'
 import { toMarkerView, toTrailView } from '@/lib/data-format'
@@ -36,7 +36,7 @@ import { AudrInspector } from './audr-inspector'
 import type { AudrSelection } from './audr-types'
 
 type CatalogState = {
-  tab: CairnCatalogTab
+  tab: FjallCatalogTab
   selectedId: string | null
   markerPath: string[]
   markerParent: string | null
@@ -91,25 +91,25 @@ export function AudrClient() {
   const [burnPage, setBurnPage] = useState(1)
 
   const markersQuery = useQuery({
-    queryKey: ['cairn-markers'],
-    queryFn: fetchCairnMarkers,
+    queryKey: ['fjall-markers'],
+    queryFn: fetchFjallMarkers,
   })
 
   const trailsQuery = useQuery({
-    queryKey: ['cairn-trails'],
-    queryFn: fetchCairnTrails,
+    queryKey: ['fjall-trails'],
+    queryFn: fetchFjallTrails,
   })
 
   const summaryQuery = useQuery({
     queryKey: ['audr', 'summary', month, year],
-    queryFn: () => fetchCairnProvisionsSummary(month, year),
+    queryFn: () => fetchProvisionsSummary(month, year),
     placeholderData: keepPreviousData,
   })
 
   const burnQuery = useQuery({
     queryKey: ['audr', 'burn', month, year, burnPage, debouncedSearch, markerFilter, sjodrFilter],
     queryFn: () =>
-      fetchCairnBurnPage({
+      fetchFjallBurnPage({
         month,
         year,
         page: burnPage,
@@ -121,14 +121,14 @@ export function AudrClient() {
   })
 
   const sjodrQuery = useQuery({
-    queryKey: ['cairn-sjodr'],
-    queryFn: fetchCairnSjodr,
+    queryKey: ['fjall-sjodr'],
+    queryFn: fetchFjallSjodr,
   })
 
   const supplylinesQuery = useQuery({
     queryKey: ['audr', 'supplylines', idunnActiveFilter],
     queryFn: () =>
-      fetchCairnSupplylinesFiltered({
+      fetchFjallSupplylinesFiltered({
         active: idunnActiveFilter !== 'all' ? idunnActiveFilter : undefined,
       }),
     placeholderData: keepPreviousData,
@@ -136,7 +136,7 @@ export function AudrClient() {
 
   const skattSupplylinesQuery = useQuery({
     queryKey: ['audr', 'supplylines-skatt'],
-    queryFn: () => fetchCairnSupplylinesFiltered({ active: 'true' }),
+    queryFn: () => fetchFjallSupplylinesFiltered({ active: 'true' }),
     placeholderData: keepPreviousData,
   })
 
@@ -284,7 +284,7 @@ export function AudrClient() {
   const skattBurnsQuery = useQuery({
     queryKey: ['audr', 'burn', month, year, 'skatt-inspector', selectedSkattMarkerId],
     queryFn: () =>
-      fetchCairnBurnPage({
+      fetchFjallBurnPage({
         month,
         year,
         page: 1,
@@ -489,7 +489,7 @@ export function AudrClient() {
       }
       inspector={
         catalog ? (
-          <CairnCatalogInspector
+          <FjallCatalogInspector
             activeTab={catalog.tab}
             onTabChange={(tab) =>
               setCatalog({

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
-import type { CairnMarkerView, CairnTrailView } from '@/lib/data-types'
+import type { FjallMarkerView, FjallTrailView } from '@/lib/data-types'
 import { MarkersBrowser, type MarkerParentContext } from '@/components/apps/markers-browser'
 import { MarkerInspector } from '@/components/apps/marker-inspector'
 import { TrailInspector } from '@/components/apps/trail-inspector'
@@ -10,31 +10,31 @@ import { Button } from '@/components/core/ui/button'
 import { ContextTabButton } from '@/components/core/ui/context-tab'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import {
-  createCairnMarker,
-  createCairnTrail,
-  deleteCairnMarker,
-  deleteCairnTrail,
-  updateCairnMarker,
-  updateCairnTrail,
+  createFjallMarker,
+  createFjallTrail,
+  deleteFjallMarker,
+  deleteFjallTrail,
+  updateFjallMarker,
+  updateFjallTrail,
 } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import { cn } from '@/lib/utils'
 
-export type CairnCatalogTab = 'greinar' | 'runir'
+export type FjallCatalogTab = 'greinar' | 'runir'
 
 function CatalogTabBar({
   active,
   onChange,
 }: {
-  active: CairnCatalogTab
-  onChange: (tab: CairnCatalogTab) => void
+  active: FjallCatalogTab
+  onChange: (tab: FjallCatalogTab) => void
 }) {
   const terms = useTerms()
   const GreinarIcon = ASGARD_ENTITY_ICONS.greinar
   const RunirIcon = ASGARD_ENTITY_ICONS.runir
   return (
-    <nav className="flex h-14 shrink-0 border-b border-border" aria-label="Cairn catalog">
+    <nav className="flex h-14 shrink-0 border-b border-border" aria-label="Fjall catalog">
       <ContextTabButton
         active={active === 'greinar'}
         onClick={() => onChange('greinar')}
@@ -61,7 +61,7 @@ function GreinarList({
   onSelect,
   onNew,
 }: {
-  trails: CairnTrailView[]
+  trails: FjallTrailView[]
   selectedId: string | null
   onSelect: (id: string) => void
   onNew: () => void
@@ -110,7 +110,7 @@ function GreinarList({
   )
 }
 
-export function CairnCatalogInspector({
+export function FjallCatalogInspector({
   activeTab,
   onTabChange,
   trails,
@@ -125,10 +125,10 @@ export function CairnCatalogInspector({
   lockedTab,
   rootMarkerPath = [],
 }: {
-  activeTab: CairnCatalogTab
-  onTabChange: (tab: CairnCatalogTab) => void
-  trails: CairnTrailView[]
-  markers: CairnMarkerView[]
+  activeTab: FjallCatalogTab
+  onTabChange: (tab: FjallCatalogTab) => void
+  trails: FjallTrailView[]
+  markers: FjallMarkerView[]
   selectedId: string | null
   markerPath: string[]
   markerParent: string | null
@@ -137,7 +137,7 @@ export function CairnCatalogInspector({
   onMarkerParentChange: (parent: string | null) => void
   onClearSelection: () => void
   /** When set, hide the tab bar and keep the inspector on this tab. */
-  lockedTab?: CairnCatalogTab
+  lockedTab?: FjallCatalogTab
   /** When set, Runir browsing cannot navigate above this path. */
   rootMarkerPath?: string[]
 }) {
@@ -163,30 +163,30 @@ export function CairnCatalogInspector({
       : null
   const isNewMarker = effectiveTab === 'runir' && selectedId === 'new'
 
-  const invalidateCairn = () => {
-    void queryClient.invalidateQueries({ queryKey: ['cairn-trails'] })
-    void queryClient.invalidateQueries({ queryKey: ['cairn-markers'] })
-    void queryClient.invalidateQueries({ queryKey: ['cairn-waypoints'] })
+  const invalidateFjall = () => {
+    void queryClient.invalidateQueries({ queryKey: ['fjall-trails'] })
+    void queryClient.invalidateQueries({ queryKey: ['fjall-markers'] })
+    void queryClient.invalidateQueries({ queryKey: ['fjall-waypoints'] })
   }
 
   const saveTrail = useMutation({
     mutationFn: async (name: string) => {
-      if (isNewTrail) return createCairnTrail({ name })
-      return updateCairnTrail(selectedId!, { name })
+      if (isNewTrail) return createFjallTrail({ name })
+      return updateFjallTrail(selectedId!, { name })
     },
     onSuccess: () => {
       toast.success(isNewTrail ? 'Grein created' : 'Grein saved')
-      invalidateCairn()
+      invalidateFjall()
       onClearSelection()
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Failed to save grein'),
   })
 
   const deleteTrail = useMutation({
-    mutationFn: () => deleteCairnTrail(selectedId!),
+    mutationFn: () => deleteFjallTrail(selectedId!),
     onSuccess: () => {
       toast.success('Grein deleted')
-      invalidateCairn()
+      invalidateFjall()
       onClearSelection()
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Failed to delete'),
@@ -194,22 +194,22 @@ export function CairnCatalogInspector({
 
   const saveMarker = useMutation({
     mutationFn: async (values: { name: string; color: string; icon: string | null }) => {
-      if (isNewMarker) return createCairnMarker(values)
-      return updateCairnMarker(selectedId!, values)
+      if (isNewMarker) return createFjallMarker(values)
+      return updateFjallMarker(selectedId!, values)
     },
     onSuccess: () => {
       toast.success(isNewMarker ? `${terms.runSingular} created` : `${terms.runSingular} saved`)
-      invalidateCairn()
+      invalidateFjall()
       onClearSelection()
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Failed to save run'),
   })
 
   const deleteMarker = useMutation({
-    mutationFn: () => deleteCairnMarker(selectedId!),
+    mutationFn: () => deleteFjallMarker(selectedId!),
     onSuccess: () => {
       toast.success(`${terms.runSingular} deleted`)
-      invalidateCairn()
+      invalidateFjall()
       onClearSelection()
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Failed to delete'),

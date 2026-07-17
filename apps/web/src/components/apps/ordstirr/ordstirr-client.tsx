@@ -8,7 +8,7 @@ import {
 } from '@/components/core/ui/studio-skeletons'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
-import { fetchCairnFullSettings, fetchCairnStatus } from '@/lib/data-api'
+import { fetchFjallFullSettings, fetchFjallStatus } from '@/lib/data-api'
 import { getManifestTerms } from '@/lib/manifest-terminology'
 import { useTerminology } from '@/hooks/use-terminology'
 import {
@@ -108,20 +108,20 @@ export function OrdstirrWorkspace() {
   const savedOriginsJson = useRef('')
 
   const statusQuery = useQuery({
-    queryKey: ['cairn-status'],
-    queryFn: fetchCairnStatus,
+    queryKey: ['fjall-status'],
+    queryFn: fetchFjallStatus,
     retry: false,
     staleTime: 60_000,
   })
 
   const settingsQuery = useQuery({
-    queryKey: ['cairn-full-settings'],
-    queryFn: fetchCairnFullSettings,
+    queryKey: ['fjall-full-settings'],
+    queryFn: fetchFjallFullSettings,
     enabled: statusQuery.data?.configured === true,
   })
 
   const manifestQuery = useQuery({
-    queryKey: ['cairn-manifest'],
+    queryKey: ['fjall-manifest'],
     queryFn: fetchManifest,
     enabled: statusQuery.data?.configured === true,
   })
@@ -307,7 +307,7 @@ export function OrdstirrWorkspace() {
   }
 
   function invalidateManifest() {
-    void queryClient.invalidateQueries({ queryKey: ['cairn-manifest'] })
+    void queryClient.invalidateQueries({ queryKey: ['fjall-manifest'] })
   }
 
   function scheduleOriginsSave(origins: ManifestOrigins) {

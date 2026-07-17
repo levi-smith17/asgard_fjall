@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { CairnTrailView } from '@/lib/data-types'
+import type { FjallTrailView } from '@/lib/data-types'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { Input } from '@/components/core/ui/input'
 import {
@@ -18,7 +18,7 @@ export function TrailInspector({
   onDelete,
   isSaving,
 }: {
-  trail: CairnTrailView | null
+  trail: FjallTrailView | null
   isNew: boolean
   title?: string
   onBack: () => void

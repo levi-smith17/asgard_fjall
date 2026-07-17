@@ -48,17 +48,17 @@ export function parsePublicManifestPath(pathname: string): PublicManifestPathMat
     return { username: asgard[1], view }
   }
 
-  // Legacy Cairn paths — keep parsing so redirects can locate the view.
-  const cairn = pathname.match(/^\/manifest\/([^/]+)(?:\/(journey|contact))?\/?$/)
-  if (cairn?.[1]) {
-    const view = (cairn[2] as 'journey' | 'contact' | undefined) ?? 'manifest'
-    return { username: cairn[1], view }
+  // Legacy Fjall paths — keep parsing so redirects can locate the view.
+  const legacy = pathname.match(/^\/manifest\/([^/]+)(?:\/(journey|contact))?\/?$/)
+  if (legacy?.[1]) {
+    const view = (legacy[2] as 'journey' | 'contact' | undefined) ?? 'manifest'
+    return { username: legacy[1], view }
   }
 
   return null
 }
 
-/** Map a legacy Cairn public URL onto the Asgard path (or null if not a public path). */
+/** Map a legacy Fjall public URL onto the Asgard path (or null if not a public path). */
 export function asgardPublicPathFromLegacy(pathname: string): string | null {
   const match = parsePublicManifestPath(pathname)
   if (!match) return null

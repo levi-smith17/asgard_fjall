@@ -1,4 +1,4 @@
-import type { CairnBurn, CairnCacheUtilization, CairnSjodrView } from '@/lib/data-types'
+import type { FjallBurn, FjallCacheUtilization, FjallSjodrView } from '@/lib/data-types'
 import { markerDisplayName, toMarkerId } from '@/lib/embedded-markers'
 
 export const AUDR_UNASSIGNED_SJODR = 'unassigned'
@@ -13,14 +13,14 @@ export function skattUtilizationColor(pct: number) {
   return 'bg-primary'
 }
 
-export function burnMarkerKey(burn: CairnBurn): string {
+export function burnMarkerKey(burn: FjallBurn): string {
   return toMarkerId(burn.markers[0]) ?? 'uncategorized'
 }
 
 export function markerShortLabel(
   markerId: string,
   markers: { id: string; name: string }[],
-  cache?: CairnCacheUtilization,
+  cache?: FjallCacheUtilization,
 ): string {
   if (markerId === 'uncategorized') return 'Uncategorized'
   const name =
@@ -31,8 +31,8 @@ export function markerShortLabel(
   return name.split('/').pop() ?? name
 }
 
-export function groupBurnsByMarker(burns: CairnBurn[]) {
-  const groups = new Map<string, CairnBurn[]>()
+export function groupBurnsByMarker(burns: FjallBurn[]) {
+  const groups = new Map<string, FjallBurn[]>()
   for (const burn of burns) {
     const key = burnMarkerKey(burn)
     const list = groups.get(key) ?? []
@@ -44,13 +44,13 @@ export function groupBurnsByMarker(burns: CairnBurn[]) {
 
 export type SurtrCanvasGroup = {
   markerId: string
-  burns: CairnBurn[]
-  cache?: CairnCacheUtilization
+  burns: FjallBurn[]
+  cache?: FjallCacheUtilization
 }
 
 export function buildSurtrCanvasGroups(
-  burns: CairnBurn[],
-  cacheUtilization: CairnCacheUtilization[],
+  burns: FjallBurn[],
+  cacheUtilization: FjallCacheUtilization[],
   markers: { id: string; name: string }[] = [],
 ): SurtrCanvasGroup[] {
   const burnGroups = groupBurnsByMarker(burns)
@@ -101,9 +101,9 @@ export type SurtrSjodrSection = {
 }
 
 export function buildSurtrSjodrSections(
-  burns: CairnBurn[],
-  cacheUtilization: CairnCacheUtilization[],
-  funds: CairnSjodrView[],
+  burns: FjallBurn[],
+  cacheUtilization: FjallCacheUtilization[],
+  funds: FjallSjodrView[],
   markers: { id: string; name: string }[] = [],
 ): SurtrSjodrSection[] {
   const fundNameById = new Map(funds.map((fund) => [fund.id, fund.name]))

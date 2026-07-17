@@ -3,11 +3,11 @@ import { Loader2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/core/ui/button'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { InspectorFormActions } from '@/components/core/ui/inspector-form-actions'
-import { deleteCairnBurn, deleteCairnCache, deleteCairnSupplyline } from '@/lib/data-api'
+import { deleteFjallBurn, deleteFjallCache, deleteFjallSupplyline } from '@/lib/data-api'
 import { markerShortLabel } from '@/lib/audr-format'
 import { useTerms } from '@/hooks/use-terminology'
 import type { Terms } from '@/lib/terminology'
-import type { CairnBurn, CairnCacheUtilization, CairnSupplyline } from '@/lib/data-types'
+import type { FjallBurn, FjallCacheUtilization, FjallSupplyline } from '@/lib/data-types'
 import type { AudrMarker, AudrSelection } from './audr-types'
 import { InlineBurnForm, type AudrSaveActionRef } from './inline-burn-form'
 import { InlineSupplylineForm } from './inline-supplyline-form'
@@ -39,11 +39,11 @@ export function AudrInspector({
   markers: AudrMarker[]
   month: number
   year: number
-  burn?: CairnBurn
-  supplyline?: CairnSupplyline
-  cache?: CairnCacheUtilization
-  skattSupplylines: CairnSupplyline[]
-  skattMarkerBurns?: CairnBurn[]
+  burn?: FjallBurn
+  supplyline?: FjallSupplyline
+  cache?: FjallCacheUtilization
+  skattSupplylines: FjallSupplyline[]
+  skattMarkerBurns?: FjallBurn[]
   targetMarkerIds: Set<string>
   onSaved: () => void
   onDeleted: () => void
@@ -219,7 +219,7 @@ export function AudrInspector({
             onConfirm={async () => {
               setDeleting(true)
               try {
-                await deleteCairnBurn(burn.id)
+                await deleteFjallBurn(burn.id)
                 setConfirmDelete(false)
                 onDeleted()
               } finally {
@@ -263,7 +263,7 @@ export function AudrInspector({
             onConfirm={async () => {
               setDeleting(true)
               try {
-                await deleteCairnSupplyline(supplyline.id)
+                await deleteFjallSupplyline(supplyline.id)
                 setConfirmDelete(false)
                 onDeleted()
               } finally {
@@ -312,7 +312,7 @@ export function AudrInspector({
             onConfirm={async () => {
               setDeleting(true)
               try {
-                await deleteCairnCache(cache.id)
+                await deleteFjallCache(cache.id)
                 setConfirmDelete(false)
                 onDeleted()
               } finally {
@@ -330,9 +330,9 @@ function inspectorTitle(
   selection: AudrSelection,
   markers: AudrMarker[],
   terms: Terms,
-  burn?: CairnBurn,
-  supplyline?: CairnSupplyline,
-  cache?: CairnCacheUtilization,
+  burn?: FjallBurn,
+  supplyline?: FjallSupplyline,
+  cache?: FjallCacheUtilization,
 ): string {
   switch (selection.kind) {
     case 'new-burn':

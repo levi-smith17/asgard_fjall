@@ -3,16 +3,16 @@ import { toast } from 'sonner'
 import { Input } from '@/components/core/ui/input'
 import { Button } from '@/components/core/ui/button'
 import { MarkerPicker } from '@/components/apps/marker-picker'
-import { saveCairnCache } from '@/lib/data-api'
+import { saveFjallCache } from '@/lib/data-api'
 import { useFormStatus } from '@/hooks/use-form-status'
-import type { CairnCacheUtilization } from '@/lib/data-types'
+import type { FjallCacheUtilization } from '@/lib/data-types'
 import { getDefaultSjodrId } from '@/lib/audr-default-sjodr'
 import { useTerms } from '@/hooks/use-terminology'
 import type { AudrSaveActionRef } from './inline-burn-form'
 import { FundPicker } from './fund-picker'
 
 interface Props {
-  cache?: CairnCacheUtilization
+  cache?: FjallCacheUtilization
   defaultMarkerId?: string
   markers: { id: string; name: string; color: string; icon?: string | null }[]
   month: number
@@ -56,7 +56,7 @@ export function InlineCacheForm({
       return
     }
     await handleSubmit(async () => {
-      await saveCairnCache({
+      await saveFjallCache({
         id: cache?.id,
         markerId,
         limit: parseFloat(limit),

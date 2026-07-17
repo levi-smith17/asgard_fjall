@@ -8,23 +8,23 @@ import { Switch } from '@/components/core/ui/switch'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import { ThingSettingRow } from '@/components/thing/thing-setting-row'
 import {
-  fetchCairnFullSettings,
-  fetchCairnStatus,
-  saveCairnListedSetting,
-  saveCairnPrivacySettings,
+  fetchFjallFullSettings,
+  fetchFjallStatus,
+  saveFjallListedSetting,
+  saveFjallPrivacySettings,
 } from '@/lib/data-api'
 
 export function ThingPrivacySettings() {
   const queryClient = useQueryClient()
   const statusQuery = useQuery({
-    queryKey: ['cairn-status'],
-    queryFn: fetchCairnStatus,
+    queryKey: ['fjall-status'],
+    queryFn: fetchFjallStatus,
     retry: false,
   })
 
   const settingsQuery = useQuery({
-    queryKey: ['cairn-full-settings'],
-    queryFn: fetchCairnFullSettings,
+    queryKey: ['fjall-full-settings'],
+    queryFn: fetchFjallFullSettings,
     enabled: statusQuery.data?.configured === true,
   })
 
@@ -45,15 +45,15 @@ export function ThingPrivacySettings() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      await saveCairnPrivacySettings({
+      await saveFjallPrivacySettings({
         manifestVisibility,
         contactFormEnabled,
       })
-      await saveCairnListedSetting(listedValue)
+      await saveFjallListedSetting(listedValue)
     },
     onSuccess: async () => {
       toast.success('Privacy settings saved')
-      await queryClient.invalidateQueries({ queryKey: ['cairn-full-settings'] })
+      await queryClient.invalidateQueries({ queryKey: ['fjall-full-settings'] })
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Failed to save'),
   })

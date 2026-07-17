@@ -2,7 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 
-/** Require fjall_session (passkey). Cognito is only for Cairn API data. */
+/** Require fjall_session (passkey). */
 export function RequireAuth() {
   const auth = useAuth()
   const location = useLocation()

@@ -1,4 +1,4 @@
-import { cairnFetch } from '@/lib/data-client'
+import { fjallFetch } from '@/lib/data-client'
 
 export type ThreadReply = {
   id: string
@@ -23,7 +23,7 @@ export type ThreadData = {
 }
 
 export async function getThread(token: string): Promise<ThreadData> {
-  return cairnFetch<ThreadData>(`/public/thread/${encodeURIComponent(token)}`)
+  return fjallFetch<ThreadData>(`/public/thread/${encodeURIComponent(token)}`)
 }
 
 export async function sendThreadReply(
@@ -31,7 +31,7 @@ export async function sendThreadReply(
   html: string,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    await cairnFetch<void>(`/public/thread/${encodeURIComponent(token)}/reply`, {
+    await fjallFetch<void>(`/public/thread/${encodeURIComponent(token)}/reply`, {
       method: 'POST',
       body: JSON.stringify({ body: html }),
     })

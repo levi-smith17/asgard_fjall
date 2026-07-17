@@ -1,15 +1,15 @@
-import type { CairnLogView } from '@/lib/data-api'
+import type { FjallLogView } from '@/lib/data-api'
 
 export type SogurLogbook = {
   id: string
   trailId: string
   name: string
-  logs: CairnLogView[]
+  logs: FjallLogView[]
   pageCount: number
   updatedAt: string
 }
 
-export function sortCairnLogs(logs: CairnLogView[]): CairnLogView[] {
+export function sortFjallLogs(logs: FjallLogView[]): FjallLogView[] {
   return [...logs].sort((a, b) => {
     if (a.position != null && b.position != null) return a.position - b.position
     if (a.position != null) return -1
@@ -18,8 +18,8 @@ export function sortCairnLogs(logs: CairnLogView[]): CairnLogView[] {
   })
 }
 
-export function groupLogsIntoLogbooks(logs: CairnLogView[]): SogurLogbook[] {
-  const map = new Map<string, CairnLogView[]>()
+export function groupLogsIntoLogbooks(logs: FjallLogView[]): SogurLogbook[] {
+  const map = new Map<string, FjallLogView[]>()
   for (const log of logs) {
     if (!log.trailId) continue
     const bucket = map.get(log.trailId)
@@ -29,7 +29,7 @@ export function groupLogsIntoLogbooks(logs: CairnLogView[]): SogurLogbook[] {
 
   const books: SogurLogbook[] = []
   for (const [trailId, trailLogs] of map.entries()) {
-    const sorted = sortCairnLogs(trailLogs)
+    const sorted = sortFjallLogs(trailLogs)
     const latest = sorted.reduce(
       (max, log) =>
         new Date(log.createdAt).getTime() > new Date(max).getTime() ? log.createdAt : max,
@@ -47,7 +47,7 @@ export function groupLogsIntoLogbooks(logs: CairnLogView[]): SogurLogbook[] {
   return books.sort((a, b) => a.name.localeCompare(b.name))
 }
 
-export function pagePreview(log: CairnLogView): string {
+export function pagePreview(log: FjallLogView): string {
   return (
     log.title ||
     log.content.replace(/<[^>]*>/g, '').trim().slice(0, 80) ||

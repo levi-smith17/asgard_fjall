@@ -24,16 +24,6 @@ variable "allowed_origins" {
   type        = list(string)
 }
 
-variable "cognito_user_pool_id" {
-  description = "Cognito user pool used for JWT validation (Cairn prod until cutover)."
-  type        = string
-}
-
-variable "cognito_client_id" {
-  description = "Cognito app client ID expected as JWT audience."
-  type        = string
-}
-
 variable "dynamodb_table_name" {
   type = string
 }

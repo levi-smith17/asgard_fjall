@@ -1,8 +1,8 @@
 /**
- * Map Summit/Cairn API paths onto Asgard Fjall HTTP routes.
+ * Map legacy Summit client API paths onto Asgard Fjall HTTP routes.
  * Keep client call sites on legacy names; rewrite at the fetch boundary.
  */
-export function mapCairnApiPathToAsgard(pathWithQuery: string): string {
+export function mapFjallApiPathToAsgard(pathWithQuery: string): string {
   const qIndex = pathWithQuery.indexOf('?')
   const path = qIndex >= 0 ? pathWithQuery.slice(0, qIndex) : pathWithQuery
   const query = qIndex >= 0 ? pathWithQuery.slice(qIndex) : ''

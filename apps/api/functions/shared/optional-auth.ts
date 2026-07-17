@@ -1,30 +1,17 @@
 import { GetCommand } from '@aws-sdk/lib-dynamodb'
 import type { APIGatewayProxyEventV2 } from 'aws-lambda'
 import { dynamo, TABLE_NAME } from './db'
+import { isApiToken, tokenLookupPk } from './api-token'
+import { isFjallSessionToken, parseFjallSessionToken } from './fjall-session'
 
-const region = process.env.AWS_REGION ?? 'us-east-2'
-const userPoolId = process.env.COGNITO_USER_POOL_ID
-const clientId = process.env.COGNITO_CLIENT_ID
-
-type JoseModule = typeof import('jose')
-type JoseJwks = ReturnType<JoseModule['createRemoteJWKSet']>
-
-let josePromise: Promise<JoseModule> | null = null
-let jwks: JoseJwks | null = null
-
-async function loadJose(): Promise<JoseModule> {
-  if (!josePromise) {
-    josePromise = new Function('return import("jose")')() as Promise<JoseModule>
-  }
-  return josePromise
-}
+const fjallSessionSecret = process.env.FJALL_SESSION_SECRET?.trim()
 
 function parseBearerToken(header: string | undefined): string | null {
   if (!header) return null
   const trimmed = header.trim()
   const bearerMatch = /^Bearer\s+(.+)$/i.exec(trimmed)
   if (bearerMatch?.[1]) return bearerMatch[1]
-  if (/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(trimmed)) {
+  if (/^csk_/.test(trimmed) || /^v1\./.test(trimmed)) {
     return trimmed
   }
   return null
@@ -51,26 +38,36 @@ function getAuthorizerSub(event: APIGatewayProxyEventV2): string | null {
   return null
 }
 
-async function verifyJwtSub(token: string): Promise<string | null> {
-  if (!userPoolId || !clientId) return null
-
-  try {
-    const jose = await loadJose()
-    if (!jwks) {
-      jwks = jose.createRemoteJWKSet(
-        new URL(`https://cognito-idp.${region}.amazonaws.com/${userPoolId}/.well-known/jwks.json`),
+async function verifyBearerSub(token: string): Promise<string | null> {
+  if (isApiToken(token)) {
+    try {
+      const lookup = await dynamo.send(
+        new GetCommand({
+          TableName: TABLE_NAME,
+          Key: {
+            pk: tokenLookupPk(token),
+            sk: 'META',
+          },
+        }),
       )
+      const userId = lookup.Item?.userId
+      return typeof userId === 'string' && userId ? userId : null
+    } catch {
+      return null
     }
-
-    const { payload } = await jose.jwtVerify(token, jwks, {
-      issuer: `https://cognito-idp.${region}.amazonaws.com/${userPoolId}`,
-      audience: clientId,
-    })
-
-    return typeof payload.sub === 'string' ? payload.sub : null
-  } catch {
-    return null
   }
+
+  if (isFjallSessionToken(token)) {
+    if (!fjallSessionSecret) return null
+    try {
+      const user = parseFjallSessionToken(fjallSessionSecret, token)
+      return user.sub
+    } catch {
+      return null
+    }
+  }
+
+  return null
 }
 
 /** Best-effort caller id for public routes (authorization_type NONE). */
@@ -81,14 +78,16 @@ export async function getOptionalUserId(event: APIGatewayProxyEventV2): Promise<
   const token = parseBearerToken(event.headers?.authorization ?? event.headers?.Authorization)
   if (!token) return null
 
-  return verifyJwtSub(token)
+  return verifyBearerSub(token)
 }
 
 export async function isUserAdmin(userId: string): Promise<boolean> {
-  const result = await dynamo.send(new GetCommand({
-    TableName: TABLE_NAME,
-    Key: { pk: `USER#${userId}`, sk: 'PROFILE' },
-  }))
+  const result = await dynamo.send(
+    new GetCommand({
+      TableName: TABLE_NAME,
+      Key: { pk: `USER#${userId}`, sk: 'PROFILE' },
+    }),
+  )
   return Boolean(result.Item?.isAdmin)
 }
 

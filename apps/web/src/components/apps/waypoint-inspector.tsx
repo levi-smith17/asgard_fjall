@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { CairnMarkerView, CairnTrailView, CairnWaypointView } from '@/lib/data-types'
+import type { FjallMarkerView, FjallTrailView, FjallWaypointView } from '@/lib/data-types'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { Input } from '@/components/core/ui/input'
 import {
@@ -8,7 +8,7 @@ import {
 } from '@/components/core/ui/inspector-form-actions'
 import { MarkerPicker } from '@/components/apps/marker-picker'
 import { Select } from '@/components/core/ui/select'
-import { fetchCairnWaypointMeta } from '@/lib/data-api'
+import { fetchFjallWaypointMeta } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 
@@ -20,7 +20,7 @@ export type WaypointDraft = {
   markerIds: string[]
 }
 
-function draftFromWaypoint(waypoint: CairnWaypointView | null): WaypointDraft {
+function draftFromWaypoint(waypoint: FjallWaypointView | null): WaypointDraft {
   return {
     title: waypoint?.title ?? '',
     url: waypoint?.url ?? '',
@@ -44,10 +44,10 @@ export function WaypointInspector({
   lockedTrailId,
   showBack = false,
 }: {
-  waypoint: CairnWaypointView | null
+  waypoint: FjallWaypointView | null
   isNew: boolean
-  trails: CairnTrailView[]
-  markers: CairnMarkerView[]
+  trails: FjallTrailView[]
+  markers: FjallMarkerView[]
   onClose: () => void
   onSave: (draft: WaypointDraft) => Promise<void>
   onDelete: () => Promise<void>
@@ -90,7 +90,7 @@ export function WaypointInspector({
     if (!url || draft.title.trim()) return
     setFetchingMeta(true)
     try {
-      const meta = await fetchCairnWaypointMeta(url)
+      const meta = await fetchFjallWaypointMeta(url)
       setDraft((current) => ({
         ...current,
         title: meta.title ?? current.title,

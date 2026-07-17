@@ -1,7 +1,7 @@
 const BILLING_CYCLES = ['WEEKLY', 'BIWEEKLY', 'MONTHLY', 'QUARTERLY', 'ANNUALLY'] as const
-export type CairnBillingCycle = (typeof BILLING_CYCLES)[number]
+export type FjallBillingCycle = (typeof BILLING_CYCLES)[number]
 
-function isBillingCycle(value: string): value is CairnBillingCycle {
+function isBillingCycle(value: string): value is FjallBillingCycle {
   return (BILLING_CYCLES as readonly string[]).includes(value)
 }
 
@@ -18,7 +18,7 @@ function parseRenewalDate(nextRenewal: string): Date {
   return new Date(nextRenewal)
 }
 
-function advanceRenewal(date: Date, billingCycle: CairnBillingCycle): void {
+function advanceRenewal(date: Date, billingCycle: FjallBillingCycle): void {
   switch (billingCycle) {
     case 'WEEKLY': date.setDate(date.getDate() + 7); break
     case 'BIWEEKLY': date.setDate(date.getDate() + 14); break

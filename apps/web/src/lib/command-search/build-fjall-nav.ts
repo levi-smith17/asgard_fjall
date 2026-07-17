@@ -6,7 +6,7 @@ function thingSectionPath(section: string): string {
   return `/thing?section=${encodeURIComponent(section)}`
 }
 
-/** Static navigation + Thing settings aliases (Cairn surfaces only). */
+/** Static navigation + Thing settings aliases (Fjall surfaces only). */
 export function buildFjallNavigationEntries(terms: Terms): CommandSearchEntry[] {
   const product = terms.productName
   const nav = getFjallNavItems(terms).map((item): CommandSearchEntry => ({

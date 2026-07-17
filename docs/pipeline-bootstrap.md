@@ -65,6 +65,6 @@ Then re-run the failed workflow (or push an empty commit on `main`).
 
 Web **deploy** (build → S3 → invalidate) and API **deploy** (esbuild → Lambda UpdateFunctionCode) are separate workflows once the env secrets above are set.
 
-## Optional next (Cairn CORS / Cognito)
+## Optional next (API CORS)
 
-Still required for live Basecamp data from the public site — see `docs/cairn-integration.md`.
+Ensure Fjall web origins are allowed on the HTTP API — see `docs/fjall-api-auth.md`.

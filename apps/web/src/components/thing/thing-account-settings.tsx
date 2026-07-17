@@ -9,11 +9,11 @@ import { Switch } from '@/components/core/ui/switch'
 import { ThingSettingRow } from '@/components/thing/thing-setting-row'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import {
-  fetchCairnFullSettings,
-  fetchCairnStatus,
-  saveCairnAccountSettings,
-  saveCairnAppearanceSettings,
-  saveCairnPrivacySettings,
+  fetchFjallFullSettings,
+  fetchFjallStatus,
+  saveFjallAccountSettings,
+  saveFjallAppearanceSettings,
+  saveFjallPrivacySettings,
 } from '@/lib/data-api'
 
 const LANDING_PAGES = [
@@ -26,14 +26,14 @@ const LANDING_PAGES = [
 export function ThingAccountSettings() {
   const queryClient = useQueryClient()
   const statusQuery = useQuery({
-    queryKey: ['cairn-status'],
-    queryFn: fetchCairnStatus,
+    queryKey: ['fjall-status'],
+    queryFn: fetchFjallStatus,
     retry: false,
   })
 
   const settingsQuery = useQuery({
-    queryKey: ['cairn-full-settings'],
-    queryFn: fetchCairnFullSettings,
+    queryKey: ['fjall-full-settings'],
+    queryFn: fetchFjallFullSettings,
     enabled: statusQuery.data?.configured === true,
   })
 
@@ -69,27 +69,27 @@ export function ThingAccountSettings() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       await Promise.all([
-        saveCairnAccountSettings({
+        saveFjallAccountSettings({
           name: name.trim() || null,
           image: image.trim() || null,
           username: account?.username ?? null,
           customDomain: account?.customDomain ?? null,
           timeFormat,
         }),
-        saveCairnAppearanceSettings({
+        saveFjallAppearanceSettings({
           sidebarDefault,
           defaultLandingPage,
           dateFormat,
           publicDefaultTheme,
           publicDefaultPalette,
         }),
-        saveCairnPrivacySettings({ contactFormEnabled }),
+        saveFjallPrivacySettings({ contactFormEnabled }),
       ])
     },
     onSuccess: async () => {
       toast.success('Account saved')
-      await queryClient.invalidateQueries({ queryKey: ['cairn-full-settings'] })
-      await queryClient.invalidateQueries({ queryKey: ['cairn-profile'] })
+      await queryClient.invalidateQueries({ queryKey: ['fjall-full-settings'] })
+      await queryClient.invalidateQueries({ queryKey: ['fjall-profile'] })
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Failed to save'),
   })

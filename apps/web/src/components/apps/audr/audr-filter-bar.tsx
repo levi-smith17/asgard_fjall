@@ -17,7 +17,7 @@ import {
 } from '@/lib/audr-format'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
-import type { CairnSjodrView } from '@/lib/data-types'
+import type { FjallSjodrView } from '@/lib/data-types'
 import type { AudrMarker } from './audr-types'
 import { resolveSjodrColor } from '@/lib/sjodr-color'
 
@@ -53,7 +53,7 @@ export function AudrFilterBar({
   groupBy: AudrCanvasGroupBy
   onGroupByChange: (value: AudrCanvasGroupBy) => void
   markers: AudrMarker[]
-  funds: CairnSjodrView[]
+  funds: FjallSjodrView[]
   filtersActive: boolean
   onClearFilters: () => void
   onBringSkatt: () => void

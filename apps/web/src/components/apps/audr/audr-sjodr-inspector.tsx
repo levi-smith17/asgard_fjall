@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
-import type { CairnCacheUtilization, CairnSjodrView, CairnSupplyline } from '@/lib/data-types'
+import type { FjallCacheUtilization, FjallSjodrView, FjallSupplyline } from '@/lib/data-types'
 import { Button } from '@/components/core/ui/button'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { Input } from '@/components/core/ui/input'
@@ -16,10 +16,10 @@ import { PRESET_COLORS } from '@/components/apps/markers-list'
 import { SwitchField } from '@/components/core/ui/switch-field'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import {
-  createCairnSjodr,
-  deleteCairnSjodr,
-  fetchCairnSjodr,
-  updateCairnSjodr,
+  createFjallSjodr,
+  deleteFjallSjodr,
+  fetchFjallSjodr,
+  updateFjallSjodr,
 } from '@/lib/data-api'
 import {
   getDefaultSjodrId,
@@ -43,8 +43,8 @@ export function AudrSjodrInspector({
 }: {
   month: number
   year: number
-  cacheUtilization: CairnCacheUtilization[]
-  supplylines: CairnSupplyline[]
+  cacheUtilization: FjallCacheUtilization[]
+  supplylines: FjallSupplyline[]
   selectedId: string | null
   onSelectId: (id: string | null) => void
 }) {
@@ -54,16 +54,16 @@ export function AudrSjodrInspector({
   const [defaultFundId, setDefaultFundIdState] = useState(() => getDefaultSjodrId())
 
   const sjodrQuery = useQuery({
-    queryKey: ['cairn-sjodr'],
-    queryFn: fetchCairnSjodr,
+    queryKey: ['fjall-sjodr'],
+    queryFn: fetchFjallSjodr,
   })
 
   const funds = sjodrQuery.data ?? []
   const isNew = selectedId === 'new'
   const selected = !isNew && selectedId ? (funds.find((fund) => fund.id === selectedId) ?? null) : null
 
-  const writeFunds = (next: CairnSjodrView[]) => {
-    queryClient.setQueryData<CairnSjodrView[]>(['cairn-sjodr'], next)
+  const writeFunds = (next: FjallSjodrView[]) => {
+    queryClient.setQueryData<FjallSjodrView[]>(['fjall-sjodr'], next)
   }
 
   const invalidateAudr = () => {
@@ -83,12 +83,12 @@ export function AudrSjodrInspector({
         color: draft.color.trim() || null,
       }
       const fund = isNew
-        ? await createCairnSjodr(payload)
-        : await updateCairnSjodr(selectedId!, payload)
+        ? await createFjallSjodr(payload)
+        : await updateFjallSjodr(selectedId!, payload)
       return { fund, isDefault: draft.isDefault }
     },
     onSuccess: ({ fund, isDefault }) => {
-      const existing = queryClient.getQueryData<CairnSjodrView[]>(['cairn-sjodr']) ?? []
+      const existing = queryClient.getQueryData<FjallSjodrView[]>(['fjall-sjodr']) ?? []
       const next = isNew
         ? [...existing, fund].sort((a, b) =>
             a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
@@ -111,9 +111,9 @@ export function AudrSjodrInspector({
   })
 
   const deleteMutation = useMutation({
-    mutationFn: () => deleteCairnSjodr(selectedId!),
+    mutationFn: () => deleteFjallSjodr(selectedId!),
     onSuccess: () => {
-      const existing = queryClient.getQueryData<CairnSjodrView[]>(['cairn-sjodr']) ?? []
+      const existing = queryClient.getQueryData<FjallSjodrView[]>(['fjall-sjodr']) ?? []
       writeFunds(existing.filter((fund) => fund.id !== selectedId))
       if (selectedId && isDefaultSjodrId(selectedId)) {
         setDefaultSjodrId(null)
@@ -226,12 +226,12 @@ function SjodrCard({
   supplylines,
   onEdit,
 }: {
-  fund: CairnSjodrView
+  fund: FjallSjodrView
   month: number
   year: number
   isDefault: boolean
-  caches: CairnCacheUtilization[]
-  supplylines: CairnSupplyline[]
+  caches: FjallCacheUtilization[]
+  supplylines: FjallSupplyline[]
   onEdit: () => void
 }) {
   const terms = useTerms()
@@ -311,7 +311,7 @@ function SjodrForm({
   onSave,
   onDelete,
 }: {
-  fund: CairnSjodrView | null
+  fund: FjallSjodrView | null
   isNew: boolean
   isDefault: boolean
   isSaving: boolean

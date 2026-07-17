@@ -1,7 +1,7 @@
-import { CAIRN_API_URL } from '@/lib/config'
-import { mapCairnApiPathToAsgard } from '@/lib/map-api-path'
+import { FJALL_API_URL } from '@/lib/config'
+import { mapFjallApiPathToAsgard } from '@/lib/map-api-path'
 
-export class CairnApiError extends Error {
+export class FjallApiError extends Error {
   status: number
   constructor(status: number, message: string) {
     super(message)
@@ -9,16 +9,16 @@ export class CairnApiError extends Error {
   }
 }
 
-export type CairnAuthProvider = () => Promise<string | null>
+export type FjallAuthProvider = () => Promise<string | null>
 
-let authProvider: CairnAuthProvider = async () => null
+let authProvider: FjallAuthProvider = async () => null
 
-/** Wire Cognito (or BFF session) token retrieval here. */
-export function setCairnAuthProvider(provider: CairnAuthProvider) {
+/** Wire passkey session token retrieval here. */
+export function setFjallAuthProvider(provider: FjallAuthProvider) {
   authProvider = provider
 }
 
-export async function cairnFetch<T>(path: string, init?: RequestInit): Promise<T> {
+export async function fjallFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const token = await authProvider()
   const headers = new Headers(init?.headers)
   headers.set('Accept', 'application/json')
@@ -27,8 +27,8 @@ export async function cairnFetch<T>(path: string, init?: RequestInit): Promise<T
     headers.set('Content-Type', 'application/json')
   }
 
-  const mappedPath = mapCairnApiPathToAsgard(path)
-  const response = await fetch(`${CAIRN_API_URL}${mappedPath}`, {
+  const mappedPath = mapFjallApiPathToAsgard(path)
+  const response = await fetch(`${FJALL_API_URL}${mappedPath}`, {
     ...init,
     headers,
     credentials: 'omit',
@@ -36,12 +36,11 @@ export async function cairnFetch<T>(path: string, init?: RequestInit): Promise<T
 
   if (!response.ok) {
     const text = await response.text().catch(() => '')
-    throw new CairnApiError(response.status, text || response.statusText)
+    throw new FjallApiError(response.status, text || response.statusText)
   }
 
   if (response.status === 204) return undefined as T
 
-  // Cairn often returns empty bodies on writes (even with 200).
   const text = await response.text().catch(() => '')
   if (!text.trim()) return undefined as T
 
@@ -52,9 +51,9 @@ export async function cairnFetch<T>(path: string, init?: RequestInit): Promise<T
   return json as T
 }
 
-export async function fetchCairnHealth(): Promise<{ ok: boolean; status: number }> {
+export async function fetchFjallHealth(): Promise<{ ok: boolean; status: number }> {
   try {
-    const response = await fetch(`${CAIRN_API_URL}/health`, { method: 'GET' })
+    const response = await fetch(`${FJALL_API_URL}/health`, { method: 'GET' })
     return { ok: response.ok, status: response.status }
   } catch {
     return { ok: false, status: 0 }

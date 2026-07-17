@@ -4,26 +4,26 @@ import { Button } from '@/components/core/ui/button'
 import { Select } from '@/components/core/ui/select'
 import { Switch } from '@/components/core/ui/switch'
 import { ThingSettingRow } from '@/components/thing/thing-setting-row'
-import { saveCairnSignalSettings, type CairnSignalSettings } from '@/lib/data-api'
+import { saveFjallSignalSettings, type FjallSignalSettings } from '@/lib/data-api'
 
 export function SendibodSettingsForm({
   initialSettings,
   onDone,
 }: {
-  initialSettings: CairnSignalSettings
+  initialSettings: FjallSignalSettings
   onDone?: () => void
 }) {
   const queryClient = useQueryClient()
-  const [values, setValues] = useState<CairnSignalSettings>(initialSettings)
+  const [values, setValues] = useState<FjallSignalSettings>(initialSettings)
 
   useEffect(() => {
     setValues(initialSettings)
   }, [initialSettings])
 
   const saveMutation = useMutation({
-    mutationFn: () => saveCairnSignalSettings(values),
+    mutationFn: () => saveFjallSignalSettings(values),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['cairn-full-settings'] })
+      await queryClient.invalidateQueries({ queryKey: ['fjall-full-settings'] })
       onDone?.()
     },
   })

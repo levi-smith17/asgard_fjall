@@ -42,7 +42,7 @@ export type PublicOrdstirrRailGroup = {
   sections: PublicOrdstirrRailSection[]
 }
 
-/** Public URL hashes always use Standard English slugs (never Asgard/Cairn terms). */
+/** Public URL hashes always use Standard English slugs (never Asgard/Fjall terms). */
 export const PUBLIC_SECTION_HASH_BY_ID: Record<PublicOrdstirrRailSectionId, string> = {
   origins: 'intro',
   expeditions: 'work-experience',

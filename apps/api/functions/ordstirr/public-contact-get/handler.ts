@@ -4,6 +4,7 @@ import { dynamo, TABLE_NAME } from '../../shared/db'
 import { toApiGatewayResponse, badRequest, forbidden, notFound, serverError } from '../../shared/response'
 import { resolveRequesterAccess } from '../../shared/optional-auth'
 import { canViewPublicManifest, getManifestVisibility } from '../../shared/ordstirr-visibility'
+import { normalizeDefaultTerminology } from '../../shared/terminology'
 
 export const handler = async (
     event: APIGatewayProxyEventV2
@@ -56,7 +57,9 @@ export const handler = async (
                     name: profile.name ?? null,
                     email: profile.email ?? null,
                     image: profile.image ?? null,
-                    defaultTerminology: settings.defaultTerminology ?? profile.defaultTerminology ?? 'STANDARD',
+                    defaultTerminology: normalizeDefaultTerminology(
+                        settings.defaultTerminology ?? profile.defaultTerminology,
+                    ),
                     defaultTheme:
                         settings.appearance?.publicDefaultTheme ??
                         settings.defaultTheme ??

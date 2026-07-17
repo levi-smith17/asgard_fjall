@@ -1,10 +1,10 @@
 import { Receipt } from 'lucide-react'
 import { MarkerBadge } from '@/components/apps/marker-badge'
 import { liveMarkersById, toDisplayMarker } from '@/lib/embedded-markers'
-import { fetchCairnBurnReceiptUrl } from '@/lib/data-api'
+import { fetchFjallBurnReceiptUrl } from '@/lib/data-api'
 import { audrFmt } from '@/lib/audr-format'
 import { cn } from '@/lib/utils'
-import type { CairnBurn } from '@/lib/data-types'
+import type { FjallBurn } from '@/lib/data-types'
 import type { AudrMarker } from './audr-types'
 
 export function AudrBurnRow({
@@ -15,7 +15,7 @@ export function AudrBurnRow({
   fundName,
   markers = [],
 }: {
-  burn: CairnBurn
+  burn: FjallBurn
   selected: boolean
   onSelect: () => void
   /** Colored Sjodr swatch after the name; omit to hide. */
@@ -68,7 +68,7 @@ export function AudrBurnRow({
           onClick={async (e) => {
             e.stopPropagation()
             try {
-              const url = await fetchCairnBurnReceiptUrl(burn.receiptUrl!)
+              const url = await fetchFjallBurnReceiptUrl(burn.receiptUrl!)
               window.open(url, '_blank')
             } catch {
               /* ignore */

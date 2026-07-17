@@ -20,8 +20,8 @@ import {
   Wallet,
 } from 'lucide-react'
 import {
-  CairnCatalogInspector,
-  type CairnCatalogTab,
+  FjallCatalogInspector,
+  type FjallCatalogTab,
 } from '@/components/apps/catalog-inspector'
 import { dataQueryErrorProps } from '@/components/apps/data-not-configured'
 import { WaypointInspector } from '@/components/apps/waypoint-inspector'
@@ -36,20 +36,21 @@ import { useAuth } from '@/hooks/use-auth'
 import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
 import { useTerminology, useTerms } from '@/hooks/use-terminology'
 import {
-  createCairnWaypoint,
-  deleteCairnWaypoint,
-  fetchCairnItineraryEvents,
-  fetchCairnLogs,
-  fetchCairnMarkers,
-  fetchCairnProvisionsSummary,
-  fetchCairnSignals,
-  fetchCairnStarfieldNetworks,
-  fetchCairnStatus,
-  fetchCairnTrails,
-  fetchCairnWaypoints,
-  updateCairnWaypoint,
+  createFjallWaypoint,
+  deleteFjallWaypoint,
+  fetchFjallItineraryEvents,
+  fetchFjallLogs,
+  fetchFjallMarkers,
+  fetchProvisionsSummary,
+  fetchFjallSignals,
+  fetchFjallStarfieldNetworks,
+  fetchFjallStatus,
+  fetchFjallTrails,
+  fetchFjallWaypoints,
+  updateFjallWaypoint,
 } from '@/lib/data-api'
-import { extractCairnId, toMarkerView, toTrailView, toWaypointView } from '@/lib/data-format'
+import { extractEntityId, toMarkerView, toTrailView, toWaypointView } from '@/lib/data-format'
+import { findAudrTrailId, isUnderAudrMarkerRoot } from '@/lib/audr-marker-root'
 import { buildManifestSectionCards } from '@/lib/hlidskjalf-manifest-cards'
 import { fetchManifest } from '@/lib/manifest-api'
 import { getManifestTerms } from '@/lib/terminology'
@@ -180,8 +181,8 @@ function HlidskjalfSnapshots() {
   const year = now.getFullYear()
 
   const statusQuery = useQuery({
-    queryKey: ['cairn-status'],
-    queryFn: fetchCairnStatus,
+    queryKey: ['fjall-status'],
+    queryFn: fetchFjallStatus,
     retry: false,
     staleTime: 60_000,
   })
@@ -189,28 +190,28 @@ function HlidskjalfSnapshots() {
   const configured = statusQuery.data?.configured === true
 
   const provisionsQuery = useQuery({
-    queryKey: ['cairn-snapshot-provisions', month, year],
-    queryFn: () => fetchCairnProvisionsSummary(month, year),
+    queryKey: ['fjall-snapshot-provisions', month, year],
+    queryFn: () => fetchProvisionsSummary(month, year),
     enabled: configured,
     staleTime: 60_000,
   })
 
   const itineraryQuery = useQuery({
-    queryKey: ['cairn-snapshot-itinerary'],
-    queryFn: () => fetchCairnItineraryEvents(),
+    queryKey: ['fjall-snapshot-itinerary'],
+    queryFn: () => fetchFjallItineraryEvents(),
     enabled: configured,
     staleTime: 60_000,
   })
 
   const signalsQuery = useQuery({
-    queryKey: ['cairn-snapshot-signals'],
-    queryFn: fetchCairnSignals,
+    queryKey: ['fjall-snapshot-signals'],
+    queryFn: fetchFjallSignals,
     enabled: configured,
     staleTime: 60_000,
   })
 
   const manifestQuery = useQuery({
-    queryKey: ['cairn-snapshot-manifest'],
+    queryKey: ['fjall-snapshot-manifest'],
     queryFn: fetchManifest,
     enabled: configured,
     staleTime: 60_000,
@@ -479,38 +480,38 @@ function OrdstirrSection({
 function HlidskjalfCanvas() {
   const terms = useTerms()
   const auth = useAuth()
-  const enabled = Boolean(auth.cairnUser)
+  const enabled = Boolean(auth.dataUser)
 
   const logsQuery = useQuery({
-    queryKey: ['cairn-logs-hlidskjalf'],
-    queryFn: fetchCairnLogs,
+    queryKey: ['fjall-logs-hlidskjalf'],
+    queryFn: fetchFjallLogs,
     enabled,
     retry: false,
   })
 
   const trailsQuery = useQuery({
-    queryKey: ['cairn-trails'],
-    queryFn: fetchCairnTrails,
+    queryKey: ['fjall-trails'],
+    queryFn: fetchFjallTrails,
     enabled,
     retry: false,
   })
 
   const manifestQuery = useQuery({
-    queryKey: ['cairn-manifest'],
+    queryKey: ['fjall-manifest'],
     queryFn: fetchManifest,
     enabled,
     retry: false,
   })
 
   const networksQuery = useQuery({
-    queryKey: ['cairn-starfield-networks'],
-    queryFn: fetchCairnStarfieldNetworks,
+    queryKey: ['fjall-starfield-networks'],
+    queryFn: fetchFjallStarfieldNetworks,
     enabled,
     retry: false,
   })
 
   const trails = trailsQuery.data ?? []
-  const trailsById = new Map(trails.map((trail) => [extractCairnId(trail.sk), trail.name]))
+  const trailsById = new Map(trails.map((trail) => [extractEntityId(trail.sk), trail.name]))
   const logs = logsQuery.data ?? []
 
   const logbooks = (() => {
@@ -596,28 +597,28 @@ export function HlidskjalfPage() {
   const [inspectorPinned, setInspectorPinned] = useInspectorPinned()
 
   const laufarId = searchParams.get('laufar')
-  const catalogTab = (searchParams.get('catalog') as CairnCatalogTab | null) ?? null
+  const catalogTab = (searchParams.get('catalog') as FjallCatalogTab | null) ?? null
   const catalogId = searchParams.get('catalogId')
   const markerPath = parseMarkerPath(searchParams.get('markerPath'))
   const markerParent = searchParams.get('markerParent')
 
   const waypointsQuery = useQuery({
-    queryKey: ['cairn-waypoints'],
-    queryFn: fetchCairnWaypoints,
+    queryKey: ['fjall-waypoints'],
+    queryFn: fetchFjallWaypoints,
     retry: false,
   })
   const trailsQuery = useQuery({
-    queryKey: ['cairn-trails'],
-    queryFn: fetchCairnTrails,
+    queryKey: ['fjall-trails'],
+    queryFn: fetchFjallTrails,
     retry: false,
   })
   const markersQuery = useQuery({
-    queryKey: ['cairn-markers'],
-    queryFn: fetchCairnMarkers,
+    queryKey: ['fjall-markers'],
+    queryFn: fetchFjallMarkers,
     retry: false,
   })
 
-  const cairnErrorProps = useMemo(() => {
+  const dataErrorProps = useMemo(() => {
     const error = waypointsQuery.error ?? trailsQuery.error ?? markersQuery.error
     return dataQueryErrorProps(error, 'Data request failed')
   }, [markersQuery.error, trailsQuery.error, waypointsQuery.error])
@@ -627,25 +628,26 @@ export function HlidskjalfPage() {
     [trailsQuery.data],
   )
   const trailsById = useMemo(() => new Map(trails.map((trail) => [trail.id, trail])), [trails])
-  const provisionsTrailId = useMemo(
-    () => trails.find((trail) => trail.name === terms.provisionsGroup)?.id ?? null,
-    [trails, terms.provisionsGroup],
-  )
-  /** Greinar available on Hlidskjalf — Provisions is managed on Audr. */
+  const audrTrailId = useMemo(() => findAudrTrailId(trails), [trails])
+  /** Greinar available on Hlidskjalf — Audr is managed on the Audr page. */
   const hlidskjalfTrails = useMemo(
-    () => (provisionsTrailId ? trails.filter((trail) => trail.id !== provisionsTrailId) : trails),
-    [trails, provisionsTrailId],
+    () => (audrTrailId ? trails.filter((trail) => trail.id !== audrTrailId) : trails),
+    [trails, audrTrailId],
   )
   const markers = useMemo(
     () => (markersQuery.data ?? []).map(toMarkerView).sort((a, b) => a.name.localeCompare(b.name)),
     [markersQuery.data],
   )
+  const hlidskjalfMarkers = useMemo(
+    () => markers.filter((marker) => !isUnderAudrMarkerRoot(marker.name)),
+    [markers],
+  )
 
   const waypoints = useMemo(() => {
     let all = (waypointsQuery.data ?? []).map((waypoint) => toWaypointView(waypoint, trailsById))
 
-    if (provisionsTrailId) {
-      all = all.filter((waypoint) => waypoint.trailId !== provisionsTrailId)
+    if (audrTrailId) {
+      all = all.filter((waypoint) => waypoint.trailId !== audrTrailId)
     }
 
     if (greinFilterId === LAUFAR_UNASSIGNED_GREIN) {
@@ -672,7 +674,7 @@ export function HlidskjalfPage() {
   }, [
     greinFilterId,
     laufarFilter,
-    provisionsTrailId,
+    audrTrailId,
     runirFilterId,
     trailsById,
     waypointsQuery.data,
@@ -713,7 +715,7 @@ export function HlidskjalfPage() {
     [searchParams, setSearchParams],
   )
 
-  const clearCairnSelection = useCallback(() => {
+  const clearCatalogSelection = useCallback(() => {
     patchParams((params) => {
       params.delete('laufar')
       params.delete('catalog')
@@ -736,8 +738,8 @@ export function HlidskjalfPage() {
     [patchParams],
   )
 
-  const openCairnCatalog = useCallback(
-    (tab: CairnCatalogTab = 'greinar') => {
+  const openCatalog = useCallback(
+    (tab: FjallCatalogTab = 'greinar') => {
       patchParams((params) => {
         params.set('catalog', tab)
         params.delete('laufar')
@@ -749,8 +751,8 @@ export function HlidskjalfPage() {
     [patchParams],
   )
 
-  const startAddCairnEntity = useCallback(
-    (tab: CairnCatalogTab) => {
+  const startAddCatalogEntity = useCallback(
+    (tab: FjallCatalogTab) => {
       patchParams((params) => {
         params.set('catalog', tab)
         params.set('catalogId', 'new')
@@ -764,8 +766,8 @@ export function HlidskjalfPage() {
 
   const dismissInspector = useCallback(() => {
     if (inspectorPinned) return
-    clearCairnSelection()
-  }, [clearCairnSelection, inspectorPinned])
+    clearCatalogSelection()
+  }, [clearCatalogSelection, inspectorPinned])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -776,10 +778,10 @@ export function HlidskjalfPage() {
   }, [dismissInspector])
 
   useEffect(() => {
-    if (provisionsTrailId && greinFilterId === provisionsTrailId) {
+    if (audrTrailId && greinFilterId === audrTrailId) {
       setGreinFilterId(LAUFAR_FILTER_ALL)
     }
-  }, [greinFilterId, provisionsTrailId])
+  }, [greinFilterId, audrTrailId])
 
   const handleCanvasPointerDown = (event: React.PointerEvent) => {
     if (inspectorPinned) return
@@ -804,13 +806,13 @@ export function HlidskjalfPage() {
         trailId: values.trailId || null,
         markerIds: values.markerIds,
       }
-      if (isNewLaufar) return createCairnWaypoint(payload)
-      return updateCairnWaypoint(laufarId!, payload)
+      if (isNewLaufar) return createFjallWaypoint(payload)
+      return updateFjallWaypoint(laufarId!, payload)
     },
     onSuccess: () => {
       toast.success(isNewLaufar ? `${terms.laufarSingular} created` : `${terms.laufarSingular} saved`)
-      void queryClient.invalidateQueries({ queryKey: ['cairn-waypoints'] })
-      if (isNewLaufar) clearCairnSelection()
+      void queryClient.invalidateQueries({ queryKey: ['fjall-waypoints'] })
+      if (isNewLaufar) clearCatalogSelection()
     },
     onError: (error) =>
       toast.error(
@@ -821,11 +823,11 @@ export function HlidskjalfPage() {
   })
 
   const deleteWaypointMutation = useMutation({
-    mutationFn: () => deleteCairnWaypoint(laufarId!),
+    mutationFn: () => deleteFjallWaypoint(laufarId!),
     onSuccess: () => {
       toast.success(`${terms.laufarSingular} deleted`)
-      void queryClient.invalidateQueries({ queryKey: ['cairn-waypoints'] })
-      clearCairnSelection()
+      void queryClient.invalidateQueries({ queryKey: ['fjall-waypoints'] })
+      clearCatalogSelection()
     },
     onError: (error) =>
       toast.error(
@@ -835,15 +837,15 @@ export function HlidskjalfPage() {
       ),
   })
 
-  const cairnInspectorOpen = laufarId != null || catalogTab != null
-  const inspectorOpen = inspectorPinned || cairnInspectorOpen
+  const catalogInspectorOpen = laufarId != null || catalogTab != null
+  const inspectorOpen = inspectorPinned || catalogInspectorOpen
   const inspectorState = inspectorOpen ? 'open' : 'hint'
 
   const laufarUnavailable =
     (waypointsQuery.isError || trailsQuery.isError || markersQuery.isError) &&
     !waypointsQuery.isLoading
-      ? cairnErrorProps.isConfigError || cairnErrorProps.isTokenError
-        ? (cairnErrorProps.detail ?? 'Data API is not configured.')
+      ? dataErrorProps.isConfigError || dataErrorProps.isTokenError
+        ? (dataErrorProps.detail ?? 'Data API is not configured.')
         : 'Could not load laufar.'
       : null
 
@@ -855,8 +857,8 @@ export function HlidskjalfPage() {
           inspectorPinned={inspectorPinned}
           onInspectorPinnedChange={setInspectorPinned}
           onAddLauf={() => selectLaufar('new')}
-          onAddGreinar={() => startAddCairnEntity('greinar')}
-          onAddRunir={() => startAddCairnEntity('runir')}
+          onAddGreinar={() => startAddCatalogEntity('greinar')}
+          onAddRunir={() => startAddCatalogEntity('runir')}
         />
       }
       rail={
@@ -870,10 +872,10 @@ export function HlidskjalfPage() {
           runirFilterId={runirFilterId}
           onRunirFilterChange={setRunirFilterId}
           trails={hlidskjalfTrails}
-          markers={markers}
+          markers={hlidskjalfMarkers}
           onInspect={selectLaufar}
           onOpenUrl={(url) => window.open(url, '_blank', 'noopener,noreferrer')}
-          onOpenCatalog={() => openCairnCatalog('greinar')}
+          onOpenCatalog={() => openCatalog('greinar')}
           isLoading={waypointsQuery.isLoading && !waypointsQuery.data}
           unavailableMessage={laufarUnavailable}
         />
@@ -893,7 +895,7 @@ export function HlidskjalfPage() {
       }
       inspector={
         catalogTab ? (
-          <CairnCatalogInspector
+          <FjallCatalogInspector
             activeTab={catalogTab}
             onTabChange={(tab) => {
               patchParams((params) => {
@@ -904,7 +906,7 @@ export function HlidskjalfPage() {
               })
             }}
             trails={trails}
-            markers={markers}
+            markers={hlidskjalfMarkers}
             selectedId={catalogId}
             markerPath={markerPath}
             markerParent={markerParent}
@@ -939,8 +941,8 @@ export function HlidskjalfPage() {
             waypoint={selectedWaypoint}
             isNew={isNewLaufar}
             trails={hlidskjalfTrails}
-            markers={markers}
-            onClose={clearCairnSelection}
+            markers={hlidskjalfMarkers}
+            onClose={clearCatalogSelection}
             onSave={async (values) => {
               await saveWaypointMutation.mutateAsync(values)
             }}

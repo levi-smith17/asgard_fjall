@@ -1,20 +1,20 @@
-/** Cairn API types — inlined from @asgard/types cairn.ts */
+/** Fjall data API types — inlined from legacy Summit shapes. */
 
-export type CairnApiResponse<T> = { data: T }
+export type FjallApiResponse<T> = { data: T }
 
-export type CairnStatusResponse = {
+export type FjallStatusResponse = {
   configured: boolean
   baseUrl: string
 }
 
-export type CairnEmbeddedMarker = {
+export type FjallEmbeddedMarker = {
   id: string
   name: string
   color: string
   icon?: string
 }
 
-export type CairnWaypoint = {
+export type FjallWaypoint = {
   pk: string
   sk: string
   url: string
@@ -25,18 +25,18 @@ export type CairnWaypoint = {
   read: boolean
   readLater: boolean
   trailId?: string
-  markers: CairnEmbeddedMarker[]
+  markers: FjallEmbeddedMarker[]
   createdAt: string
 }
 
-export type CairnTrail = {
+export type FjallTrail = {
   pk: string
   sk: string
   name: string
   createdAt: string
 }
 
-export type CairnMarker = {
+export type FjallMarker = {
   pk: string
   sk: string
   name: string
@@ -46,7 +46,7 @@ export type CairnMarker = {
   waypointCount?: number
 }
 
-export type CairnWaypointView = {
+export type FjallWaypointView = {
   id: string
   url: string
   title: string
@@ -57,17 +57,17 @@ export type CairnWaypointView = {
   readLater: boolean
   trailId: string | null
   trailName: string | null
-  markers: CairnEmbeddedMarker[]
+  markers: FjallEmbeddedMarker[]
   createdAt: string
 }
 
-export type CairnTrailView = {
+export type FjallTrailView = {
   id: string
   name: string
   createdAt: string
 }
 
-export type CairnMarkerView = {
+export type FjallMarkerView = {
   id: string
   name: string
   color: string
@@ -76,12 +76,12 @@ export type CairnMarkerView = {
   waypointCount: number
 }
 
-export type CairnWaypointMeta = {
+export type FjallWaypointMeta = {
   title: string | null
   favicon: string | null
 }
 
-export type SaveCairnWaypointRequest = {
+export type SaveFjallWaypointRequest = {
   title: string
   url: string
   description?: string
@@ -93,9 +93,9 @@ export type SaveCairnWaypointRequest = {
   readLater?: boolean
 }
 
-export type SaveCairnTrailRequest = { name: string }
+export type SaveFjallTrailRequest = { name: string }
 
-export type SaveCairnMarkerRequest = {
+export type SaveFjallMarkerRequest = {
   name: string
   color: string
   icon?: string | null
@@ -103,12 +103,12 @@ export type SaveCairnMarkerRequest = {
 
 // — Audr —
 
-export type CairnMarkerJunction = {
+export type FjallMarkerJunction = {
   markerId: string
-  marker: CairnEmbeddedMarker
+  marker: FjallEmbeddedMarker
 }
 
-export type CairnBurn = {
+export type FjallBurn = {
   id: string
   name: string
   amount: number
@@ -116,10 +116,10 @@ export type CairnBurn = {
   notes?: string | null
   receiptUrl?: string | null
   fundId?: string | null
-  markers: CairnMarkerJunction[]
+  markers: FjallMarkerJunction[]
 }
 
-export type CairnSupplyline = {
+export type FjallSupplyline = {
   id: string
   name: string
   amount: number
@@ -129,20 +129,20 @@ export type CairnSupplyline = {
   notes?: string | null
   active: boolean
   fundId?: string | null
-  markers: CairnMarkerJunction[]
+  markers: FjallMarkerJunction[]
 }
 
-export type CairnCacheUtilization = {
+export type FjallCacheUtilization = {
   id: string
   markerId: string
-  marker: CairnEmbeddedMarker
+  marker: FjallEmbeddedMarker
   limit: number
   spent: number
   utilization: number
   fundId?: string | null
 }
 
-export type CairnSjodr = {
+export type FjallSjodr = {
   pk: string
   sk: string
   name: string
@@ -151,7 +151,7 @@ export type CairnSjodr = {
   createdAt: string
 }
 
-export type CairnSjodrView = {
+export type FjallSjodrView = {
   id: string
   name: string
   description: string | null
@@ -159,13 +159,13 @@ export type CairnSjodrView = {
   createdAt: string
 }
 
-export type SaveCairnSjodrRequest = {
+export type SaveFjallSjodrRequest = {
   name: string
   description?: string | null
   color?: string | null
 }
 
-export type CairnUpcomingRenewal = {
+export type FjallUpcomingRenewal = {
   id: string
   name: string
   amount: number
@@ -173,32 +173,32 @@ export type CairnUpcomingRenewal = {
   billingCycle: string
 }
 
-export type CairnProvisionsSummary = {
+export type AudrSummary = {
   summary: {
     monthlySupplylineCost: number
     totalBurn: number
     totalMonthSpend: number
     activeSupplylines: number
   }
-  upcomingRenewals: CairnUpcomingRenewal[]
-  cacheUtilization: CairnCacheUtilization[]
+  upcomingRenewals: FjallUpcomingRenewal[]
+  cacheUtilization: FjallCacheUtilization[]
 }
 
-export type CairnBurnPage = {
-  burn: CairnBurn[]
+export type FjallBurnPage = {
+  burn: FjallBurn[]
   total: number
   pageSize: number
 }
 
 // — Dagatal —
 
-export type CairnCalendarOption = {
+export type FjallCalendarOption = {
   id: string
   name: string
   color: string
 }
 
-export type CairnExternalCalendarEvent = {
+export type FjallExternalCalendarEvent = {
   uid: string
   title: string
   startDate: Date
@@ -213,7 +213,7 @@ export type CairnExternalCalendarEvent = {
   recurrenceRule: string | null
 }
 
-export type CairnSettings = {
+export type FjallSettings = {
   calendars?: { id: string; name: string; color: string }[]
   calendarSubscriptions?: { id: string; name: string; color: string }[]
 }

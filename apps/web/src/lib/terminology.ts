@@ -1,4 +1,4 @@
-export type TerminologyStyle = 'ASGARD' | 'CAIRN' | 'STANDARD'
+export type TerminologyStyle = 'STANDARD' | 'ASGARD'
 
 export type Terms = {
   productName: string
@@ -20,7 +20,7 @@ export type Terms = {
   settings: string
   account: string
   privacy: string
-  /** Cairn catalog write-through cache (not Audr budgets, not Dagatal). */
+  /** Fjall catalog write-through cache (not Audr budgets, not Dagatal). */
   cache: string
   /** Sidebar group: Platform / Pallr. */
   platformGroup: string
@@ -44,7 +44,7 @@ export type Terms = {
   /** Audr funds (Asgard: Sjodr). */
   sjodr: string
   sjodrSingular: string
-  // Cairn item types
+  // Fjall item types
   laufar: string
   laufarSingular: string
   greinar: string
@@ -195,12 +195,14 @@ const STANDARD: Terms = {
 
 const STORAGE_KEY = 'fjall_terminology_style'
 
+export function normalizeTerminologyStyle(stored: string | null | undefined): TerminologyStyle {
+  if (stored === 'STANDARD' || stored === 'ASGARD') return stored
+  return 'ASGARD'
+}
+
 export function loadTerminologyStyle(): TerminologyStyle {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    // Cairn style removed from Fjall UI — map legacy preference to Standard.
-    if (raw === 'CAIRN') return 'STANDARD'
-    if (raw === 'STANDARD' || raw === 'ASGARD') return raw
+    return normalizeTerminologyStyle(localStorage.getItem(STORAGE_KEY))
   } catch {
     // ignore
   }
@@ -216,15 +218,8 @@ export function saveTerminologyStyle(style: TerminologyStyle) {
 }
 
 export function termsFor(style: TerminologyStyle): Terms {
-  switch (style) {
-    case 'STANDARD':
-      return STANDARD
-    case 'CAIRN':
-      // Legacy: treat as Standard on Fjall (Cairn pack not user-facing).
-      return STANDARD
-    default:
-      return ASGARD
-  }
+  if (style === 'STANDARD') return STANDARD
+  return ASGARD
 }
 
 /** Public UI cycles Standard ↔ Asgard only. */

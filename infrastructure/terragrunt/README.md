@@ -38,8 +38,7 @@ apps/api/                      # Lambda handlers (tsc → zip deploy)
 | `prod/api-media` | CloudFront + us-east-1 ACM + R53 for `media.asgard.levismith.us` |
 | `prod/api-http` | HTTP API + Lambdas + custom domain |
 
-Auth today validates JWTs against **Cairn prod Cognito** (IDs in `env.hcl`). New Cognito
-in the asgard account lands at data cutover (passkey re-enroll).
+Auth today validates **passkey session Bearer** (`v1.*`) and **API tokens** (`csk_*`) via the request authorizer. `FJALL_SESSION_SECRET` lives in SSM `/asgard-fjall/<env>/FJALL_SESSION_SECRET`.
 
 ## Usage
 

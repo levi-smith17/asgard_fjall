@@ -38,7 +38,7 @@ export function OrdstirrSectionsRail<T extends string>({
   onInspectSection?: (sectionId: T) => void
   addSections?: OrdstirrRailSection<T>[]
   onAddSection?: (sectionId: T) => void
-  /** Public Cairn URL — shown as an icon-only external link left of Add. */
+  /** Public Fjall URL — shown as an icon-only external link left of Add. */
   liveUrl?: string | null
 }) {
   const [addOpen, setAddOpen] = useState(false)
@@ -60,14 +60,18 @@ export function OrdstirrSectionsRail<T extends string>({
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="flex h-14 min-h-14 max-h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
         <StudioRailTitle icon={Section}>Sections</StudioRailTitle>
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-1">
           {liveUrl ? (
-            <ToolbarTooltip label="Live profile">
-              <Button asChild variant="ghost" size="icon" className="h-7 w-7">
-                <a href={liveUrl} target="_blank" rel="noopener noreferrer" aria-label="Live profile">
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              </Button>
+            <ToolbarTooltip label="Live Profile">
+              <a
+                href={liveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted-hover hover:text-foreground"
+                aria-label="Live Profile"
+              >
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+              </a>
             </ToolbarTooltip>
           ) : null}
           {addable.length > 0 && onAddSection ? (
@@ -75,14 +79,14 @@ export function OrdstirrSectionsRail<T extends string>({
               <ToolbarTooltip label="Add to section">
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="secondary"
                   size="icon"
                   className="h-7 w-7"
                   aria-haspopup="menu"
                   aria-expanded={addOpen}
                   onClick={() => setAddOpen((open) => !open)}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-3.5 w-3.5" aria-hidden />
                 </Button>
               </ToolbarTooltip>
               {addOpen ? (

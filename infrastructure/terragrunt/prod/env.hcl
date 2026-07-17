@@ -19,10 +19,6 @@ locals {
     "http://localhost:5180",
   ]
 
-  # Cairn prod Cognito until asgard-account pool cutover (re-enroll).
-  cognito_user_pool_id = "us-east-2_lf42INJJ7"
-  cognito_client_id    = "4sqhce1qj85imq4sk8i9dei36d"
-
   common_tags = {
     project     = "asgard-fjall"
     environment = "prod"

@@ -2,7 +2,7 @@
 
 ## Launch gate
 - **Auth gate:** Passkeys + HttpOnly `fjall_session` via `apps/auth` (DynamoDB + Lambda Function URL, CloudFront `/api/auth*`).
-- **Cairn API:** Cognito ID token as Bearer via `cairnFetch` (separate from passkey gate).
+- **Data API:** Passkey session Bearer via `fjallFetch` (or RealmOps `csk_*` API token).
 - **Public URL:** `https://asgard.levismith.us`
 - **Local:** `pnpm dev:auth` (port 3002) + Vite proxies `/api/auth`
 
@@ -12,7 +12,7 @@
 | Basecamp | `/` | Summit-style home + snapshots + Stjornur entry |
 | Sendibod | `/sendibod` | Signals list/detail, search, status |
 | Audr | `/audr` | Burns / supplylines / cache / Skatt |
-| Dagatal | `/dagatal` | Cairn itinerary calendar |
+| Dagatal | `/dagatal` | Itinerary calendar |
 | Ordstirr | `/ordstirr` | Manifest / résumé |
 | Sögur | `/sogur` | Logbook / notes |
 | Stjörnur | `/stjornur` | Full `@xyflow/react` planner canvas |
@@ -20,7 +20,7 @@
 ## Foundation
 - Studio layout + UI primitives, inspector pin (no BFF cache-sync)
 - Expanded terminology / `useTerms` with cycle chrome
-- Cognito defaults baked in `config.ts` (overridable via `VITE_*`)
+- `VITE_FJALL_API_URL` for data API (defaults to prod)
 - Asgard-parity shell: narrow icon rail, tree brand + **Fjall** subtitle, overflow-hidden main + Valknut watermark
 - Dual palettes (`fjall` gold default + `green`) with light/dark theme
 - Command palette (⌘/Ctrl+K) + context-bar search triggers (Fjall routes + sign-in/out)

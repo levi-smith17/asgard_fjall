@@ -14,7 +14,7 @@ import { StjornurContextBar } from '@/components/apps/stjornur/stjornur-context-
 import { StjornurNetworksRail } from '@/components/apps/stjornur/stjornur-networks-rail'
 import { TooltipProvider } from '@/components/core/ui/tooltip'
 import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
-import { fetchCairnStatus } from '@/lib/data-api'
+import { fetchFjallStatus } from '@/lib/data-api'
 import { fetchStarfieldData } from '@/lib/stjornur-api'
 
 function networkIdFromSk(sk: string): string {
@@ -32,8 +32,8 @@ export function StjornurPage() {
   const selectedNetworkId = searchParams.get('network')
 
   const statusQuery = useQuery({
-    queryKey: ['cairn-status'],
-    queryFn: fetchCairnStatus,
+    queryKey: ['fjall-status'],
+    queryFn: fetchFjallStatus,
     retry: false,
     staleTime: 60_000,
   })

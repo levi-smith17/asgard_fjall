@@ -2,7 +2,7 @@
 
 > *In Norse myth, a fjall is a mountain — a high place open to the sky. This is the public face of Asgard: the same hall, without the locked armory of the homelab.*
 
-**Asgard Fjall** is the public, personal Asgard-skinned client. It exposes the **Cairn** product surfaces (journal, profile, provisions, planner, and related apps) behind an Asgard shell — and intentionally excludes the private homelab control plane (**RealmOps**).
+**Asgard Fjall** is the public, personal Asgard-skinned client. It exposes personal productivity apps (journal, profile, provisions, planner, and related surfaces) behind an Asgard shell — and intentionally excludes the private homelab control plane (**RealmOps**).
 
 Private companion: [`levi-smith17/asgard`](https://github.com/levi-smith17/asgard) (RealmOps). Product boundary brief lives there as `docs/asgard-fjall.md`.
 
@@ -10,13 +10,13 @@ Private companion: [`levi-smith17/asgard`](https://github.com/levi-smith17/asgar
 
 ## What Fjall Does
 
-Fjall gathers personal Cairn apps into one cohesive interface with Asgard branding and terminology — without DNS, DHCP, firewall, Pi-hole, Kubernetes, NAS, VMs, or other RealmOps services.
+Fjall gathers personal apps into one cohesive interface with Asgard branding and terminology — without DNS, DHCP, firewall, Pi-hole, Kubernetes, NAS, VMs, or other RealmOps services.
 
 | Surface | Role |
 |---|---|
 | Basecamp / **Hlidskjalf** | Home — Summit-style cards, snapshots, Stjörnur entry, Laufar rail |
 | Finance / **Audr** | Expenses, subscriptions, budgets |
-| Calendar / **Dagatal** | Cairn Itinerary |
+| Calendar / **Dagatal** | Itinerary calendar |
 | Resume / **Ordstirr** | Public profile editor + live public views |
 | Notes / **Sögur** | Logbooks and journal pages |
 | Starfield / **Stjörnur** | Outpost network planner |
@@ -39,9 +39,9 @@ A sidebar toggle cycles UI labels (**Standard** ↔ **Asgard** by default on Fja
 - **[Tailwind CSS v4](https://tailwindcss.com/)** — styling, shared studio two-tier layout with RealmOps
 
 ### Data & auth
-- **Cairn Summit API** (`api.cairn.ing`) — browser calls the API directly (no RealmOps BFF / SSM token in the static site)
-- **AWS Cognito** — ID token as `Authorization: Bearer` for Cairn API calls
-- **Passkeys** — target app gate with host-only cookie `fjall_session` (see Auth Model)
+- **Fjall API** (`api.asgard.levismith.us`) — browser calls the API directly with passkey session Bearer (no RealmOps BFF / SSM token in the static site)
+- **Passkeys** — app gate with host-only cookie `fjall_session` (see Auth Model)
+- **API tokens** (`csk_*`) — RealmOps / automation only
 
 ### Infrastructure
 - **Terraform** → S3 + CloudFront + ACM + Route53 alias (`infrastructure/terraform/prod`)
@@ -67,9 +67,9 @@ asgard_fjall/
 
 Source of truth: `apps/web/src/lib/terminology.ts`. Sidebar subtitle is **Fjall**.
 
-### Cairn sections
+### Legacy Summit labels
 
-| Key | Standard | Cairn | Asgard |
+| Key | Standard | Legacy Summit | Asgard |
 |---|---|---|---|
 | Finance | Finance | Provisions | Audr |
 | Calendar | Calendar | Itinerary | Dagatal |
@@ -80,11 +80,11 @@ Source of truth: `apps/web/src/lib/terminology.ts`. Sidebar subtitle is **Fjall*
 
 ### Ordstirr / profile sections (Asgard names)
 
-Rót, Leidangr, Thjalfun, Bunadr, Vördur, Tindar, Lidsinni, Sjalfsmynd, Foruneyti, Bautasteinn, Ferd Min — with Standard résumé labels and Cairn labels in their respective modes.
+Rót, Leidangr, Thjalfun, Bunadr, Vördur, Tindar, Lidsinni, Sjalfsmynd, Foruneyti, Bautasteinn, Ferd Min — with Standard résumé labels and legacy Summit labels in their respective modes.
 
 ### Basecamp catalog
 
-| Key | Standard | Cairn | Asgard |
+| Key | Standard | Legacy Summit | Asgard |
 |---|---|---|---|
 | Tasks | Tasks | Waypoints | Laufar |
 | Groups | Groups | Trails | Greinar |
@@ -95,17 +95,19 @@ Rót, Leidangr, Thjalfun, Bunadr, Vördur, Tindar, Lidsinni, Sjalfsmynd, Foruney
 ## Auth Model
 
 - **App gate:** passkeys via `apps/auth` — host-only HttpOnly cookie `fjall_session` (no `Domain=`). Distinct from private Asgard’s `asgard_session`.
-- **Cairn API:** Cognito ID token as Bearer in the browser. Do **not** embed the private Asgard Cairn API token in the static site.
+- **Data API:** passkey session Bearer via `fjallFetch`. Do **not** embed private API tokens in the static site.
 - **Infra:** DynamoDB credentials/challenges + Lambda Function URL; CloudFront routes `/api/auth*` to that origin.
-- **Local:** `pnpm dev:auth` (port 3002); web Vite proxies `/api/auth`. Set `fjall_session_secret` in Terraform tfvars for prod.
+- **Local:** `pnpm dev:auth` (port 3002); web Vite proxies `/api/auth`. Set `FJALL_SESSION_SECRET` in Terraform/SSM for prod.
+
+See `docs/fjall-api-auth.md`.
 
 ---
 
-## Relation to Cairn Summit
+## Relation to legacy Summit API
 
-- Browser → `https://api.asgard.levismith.us` (Cognito JWT; Cairn-style client paths remapped to Asgard routes)
+- Browser → `https://api.asgard.levismith.us` (passkey session Bearer; legacy client paths remapped to Asgard routes)
 - Media → `https://media.asgard.levismith.us`
-- Public Ordstirr paths on Fjall use Asgard-style URLs (`/ordstirr/:username`, `/ferd`, `/ordsending`); Cairn custom domains may still host `/manifest/…`
+- Public Ordstirr paths on Fjall use Asgard-style URLs (`/ordstirr/:username`, `/ferd`, `/ordsending`); custom domains may still host `/manifest/…`
 
 ---
 
@@ -116,7 +118,7 @@ pnpm install
 pnpm dev
 ```
 
-Web defaults to the Vite dev server (typically `http://localhost:5173`). Overlay Cognito / API values with `VITE_*` env vars as needed — never commit secrets.
+Web defaults to the Vite dev server (typically `http://localhost:5173`). Overlay API / auth values with `VITE_*` env vars as needed — never commit secrets.
 
 ---
 

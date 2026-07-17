@@ -6,14 +6,14 @@ import { Select } from '@/components/core/ui/select'
 import { Switch } from '@/components/core/ui/switch'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import { ThingSettingRow } from '@/components/thing/thing-setting-row'
-import { fetchCairnFullSettings, fetchCairnStatus, saveCairnWaypointSettings } from '@/lib/data-api'
+import { fetchFjallFullSettings, fetchFjallStatus, saveFjallWaypointSettings } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 
 export function ThingWaypointSettings() {
   const terms = useTerms()
   const queryClient = useQueryClient()
-  const statusQuery = useQuery({ queryKey: ['cairn-status'], queryFn: fetchCairnStatus, retry: false })
-  const settingsQuery = useQuery({ queryKey: ['cairn-full-settings'], queryFn: fetchCairnFullSettings, enabled: statusQuery.data?.configured === true })
+  const statusQuery = useQuery({ queryKey: ['fjall-status'], queryFn: fetchFjallStatus, retry: false })
+  const settingsQuery = useQuery({ queryKey: ['fjall-full-settings'], queryFn: fetchFjallFullSettings, enabled: statusQuery.data?.configured === true })
 
   const waypoints = settingsQuery.data?.waypoints
   const [defaultSort, setDefaultSort] = useState<'NEWEST' | 'OLDEST' | 'TITLE_ASC' | 'TITLE_DESC'>('NEWEST')
@@ -28,9 +28,9 @@ export function ThingWaypointSettings() {
   }, [waypoints])
 
   const saveMutation = useMutation({
-    mutationFn: () => saveCairnWaypointSettings({ defaultSort, openInNewTab, waypointsPerPage }),
+    mutationFn: () => saveFjallWaypointSettings({ defaultSort, openInNewTab, waypointsPerPage }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['cairn-full-settings'] })
+      await queryClient.invalidateQueries({ queryKey: ['fjall-full-settings'] })
     },
   })
 

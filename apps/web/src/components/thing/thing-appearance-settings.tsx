@@ -6,10 +6,10 @@ import { Select } from '@/components/core/ui/select'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import { ThingSettingRow } from '@/components/thing/thing-setting-row'
 import {
-  fetchCairnFullSettings,
-  fetchCairnStatus,
-  saveCairnAccountSettings,
-  saveCairnAppearanceSettings,
+  fetchFjallFullSettings,
+  fetchFjallStatus,
+  saveFjallAccountSettings,
+  saveFjallAppearanceSettings,
 } from '@/lib/data-api'
 
 const LANDING_PAGES = [
@@ -21,10 +21,10 @@ const LANDING_PAGES = [
 
 export function ThingAppearanceSettings() {
   const queryClient = useQueryClient()
-  const statusQuery = useQuery({ queryKey: ['cairn-status'], queryFn: fetchCairnStatus, retry: false })
+  const statusQuery = useQuery({ queryKey: ['fjall-status'], queryFn: fetchFjallStatus, retry: false })
   const settingsQuery = useQuery({
-    queryKey: ['cairn-full-settings'],
-    queryFn: fetchCairnFullSettings,
+    queryKey: ['fjall-full-settings'],
+    queryFn: fetchFjallFullSettings,
     enabled: statusQuery.data?.configured === true,
   })
 
@@ -50,14 +50,14 @@ export function ThingAppearanceSettings() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       await Promise.all([
-        saveCairnAppearanceSettings({
+        saveFjallAppearanceSettings({
           sidebarDefault,
           defaultLandingPage,
           dateFormat,
           publicDefaultTheme,
           publicDefaultPalette,
         }),
-        saveCairnAccountSettings({
+        saveFjallAccountSettings({
           name: account?.name ?? null,
           image: account?.image ?? null,
           username: account?.username ?? null,
@@ -67,8 +67,8 @@ export function ThingAppearanceSettings() {
       ])
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['cairn-full-settings'] })
-      await queryClient.invalidateQueries({ queryKey: ['cairn-profile'] })
+      await queryClient.invalidateQueries({ queryKey: ['fjall-full-settings'] })
+      await queryClient.invalidateQueries({ queryKey: ['fjall-profile'] })
     },
   })
 

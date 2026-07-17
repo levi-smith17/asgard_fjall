@@ -5,10 +5,10 @@ import { toast } from 'sonner'
 import { Button } from '@/components/core/ui/button'
 import { StudioPagination } from '@/components/core/ui/studio-pagination'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
-import { fetchCairnProvisionsSummary } from '@/lib/data-api'
+import { fetchProvisionsSummary } from '@/lib/data-api'
 import {
-  carryOverCairnCacheToMonth,
-  carrySelectedCairnCacheToMonth,
+  carryOverFjallCacheToMonth,
+  carrySelectedFjallCacheToMonth,
 } from '@/lib/skatt-carry-over'
 import { audrFmt, monthYearLabel, shiftMonth, markerShortLabel } from '@/lib/audr-format'
 import { useTerms } from '@/hooks/use-terminology'
@@ -38,7 +38,7 @@ export function AudrSkattCarryInspector({
 
   const sourceQuery = useQuery({
     queryKey: ['audr', 'skatt-carry-source', sourceMonth, sourceYear],
-    queryFn: () => fetchCairnProvisionsSummary(sourceMonth, sourceYear),
+    queryFn: () => fetchProvisionsSummary(sourceMonth, sourceYear),
   })
 
   const sourceItems = sourceQuery.data?.cacheUtilization ?? []
@@ -69,7 +69,7 @@ export function AudrSkattCarryInspector({
 
     setCarrying(true)
     try {
-      const result = await carrySelectedCairnCacheToMonth(targetMonth, targetYear, items)
+      const result = await carrySelectedFjallCacheToMonth(targetMonth, targetYear, items)
       const sourceName = monthYearLabel(sourceMonth, sourceYear)
       if (result.created > 0) {
         toast.success(
@@ -91,7 +91,7 @@ export function AudrSkattCarryInspector({
   async function handleQuickCarry() {
     setCarrying(true)
     try {
-      const result = await carryOverCairnCacheToMonth(targetMonth, targetYear)
+      const result = await carryOverFjallCacheToMonth(targetMonth, targetYear)
       if (!result) {
         toast.message(`No previous ${terms.budgets.toLowerCase()} available`)
         return

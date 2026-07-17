@@ -3,7 +3,7 @@ import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { cn } from '@/lib/utils'
 import { RefreshCw } from 'lucide-react'
 
-export function CairnToolbar({ description, onRefresh, isRefreshing, leading }: { description: string; onRefresh: () => void; isRefreshing: boolean; leading?: React.ReactNode }) {
+export function FjallToolbar({ description, onRefresh, isRefreshing, leading }: { description: string; onRefresh: () => void; isRefreshing: boolean; leading?: React.ReactNode }) {
   return (
     <StudioDataToolbar
       description={description}

@@ -1,6 +1,6 @@
-import type { CairnMarker, CairnMarkerView, CairnTrail, CairnTrailView, CairnWaypoint, CairnWaypointView } from '@/lib/data-types'
+import type { FjallMarker, FjallMarkerView, FjallTrail, FjallTrailView, FjallWaypoint, FjallWaypointView } from '@/lib/data-types'
 
-export function extractCairnId(sk: string): string {
+export function extractEntityId(sk: string): string {
   const hash = sk.lastIndexOf('#')
   return hash >= 0 ? sk.slice(hash + 1) : sk
 }
@@ -9,17 +9,17 @@ export function secureRemoteAssetUrl(url: string): string {
   return url.startsWith('http://') ? `https://${url.slice('http://'.length)}` : url
 }
 
-export function toTrailView(trail: CairnTrail): CairnTrailView {
+export function toTrailView(trail: FjallTrail): FjallTrailView {
   return {
-    id: extractCairnId(trail.sk),
+    id: extractEntityId(trail.sk),
     name: trail.name,
     createdAt: trail.createdAt,
   }
 }
 
-export function toMarkerView(marker: CairnMarker): CairnMarkerView {
+export function toMarkerView(marker: FjallMarker): FjallMarkerView {
   return {
-    id: extractCairnId(marker.sk),
+    id: extractEntityId(marker.sk),
     name: marker.name,
     color: marker.color,
     icon: marker.icon ?? null,
@@ -29,12 +29,12 @@ export function toMarkerView(marker: CairnMarker): CairnMarkerView {
 }
 
 export function toWaypointView(
-  waypoint: CairnWaypoint,
-  trailsById: Map<string, CairnTrailView>,
-): CairnWaypointView {
+  waypoint: FjallWaypoint,
+  trailsById: Map<string, FjallTrailView>,
+): FjallWaypointView {
   const trailId = waypoint.trailId ?? null
   return {
-    id: extractCairnId(waypoint.sk),
+    id: extractEntityId(waypoint.sk),
     url: waypoint.url,
     title: waypoint.title,
     description: waypoint.description ?? '',

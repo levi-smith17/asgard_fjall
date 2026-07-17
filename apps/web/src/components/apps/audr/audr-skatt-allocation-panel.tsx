@@ -10,7 +10,7 @@ import {
 } from '@/lib/audr-skatt-idunn'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
-import type { CairnBurn, CairnCacheUtilization, CairnSupplyline } from '@/lib/data-types'
+import type { FjallBurn, FjallCacheUtilization, FjallSupplyline } from '@/lib/data-types'
 import type { AudrMarker } from './audr-types'
 
 const CYCLE_LABELS: Record<string, string> = {
@@ -27,9 +27,9 @@ export function AudrSkattAllocationPanel({
   supplylines,
   markers = [],
 }: {
-  cache: CairnCacheUtilization
-  burns: CairnBurn[]
-  supplylines: CairnSupplyline[]
+  cache: FjallCacheUtilization
+  burns: FjallBurn[]
+  supplylines: FjallSupplyline[]
   markers?: AudrMarker[]
 }) {
   const terms = useTerms()

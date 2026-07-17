@@ -6,13 +6,13 @@ import { Button } from '@/components/core/ui/button'
 import { DatePicker } from '@/components/core/ui/date-picker'
 import { MarkerPicker } from '@/components/apps/marker-picker'
 import {
-  fetchCairnBurnReceiptUrl,
-  saveCairnBurn,
-  uploadCairnBurnReceipt,
+  fetchFjallBurnReceiptUrl,
+  saveFjallBurn,
+  uploadFjallBurnReceipt,
 } from '@/lib/data-api'
 import { useFormStatus } from '@/hooks/use-form-status'
 import { toMarkerId } from '@/lib/embedded-markers'
-import type { CairnBurn } from '@/lib/data-types'
+import type { FjallBurn } from '@/lib/data-types'
 import { toDateInputValue, todayDateInputValue } from '@/lib/date-input'
 import { getDefaultSjodrId } from '@/lib/audr-default-sjodr'
 import { useTerms } from '@/hooks/use-terminology'
@@ -21,7 +21,7 @@ import { FundPicker } from './fund-picker'
 export type AudrSaveActionRef = MutableRefObject<(() => Promise<void>) | null>
 
 interface Props {
-  burn?: CairnBurn
+  burn?: FjallBurn
   defaultMarkerId?: string
   tags: { id: string; name: string; color: string; icon?: string | null }[]
   formId?: string
@@ -83,7 +83,7 @@ export function InlineBurnForm({
 
   useEffect(() => {
     if (burn?.receiptUrl && !receiptPreview) {
-      fetchCairnBurnReceiptUrl(burn.receiptUrl).then(setReceiptViewUrl).catch(() => {})
+      fetchFjallBurnReceiptUrl(burn.receiptUrl).then(setReceiptViewUrl).catch(() => {})
     }
   }, [burn?.receiptUrl, receiptPreview])
 
@@ -93,7 +93,7 @@ export function InlineBurnForm({
     setReceiptViewUrl(null)
     setUploading(true)
     try {
-      const key = await uploadCairnBurnReceipt(file)
+      const key = await uploadFjallBurnReceipt(file)
       setReceiptKey(key)
     } catch (error) {
       setReceiptPreview(null)
@@ -114,7 +114,7 @@ export function InlineBurnForm({
       return
     }
     await handleSubmit(async () => {
-      await saveCairnBurn({
+      await saveFjallBurn({
         id: burn?.id,
         name: name.trim(),
         amount: parseFloat(amount) || 0,

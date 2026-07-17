@@ -1,4 +1,5 @@
-import { cairnFetch } from '@/lib/data-client'
+import { fjallFetch } from '@/lib/data-client'
+import { normalizeTerminologyStyle, type TerminologyStyle } from '@/lib/terminology'
 
 export type PublicManifestData = {
   wayfarer: {
@@ -7,7 +8,7 @@ export type PublicManifestData = {
     email: string | null
     image?: string | null
     avatar?: string | null
-    defaultTerminology: 'CAIRN' | 'STANDARD' | 'ASGARD'
+    defaultTerminology: TerminologyStyle
     defaultTheme: 'LIGHT' | 'DARK' | 'SYSTEM'
     defaultPalette?: 'green' | 'fjall' | null
   }
@@ -99,33 +100,45 @@ export type PublicContactData = {
     name: string | null
     email: string | null
     image: string | null
-    defaultTerminology: 'CAIRN' | 'STANDARD' | 'ASGARD'
+    defaultTerminology: TerminologyStyle
     defaultTheme: 'LIGHT' | 'DARK' | 'SYSTEM'
     defaultPalette?: 'green' | 'fjall' | null
   }
 }
 
+function normalizePublicWayfarer<T extends { defaultTerminology?: string | null }>(
+  wayfarer: T,
+): T & { defaultTerminology: TerminologyStyle } {
+  return {
+    ...wayfarer,
+    defaultTerminology: normalizeTerminologyStyle(wayfarer.defaultTerminology),
+  }
+}
+
 export async function fetchPublicManifest(username: string): Promise<PublicManifestData> {
-  return cairnFetch<PublicManifestData>(`/public/manifest/${encodeURIComponent(username)}`)
+  const data = await fjallFetch<PublicManifestData>(`/public/manifest/${encodeURIComponent(username)}`)
+  return { ...data, wayfarer: normalizePublicWayfarer(data.wayfarer) }
 }
 
 export async function fetchPublicJourney(username: string): Promise<PublicJourneyData> {
-  return cairnFetch<PublicJourneyData>(
+  const data = await fjallFetch<PublicJourneyData>(
     `/public/manifest/${encodeURIComponent(username)}/journey`,
   )
+  return { ...data, wayfarer: normalizePublicWayfarer(data.wayfarer) }
 }
 
 export async function fetchPublicContact(username: string): Promise<PublicContactData> {
-  return cairnFetch<PublicContactData>(
+  const data = await fjallFetch<PublicContactData>(
     `/public/manifest/${encodeURIComponent(username)}/contact`,
   )
+  return { ...data, wayfarer: normalizePublicWayfarer(data.wayfarer) }
 }
 
 export async function submitPublicContact(
   username: string,
   body: { senderName: string; senderEmail: string; body: string },
 ): Promise<{ threadUrl?: string }> {
-  return cairnFetch<{ threadUrl?: string }>(
+  return fjallFetch<{ threadUrl?: string }>(
     `/public/manifest/${encodeURIComponent(username)}/contact`,
     {
       method: 'POST',

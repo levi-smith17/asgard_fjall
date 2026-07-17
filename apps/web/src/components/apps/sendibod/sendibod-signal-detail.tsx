@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/core/ui/button'
-import { markCairnSignalRead, replyToCairnSignal, type CairnSignal } from '@/lib/data-api'
+import { markFjallSignalRead, replyToFjallSignal, type FjallSignal } from '@/lib/data-api'
 
 function formatWhen(iso: string) {
   return new Date(iso).toLocaleString(undefined, {
@@ -16,7 +16,7 @@ export function SendibodSignalDetail({
   signal,
   autoMarkRead,
 }: {
-  signal: CairnSignal
+  signal: FjallSignal
   autoMarkRead: boolean
 }) {
   const queryClient = useQueryClient()
@@ -25,8 +25,8 @@ export function SendibodSignalDetail({
 
   useEffect(() => {
     if (!autoMarkRead || signal.read) return
-    void markCairnSignalRead(signal.id)
-      .then(() => queryClient.invalidateQueries({ queryKey: ['cairn-signals'] }))
+    void markFjallSignalRead(signal.id)
+      .then(() => queryClient.invalidateQueries({ queryKey: ['fjall-signals'] }))
       .catch(() => {})
   }, [signal.id, signal.read, autoMarkRead, queryClient])
 
@@ -35,9 +35,9 @@ export function SendibodSignalDetail({
     if (!reply.trim()) return
     setSaving(true)
     try {
-      await replyToCairnSignal(signal.id, reply.trim())
+      await replyToFjallSignal(signal.id, reply.trim())
       setReply('')
-      await queryClient.invalidateQueries({ queryKey: ['cairn-signals'] })
+      await queryClient.invalidateQueries({ queryKey: ['fjall-signals'] })
     } finally {
       setSaving(false)
     }

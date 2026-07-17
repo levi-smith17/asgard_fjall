@@ -1,4 +1,4 @@
-import { CairnApiError } from '@/lib/data-client'
+import { FjallApiError } from '@/lib/data-client'
 import { cn } from '@/lib/utils'
 
 export function DataNotConfiguredNotice({
@@ -14,7 +14,7 @@ export function DataNotConfiguredNotice({
 }) {
   const hint =
     detail ??
-    'Sign in with your Cognito account for live data. Fjall calls the data API with your session token — there is no separate API token to configure.'
+    'Sign in with your passkey for live data. Fjall calls the data API with your session token.'
 
   return (
     <div
@@ -40,7 +40,7 @@ export function DataNotConfiguredNotice({
 }
 
 export function dataQueryErrorProps(error: unknown, fallback: string) {
-  const apiError = error instanceof CairnApiError ? error : null
+  const apiError = error instanceof FjallApiError ? error : null
   const isConfigError = apiError?.status === 503
   const isTokenError = apiError?.status === 401 || apiError?.status === 403
   return {

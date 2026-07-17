@@ -1,4 +1,4 @@
-import type { CairnExternalCalendarEvent } from '@/lib/data-types'
+import type { FjallExternalCalendarEvent } from '@/lib/data-types'
 import type { ICloudEventDisplay } from '@/components/apps/dagatal/dagatal-types'
 
 function localDateKey(date: Date): string {
@@ -30,7 +30,7 @@ function eventOccursOnDay(event: ICloudEventDisplay, date: Date): boolean {
   return start <= dayEnd && end >= dayStart
 }
 
-export function reviveItineraryEvents(events: CairnExternalCalendarEvent[]): CairnExternalCalendarEvent[] {
+export function reviveItineraryEvents(events: FjallExternalCalendarEvent[]): FjallExternalCalendarEvent[] {
   return events.map((event) => ({
     ...event,
     startDate: new Date(event.startDate),
@@ -39,10 +39,10 @@ export function reviveItineraryEvents(events: CairnExternalCalendarEvent[]): Cai
 }
 
 export function filterItineraryEventsToRange(
-  events: CairnExternalCalendarEvent[],
+  events: FjallExternalCalendarEvent[],
   from: string,
   to: string,
-): CairnExternalCalendarEvent[] {
+): FjallExternalCalendarEvent[] {
   const rangeStart = new Date(from)
   const rangeEnd = new Date(to)
   if (Number.isNaN(rangeStart.getTime()) || Number.isNaN(rangeEnd.getTime())) return events
@@ -57,7 +57,7 @@ export function icloudEventsForDay(events: ICloudEventDisplay[], date: Date): IC
   return events.filter((event) => eventOccursOnDay(event, date))
 }
 
-export function mapCairnItineraryEvent(raw: Record<string, unknown>): CairnExternalCalendarEvent | null {
+export function mapFjallItineraryEvent(raw: Record<string, unknown>): FjallExternalCalendarEvent | null {
   const startRaw = raw.startDate ?? raw.start_date ?? raw.start
   if (startRaw == null || startRaw === '') return null
   const endRaw = raw.endDate ?? raw.end_date ?? raw.end
@@ -81,11 +81,11 @@ export function mapCairnItineraryEvent(raw: Record<string, unknown>): CairnExter
   }
 }
 
-export function parseCairnItineraryEventsPayload(data: unknown): CairnExternalCalendarEvent[] {
+export function parseFjallItineraryEventsPayload(data: unknown): FjallExternalCalendarEvent[] {
   const records = extractItineraryEventRecords(data)
-  const events: CairnExternalCalendarEvent[] = []
+  const events: FjallExternalCalendarEvent[] = []
   for (const record of records) {
-    const mapped = mapCairnItineraryEvent(record)
+    const mapped = mapFjallItineraryEvent(record)
     if (mapped) events.push(mapped)
   }
   return events

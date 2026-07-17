@@ -18,14 +18,14 @@ import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/core/ui/popover'
 import { RichEditor, type FontSize } from '@/components/core/ui/rich-editor'
 import {
-  deleteCairnLog,
-  saveCairnLog,
-  uploadCairnLogImage,
-  type CairnLogView,
+  deleteFjallLog,
+  saveFjallLog,
+  uploadFjallLogImage,
+  type FjallLogView,
 } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 import { toMarkerView } from '@/lib/data-format'
-import type { CairnMarker } from '@/lib/data-types'
+import type { FjallMarker } from '@/lib/data-types'
 import { pagePreview } from '@/lib/sogur-format'
 import { cn } from '@/lib/utils'
 import { SogurLaufarPicker, type SogurWaypointOption } from './sogur-laufar-picker'
@@ -44,11 +44,11 @@ export function SogurLogbook({
   bookId: string
   bookName: string
   trailId: string
-  initialLogs: CairnLogView[]
+  initialLogs: FjallLogView[]
   initialPageId?: string | null
-  markers: CairnMarker[]
+  markers: FjallMarker[]
   waypoints: SogurWaypointOption[]
-  onLogsChange: (logs: CairnLogView[]) => void
+  onLogsChange: (logs: FjallLogView[]) => void
   onOpenPageOrder: () => void
 }) {
   const terms = useTerms()
@@ -159,7 +159,7 @@ export function SogurLogbook({
       pageWaypointId: string | null,
       message: string | false = 'Saved',
     ) => {
-      const updated = await saveCairnLog({
+      const updated = await saveFjallLog({
         id: logId,
         title: pageTitle || null,
         content: html,
@@ -231,7 +231,7 @@ export function SogurLogbook({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
 
-  function activateLog(log: CairnLogView, targetIndex: number) {
+  function activateLog(log: FjallLogView, targetIndex: number) {
     setCurrentIndex(targetIndex)
     setContent(log.content)
     setSavedContent(log.content)
@@ -279,7 +279,7 @@ export function SogurLogbook({
     }
     setAddingPage(true)
     try {
-      const created = await saveCairnLog({
+      const created = await saveFjallLog({
         title: null,
         content: '<p></p>',
         trailId,
@@ -303,7 +303,7 @@ export function SogurLogbook({
     if (!currentLog || localLogs.length <= 1) return
     setDeleting(true)
     try {
-      await deleteCairnLog(currentLog.id)
+      await deleteFjallLog(currentLog.id)
       const next = localLogs.filter((log) => log.id !== currentLog.id)
       const newIndex = Math.min(currentIndex, next.length - 1)
       setLocalLogs(next)
@@ -320,7 +320,7 @@ export function SogurLogbook({
   const handleImageUpload = useCallback(
     async (file: File) => {
       if (!currentLog) throw new Error('No active page')
-      return uploadCairnLogImage(file, currentLog.id)
+      return uploadFjallLogImage(file, currentLog.id)
     },
     [currentLog],
   )

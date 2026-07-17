@@ -2,27 +2,24 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ExternalLink, Plus, Settings } from 'lucide-react'
 import { toast } from 'sonner'
-import type { CairnMarkerView, CairnTrailView, CairnWaypointView } from '@/lib/data-types'
+import type { FjallMarkerView, FjallTrailView, FjallWaypointView } from '@/lib/data-types'
 import { WaypointInspector, type WaypointDraft } from '@/components/apps/waypoint-inspector'
 import { Button } from '@/components/core/ui/button'
 import { FilterInput } from '@/components/core/ui/filter-input'
 import { InspectorChrome, InspectorChromeTitle } from '@/components/core/ui/inspector-chrome'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import {
-  createCairnWaypoint,
-  deleteCairnWaypoint,
-  fetchCairnWaypoints,
-  updateCairnWaypoint,
+  createFjallWaypoint,
+  deleteFjallWaypoint,
+  fetchFjallWaypoints,
+  updateFjallWaypoint,
 } from '@/lib/data-api'
 import { toWaypointView } from '@/lib/data-format'
 import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import { liveMarkersById, withLiveMarker } from '@/lib/embedded-markers'
+import { isAudrRootName, isUnderAudrMarkerRoot } from '@/lib/audr-marker-root'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn, includesFoldedSearch } from '@/lib/utils'
-
-function isUnderRoot(markerName: string, root: string) {
-  return markerName === root || markerName.startsWith(`${root}/`)
-}
 
 function normalizeHref(url: string): string {
   const trimmed = url.trim()
@@ -37,8 +34,8 @@ export function AudrLaufarInspector({
   selectedId,
   onSelectId,
 }: {
-  trails: CairnTrailView[]
-  markers: CairnMarkerView[]
+  trails: FjallTrailView[]
+  markers: FjallMarkerView[]
   rootMarkerName: string
   selectedId: string | null
   onSelectId: (id: string | null) => void
@@ -50,22 +47,35 @@ export function AudrLaufarInspector({
   const liveById = useMemo(() => liveMarkersById(markers), [markers])
 
   const waypointsQuery = useQuery({
-    queryKey: ['cairn-waypoints'],
-    queryFn: fetchCairnWaypoints,
+    queryKey: ['fjall-waypoints'],
+    queryFn: fetchFjallWaypoints,
   })
 
   const trailsById = useMemo(() => new Map(trails.map((trail) => [trail.id, trail])), [trails])
   const provisionsTrail = useMemo(
-    () => trails.find((trail) => trail.name === rootMarkerName) ?? null,
+    () =>
+      trails.find((trail) => trail.name === rootMarkerName) ??
+      trails.find((trail) => isAudrRootName(trail.name)) ??
+      null,
     [trails, rootMarkerName],
   )
   const provisionsMarkerIds = useMemo(() => {
     return new Set(
-      markers.filter((marker) => isUnderRoot(marker.name, rootMarkerName)).map((marker) => marker.id),
+      markers
+        .filter(
+          (marker) =>
+            isUnderAudrMarkerRoot(marker.name) ||
+            marker.name === rootMarkerName ||
+            marker.name.startsWith(`${rootMarkerName}/`),
+        )
+        .map((marker) => marker.id),
     )
   }, [markers, rootMarkerName])
   const rootMarker = useMemo(
-    () => markers.find((marker) => marker.name === rootMarkerName) ?? null,
+    () =>
+      markers.find((marker) => marker.name === rootMarkerName) ??
+      markers.find((marker) => isAudrRootName(marker.name)) ??
+      null,
     [markers, rootMarkerName],
   )
 
@@ -104,7 +114,7 @@ export function AudrLaufarInspector({
       : null
 
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ['cairn-waypoints'] })
+    void queryClient.invalidateQueries({ queryKey: ['fjall-waypoints'] })
   }
 
   const saveMutation = useMutation({
@@ -119,8 +129,8 @@ export function AudrLaufarInspector({
         trailId: provisionsTrail.id,
         markerIds: draft.markerIds,
       }
-      if (isNew) return createCairnWaypoint(payload)
-      return updateCairnWaypoint(selectedId!, payload)
+      if (isNew) return createFjallWaypoint(payload)
+      return updateFjallWaypoint(selectedId!, payload)
     },
     onSuccess: () => {
       toast.success(isNew ? `${terms.laufarSingular} created` : `${terms.laufarSingular} saved`)
@@ -132,7 +142,7 @@ export function AudrLaufarInspector({
   })
 
   const deleteMutation = useMutation({
-    mutationFn: () => deleteCairnWaypoint(selectedId!),
+    mutationFn: () => deleteFjallWaypoint(selectedId!),
     onSuccess: () => {
       toast.success(`${terms.laufarSingular} deleted`)
       invalidate()
@@ -148,7 +158,12 @@ export function AudrLaufarInspector({
         waypoint={selectedWaypoint}
         isNew={isNew}
         trails={trails}
-        markers={markers.filter((marker) => isUnderRoot(marker.name, rootMarkerName))}
+        markers={markers.filter(
+          (marker) =>
+            isUnderAudrMarkerRoot(marker.name) ||
+            marker.name === rootMarkerName ||
+            marker.name.startsWith(`${rootMarkerName}/`),
+        )}
         markerPickerInitialPath={[rootMarkerName]}
         defaultMarkerIds={isNew && rootMarker ? [rootMarker.id] : undefined}
         lockedTrailId={provisionsTrail?.id}
@@ -240,7 +255,7 @@ function LaufarCard({
   onOpenLink,
   onEdit,
 }: {
-  waypoint: CairnWaypointView
+  waypoint: FjallWaypointView
   liveById: ReturnType<typeof liveMarkersById>
   onOpenLink: () => void
   onEdit: () => void

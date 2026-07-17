@@ -11,12 +11,10 @@ locals {
 
   lambda_env = merge(
     {
-      ENVIRONMENT          = var.environment
-      SERVICE              = "asgard-fjall-api"
-      COGNITO_USER_POOL_ID = var.cognito_user_pool_id
-      COGNITO_CLIENT_ID    = var.cognito_client_id
-      DYNAMODB_TABLE       = var.dynamodb_table_name
-      WEB_URL              = var.web_url
+      ENVIRONMENT    = var.environment
+      SERVICE        = "asgard-fjall-api"
+      DYNAMODB_TABLE = var.dynamodb_table_name
+      WEB_URL        = var.web_url
     },
     local.fjall_session_secret != "" ? {
       FJALL_SESSION_SECRET = local.fjall_session_secret

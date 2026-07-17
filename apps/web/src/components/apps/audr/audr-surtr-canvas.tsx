@@ -17,10 +17,10 @@ import { effectiveSkattSpent, effectiveSkattUtilization } from '@/lib/audr-skatt
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
 import type {
-  CairnBurn,
-  CairnCacheUtilization,
-  CairnSjodrView,
-  CairnSupplyline,
+  FjallBurn,
+  FjallCacheUtilization,
+  FjallSjodrView,
+  FjallSupplyline,
 } from '@/lib/data-types'
 import { resolveSjodrColor } from '@/lib/sjodr-color'
 import type { AudrMarker } from './audr-types'
@@ -73,15 +73,15 @@ export function AudrSurtrCanvas({
   groupBy: AudrCanvasGroupBy
   onGroupByChange: (value: AudrCanvasGroupBy) => void
   markers: AudrMarker[]
-  funds: CairnSjodrView[]
+  funds: FjallSjodrView[]
   filtersActive: boolean
   onClearFilters: () => void
   onBringSkatt: () => void
   onManageLaufar: () => void
   onManageSjodr: () => void
-  burns: CairnBurn[]
-  cacheUtilization: CairnCacheUtilization[]
-  supplylines: CairnSupplyline[]
+  burns: FjallBurn[]
+  cacheUtilization: FjallCacheUtilization[]
+  supplylines: FjallSupplyline[]
   burnsLoading: boolean
   selectedBurnId: string | null
   onSelectBurn: (id: string) => void
@@ -165,7 +165,7 @@ export function AudrSurtrCanvas({
                 const sectionBurns = section.groups.flatMap((group) => group.burns)
                 const sectionCaches = section.groups
                   .map((group) => group.cache)
-                  .filter((cache): cache is CairnCacheUtilization => cache != null)
+                  .filter((cache): cache is FjallCacheUtilization => cache != null)
                 const spent = sectionCaches.reduce(
                   (sum, cache) => sum + effectiveSkattSpent(cache, supplylines),
                   0,
@@ -304,7 +304,7 @@ function SkattGroupBlock({
 }: {
   group: SurtrCanvasGroup
   markers: AudrMarker[]
-  supplylines: CairnSupplyline[]
+  supplylines: FjallSupplyline[]
   selectedBurnId: string | null
   fundNameById: Map<string, string>
   fundColorById: Map<string, string>

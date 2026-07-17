@@ -5,23 +5,23 @@ import { BookOpen } from 'lucide-react'
 import { RailCatalogSkeleton, SogurCanvasSkeleton } from '@/components/core/ui/studio-skeletons'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
 import {
-  CairnCatalogInspector,
-  type CairnCatalogTab,
+  FjallCatalogInspector,
+  type FjallCatalogTab,
 } from '@/components/apps/catalog-inspector'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import {
-  createCairnTrail,
-  fetchCairnLogs,
-  fetchCairnMarkers,
-  fetchCairnStatus,
-  fetchCairnTrails,
-  fetchCairnWaypoints,
-  saveCairnLog,
-  type CairnLogView,
+  createFjallTrail,
+  fetchFjallLogs,
+  fetchFjallMarkers,
+  fetchFjallStatus,
+  fetchFjallTrails,
+  fetchFjallWaypoints,
+  saveFjallLog,
+  type FjallLogView,
 } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 import { toMarkerView, toTrailView, toWaypointView } from '@/lib/data-format'
-import { groupLogsIntoLogbooks, sortCairnLogs } from '@/lib/sogur-format'
+import { groupLogsIntoLogbooks, sortFjallLogs } from '@/lib/sogur-format'
 import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
 import { SogurContextBar } from './sogur-context-bar'
 import { SogurLogbook } from './sogur-logbook'
@@ -32,7 +32,7 @@ import { SogurRail } from './sogur-rail'
 type InspectorMode = 'new' | 'reorder'
 
 type CatalogState = {
-  tab: CairnCatalogTab
+  tab: FjallCatalogTab
   selectedId: string | null
   markerPath: string[]
   markerParent: string | null
@@ -50,33 +50,33 @@ export function SogurWorkspace() {
   const [catalog, setCatalog] = useState<CatalogState | null>(null)
 
   const statusQuery = useQuery({
-    queryKey: ['cairn-status'],
-    queryFn: fetchCairnStatus,
+    queryKey: ['fjall-status'],
+    queryFn: fetchFjallStatus,
     retry: false,
     staleTime: 60_000,
   })
 
   const logsQuery = useQuery({
-    queryKey: ['cairn-logs'],
-    queryFn: fetchCairnLogs,
+    queryKey: ['fjall-logs'],
+    queryFn: fetchFjallLogs,
     enabled: statusQuery.data?.configured === true,
   })
 
   const trailsQuery = useQuery({
-    queryKey: ['cairn-trails'],
-    queryFn: fetchCairnTrails,
+    queryKey: ['fjall-trails'],
+    queryFn: fetchFjallTrails,
     enabled: statusQuery.data?.configured === true,
   })
 
   const markersQuery = useQuery({
-    queryKey: ['cairn-markers'],
-    queryFn: fetchCairnMarkers,
+    queryKey: ['fjall-markers'],
+    queryFn: fetchFjallMarkers,
     enabled: statusQuery.data?.configured === true,
   })
 
   const waypointsQuery = useQuery({
-    queryKey: ['cairn-waypoints'],
-    queryFn: fetchCairnWaypoints,
+    queryKey: ['fjall-waypoints'],
+    queryFn: fetchFjallWaypoints,
     enabled: statusQuery.data?.configured === true,
   })
 
@@ -135,9 +135,9 @@ export function SogurWorkspace() {
     selectBook(selectedBookId, pageId)
   }
 
-  function handleLogsChange(nextBookLogs: CairnLogView[]) {
+  function handleLogsChange(nextBookLogs: FjallLogView[]) {
     if (!selectedBook) return
-    queryClient.setQueryData(['cairn-logs'], (prev: CairnLogView[] | undefined) => {
+    queryClient.setQueryData(['fjall-logs'], (prev: FjallLogView[] | undefined) => {
       const others = (prev ?? []).filter((log) => log.trailId !== selectedBook.trailId)
       return [...others, ...nextBookLogs]
     })
@@ -198,20 +198,20 @@ export function SogurWorkspace() {
     try {
       let trailId = input.trailId
       if (input.newGreinName) {
-        const trail = await createCairnTrail({ name: input.newGreinName })
+        const trail = await createFjallTrail({ name: input.newGreinName })
         trailId = trail.id
-        await queryClient.invalidateQueries({ queryKey: ['cairn-trails'] })
+        await queryClient.invalidateQueries({ queryKey: ['fjall-trails'] })
       }
       if (!trailId) return
 
-      const created = await saveCairnLog({
+      const created = await saveFjallLog({
         title: null,
         content: '<p></p>',
         trailId,
         markerIds: [],
         waypointId: null,
       })
-      await queryClient.invalidateQueries({ queryKey: ['cairn-logs'] })
+      await queryClient.invalidateQueries({ queryKey: ['fjall-logs'] })
       setInspectorMode('reorder')
       setInspectorEngaged(true)
       selectBook(trailId, created.id)
@@ -225,7 +225,7 @@ export function SogurWorkspace() {
     if (!selectedBook) setInspectorEngaged(false)
   }
 
-  const bookLogs = selectedBook ? sortCairnLogs(selectedBook.logs) : []
+  const bookLogs = selectedBook ? sortFjallLogs(selectedBook.logs) : []
   const activeInspectorMode =
     catalog ? null : inspectorMode ?? (selectedBook && inspectorEngaged ? 'reorder' : null)
   const inspectorContentAvailable =
@@ -319,7 +319,7 @@ export function SogurWorkspace() {
       inspectorHint={inspectorHint}
       inspector={
         catalog ? (
-          <CairnCatalogInspector
+          <FjallCatalogInspector
             activeTab={catalog.tab}
             onTabChange={(tab) =>
               setCatalog({ tab, selectedId: null, markerPath: [], markerParent: null })

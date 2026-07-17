@@ -4,13 +4,13 @@ import { MarkerBadge } from '@/components/apps/marker-badge'
 import { RowActionsMenu } from '@/components/apps/row-actions-menu'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { toDisplayMarker } from '@/lib/embedded-markers'
-import { deleteCairnBurn, fetchCairnBurnReceiptUrl } from '@/lib/data-api'
+import { deleteFjallBurn, fetchFjallBurnReceiptUrl } from '@/lib/data-api'
 import { InlineBurnForm } from './inline-burn-form'
-import type { CairnBurn } from '@/lib/data-types'
+import type { FjallBurn } from '@/lib/data-types'
 import { useTerms } from '@/hooks/use-terminology'
 
 interface Props {
-  burn: CairnBurn
+  burn: FjallBurn
   tags: { id: string; name: string; color: string; icon?: string | null }[]
   onSaved: () => void
   onDeleted: () => void
@@ -57,7 +57,7 @@ export function BurnRow({ burn, tags, onSaved, onDeleted }: Props) {
             type="button"
             onClick={async () => {
               try {
-                const url = await fetchCairnBurnReceiptUrl(burn.receiptUrl!)
+                const url = await fetchFjallBurnReceiptUrl(burn.receiptUrl!)
                 window.open(url, '_blank')
               } catch { /* ignore */ }
             }}
@@ -81,7 +81,7 @@ export function BurnRow({ burn, tags, onSaved, onDeleted }: Props) {
         confirmLabel="Remove"
         confirmVariant="destructive"
         onCancel={() => setConfirmDelete(false)}
-        onConfirm={async () => { await deleteCairnBurn(burn.id); setConfirmDelete(false); onDeleted() }}
+        onConfirm={async () => { await deleteFjallBurn(burn.id); setConfirmDelete(false); onDeleted() }}
       />
     </>
   )

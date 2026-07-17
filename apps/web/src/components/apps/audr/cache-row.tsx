@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/core/ui/button'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
-import { deleteCairnCache } from '@/lib/data-api'
+import { deleteFjallCache } from '@/lib/data-api'
 import { InlineCacheForm } from './inline-cache-form'
-import type { CairnCacheUtilization } from '@/lib/data-types'
+import type { FjallCacheUtilization } from '@/lib/data-types'
 import { useTerms } from '@/hooks/use-terminology'
 
 interface Props {
-  cache: CairnCacheUtilization
+  cache: FjallCacheUtilization
   markers: { id: string; name: string; color: string; icon?: string | null }[]
   month: number
   year: number
@@ -25,7 +25,7 @@ const utilizationColor = (pct: number) => {
   return 'bg-primary'
 }
 
-function cacheMarkerLabel(cache: CairnCacheUtilization, markers: Props['markers']): string {
+function cacheMarkerLabel(cache: FjallCacheUtilization, markers: Props['markers']): string {
   const name = markers.find((m) => m.id === cache.markerId)?.name ?? cache.marker?.name
   if (!name || name === 'Uncategorized') return 'Uncategorized'
   return name.split('/').pop() ?? name
@@ -85,7 +85,7 @@ export function CacheRow({ cache, markers, month, year, onSaved, onDeleted }: Pr
         confirmLabel="Remove"
         confirmVariant="destructive"
         onCancel={() => setConfirmDelete(false)}
-        onConfirm={async () => { await deleteCairnCache(cache.id); setConfirmDelete(false); onDeleted() }}
+        onConfirm={async () => { await deleteFjallCache(cache.id); setConfirmDelete(false); onDeleted() }}
       />
     </>
   )

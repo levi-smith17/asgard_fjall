@@ -30,7 +30,7 @@ function parseOrigins(env: NodeJS.ProcessEnv): string[] {
   return merged
 }
 
-/** Migrated Cairn Cognito sub — Dynamo rows are keyed USER#<sub>. */
+/** Stable user id — Dynamo rows are keyed USER#<sub>. */
 export const DEFAULT_DATA_USER_SUB = '610b75f0-6031-703c-a794-0924826eaa3f'
 
 export function loadSessionConfig(env: NodeJS.ProcessEnv = process.env): SessionConfig {

@@ -1,5 +1,5 @@
 import { Bookmark, Settings, SlidersHorizontal } from 'lucide-react'
-import type { CairnMarkerView, CairnTrailView, CairnWaypointView } from '@/lib/data-types'
+import type { FjallMarkerView, FjallTrailView, FjallWaypointView } from '@/lib/data-types'
 import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
 import { FilterInput } from '@/components/core/ui/filter-input'
 import { MarkerPicker } from '@/components/apps/marker-picker'
@@ -47,7 +47,7 @@ export function HlidskjalfLaufarRail({
   isLoading,
   unavailableMessage,
 }: {
-  groups: Array<{ label: string; waypoints: CairnWaypointView[] }>
+  groups: Array<{ label: string; waypoints: FjallWaypointView[] }>
   selectedId: string | null
   filterQuery: string
   onFilterQueryChange: (value: string) => void
@@ -55,8 +55,8 @@ export function HlidskjalfLaufarRail({
   onGreinFilterChange: (id: string) => void
   runirFilterId: string
   onRunirFilterChange: (id: string) => void
-  trails: CairnTrailView[]
-  markers: CairnMarkerView[]
+  trails: FjallTrailView[]
+  markers: FjallMarkerView[]
   onInspect: (id: string) => void
   onOpenUrl: (url: string) => void
   onOpenCatalog: () => void

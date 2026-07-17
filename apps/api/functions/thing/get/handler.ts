@@ -4,6 +4,7 @@ import { dynamo, TABLE_NAME } from '../../shared/db'
 import { getPk } from '../../shared/auth'
 import { DAGATAL_PREFIX, DAGATAL_SUB_PREFIX, idFromSk } from '../../shared/keys'
 import { ok, serverError, toApiGatewayResponse } from '../../shared/response'
+import { normalizeDefaultTerminology } from '../../shared/terminology'
 
 const DEFAULT_SETTINGS = {
   appearance: {
@@ -108,7 +109,7 @@ export const handler = async (
           username: profile.username ?? null,
           timeFormat: profile.timeFormat ?? 'TWELVE',
           listed: profile.listed ?? false,
-          defaultTerminology: profile.defaultTerminology ?? 'STANDARD',
+          defaultTerminology: normalizeDefaultTerminology(profile.defaultTerminology),
           defaultTheme: profile.defaultTheme ?? 'SYSTEM',
           headline: profile.headline ?? null,
           summary: profile.summary ?? null,

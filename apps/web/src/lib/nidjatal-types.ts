@@ -1,4 +1,4 @@
-/** Nidjatal (genealogy) types — inlined from cairn_summit's @cairn/types (Kin, Bloodline). */
+/** Nidjatal (genealogy) types — Kin and Bloodline records. */
 
 export type NidjatalBloodlineEndReason = 'DIVORCE' | 'DEATH' | 'SEPARATION'
 

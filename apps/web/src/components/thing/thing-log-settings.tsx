@@ -5,16 +5,16 @@ import { Button } from '@/components/core/ui/button'
 import { Select } from '@/components/core/ui/select'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import { ThingSettingRow } from '@/components/thing/thing-setting-row'
-import { fetchCairnFullSettings, fetchCairnStatus, saveCairnLogSettings } from '@/lib/data-api'
+import { fetchFjallFullSettings, fetchFjallStatus, saveFjallLogSettings } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 
 export function ThingLogSettings() {
   const terms = useTerms()
   const queryClient = useQueryClient()
-  const statusQuery = useQuery({ queryKey: ['cairn-status'], queryFn: fetchCairnStatus, retry: false })
+  const statusQuery = useQuery({ queryKey: ['fjall-status'], queryFn: fetchFjallStatus, retry: false })
   const settingsQuery = useQuery({
-    queryKey: ['cairn-full-settings'],
-    queryFn: fetchCairnFullSettings,
+    queryKey: ['fjall-full-settings'],
+    queryFn: fetchFjallFullSettings,
     enabled: statusQuery.data?.configured === true,
   })
 
@@ -29,9 +29,9 @@ export function ThingLogSettings() {
   }, [logs])
 
   const saveMutation = useMutation({
-    mutationFn: () => saveCairnLogSettings({ logsPerPage, defaultSort }),
+    mutationFn: () => saveFjallLogSettings({ logsPerPage, defaultSort }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['cairn-full-settings'] })
+      await queryClient.invalidateQueries({ queryKey: ['fjall-full-settings'] })
     },
   })
 

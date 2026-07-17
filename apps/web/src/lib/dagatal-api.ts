@@ -1,11 +1,11 @@
-import { cairnFetch } from '@/lib/data-client'
-import type { CairnExternalCalendarEvent } from '@/lib/data-types'
-import type { CairnCalendarSyncStatus } from '@/lib/data-api'
-import { parseCairnItineraryEventsPayload, reviveItineraryEvents } from '@/lib/dagatal-events'
+import { fjallFetch } from '@/lib/data-client'
+import type { FjallExternalCalendarEvent } from '@/lib/data-types'
+import type { FjallCalendarSyncStatus } from '@/lib/data-api'
+import { parseFjallItineraryEventsPayload, reviveItineraryEvents } from '@/lib/dagatal-events'
 
 export type DagatalEventsResult = {
-  events: CairnExternalCalendarEvent[]
-  calendarSync: CairnCalendarSyncStatus[]
+  events: FjallExternalCalendarEvent[]
+  calendarSync: FjallCalendarSyncStatus[]
   cacheStatus: string | null
 }
 
@@ -17,7 +17,7 @@ export type DagatalCalendar = {
 }
 
 export async function fetchDagatalCalendars(): Promise<DagatalCalendar[]> {
-  const settings = await cairnFetch<{
+  const settings = await fjallFetch<{
     calendars?: { id: string; name: string; color: string }[]
     calendarSubscriptions?: { id: string; name: string; color: string }[]
   }>('/settings')
@@ -38,18 +38,18 @@ export async function fetchDagatalEvents(params?: {
   if (params?.refresh) qs.set('refresh', 'true')
   const query = qs.toString()
 
-  const data = await cairnFetch<{
+  const data = await fjallFetch<{
     events?: Record<string, unknown>[]
-    calendarSync?: CairnCalendarSyncStatus[]
+    calendarSync?: FjallCalendarSyncStatus[]
   }>(`/itinerary/events${query ? `?${query}` : ''}`)
 
   return {
-    events: reviveItineraryEvents(parseCairnItineraryEventsPayload(data)),
+    events: reviveItineraryEvents(parseFjallItineraryEventsPayload(data)),
     calendarSync: Array.isArray(data.calendarSync) ? data.calendarSync : [],
     cacheStatus: null,
   }
 }
 
 export async function syncDagatal(): Promise<void> {
-  await cairnFetch('/itinerary/sync', { method: 'POST', body: '{}' })
+  await fjallFetch('/itinerary/sync', { method: 'POST', body: '{}' })
 }

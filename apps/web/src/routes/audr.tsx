@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import { AudrClient, AudrPageSkeleton } from '@/components/apps/audr/audr-client'
-import { fetchCairnStatus } from '@/lib/data-api'
+import { fetchFjallStatus } from '@/lib/data-api'
 
 export function AudrPage() {
   const statusQuery = useQuery({
-    queryKey: ['cairn-status'],
-    queryFn: fetchCairnStatus,
+    queryKey: ['fjall-status'],
+    queryFn: fetchFjallStatus,
     retry: false,
     staleTime: 60_000,
   })

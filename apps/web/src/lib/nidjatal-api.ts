@@ -1,4 +1,4 @@
-import { cairnFetch } from '@/lib/data-client'
+import { fjallFetch } from '@/lib/data-client'
 import type { NidjatalBloodline, NidjatalKin } from '@/lib/nidjatal-types'
 
 export interface NidjatalKinPayload {
@@ -17,12 +17,12 @@ export interface NidjatalKinPayload {
 }
 
 export async function fetchNidjatalKin(): Promise<NidjatalKin[]> {
-  const data = await cairnFetch<NidjatalKin[]>('/headwaters/kin')
+  const data = await fjallFetch<NidjatalKin[]>('/headwaters/kin')
   return data ?? []
 }
 
 export async function createNidjatalKin(payload: NidjatalKinPayload): Promise<NidjatalKin> {
-  return cairnFetch<NidjatalKin>('/headwaters/kin', {
+  return fjallFetch<NidjatalKin>('/headwaters/kin', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
@@ -32,12 +32,12 @@ export async function updateNidjatalKin(
   id: string,
   payload: Partial<NidjatalKinPayload>,
 ): Promise<void> {
-  await cairnFetch(`/headwaters/kin/${id}`, {
+  await fjallFetch(`/headwaters/kin/${id}`, {
     method: 'PUT',
     body: JSON.stringify(payload),
   })
 }
 
 export async function deleteNidjatalKin(id: string): Promise<void> {
-  await cairnFetch(`/headwaters/kin/${id}`, { method: 'DELETE' })
+  await fjallFetch(`/headwaters/kin/${id}`, { method: 'DELETE' })
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { CairnMarkerView } from '@/lib/data-types'
+import type { FjallMarkerView } from '@/lib/data-types'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { Input } from '@/components/core/ui/input'
 import {
@@ -21,7 +21,7 @@ export function MarkerInspector({
   onDelete,
   isSaving,
 }: {
-  marker: CairnMarkerView | null
+  marker: FjallMarkerView | null
   isNew: boolean
   parentPrefix?: string | null
   title?: string

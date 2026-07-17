@@ -7,13 +7,13 @@ import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { MarkerBadge } from '@/components/apps/marker-badge'
 import { liveMarkersById, toDisplayMarker } from '@/lib/embedded-markers'
-import { toggleCairnSupplylineActive } from '@/lib/data-api'
+import { toggleFjallSupplylineActive } from '@/lib/data-api'
 import { daysUntilRenewal, getEffectiveNextRenewal } from '@/lib/idunn-renewal'
 import { audrFmt } from '@/lib/audr-format'
 import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
-import type { CairnSjodrView, CairnSupplyline } from '@/lib/data-types'
+import type { FjallSjodrView, FjallSupplyline } from '@/lib/data-types'
 import { resolveSjodrColor } from '@/lib/sjodr-color'
 import type { AudrMarker } from './audr-types'
 
@@ -39,8 +39,8 @@ export function AudrIdunnRail({
   onOpenCatalog,
   onRefresh,
 }: {
-  supplylines: CairnSupplyline[]
-  funds: CairnSjodrView[]
+  supplylines: FjallSupplyline[]
+  funds: FjallSjodrView[]
   markers?: AudrMarker[]
   selectedId: string | null
   activeFilter: string
@@ -158,7 +158,7 @@ function AudrIdunnRailCard({
   onSelect,
   onToggleActive,
 }: {
-  supplyline: CairnSupplyline
+  supplyline: FjallSupplyline
   liveById: ReturnType<typeof liveMarkersById>
   fundColor?: string | null
   fundName?: string
@@ -188,7 +188,7 @@ function AudrIdunnRailCard({
       <Switch
         checked={supplyline.active}
         onCheckedChange={async (checked) => {
-          await toggleCairnSupplylineActive(supplyline.id, checked)
+          await toggleFjallSupplylineActive(supplyline.id, checked)
           onToggleActive()
         }}
         className="mt-0.5 shrink-0 scale-75"

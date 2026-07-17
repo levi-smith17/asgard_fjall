@@ -12,10 +12,10 @@ import { SendibodSignalList } from '@/components/apps/sendibod/sendibod-signal-l
 import { SendibodSettingsForm } from '@/components/apps/sendibod/sendibod-settings-form'
 import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
 import {
-  deleteCairnSignal,
-  fetchCairnFullSettings,
-  fetchCairnSignals,
-  fetchCairnStatus,
+  deleteFjallSignal,
+  fetchFjallFullSettings,
+  fetchFjallSignals,
+  fetchFjallStatus,
 } from '@/lib/data-api'
 
 export function SendibodPage() {
@@ -35,8 +35,8 @@ export function SendibodPage() {
   }, [setSearchParams])
 
   const statusQuery = useQuery({
-    queryKey: ['cairn-status'],
-    queryFn: fetchCairnStatus,
+    queryKey: ['fjall-status'],
+    queryFn: fetchFjallStatus,
     retry: false,
     staleTime: 60_000,
   })
@@ -44,14 +44,14 @@ export function SendibodPage() {
   const configured = statusQuery.data?.configured === true
 
   const signalsQuery = useQuery({
-    queryKey: ['cairn-signals'],
-    queryFn: fetchCairnSignals,
+    queryKey: ['fjall-signals'],
+    queryFn: fetchFjallSignals,
     enabled: configured,
   })
 
   const settingsQuery = useQuery({
-    queryKey: ['cairn-settings-signals'],
-    queryFn: fetchCairnFullSettings,
+    queryKey: ['fjall-settings-signals'],
+    queryFn: fetchFjallFullSettings,
     enabled: configured,
     staleTime: 60_000,
   })
@@ -120,8 +120,8 @@ export function SendibodPage() {
 
   async function confirmDelete() {
     if (!deleteTarget) return
-    await deleteCairnSignal(deleteTarget.id)
-    await queryClient.invalidateQueries({ queryKey: ['cairn-signals'] })
+    await deleteFjallSignal(deleteTarget.id)
+    await queryClient.invalidateQueries({ queryKey: ['fjall-signals'] })
     if (selectedId === deleteTarget.id) clearSelection()
     setDeleteTarget(null)
   }

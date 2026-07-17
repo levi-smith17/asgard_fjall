@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { ChevronLeft, Plus, Settings, Tag } from 'lucide-react'
-import type { CairnMarkerView } from '@/lib/data-types'
+import type { FjallMarkerView } from '@/lib/data-types'
 import { Button } from '@/components/core/ui/button'
 import { FilterInput } from '@/components/core/ui/filter-input'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
@@ -30,7 +30,7 @@ export function MarkersBrowser({
   onNavigateInto,
   rootPath = [],
 }: {
-  markers: CairnMarkerView[]
+  markers: FjallMarkerView[]
   search: string
   onSearchChange?: (value: string) => void
   groupPath: string[]
@@ -57,7 +57,7 @@ export function MarkersBrowser({
     const rootName = rootPath.length > 0 ? rootPath.join('/') : null
     return allLeaves
       .map(({ leaf }) => markerMap.get(leaf.id))
-      .filter((marker): marker is CairnMarkerView => {
+      .filter((marker): marker is FjallMarkerView => {
         if (!marker || !marker.name.toLowerCase().includes(query)) return false
         if (!rootName) return true
         return marker.name === rootName || marker.name.startsWith(rootPrefix!)
@@ -342,7 +342,7 @@ function SearchResultRow({
   onSelect,
   onAdd,
 }: {
-  marker: CairnMarkerView
+  marker: FjallMarkerView
   isSelected: boolean
   onSelect: () => void
   onAdd: () => void

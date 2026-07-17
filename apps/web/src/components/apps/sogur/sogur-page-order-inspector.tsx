@@ -16,7 +16,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { Check, GripVertical } from 'lucide-react'
 import { Button } from '@/components/core/ui/button'
-import { reorderCairnLogs, type CairnLogView } from '@/lib/data-api'
+import { reorderFjallLogs, type FjallLogView } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 import { InspectorChrome, InspectorChromeTitle } from '@/components/core/ui/inspector-chrome'
 import { pagePreview } from '@/lib/sogur-format'
@@ -28,7 +28,7 @@ function SortablePageRow({
   isActive,
   onSelect,
 }: {
-  log: CairnLogView
+  log: FjallLogView
   index: number
   isActive: boolean
   onSelect: () => void
@@ -82,10 +82,10 @@ export function SogurPageOrderInspector({
   onSelectPage,
   onClose,
 }: {
-  logs: CairnLogView[]
+  logs: FjallLogView[]
   activePageId: string | null
   bookName: string
-  onLogsChange: (logs: CairnLogView[]) => void
+  onLogsChange: (logs: FjallLogView[]) => void
   onSelectPage: (pageId: string) => void
   onClose?: () => void
 }) {
@@ -104,7 +104,7 @@ export function SogurPageOrderInspector({
     const next = arrayMove(logs, oldIndex, newIndex)
     onLogsChange(next)
     try {
-      await reorderCairnLogs(next.map((log) => log.id))
+      await reorderFjallLogs(next.map((log) => log.id))
     } catch {
       onLogsChange(logs)
     }

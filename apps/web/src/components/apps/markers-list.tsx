@@ -1,5 +1,5 @@
 import { Plus } from 'lucide-react'
-import type { CairnMarkerView } from '@/lib/data-types'
+import type { FjallMarkerView } from '@/lib/data-types'
 import { Button } from '@/components/core/ui/button'
 import { AppPanelHeader } from '@/components/apps/split-canvas'
 import { ASGARD_PRIMARY_HEX } from '@/lib/brand-colors'
@@ -60,7 +60,7 @@ export function MarkersList({
   onSelect,
   onNew,
 }: {
-  markers: CairnMarkerView[]
+  markers: FjallMarkerView[]
   selectedId: string | null
   searchQuery: string
   onSearchChange: (value: string) => void

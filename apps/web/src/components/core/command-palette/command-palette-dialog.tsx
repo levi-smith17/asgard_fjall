@@ -242,7 +242,7 @@ export function CommandPaletteDialog() {
               ))}
               {isIndexing && query.trim() ? (
                 <p className="px-4 py-2 text-center text-xs text-muted-foreground">
-                  Searching Cairn…
+                  Searching Fjall…
                 </p>
               ) : null}
             </>

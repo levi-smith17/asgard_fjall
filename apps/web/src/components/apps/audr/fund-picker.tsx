@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Select } from '@/components/core/ui/select'
-import { fetchCairnSjodr } from '@/lib/data-api'
+import { fetchFjallSjodr } from '@/lib/data-api'
 import { resolveSjodrColor } from '@/lib/sjodr-color'
 import { useTerms } from '@/hooks/use-terminology'
 
@@ -13,8 +13,8 @@ export function FundPicker({
 }) {
   const terms = useTerms()
   const sjodrQuery = useQuery({
-    queryKey: ['cairn-sjodr'],
-    queryFn: fetchCairnSjodr,
+    queryKey: ['fjall-sjodr'],
+    queryFn: fetchFjallSjodr,
   })
   const funds = sjodrQuery.data ?? []
 

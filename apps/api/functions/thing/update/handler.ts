@@ -3,6 +3,7 @@ import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 }
 import { dynamo, TABLE_NAME } from '../../shared/db'
 import { getPk } from '../../shared/auth'
 import { badRequest, ok, serverError, toApiGatewayResponse } from '../../shared/response'
+import { normalizeDefaultTerminology } from '../../shared/terminology'
 
 const THING_SECTIONS = ['appearance', 'privacy', 'dagatal', 'laufar', 'sogur', 'sendibod'] as const
 type ThingSection = (typeof THING_SECTIONS)[number]
@@ -45,7 +46,10 @@ export const handler = async (
           exprNames[nameKey] = field
           if (body[field] !== null && body[field] !== undefined) {
             setExprs.push(`${nameKey} = :${field}`)
-            exprValues[`:${field}`] = body[field]
+            exprValues[`:${field}`] =
+              field === 'defaultTerminology'
+                ? normalizeDefaultTerminology(body[field])
+                : body[field]
           } else {
             removeExprs.push(nameKey)
           }

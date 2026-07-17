@@ -1,29 +1,30 @@
-import { cairnFetch, fetchCairnHealth } from '@/lib/data-client'
-import { CAIRN_API_URL } from '@/lib/config'
+import { fjallFetch, fetchFjallHealth } from '@/lib/data-client'
+import { FJALL_API_URL } from '@/lib/config'
 import { getStoredAccessToken } from '@/lib/webauthn-client'
 import type {
-  CairnBurnPage,
-  CairnCalendarOption,
-  CairnExternalCalendarEvent,
-  CairnMarker,
-  CairnMarkerView,
-  CairnProvisionsSummary,
-  CairnSjodr,
-  CairnSjodrView,
-  CairnSupplyline,
-  CairnTrail,
-  CairnTrailView,
-  CairnWaypoint,
-  CairnWaypointMeta,
-  SaveCairnSjodrRequest,
-  SaveCairnWaypointRequest,
+  FjallBurnPage,
+  FjallCalendarOption,
+  FjallExternalCalendarEvent,
+  FjallMarker,
+  FjallMarkerView,
+  AudrSummary,
+  FjallSjodr,
+  FjallSjodrView,
+  FjallSupplyline,
+  FjallTrail,
+  FjallTrailView,
+  FjallWaypoint,
+  FjallWaypointMeta,
+  SaveFjallSjodrRequest,
+  SaveFjallWaypointRequest,
 } from '@/lib/data-types'
-import { extractCairnId } from '@/lib/data-format'
-import { parseCairnItineraryEventsPayload, reviveItineraryEvents } from '@/lib/dagatal-events'
+import { extractEntityId } from '@/lib/data-format'
+import { normalizeTerminologyStyle, type TerminologyStyle } from '@/lib/terminology'
+import { parseFjallItineraryEventsPayload, reviveItineraryEvents } from '@/lib/dagatal-events'
 
 // ─── Status ────────────────────────────────────────────────────────────────
 
-export type CairnStatusResponse = {
+export type FjallStatusResponse = {
   configured: boolean
   baseUrl: string
 }
@@ -31,17 +32,17 @@ export type CairnStatusResponse = {
 /**
  * Passkey session Bearer + reachable API means live data is available.
  */
-export async function fetchCairnStatus(): Promise<CairnStatusResponse> {
-  const health = await fetchCairnHealth()
+export async function fetchFjallStatus(): Promise<FjallStatusResponse> {
+  const health = await fetchFjallHealth()
   return {
     configured: Boolean(getStoredAccessToken()) && health.ok,
-    baseUrl: CAIRN_API_URL,
+    baseUrl: FJALL_API_URL,
   }
 }
 
 // ─── Settings ──────────────────────────────────────────────────────────────
 
-export type CairnSignalSettings = {
+export type FjallSignalSettings = {
   messagesPerPage: number
   autoMarkRead: boolean
   autoRefreshInterval: number
@@ -51,28 +52,28 @@ export type CairnSignalSettings = {
   notificationSound: boolean
 }
 
-export type CairnCalendarEntry = {
+export type FjallCalendarEntry = {
   id: string
   name: string
   color: string
   appleId?: string
 }
 
-export type CairnSubscriptionEntry = {
+export type FjallSubscriptionEntry = {
   id: string
   name: string
   url: string
   color: string
 }
 
-export type CairnFullSettings = {
+export type FjallFullSettings = {
   account: {
     name: string | null
     image: string | null
     username: string | null
     timeFormat: 'TWELVE' | 'TWENTYFOUR'
     listed: boolean
-    defaultTerminology: 'CAIRN' | 'STANDARD'
+    defaultTerminology: TerminologyStyle
     defaultTheme: 'SYSTEM' | 'LIGHT' | 'DARK'
     customDomain: string | null
   }
@@ -102,15 +103,20 @@ export type CairnFullSettings = {
     logsPerPage: number
     defaultSort: 'NEWEST' | 'OLDEST'
   }
-  calendars: CairnCalendarEntry[]
-  calendarSubscriptions: CairnSubscriptionEntry[]
-  signals: CairnSignalSettings
+  calendars: FjallCalendarEntry[]
+  calendarSubscriptions: FjallSubscriptionEntry[]
+  signals: FjallSignalSettings
 }
 
-export async function fetchCairnFullSettings(): Promise<CairnFullSettings> {
-  const raw = await cairnFetch<Record<string, any>>('/settings')
+export async function fetchFjallFullSettings(): Promise<FjallFullSettings> {
+  const raw = await fjallFetch<Record<string, any>>('/settings')
+  const account = raw.account ?? {}
   return {
     ...raw,
+    account: {
+      ...account,
+      defaultTerminology: normalizeTerminologyStyle(account.defaultTerminology),
+    },
     itinerary: raw.itinerary ?? raw.dagatal,
     waypoints: raw.waypoints ?? {
       defaultSort: raw.laufar?.defaultSort,
@@ -124,10 +130,10 @@ export async function fetchCairnFullSettings(): Promise<CairnFullSettings> {
     calendars: raw.calendars,
     calendarSubscriptions: raw.calendarSubscriptions,
     signals: raw.signals ?? raw.sendibod,
-  } as CairnFullSettings
+  } as FjallFullSettings
 }
 
-export type CairnProfile = {
+export type FjallProfile = {
   username: string | null
   name: string | null
   email: string | null
@@ -135,136 +141,136 @@ export type CairnProfile = {
   isAdmin: boolean
 }
 
-export async function fetchCairnProfile(): Promise<CairnProfile> {
-  return cairnFetch<CairnProfile>('/profile')
+export async function fetchFjallProfile(): Promise<FjallProfile> {
+  return fjallFetch<FjallProfile>('/profile')
 }
 
-export async function saveCairnAccountSettings(data: Record<string, unknown>): Promise<void> {
-  await cairnFetch('/settings/account', {
+export async function saveFjallAccountSettings(data: Record<string, unknown>): Promise<void> {
+  await fjallFetch('/settings/account', {
     method: 'PUT',
     body: JSON.stringify(data),
   })
 }
 
-export async function saveCairnPrivacySettings(data: Record<string, unknown>): Promise<void> {
-  await cairnFetch('/settings/privacy', {
+export async function saveFjallPrivacySettings(data: Record<string, unknown>): Promise<void> {
+  await fjallFetch('/settings/privacy', {
     method: 'PUT',
     body: JSON.stringify(data),
   })
 }
 
-export async function saveCairnListedSetting(listed: boolean): Promise<void> {
-  await cairnFetch('/settings/account', {
+export async function saveFjallListedSetting(listed: boolean): Promise<void> {
+  await fjallFetch('/settings/account', {
     method: 'PUT',
     body: JSON.stringify({ listed }),
   })
 }
 
-export async function saveCairnItinerarySettings(data: Record<string, unknown>): Promise<void> {
-  await cairnFetch('/settings/itinerary', {
+export async function saveFjallItinerarySettings(data: Record<string, unknown>): Promise<void> {
+  await fjallFetch('/settings/itinerary', {
     method: 'PUT',
     body: JSON.stringify(data),
   })
 }
 
-export async function saveCairnAppearanceSettings(data: Record<string, unknown>): Promise<void> {
-  await cairnFetch('/settings/appearance', {
+export async function saveFjallAppearanceSettings(data: Record<string, unknown>): Promise<void> {
+  await fjallFetch('/settings/appearance', {
     method: 'PUT',
     body: JSON.stringify(data),
   })
 }
 
-export async function saveCairnWaypointSettings(data: Record<string, unknown>): Promise<void> {
-  await cairnFetch('/settings/waypoints', {
+export async function saveFjallWaypointSettings(data: Record<string, unknown>): Promise<void> {
+  await fjallFetch('/settings/waypoints', {
     method: 'PUT',
     body: JSON.stringify(data),
   })
 }
 
-export async function saveCairnLogSettings(data: Record<string, unknown>): Promise<void> {
-  await cairnFetch('/settings/logs', {
+export async function saveFjallLogSettings(data: Record<string, unknown>): Promise<void> {
+  await fjallFetch('/settings/logs', {
     method: 'PUT',
     body: JSON.stringify(data),
   })
 }
 
-export type CairnApiTokenStatus = {
+export type FjallApiTokenStatus = {
   configured: boolean
   tokenPrefix: string | null
   lastUsedAt: string | null
 }
 
-export async function fetchCairnApiTokenStatus(): Promise<CairnApiTokenStatus> {
-  return cairnFetch<CairnApiTokenStatus>('/settings/api-token')
+export async function fetchFjallApiTokenStatus(): Promise<FjallApiTokenStatus> {
+  return fjallFetch<FjallApiTokenStatus>('/settings/api-token')
 }
 
-export async function createCairnApiToken(): Promise<{ token: string }> {
-  return cairnFetch<{ token: string }>('/settings/api-token', { method: 'POST' })
+export async function createFjallApiToken(): Promise<{ token: string }> {
+  return fjallFetch<{ token: string }>('/settings/api-token', { method: 'POST' })
 }
 
-export async function revokeCairnApiToken(): Promise<void> {
-  await cairnFetch<void>('/settings/api-token', { method: 'DELETE' })
+export async function revokeFjallApiToken(): Promise<void> {
+  await fjallFetch<void>('/settings/api-token', { method: 'DELETE' })
 }
 
-export async function addCairnICloudCalendar(data: {
+export async function addFjallICloudCalendar(data: {
   appleId: string
   password: string
   name: string
   color: string
 }): Promise<void> {
-  await cairnFetch('/itinerary', {
+  await fjallFetch('/itinerary', {
     method: 'POST',
     body: JSON.stringify(data),
   })
 }
 
-export async function updateCairnICloudCalendar(
+export async function updateFjallICloudCalendar(
   id: string,
   data: Record<string, unknown>,
 ): Promise<void> {
-  await cairnFetch(`/itinerary/${id}`, {
+  await fjallFetch(`/itinerary/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   })
 }
 
-export async function deleteCairnICloudCalendar(id: string): Promise<void> {
-  await cairnFetch<void>(`/itinerary/${id}`, { method: 'DELETE' })
+export async function deleteFjallICloudCalendar(id: string): Promise<void> {
+  await fjallFetch<void>(`/itinerary/${id}`, { method: 'DELETE' })
 }
 
-export async function addCairnCalendarSubscription(data: Record<string, unknown>): Promise<void> {
-  await cairnFetch('/itinerary-subscriptions', {
+export async function addFjallCalendarSubscription(data: Record<string, unknown>): Promise<void> {
+  await fjallFetch('/itinerary-subscriptions', {
     method: 'POST',
     body: JSON.stringify(data),
   })
 }
 
-export async function deleteCairnCalendarSubscription(id: string): Promise<void> {
-  await cairnFetch<void>(`/itinerary-subscriptions/${id}`, { method: 'DELETE' })
+export async function deleteFjallCalendarSubscription(id: string): Promise<void> {
+  await fjallFetch<void>(`/itinerary-subscriptions/${id}`, { method: 'DELETE' })
 }
 
-export type CairnStarfieldNetwork = {
+export type FjallStarfieldNetwork = {
   id: string
   name: string
   description?: string | null
   color?: string | null
 }
 
-export async function fetchCairnStarfieldNetworks(): Promise<CairnStarfieldNetwork[]> {
-  const raw = await cairnFetch<Array<CairnStarfieldNetwork & { sk?: string }>>('/starfield/networks')
+export async function fetchFjallStarfieldNetworks(): Promise<FjallStarfieldNetwork[]> {
+  const raw = await fjallFetch<Array<FjallStarfieldNetwork & { sk?: string }>>('/starfield/networks')
   return raw.map((network) => ({
-    id: network.id || (network.sk ? extractCairnId(network.sk) : ''),
+    id: network.id || (network.sk ? extractEntityId(network.sk) : ''),
     name: network.name,
     description: network.description ?? null,
     color: network.color ?? null,
   }))
 }
 
-export type CairnSearchResultType = 'waypoint' | 'log' | 'provision' | 'stop' | 'trail' | 'marker'
+export type FjallSearchResultType = 'waypoint' | 'log' | 'provision' | 'stop' | 'trail' | 'marker'
 
-export type CairnSearchResult = {
+export type FjallSearchResult = {
   id: string
-  type: CairnSearchResultType
+  type: FjallSearchResultType
   title: string
   subtitle?: string
   url: string
@@ -273,8 +279,8 @@ export type CairnSearchResult = {
   score?: number
 }
 
-/** Map Summit/Cairn search URLs onto Fjall routes. */
-export function mapCairnSearchUrlToFjall(url: string): string {
+/** Map Summit/Fjall search URLs onto Fjall routes. */
+export function mapLegacySearchUrlToFjall(url: string): string {
   try {
     const parsed = new URL(url, 'https://fjall.local')
     const path = parsed.pathname
@@ -296,22 +302,22 @@ export function mapCairnSearchUrlToFjall(url: string): string {
   }
 }
 
-export async function searchCairn(query: string, deep = true): Promise<CairnSearchResult[]> {
+export async function searchFjall(query: string, deep = true): Promise<FjallSearchResult[]> {
   const qs = new URLSearchParams({ q: query, deep: String(deep) })
-  const results = await cairnFetch<CairnSearchResult[]>(`/search?${qs}`)
+  const results = await fjallFetch<FjallSearchResult[]>(`/search?${qs}`)
   return results.map((result) => ({
     ...result,
-    url: mapCairnSearchUrlToFjall(result.url),
+    url: mapLegacySearchUrlToFjall(result.url),
   }))
 }
 
-export async function saveCairnSignalSettings(data: CairnSignalSettings): Promise<void> {
-  await cairnFetch('/settings/signals', { method: 'PUT', body: JSON.stringify(data) })
+export async function saveFjallSignalSettings(data: FjallSignalSettings): Promise<void> {
+  await fjallFetch('/settings/signals', { method: 'PUT', body: JSON.stringify(data) })
 }
 
 // ─── Sendibóð (signals) ────────────────────────────────────────────────────
 
-export type CairnSignalReply = {
+export type FjallSignalReply = {
   id: string
   body: string
   direction: 'INBOUND' | 'OUTBOUND'
@@ -320,39 +326,39 @@ export type CairnSignalReply = {
   createdAt: string
 }
 
-export type CairnSignal = {
+export type FjallSignal = {
   id: string
   senderName: string
   senderEmail: string
   body: string
   read: boolean
   createdAt: string
-  replies: CairnSignalReply[]
+  replies: FjallSignalReply[]
 }
 
-export async function fetchCairnSignals(): Promise<CairnSignal[]> {
-  return cairnFetch<CairnSignal[]>('/signals')
+export async function fetchFjallSignals(): Promise<FjallSignal[]> {
+  return fjallFetch<FjallSignal[]>('/signals')
 }
 
-export async function replyToCairnSignal(id: string, body: string): Promise<CairnSignalReply> {
-  return cairnFetch<CairnSignalReply>(`/signals/${id}/reply`, { method: 'POST', body: JSON.stringify({ body }) })
+export async function replyToFjallSignal(id: string, body: string): Promise<FjallSignalReply> {
+  return fjallFetch<FjallSignalReply>(`/signals/${id}/reply`, { method: 'POST', body: JSON.stringify({ body }) })
 }
 
-export async function markCairnSignalRead(id: string): Promise<void> {
-  await cairnFetch<void>(`/signals/${id}/read`, { method: 'PUT' })
+export async function markFjallSignalRead(id: string): Promise<void> {
+  await fjallFetch<void>(`/signals/${id}/read`, { method: 'PUT' })
 }
 
-export async function deleteCairnSignal(id: string): Promise<void> {
-  await cairnFetch<void>(`/signals/${id}`, { method: 'DELETE' })
+export async function deleteFjallSignal(id: string): Promise<void> {
+  await fjallFetch<void>(`/signals/${id}`, { method: 'DELETE' })
 }
 
 // ─── Sjodr (funds) ─────────────────────────────────────────────────────────
 
-export async function fetchCairnSjodr(): Promise<CairnSjodrView[]> {
-  const rows = await cairnFetch<CairnSjodr[]>('/sjodr')
+export async function fetchFjallSjodr(): Promise<FjallSjodrView[]> {
+  const rows = await fjallFetch<FjallSjodr[]>('/sjodr')
   return rows
     .map((row) => ({
-      id: extractCairnId(row.sk),
+      id: extractEntityId(row.sk),
       name: row.name,
       description: row.description ?? null,
       color: row.color?.trim() || null,
@@ -361,13 +367,13 @@ export async function fetchCairnSjodr(): Promise<CairnSjodrView[]> {
     .sort((left, right) => left.name.localeCompare(right.name, undefined, { sensitivity: 'base' }))
 }
 
-export async function createCairnSjodr(data: SaveCairnSjodrRequest): Promise<CairnSjodrView> {
-  const row = await cairnFetch<CairnSjodr>('/sjodr', {
+export async function createFjallSjodr(data: SaveFjallSjodrRequest): Promise<FjallSjodrView> {
+  const row = await fjallFetch<FjallSjodr>('/sjodr', {
     method: 'POST',
     body: JSON.stringify(data),
   })
   return {
-    id: extractCairnId(row.sk),
+    id: extractEntityId(row.sk),
     name: row.name,
     description: row.description ?? null,
     color: row.color?.trim() || null,
@@ -375,16 +381,16 @@ export async function createCairnSjodr(data: SaveCairnSjodrRequest): Promise<Cai
   }
 }
 
-export async function updateCairnSjodr(
+export async function updateFjallSjodr(
   id: string,
-  data: SaveCairnSjodrRequest,
-): Promise<CairnSjodrView> {
-  const row = await cairnFetch<CairnSjodr>(`/sjodr/${id}`, {
+  data: SaveFjallSjodrRequest,
+): Promise<FjallSjodrView> {
+  const row = await fjallFetch<FjallSjodr>(`/sjodr/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   })
   return {
-    id: extractCairnId(row.sk),
+    id: extractEntityId(row.sk),
     name: row.name,
     description: row.description ?? null,
     color: row.color?.trim() || null,
@@ -392,89 +398,89 @@ export async function updateCairnSjodr(
   }
 }
 
-export async function deleteCairnSjodr(id: string): Promise<void> {
-  await cairnFetch<void>(`/sjodr/${id}`, { method: 'DELETE' })
+export async function deleteFjallSjodr(id: string): Promise<void> {
+  await fjallFetch<void>(`/sjodr/${id}`, { method: 'DELETE' })
 }
 
 // ─── Trails ────────────────────────────────────────────────────────────────
 
-export async function fetchCairnTrails(): Promise<CairnTrail[]> {
-  return cairnFetch<CairnTrail[]>('/trails')
+export async function fetchFjallTrails(): Promise<FjallTrail[]> {
+  return fjallFetch<FjallTrail[]>('/trails')
 }
 
-export async function createCairnTrail(data: { name: string }): Promise<CairnTrailView> {
-  const trail = await cairnFetch<CairnTrail>('/trails', { method: 'POST', body: JSON.stringify(data) })
-  return { id: extractCairnId(trail.sk), name: trail.name, createdAt: trail.createdAt }
+export async function createFjallTrail(data: { name: string }): Promise<FjallTrailView> {
+  const trail = await fjallFetch<FjallTrail>('/trails', { method: 'POST', body: JSON.stringify(data) })
+  return { id: extractEntityId(trail.sk), name: trail.name, createdAt: trail.createdAt }
 }
 
-export async function updateCairnTrail(id: string, data: { name: string }): Promise<CairnTrailView> {
-  const trail = await cairnFetch<CairnTrail>(`/trails/${id}`, { method: 'PUT', body: JSON.stringify(data) })
-  return { id: extractCairnId(trail.sk), name: trail.name, createdAt: trail.createdAt }
+export async function updateFjallTrail(id: string, data: { name: string }): Promise<FjallTrailView> {
+  const trail = await fjallFetch<FjallTrail>(`/trails/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+  return { id: extractEntityId(trail.sk), name: trail.name, createdAt: trail.createdAt }
 }
 
-export async function deleteCairnTrail(id: string): Promise<void> {
-  await cairnFetch<void>(`/trails/${id}`, { method: 'DELETE' })
+export async function deleteFjallTrail(id: string): Promise<void> {
+  await fjallFetch<void>(`/trails/${id}`, { method: 'DELETE' })
 }
 
 // ─── Markers ───────────────────────────────────────────────────────────────
 
-export async function fetchCairnMarkers(): Promise<CairnMarker[]> {
-  return cairnFetch<CairnMarker[]>('/markers')
+export async function fetchFjallMarkers(): Promise<FjallMarker[]> {
+  return fjallFetch<FjallMarker[]>('/markers')
 }
 
-export async function createCairnMarker(data: { name: string; color: string; icon?: string | null }): Promise<CairnMarkerView> {
-  const marker = await cairnFetch<CairnMarker>('/markers', { method: 'POST', body: JSON.stringify(data) })
-  return { id: extractCairnId(marker.sk), name: marker.name, color: marker.color, icon: marker.icon ?? null, createdAt: marker.createdAt, waypointCount: marker.waypointCount ?? 0 }
+export async function createFjallMarker(data: { name: string; color: string; icon?: string | null }): Promise<FjallMarkerView> {
+  const marker = await fjallFetch<FjallMarker>('/markers', { method: 'POST', body: JSON.stringify(data) })
+  return { id: extractEntityId(marker.sk), name: marker.name, color: marker.color, icon: marker.icon ?? null, createdAt: marker.createdAt, waypointCount: marker.waypointCount ?? 0 }
 }
 
-export async function updateCairnMarker(id: string, data: { name: string; color: string; icon?: string | null }): Promise<CairnMarkerView> {
-  const marker = await cairnFetch<CairnMarker>(`/markers/${id}`, { method: 'PUT', body: JSON.stringify(data) })
-  return { id: extractCairnId(marker.sk), name: marker.name, color: marker.color, icon: marker.icon ?? null, createdAt: marker.createdAt, waypointCount: marker.waypointCount ?? 0 }
+export async function updateFjallMarker(id: string, data: { name: string; color: string; icon?: string | null }): Promise<FjallMarkerView> {
+  const marker = await fjallFetch<FjallMarker>(`/markers/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+  return { id: extractEntityId(marker.sk), name: marker.name, color: marker.color, icon: marker.icon ?? null, createdAt: marker.createdAt, waypointCount: marker.waypointCount ?? 0 }
 }
 
-export async function deleteCairnMarker(id: string): Promise<void> {
-  await cairnFetch<void>(`/markers/${id}`, { method: 'DELETE' })
+export async function deleteFjallMarker(id: string): Promise<void> {
+  await fjallFetch<void>(`/markers/${id}`, { method: 'DELETE' })
 }
 
 // ─── Waypoints ─────────────────────────────────────────────────────────────
 
-export async function fetchCairnWaypoints(): Promise<CairnWaypoint[]> {
-  return cairnFetch<CairnWaypoint[]>('/waypoints')
+export async function fetchFjallWaypoints(): Promise<FjallWaypoint[]> {
+  return fjallFetch<FjallWaypoint[]>('/waypoints')
 }
 
-export async function createCairnWaypoint(data: SaveCairnWaypointRequest): Promise<CairnWaypoint> {
-  return cairnFetch<CairnWaypoint>('/waypoints', {
+export async function createFjallWaypoint(data: SaveFjallWaypointRequest): Promise<FjallWaypoint> {
+  return fjallFetch<FjallWaypoint>('/waypoints', {
     method: 'POST',
     body: JSON.stringify(data),
   })
 }
 
-export async function updateCairnWaypoint(
+export async function updateFjallWaypoint(
   id: string,
-  data: Partial<SaveCairnWaypointRequest>,
-): Promise<CairnWaypoint> {
-  return cairnFetch<CairnWaypoint>(`/waypoints/${id}`, {
+  data: Partial<SaveFjallWaypointRequest>,
+): Promise<FjallWaypoint> {
+  return fjallFetch<FjallWaypoint>(`/waypoints/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   })
 }
 
-export async function deleteCairnWaypoint(id: string): Promise<void> {
-  await cairnFetch<void>(`/waypoints/${id}`, { method: 'DELETE' })
+export async function deleteFjallWaypoint(id: string): Promise<void> {
+  await fjallFetch<void>(`/waypoints/${id}`, { method: 'DELETE' })
 }
 
-export async function fetchCairnWaypointMeta(url: string): Promise<CairnWaypointMeta> {
-  return cairnFetch<CairnWaypointMeta>(`/waypoints/fetch-meta?url=${encodeURIComponent(url)}`)
+export async function fetchFjallWaypointMeta(url: string): Promise<FjallWaypointMeta> {
+  return fjallFetch<FjallWaypointMeta>(`/waypoints/fetch-meta?url=${encodeURIComponent(url)}`)
 }
 
 // ─── Logs (Sögur) ──────────────────────────────────────────────────────────
 
-export type CairnLogMarker = {
+export type FjallLogMarker = {
   markerId: string
   marker: { id: string; name: string; color: string; icon: string | null }
 }
 
-export type CairnLogView = {
+export type FjallLogView = {
   id: string
   title: string | null
   content: string
@@ -483,10 +489,10 @@ export type CairnLogView = {
   trailId: string | null
   waypointId: string | null
   trailName: string | null
-  markers: CairnLogMarker[]
+  markers: FjallLogMarker[]
 }
 
-type CairnLogRaw = {
+type FjallLogRaw = {
   id?: string
   sk?: string
   title: string | null
@@ -496,11 +502,11 @@ type CairnLogRaw = {
   trailId: string | null
   waypointId?: string | null
   trail?: { id: string; name: string } | null
-  markers?: CairnLogMarker[]
+  markers?: FjallLogMarker[]
 }
 
-function toCairnLogView(raw: CairnLogRaw, trailsById: Map<string, string>): CairnLogView {
-  const id = raw.id ?? (raw.sk ? extractCairnId(raw.sk) : '')
+function toFjallLogView(raw: FjallLogRaw, trailsById: Map<string, string>): FjallLogView {
+  const id = raw.id ?? (raw.sk ? extractEntityId(raw.sk) : '')
   const trailId = raw.trailId ?? null
   return {
     id,
@@ -515,13 +521,13 @@ function toCairnLogView(raw: CairnLogRaw, trailsById: Map<string, string>): Cair
   }
 }
 
-export async function fetchCairnLogs(): Promise<CairnLogView[]> {
-  const [logs, trails] = await Promise.all([cairnFetch<CairnLogRaw[]>('/logs'), fetchCairnTrails()])
-  const trailsById = new Map(trails.map((trail) => [extractCairnId(trail.sk), trail.name]))
-  return logs.map((log) => toCairnLogView(log, trailsById))
+export async function fetchFjallLogs(): Promise<FjallLogView[]> {
+  const [logs, trails] = await Promise.all([fjallFetch<FjallLogRaw[]>('/logs'), fetchFjallTrails()])
+  const trailsById = new Map(trails.map((trail) => [extractEntityId(trail.sk), trail.name]))
+  return logs.map((log) => toFjallLogView(log, trailsById))
 }
 
-export type SaveCairnLogRequest = {
+export type SaveFjallLogRequest = {
   id?: string
   title: string | null
   content: string
@@ -530,26 +536,26 @@ export type SaveCairnLogRequest = {
   markerIds?: string[]
 }
 
-export async function saveCairnLog(data: SaveCairnLogRequest): Promise<CairnLogView> {
+export async function saveFjallLog(data: SaveFjallLogRequest): Promise<FjallLogView> {
   const { id, ...rest } = data
   const raw = id
-    ? await cairnFetch<CairnLogRaw>(`/logs/${id}`, { method: 'PUT', body: JSON.stringify(rest) })
-    : await cairnFetch<CairnLogRaw>('/logs', { method: 'POST', body: JSON.stringify(rest) })
-  const trails = await fetchCairnTrails()
-  const trailsById = new Map(trails.map((trail) => [extractCairnId(trail.sk), trail.name]))
-  return toCairnLogView(raw, trailsById)
+    ? await fjallFetch<FjallLogRaw>(`/logs/${id}`, { method: 'PUT', body: JSON.stringify(rest) })
+    : await fjallFetch<FjallLogRaw>('/logs', { method: 'POST', body: JSON.stringify(rest) })
+  const trails = await fetchFjallTrails()
+  const trailsById = new Map(trails.map((trail) => [extractEntityId(trail.sk), trail.name]))
+  return toFjallLogView(raw, trailsById)
 }
 
-export async function deleteCairnLog(id: string): Promise<void> {
-  await cairnFetch<void>(`/logs/${id}`, { method: 'DELETE' })
+export async function deleteFjallLog(id: string): Promise<void> {
+  await fjallFetch<void>(`/logs/${id}`, { method: 'DELETE' })
 }
 
-export async function reorderCairnLogs(orderedIds: string[]): Promise<void> {
-  await cairnFetch('/logs/reorder', { method: 'PUT', body: JSON.stringify({ orderedIds }) })
+export async function reorderFjallLogs(orderedIds: string[]): Promise<void> {
+  await fjallFetch('/logs/reorder', { method: 'PUT', body: JSON.stringify({ orderedIds }) })
 }
 
-export async function uploadCairnLogImage(file: File, logId: string): Promise<string> {
-  const data = await cairnFetch<{ url: string; key: string; cloudFrontUrl?: string }>(
+export async function uploadFjallLogImage(file: File, logId: string): Promise<string> {
+  const data = await fjallFetch<{ url: string; key: string; cloudFrontUrl?: string }>(
     '/logs/upload-url',
     { method: 'POST', body: JSON.stringify({ contentType: file.type, fileSize: file.size, logId }) },
   )
@@ -560,11 +566,11 @@ export async function uploadCairnLogImage(file: File, logId: string): Promise<st
 
 // ─── Audr (provisions) ─────────────────────────────────────────────────────
 
-export async function fetchCairnProvisionsSummary(month: number, year: number): Promise<CairnProvisionsSummary> {
-  return cairnFetch<CairnProvisionsSummary>(`/supplylines/summary?month=${month}&year=${year}`)
+export async function fetchProvisionsSummary(month: number, year: number): Promise<AudrSummary> {
+  return fjallFetch<AudrSummary>(`/supplylines/summary?month=${month}&year=${year}`)
 }
 
-export type CairnBurnQueryParams = {
+export type FjallBurnQueryParams = {
   month: number
   year: number
   page?: number
@@ -573,63 +579,63 @@ export type CairnBurnQueryParams = {
   fundId?: string
 }
 
-export async function fetchCairnBurnPage(params: CairnBurnQueryParams): Promise<CairnBurnPage> {
+export async function fetchFjallBurnPage(params: FjallBurnQueryParams): Promise<FjallBurnPage> {
   const qs = new URLSearchParams({ month: String(params.month), year: String(params.year), page: String(params.page ?? 1) })
   if (params.search) qs.set('search', params.search)
   if (params.markerId) qs.set('markerId', params.markerId)
   if (params.fundId) qs.set('fundId', params.fundId)
-  return cairnFetch<CairnBurnPage>(`/burn?${qs}`)
+  return fjallFetch<FjallBurnPage>(`/burn?${qs}`)
 }
 
-export type CairnSupplylineQueryParams = {
+export type FjallSupplylineQueryParams = {
   search?: string
   markerId?: string
   active?: string
 }
 
-export async function fetchCairnSupplylinesFiltered(params: CairnSupplylineQueryParams = {}): Promise<CairnSupplyline[]> {
+export async function fetchFjallSupplylinesFiltered(params: FjallSupplylineQueryParams = {}): Promise<FjallSupplyline[]> {
   const qs = new URLSearchParams()
   if (params.search) qs.set('search', params.search)
   if (params.markerId) qs.set('markerId', params.markerId)
   if (params.active) qs.set('active', params.active)
   const query = qs.toString()
-  return cairnFetch<CairnSupplyline[]>(`/supplylines${query ? `?${query}` : ''}`)
+  return fjallFetch<FjallSupplyline[]>(`/supplylines${query ? `?${query}` : ''}`)
 }
 
-export async function saveCairnSupplyline(data: Record<string, unknown>): Promise<unknown> {
+export async function saveFjallSupplyline(data: Record<string, unknown>): Promise<unknown> {
   const { id, nextRenewal, url, notes, active, ...rest } = data
   const path = id ? `/supplylines/${encodeURIComponent(String(id))}` : '/supplylines'
-  return cairnFetch(path, {
+  return fjallFetch(path, {
     method: id ? 'PUT' : 'POST',
     body: JSON.stringify({ ...rest, active: active ?? true, nextRenewal, url: typeof url === 'string' && url.trim() ? url.trim() : null, notes: typeof notes === 'string' && notes.trim() ? notes.trim() : null }),
   })
 }
 
-export async function deleteCairnSupplyline(id: string): Promise<void> {
-  await cairnFetch<void>(`/supplylines/${id}`, { method: 'DELETE' })
+export async function deleteFjallSupplyline(id: string): Promise<void> {
+  await fjallFetch<void>(`/supplylines/${id}`, { method: 'DELETE' })
 }
 
-export async function toggleCairnSupplylineActive(id: string, active: boolean): Promise<unknown> {
-  return cairnFetch(`/supplylines/${id}`, { method: 'PUT', body: JSON.stringify({ active }) })
+export async function toggleFjallSupplylineActive(id: string, active: boolean): Promise<unknown> {
+  return fjallFetch(`/supplylines/${id}`, { method: 'PUT', body: JSON.stringify({ active }) })
 }
 
-export async function saveCairnBurn(data: Record<string, unknown>): Promise<unknown> {
+export async function saveFjallBurn(data: Record<string, unknown>): Promise<unknown> {
   const { id, ...rest } = data
   const path = id ? `/burn/${id}` : '/burn'
-  return cairnFetch(path, { method: id ? 'PUT' : 'POST', body: JSON.stringify(rest) })
+  return fjallFetch(path, { method: id ? 'PUT' : 'POST', body: JSON.stringify(rest) })
 }
 
-export async function deleteCairnBurn(id: string): Promise<void> {
-  await cairnFetch<void>(`/burn/${id}`, { method: 'DELETE' })
+export async function deleteFjallBurn(id: string): Promise<void> {
+  await fjallFetch<void>(`/burn/${id}`, { method: 'DELETE' })
 }
 
-export async function fetchCairnBurnReceiptUrl(key: string): Promise<string> {
-  const data = await cairnFetch<{ url: string }>(`/burn/receipt-url?key=${encodeURIComponent(key)}`)
+export async function fetchFjallBurnReceiptUrl(key: string): Promise<string> {
+  const data = await fjallFetch<{ url: string }>(`/burn/receipt-url?key=${encodeURIComponent(key)}`)
   return data.url
 }
 
-export async function uploadCairnBurnReceipt(file: File): Promise<string> {
-  const data = await cairnFetch<{ url: string; key: string; cloudFrontUrl?: string }>(
+export async function uploadFjallBurnReceipt(file: File): Promise<string> {
+  const data = await fjallFetch<{ url: string; key: string; cloudFrontUrl?: string }>(
     '/burn/receipt-upload-url',
     { method: 'POST', body: JSON.stringify({ contentType: file.type, fileSize: file.size }) },
   )
@@ -637,19 +643,19 @@ export async function uploadCairnBurnReceipt(file: File): Promise<string> {
   return data.cloudFrontUrl ?? data.key
 }
 
-export async function saveCairnCache(data: Record<string, unknown>): Promise<unknown> {
+export async function saveFjallCache(data: Record<string, unknown>): Promise<unknown> {
   const { id, ...rest } = data
   const path = id ? `/cache/${encodeURIComponent(String(id))}` : '/cache'
-  return cairnFetch(path, { method: id ? 'PUT' : 'POST', body: JSON.stringify(rest) })
+  return fjallFetch(path, { method: id ? 'PUT' : 'POST', body: JSON.stringify(rest) })
 }
 
-export async function deleteCairnCache(id: string): Promise<void> {
-  await cairnFetch<void>(`/cache/${id}`, { method: 'DELETE' })
+export async function deleteFjallCache(id: string): Promise<void> {
+  await fjallFetch<void>(`/cache/${id}`, { method: 'DELETE' })
 }
 
 // ─── Dagatal (itinerary) ───────────────────────────────────────────────────
 
-export type CairnCalendarSyncStatus = {
+export type FjallCalendarSyncStatus = {
   calendarId: string
   name: string
   source: 'icloud' | 'subscription'
@@ -659,26 +665,26 @@ export type CairnCalendarSyncStatus = {
   message?: string
 }
 
-export type CairnItineraryEventsResult = {
-  events: CairnExternalCalendarEvent[]
-  calendarSync: CairnCalendarSyncStatus[]
+export type FjallItineraryEventsResult = {
+  events: FjallExternalCalendarEvent[]
+  calendarSync: FjallCalendarSyncStatus[]
 }
 
-export async function fetchCairnItineraryCalendars(): Promise<CairnCalendarOption[]> {
-  const settings = await fetchCairnFullSettings()
+export async function fetchFjallItineraryCalendars(): Promise<FjallCalendarOption[]> {
+  const settings = await fetchFjallFullSettings()
   const calendars = (settings.calendars ?? []).map((c) => ({ id: c.id, name: c.name, color: c.color }))
   const subscriptions = (settings.calendarSubscriptions ?? []).map((s) => ({ id: s.id, name: s.name, color: s.color }))
   return [...calendars, ...subscriptions]
 }
 
-export async function fetchCairnItineraryEvents(params?: { from?: string; to?: string }): Promise<CairnItineraryEventsResult> {
+export async function fetchFjallItineraryEvents(params?: { from?: string; to?: string }): Promise<FjallItineraryEventsResult> {
   const qs = new URLSearchParams()
   if (params?.from) qs.set('from', params.from)
   if (params?.to) qs.set('to', params.to)
   const query = qs.toString()
-  const data = await cairnFetch<{ events?: Record<string, unknown>[]; calendarSync?: CairnCalendarSyncStatus[] }>(`/itinerary/events${query ? `?${query}` : ''}`)
+  const data = await fjallFetch<{ events?: Record<string, unknown>[]; calendarSync?: FjallCalendarSyncStatus[] }>(`/itinerary/events${query ? `?${query}` : ''}`)
   return {
-    events: reviveItineraryEvents(parseCairnItineraryEventsPayload(data)),
+    events: reviveItineraryEvents(parseFjallItineraryEventsPayload(data)),
     calendarSync: Array.isArray(data.calendarSync) ? data.calendarSync : [],
   }
 }

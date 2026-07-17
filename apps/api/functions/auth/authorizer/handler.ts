@@ -1,4 +1,3 @@
-import { createRemoteJWKSet, jwtVerify } from 'jose'
 import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb'
 import type {
   APIGatewayRequestAuthorizerEventV2,
@@ -8,12 +7,7 @@ import { dynamo, TABLE_NAME } from '../../shared/db'
 import { hashApiToken, isApiToken, tokenLookupPk } from '../../shared/api-token'
 import { isFjallSessionToken, parseFjallSessionToken } from '../../shared/fjall-session'
 
-const region = process.env.AWS_REGION ?? 'us-east-2'
-const userPoolId = process.env.COGNITO_USER_POOL_ID
-const clientId = process.env.COGNITO_CLIENT_ID
 const fjallSessionSecret = process.env.FJALL_SESSION_SECRET?.trim()
-
-let jwks: ReturnType<typeof createRemoteJWKSet> | null = null
 
 function extractBearerToken(event: APIGatewayRequestAuthorizerEventV2): string | null {
   const fromHeader = parseBearerToken(
@@ -34,41 +28,10 @@ function parseBearerToken(header: string | undefined): string | null {
   const trimmed = header.trim()
   const bearerMatch = /^Bearer\s+(.+)$/i.exec(trimmed)
   if (bearerMatch?.[1]) return bearerMatch[1]
-  // Fjall may send session / Cognito tokens without a Bearer prefix.
-  if (
-    /^csk_/.test(trimmed) ||
-    /^v1\./.test(trimmed) ||
-    /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(trimmed)
-  ) {
+  if (/^csk_/.test(trimmed) || /^v1\./.test(trimmed)) {
     return trimmed
   }
   return null
-}
-
-async function verifyJwt(token: string): Promise<{ sub: string; email?: string }> {
-  if (!userPoolId || !clientId) {
-    throw new Error('Cognito env vars missing')
-  }
-
-  if (!jwks) {
-    jwks = createRemoteJWKSet(
-      new URL(`https://cognito-idp.${region}.amazonaws.com/${userPoolId}/.well-known/jwks.json`),
-    )
-  }
-
-  const issuer = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}`
-  const { payload } = await jwtVerify(token, jwks, {
-    issuer,
-    audience: clientId,
-  })
-
-  const sub = typeof payload.sub === 'string' ? payload.sub : null
-  if (!sub) throw new Error('Missing sub claim')
-
-  return {
-    sub,
-    email: typeof payload.email === 'string' ? payload.email : undefined,
-  }
 }
 
 async function verifyApiToken(token: string): Promise<{ sub: string }> {
@@ -148,15 +111,8 @@ export const handler = async (
       } as APIGatewaySimpleAuthorizerResult
     }
 
-    const user = await verifyJwt(token)
-    return {
-      isAuthorized: true,
-      context: {
-        sub: user.sub,
-        email: user.email ?? '',
-        authType: 'jwt',
-      },
-    } as APIGatewaySimpleAuthorizerResult
+    console.warn('Authorizer denied: unrecognized token type')
+    return { isAuthorized: false }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     console.error('Authorizer failed', message)

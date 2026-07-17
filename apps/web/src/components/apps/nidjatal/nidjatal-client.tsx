@@ -4,7 +4,7 @@ import { StudioLayout } from '@/components/core/layout/studio-layout'
 import { StudioDataToolbar } from '@/components/core/layout/studio-data-toolbar'
 import { FilterInput } from '@/components/core/ui/filter-input'
 import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
-import { extractCairnId } from '@/lib/data-format'
+import { extractEntityId } from '@/lib/data-format'
 import { updateNidjatalKin } from '@/lib/nidjatal-api'
 import { useTerms } from '@/hooks/use-terminology'
 import type { NidjatalKin } from '@/lib/nidjatal-types'
@@ -30,7 +30,7 @@ export function NidjatalClient({ kins, seedKinId, onRefresh, panel, onSetPanel }
   const [inspectorPinned, setInspectorPinned] = useInspectorPinned()
   const [searchQuery, setSearchQuery] = useState('')
 
-  const kinsWithId = useMemo(() => kins.map((k) => ({ ...k, id: extractCairnId(k.sk) })), [kins])
+  const kinsWithId = useMemo(() => kins.map((k) => ({ ...k, id: extractEntityId(k.sk) })), [kins])
 
   const selectedKinId = panel.mode === 'kin-form' ? panel.kinId : null
   const inspectorOpen = inspectorPinned || panel.mode !== 'closed'

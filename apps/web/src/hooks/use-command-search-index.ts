@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/use-auth'
 import { useDebounce } from '@/hooks/use-debounce'
 import { useTerminology } from '@/hooks/use-terminology'
-import { searchCairn, type CairnSearchResultType } from '@/lib/data-api'
+import { searchFjall, type FjallSearchResultType } from '@/lib/data-api'
 import { buildFjallNavigationEntries } from '@/lib/command-search/build-fjall-nav'
 import {
   hydrateRecentCommandSearch,
@@ -13,7 +13,7 @@ import {
 import { searchCommandIndex } from '@/lib/command-search/search'
 import type { CommandSearchArea, CommandSearchEntry } from '@/lib/command-search/types'
 
-const AREA_FOR_TYPE: Record<CairnSearchResultType, CommandSearchArea> = {
+const AREA_FOR_TYPE: Record<FjallSearchResultType, CommandSearchArea> = {
   waypoint: 'Hlidskjalf',
   trail: 'Catalog',
   marker: 'Catalog',
@@ -22,12 +22,12 @@ const AREA_FOR_TYPE: Record<CairnSearchResultType, CommandSearchArea> = {
   stop: 'Navigation',
 }
 
-function cairnResultToEntry(
-  result: Awaited<ReturnType<typeof searchCairn>>[number],
+function searchResultToEntry(
+  result: Awaited<ReturnType<typeof searchFjall>>[number],
   productPill: string,
 ): CommandSearchEntry {
   return {
-    id: `cairn-${result.type}-${result.id}`,
+    id: `fjall-${result.type}-${result.id}`,
     label: result.title,
     subtitle: result.subtitle,
     productPill,
@@ -41,7 +41,7 @@ function cairnResultToEntry(
 export function useCommandSearchIndex(query: string) {
   const auth = useAuth()
   const { terms } = useTerminology()
-  const userId = auth.gateUser?.email ?? auth.cairnUser?.email ?? 'guest'
+  const userId = auth.gateUser?.email ?? auth.dataUser?.email ?? 'guest'
   const debouncedQuery = useDebounce(query.trim(), 200)
 
   const navEntries = useMemo(() => buildFjallNavigationEntries(terms), [terms])
@@ -54,34 +54,34 @@ export function useCommandSearchIndex(query: string) {
     setRecents(loadRecentCommandSearch(userId))
   }, [userId])
 
-  const cairnQuery = useQuery({
+  const searchQuery = useQuery({
     queryKey: ['fjall-command-search', debouncedQuery],
-    queryFn: () => searchCairn(debouncedQuery, true),
-    enabled: debouncedQuery.length >= 2 && Boolean(auth.cairnUser),
+    queryFn: () => searchFjall(debouncedQuery, true),
+    enabled: debouncedQuery.length >= 2 && Boolean(auth.dataUser),
     staleTime: 15_000,
   })
 
-  const cairnEntries = useMemo(
-    () => (cairnQuery.data ?? []).map((result) => cairnResultToEntry(result, terms.productName)),
-    [cairnQuery.data, terms.productName],
+  const searchEntries = useMemo(
+    () => (searchQuery.data ?? []).map((result) => searchResultToEntry(result, terms.productName)),
+    [searchQuery.data, terms.productName],
   )
 
   const results = useMemo(() => {
     const q = query.trim()
     if (!q) {
-      return hydrateRecentCommandSearch(recents, [...navEntries, ...cairnEntries])
+      return hydrateRecentCommandSearch(recents, [...navEntries, ...searchEntries])
     }
 
     const navHits = searchCommandIndex(navEntries, q, 12)
     const merged = [...navHits]
     const seen = new Set(navHits.map((entry) => entry.id))
-    for (const entry of cairnEntries) {
+    for (const entry of searchEntries) {
       if (seen.has(entry.id)) continue
       merged.push(entry)
       seen.add(entry.id)
     }
     return merged.slice(0, 16)
-  }, [cairnEntries, navEntries, query, recents])
+  }, [searchEntries, navEntries, query, recents])
 
   const recordRecent = useCallback(
     (entry: CommandSearchEntry) => {
@@ -92,7 +92,7 @@ export function useCommandSearchIndex(query: string) {
 
   return {
     results,
-    isIndexing: cairnQuery.isFetching,
+    isIndexing: searchQuery.isFetching,
     recordRecent,
     isShowingRecents: !query.trim() && results.length > 0,
   }

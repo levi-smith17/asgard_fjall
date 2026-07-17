@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
-import { setCairnAuthProvider } from '@/lib/data-client'
+import { setFjallAuthProvider } from '@/lib/data-client'
 import {
   clearAccessToken,
   fetchAccessToken,
@@ -21,14 +21,10 @@ type AuthState = {
   status: AuthStatus
   gateUser: GateUser | null
   /** Data API identity (same as gate after passkey login). */
-  cairnUser: DataUser | null
-  /** @deprecated Cognito removed — always false. */
-  cognitoConfigured: boolean
+  dataUser: DataUser | null
   refresh: () => Promise<void>
-  /** @deprecated Cognito removed. */
-  signInCognito: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
-  /** @deprecated use gateUser / cairnUser */
+  /** @deprecated use gateUser / dataUser */
   user: GateUser | DataUser | null
   configured: boolean
 }
@@ -38,10 +34,10 @@ const AuthContext = createContext<AuthState | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading')
   const [gateUser, setGateUser] = useState<GateUser | null>(null)
-  const [cairnUser, setCairnUser] = useState<DataUser | null>(null)
+  const [dataUser, setDataUser] = useState<DataUser | null>(null)
 
   useEffect(() => {
-    setCairnAuthProvider(async () => getStoredAccessToken())
+    setFjallAuthProvider(async () => getStoredAccessToken())
   }, [])
 
   const refresh = useCallback(async () => {
@@ -51,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!me) {
         clearAccessToken()
         setGateUser(null)
-        setCairnUser(null)
+        setDataUser(null)
         setStatus('unauthorized')
         return
       }
@@ -64,20 +60,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token = issued?.accessToken ?? null
         if (issued) {
           storeAccessToken(issued.accessToken)
-          setCairnUser({ id: issued.sub, email: issued.email })
+          setDataUser({ id: issued.sub, email: issued.email })
           return
         }
       }
       if (token) {
-        setCairnUser({ id: me.sub, email: me.email })
+        setDataUser({ id: me.sub, email: me.email })
       } else {
         // Gate cookie is valid but data Bearer could not be minted (often FJALL_SESSION_SECRET).
-        setCairnUser(null)
+        setDataUser(null)
       }
     } catch {
       clearAccessToken()
       setGateUser(null)
-      setCairnUser(null)
+      setDataUser(null)
       setStatus('unauthorized')
     }
   }, [])
@@ -94,12 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading: status === 'loading',
     status,
     gateUser,
-    cairnUser,
-    cognitoConfigured: false,
+    dataUser,
     refresh,
-    signInCognito: async () => {
-      throw new Error('Cognito sign-in is disabled — use your passkey')
-    },
     signOut: async () => {
       try {
         await logoutGate()
@@ -108,10 +100,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       clearAccessToken()
       setGateUser(null)
-      setCairnUser(null)
+      setDataUser(null)
       setStatus('unauthorized')
     },
-    user: gateUser ?? cairnUser,
+    user: gateUser ?? dataUser,
     configured: true,
   }
 

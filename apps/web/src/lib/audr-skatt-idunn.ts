@@ -1,4 +1,4 @@
-import type { CairnCacheUtilization, CairnSupplyline } from '@/lib/data-types'
+import type { FjallCacheUtilization, FjallSupplyline } from '@/lib/data-types'
 import { toMarkerId } from '@/lib/embedded-markers'
 
 const MONTHLY_OR_LESS = new Set(['WEEKLY', 'BIWEEKLY', 'MONTHLY'])
@@ -16,7 +16,7 @@ export function supplylineMonthlyAmount(amount: number, billingCycle: string): n
   }
 }
 
-export function idunnSpendForMarker(supplylines: CairnSupplyline[], markerId: string): number {
+export function idunnSpendForMarker(supplylines: FjallSupplyline[], markerId: string): number {
   return supplylines
     .filter((line) => line.active)
     .filter((line) => supplylineCountsAgainstSkatt(line.billingCycle))
@@ -25,23 +25,23 @@ export function idunnSpendForMarker(supplylines: CairnSupplyline[], markerId: st
 }
 
 export function effectiveSkattSpent(
-  cache: CairnCacheUtilization,
-  supplylines: CairnSupplyline[],
+  cache: FjallCacheUtilization,
+  supplylines: FjallSupplyline[],
 ): number {
   return cache.spent + idunnSpendForMarker(supplylines, cache.markerId)
 }
 
 export function effectiveSkattUtilization(
-  cache: CairnCacheUtilization,
-  supplylines: CairnSupplyline[],
+  cache: FjallCacheUtilization,
+  supplylines: FjallSupplyline[],
 ): number {
   const spent = effectiveSkattSpent(cache, supplylines)
   return cache.limit > 0 ? (spent / cache.limit) * 100 : 0
 }
 
 export function totalEffectiveSkattUtilization(
-  cacheUtilization: CairnCacheUtilization[],
-  supplylines: CairnSupplyline[],
+  cacheUtilization: FjallCacheUtilization[],
+  supplylines: FjallSupplyline[],
 ): number | null {
   const totalSpent = cacheUtilization.reduce(
     (sum, cache) => sum + effectiveSkattSpent(cache, supplylines),

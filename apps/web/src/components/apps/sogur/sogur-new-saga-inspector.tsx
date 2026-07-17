@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { CairnTrailView } from '@/lib/data-types'
+import type { FjallTrailView } from '@/lib/data-types'
 import { Input } from '@/components/core/ui/input'
 import { InspectorFormActions } from '@/components/core/ui/inspector-form-actions'
 import { Select } from '@/components/core/ui/select'
@@ -15,7 +15,7 @@ export function SogurNewSagaInspector({
   onCancel: _onCancel,
   creating,
 }: {
-  greinar: CairnTrailView[]
+  greinar: FjallTrailView[]
   onCreate: (input: { trailId?: string; newGreinName?: string }) => void
   onCancel: () => void
   creating?: boolean

@@ -5,10 +5,10 @@ import { Button } from '@/components/core/ui/button'
 import { DatePicker } from '@/components/core/ui/date-picker'
 import { Select } from '@/components/core/ui/select'
 import { MarkerPicker } from '@/components/apps/marker-picker'
-import { saveCairnSupplyline } from '@/lib/data-api'
+import { saveFjallSupplyline } from '@/lib/data-api'
 import { useFormStatus } from '@/hooks/use-form-status'
 import { toMarkerId } from '@/lib/embedded-markers'
-import type { CairnSupplyline } from '@/lib/data-types'
+import type { FjallSupplyline } from '@/lib/data-types'
 import { toDateInputValue, todayDateInputValue } from '@/lib/date-input'
 import { getDefaultSjodrId } from '@/lib/audr-default-sjodr'
 import { useTerms } from '@/hooks/use-terminology'
@@ -36,7 +36,7 @@ function normalizeOptionalUrl(value: string): string | null {
 }
 
 interface Props {
-  supplyline?: CairnSupplyline
+  supplyline?: FjallSupplyline
   tags: { id: string; name: string; color: string; icon?: string | null }[]
   formId?: string
   saveActionRef?: AudrSaveActionRef
@@ -107,7 +107,7 @@ export function InlineSupplylineForm({
 
     try {
       await handleSubmit(async () => {
-        await saveCairnSupplyline({
+        await saveFjallSupplyline({
           id: supplyline?.id,
           name: name.trim(),
           amount: parseFloat(amount) || 0,

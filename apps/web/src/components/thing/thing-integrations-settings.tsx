@@ -4,26 +4,26 @@ import { Copy, KeyRound, Trash2 } from 'lucide-react'
 import { Button } from '@/components/core/ui/button'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
-import { fetchCairnStatus, fetchCairnApiTokenStatus, createCairnApiToken, revokeCairnApiToken } from '@/lib/data-api'
+import { fetchFjallStatus, fetchFjallApiTokenStatus, createFjallApiToken, revokeFjallApiToken } from '@/lib/data-api'
 
 export function ThingIntegrationsSettings() {
   const queryClient = useQueryClient()
-  const statusQuery = useQuery({ queryKey: ['cairn-status'], queryFn: fetchCairnStatus, retry: false })
-  const tokenQuery = useQuery({ queryKey: ['cairn-api-token'], queryFn: fetchCairnApiTokenStatus, enabled: statusQuery.data?.configured === true })
+  const statusQuery = useQuery({ queryKey: ['fjall-status'], queryFn: fetchFjallStatus, retry: false })
+  const tokenQuery = useQuery({ queryKey: ['fjall-api-token'], queryFn: fetchFjallApiTokenStatus, enabled: statusQuery.data?.configured === true })
   const [generatedToken, setGeneratedToken] = useState<string | null>(null)
   const [revokeOpen, setRevokeOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function refresh() {
-    await queryClient.invalidateQueries({ queryKey: ['cairn-api-token'] })
+    await queryClient.invalidateQueries({ queryKey: ['fjall-api-token'] })
   }
 
   async function handleGenerate() {
     setBusy(true)
     setError(null)
     try {
-      const result = await createCairnApiToken()
+      const result = await createFjallApiToken()
       setGeneratedToken(result.token)
       await refresh()
     } catch (err) {
@@ -37,7 +37,7 @@ export function ThingIntegrationsSettings() {
     setBusy(true)
     setError(null)
     try {
-      await revokeCairnApiToken()
+      await revokeFjallApiToken()
       setGeneratedToken(null)
       setRevokeOpen(false)
       await refresh()

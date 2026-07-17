@@ -6,10 +6,10 @@ import { MarkerBadge } from '@/components/apps/marker-badge'
 import { RowActionsMenu } from '@/components/apps/row-actions-menu'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { toDisplayMarker } from '@/lib/embedded-markers'
-import { deleteCairnSupplyline, toggleCairnSupplylineActive } from '@/lib/data-api'
+import { deleteFjallSupplyline, toggleFjallSupplylineActive } from '@/lib/data-api'
 import { daysUntilRenewal, getEffectiveNextRenewal } from '@/lib/idunn-renewal'
 import { InlineSupplylineForm } from './inline-supplyline-form'
-import type { CairnSupplyline } from '@/lib/data-types'
+import type { FjallSupplyline } from '@/lib/data-types'
 import { useTerms } from '@/hooks/use-terminology'
 
 const CYCLE_LABELS: Record<string, string> = {
@@ -24,7 +24,7 @@ const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
 
 interface Props {
-  supplyline: CairnSupplyline
+  supplyline: FjallSupplyline
   tags: { id: string; name: string; color: string; icon?: string | null }[]
   onSaved: () => void
   onDeleted: () => void
@@ -62,7 +62,7 @@ export function SupplylineRow({ supplyline, tags, onSaved, onDeleted }: Props) {
       <div className={`group flex items-center gap-2 px-3 py-2 hover:bg-muted/30 ${!supplyline.active ? 'opacity-50' : ''}`}>
         <Switch
           checked={supplyline.active}
-          onCheckedChange={async (checked) => { await toggleCairnSupplylineActive(supplyline.id, checked); onSaved() }}
+          onCheckedChange={async (checked) => { await toggleFjallSupplylineActive(supplyline.id, checked); onSaved() }}
           className="shrink-0 scale-75"
         />
         <div className="min-w-0 flex-1">
@@ -94,7 +94,7 @@ export function SupplylineRow({ supplyline, tags, onSaved, onDeleted }: Props) {
         confirmLabel="Remove"
         confirmVariant="destructive"
         onCancel={() => setConfirmDelete(false)}
-        onConfirm={async () => { await deleteCairnSupplyline(supplyline.id); setConfirmDelete(false); onDeleted() }}
+        onConfirm={async () => { await deleteFjallSupplyline(supplyline.id); setConfirmDelete(false); onDeleted() }}
       />
     </>
   )

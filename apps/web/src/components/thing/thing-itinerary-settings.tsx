@@ -11,15 +11,15 @@ import { Switch } from '@/components/core/ui/switch'
 import { ThingSettingRow } from '@/components/thing/thing-setting-row'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import {
-  addCairnCalendarSubscription,
-  addCairnICloudCalendar,
-  deleteCairnCalendarSubscription,
-  deleteCairnICloudCalendar,
-  fetchCairnFullSettings,
-  fetchCairnStatus,
-  saveCairnItinerarySettings,
-  updateCairnICloudCalendar,
-  type CairnCalendarEntry,
+  addFjallCalendarSubscription,
+  addFjallICloudCalendar,
+  deleteFjallCalendarSubscription,
+  deleteFjallICloudCalendar,
+  fetchFjallFullSettings,
+  fetchFjallStatus,
+  saveFjallItinerarySettings,
+  updateFjallICloudCalendar,
+  type FjallCalendarEntry,
 } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 import { ASGARD_PRIMARY_HEX } from '@/lib/brand-colors'
@@ -58,7 +58,7 @@ function ICloudCalendarRow({
   calendar,
   onRefresh,
 }: {
-  calendar: CairnCalendarEntry
+  calendar: FjallCalendarEntry
   onRefresh: () => Promise<void>
 }) {
   const [editing, setEditing] = useState(false)
@@ -76,7 +76,7 @@ function ICloudCalendarRow({
 
   const saveMutation = useMutation({
     mutationFn: () =>
-      updateCairnICloudCalendar(calendar.id, {
+      updateFjallICloudCalendar(calendar.id, {
         name: editName.trim(),
         color: editColor,
         ...(editPassword.trim() ? { password: editPassword.trim() } : {}),
@@ -129,7 +129,7 @@ function ICloudCalendarRow({
           variant="ghost"
           aria-label="Remove calendar"
           onClick={() =>
-            void deleteCairnICloudCalendar(calendar.id).then(() => {
+            void deleteFjallICloudCalendar(calendar.id).then(() => {
               toast.success('Calendar removed')
               return onRefresh()
             })
@@ -197,14 +197,14 @@ export function ThingItinerarySettings() {
   const queryClient = useQueryClient()
 
   const statusQuery = useQuery({
-    queryKey: ['cairn-status'],
-    queryFn: fetchCairnStatus,
+    queryKey: ['fjall-status'],
+    queryFn: fetchFjallStatus,
     retry: false,
   })
 
   const settingsQuery = useQuery({
-    queryKey: ['cairn-full-settings'],
-    queryFn: fetchCairnFullSettings,
+    queryKey: ['fjall-full-settings'],
+    queryFn: fetchFjallFullSettings,
     enabled: statusQuery.data?.configured === true,
     retry: false,
   })
@@ -238,13 +238,13 @@ export function ThingItinerarySettings() {
   }, [itinerary])
 
   async function refresh() {
-    await queryClient.invalidateQueries({ queryKey: ['cairn-full-settings'] })
-    await queryClient.invalidateQueries({ queryKey: ['cairn-itinerary-events'] })
+    await queryClient.invalidateQueries({ queryKey: ['fjall-full-settings'] })
+    await queryClient.invalidateQueries({ queryKey: ['fjall-itinerary-events'] })
   }
 
   const savePrefsMutation = useMutation({
     mutationFn: () =>
-      saveCairnItinerarySettings({
+      saveFjallItinerarySettings({
         defaultView,
         firstDayOfWeek,
         defaultEventDuration,
@@ -259,7 +259,7 @@ export function ThingItinerarySettings() {
 
   const addCalendarMutation = useMutation({
     mutationFn: () =>
-      addCairnICloudCalendar({
+      addFjallICloudCalendar({
         appleId: appleId.trim(),
         password: appPassword,
         name: calendarName.trim(),
@@ -278,7 +278,7 @@ export function ThingItinerarySettings() {
 
   const addSubscriptionMutation = useMutation({
     mutationFn: () =>
-      addCairnCalendarSubscription({
+      addFjallCalendarSubscription({
         name: subName.trim(),
         url: subUrl.trim(),
         color: subColor,
@@ -486,7 +486,7 @@ export function ThingItinerarySettings() {
                   size="icon"
                   variant="ghost"
                   onClick={() =>
-                    void deleteCairnCalendarSubscription(sub.id).then(() => {
+                    void deleteFjallCalendarSubscription(sub.id).then(() => {
                       toast.success('Subscription removed')
                       return refresh()
                     })
