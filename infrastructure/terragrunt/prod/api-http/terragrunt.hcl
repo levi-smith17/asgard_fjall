@@ -80,6 +80,7 @@ inputs = {
   lambda_ssm_read_policy_arn  = dependency.api_data.outputs.lambda_ssm_read_policy_arn
   lambda_ssm_write_policy_arn = dependency.api_data.outputs.lambda_ssm_write_policy_arn
 
-  # Same secret as apps/auth — enables passkey session Bearer on the API authorizer.
+  # Prefer FJALL_SESSION_SECRET env; otherwise Terraform reads SSM
+  # /asgard-fjall/<env>/FJALL_SESSION_SECRET (set during passkey cutover).
   fjall_session_secret = get_env("FJALL_SESSION_SECRET", "")
 }

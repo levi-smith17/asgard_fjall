@@ -14,6 +14,9 @@
 cd infrastructure/terraform/prod
 AWS_PROFILE=asgard terraform init
 AWS_PROFILE=asgard terraform apply -var-file=prod.tfvars
+
+# Passkey session HMAC (optional if SSM `/asgard-fjall/prod/FJALL_SESSION_SECRET` exists):
+#   TF_VAR_fjall_session_secret=… AWS_PROFILE=asgard terraform apply -var-file=prod.tfvars
 ```
 
 Profiles in `prod.tfvars` must resolve (`asgard` + `cairn-prod`).

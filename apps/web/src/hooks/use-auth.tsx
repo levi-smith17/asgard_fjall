@@ -71,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (token) {
         setCairnUser({ id: me.sub, email: me.email })
       } else {
+        // Gate cookie is valid but data Bearer could not be minted (often FJALL_SESSION_SECRET).
         setCairnUser(null)
       }
     } catch {

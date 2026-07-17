@@ -76,9 +76,10 @@ variable "terraform_state_bucket" {
 }
 
 variable "fjall_session_secret" {
-  description = "HMAC secret for fjall_session cookies (passkey auth)."
+  description = "HMAC secret for fjall_session cookies (passkey auth). Prefer SSM /asgard-fjall/<env>/FJALL_SESSION_SECRET; empty uses that parameter."
   type        = string
   sensitive   = true
+  default     = ""
 }
 
 variable "fjall_auth_email" {

@@ -2,6 +2,16 @@ locals {
   cloudfront_extra_domains = compact(concat([var.lan_domain], var.apex_domains))
 }
 
+data "aws_ssm_parameter" "fjall_session_secret" {
+  count           = var.fjall_session_secret == "" ? 1 : 0
+  name            = "/asgard-fjall/${var.environment}/FJALL_SESSION_SECRET"
+  with_decryption = true
+}
+
+locals {
+  fjall_session_secret = var.fjall_session_secret != "" ? var.fjall_session_secret : data.aws_ssm_parameter.fjall_session_secret[0].value
+}
+
 module "auth" {
   source             = "../modules/auth"
   environment        = var.environment
@@ -11,7 +21,7 @@ module "auth" {
   custom_domain      = var.domain
   additional_domains = compact([var.lan_domain])
   webauthn_rp_id     = var.webauthn_rp_id
-  session_secret     = var.fjall_session_secret
+  session_secret     = local.fjall_session_secret
   auth_email         = var.fjall_auth_email
   auth_sub           = var.fjall_auth_sub
 }

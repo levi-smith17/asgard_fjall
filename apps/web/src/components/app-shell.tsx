@@ -4,6 +4,7 @@ import {
   BookOpen,
   BookType,
   ExternalLink,
+  MessageSquare,
   Moon,
   Palette,
   Settings,
@@ -13,7 +14,7 @@ import {
 import { AsgardSidebarBrand } from '@/components/core/brand/asgard-sidebar-brand'
 import { CommandPaletteDialog } from '@/components/core/command-palette/command-palette-dialog'
 import { ValknutWatermark } from '@/components/core/icons/valknut-watermark'
-import { SidebarUtilitiesFlyout } from '@/components/core/shell/sidebar-utilities-flyout'
+import { SidebarNavGroupFlyout } from '@/components/core/shell/sidebar-nav-group-flyout'
 import { Avatar } from '@/components/core/ui/avatar'
 import { Button } from '@/components/core/ui/button'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
@@ -22,8 +23,8 @@ import { usePalette } from '@/hooks/use-palette'
 import { useSidebarCollapsed } from '@/hooks/use-sidebar-collapsed'
 import { useTerminology } from '@/hooks/use-terminology'
 import { useTheme } from '@/hooks/use-theme'
-import { fetchCairnProfile, fetchCairnStatus } from '@/lib/data-api'
-import { getFjallNavItems } from '@/lib/fjall-nav'
+import { fetchCairnProfile, fetchCairnSignals, fetchCairnStatus } from '@/lib/data-api'
+import { getFjallNavGroups } from '@/lib/fjall-nav'
 import { parsePublicManifestPath, publicManifestPath } from '@/lib/public-manifest-path'
 import { cn } from '@/lib/utils'
 
@@ -32,26 +33,10 @@ function themeToggleLabel(style: string, theme: string): string {
   return theme === 'dark' ? 'Light' : 'Dark'
 }
 
-function SidebarGroupLabel({
-  children,
-  className,
-  narrow,
-}: {
-  children: React.ReactNode
-  className?: string
-  narrow: boolean
-}) {
-  if (narrow) return null
-  return (
-    <p
-      className={cn(
-        'mb-1 px-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground',
-        className,
-      )}
-    >
-      {children}
-    </p>
-  )
+function navItemActive(pathname: string, key: string, href: string, external?: boolean): boolean {
+  if (external) return false
+  if (key === 'ordstirr') return pathname === href
+  return pathname.startsWith(href)
 }
 
 export function AppShell() {
@@ -61,12 +46,14 @@ export function AppShell() {
   const { terms, style, cycleTerminology, toggleTooltip } = useTerminology()
   const { cyclePalette, toggleTooltip: paletteTooltip } = usePalette()
   const { isDesktop, isNarrow, desktopCollapsed, toggleDesktopCollapsed } = useSidebarCollapsed()
-  const nav = getFjallNavItems(terms)
+  const useGroupFlyouts = !isDesktop
+  const groups = getFjallNavGroups(terms)
   const themeLabel = themeToggleLabel(style, theme)
 
   const statusQuery = useQuery({
-    queryKey: ['cairn-status'],
+    queryKey: ['cairn-status', auth.cairnUser?.id ?? 'anon'],
     queryFn: fetchCairnStatus,
+    enabled: auth.status === 'authenticated',
     retry: false,
     staleTime: 60_000,
   })
@@ -78,6 +65,18 @@ export function AppShell() {
     retry: false,
     staleTime: 60_000,
   })
+
+  const signalsQuery = useQuery({
+    queryKey: ['cairn-signals'],
+    queryFn: fetchCairnSignals,
+    enabled: statusQuery.data?.configured === true,
+    retry: false,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+  })
+
+  const unreadMessageCount = (signalsQuery.data ?? []).filter((signal) => !signal.read).length
+  const sendibodActive = pathname.startsWith('/sendibod')
 
   const displayName =
     profileQuery.data?.name ?? auth.gateUser?.email?.split('@')[0] ?? 'Guest'
@@ -93,14 +92,10 @@ export function AppShell() {
     label: string
     href: string
     icon: LucideIcon
-    active?: boolean
     external?: boolean
   }) {
     const Icon = item.icon
-    const active = item.external
-      ? false
-      : (item.active ??
-        (item.key === 'ordstirr' ? pathname === item.href : pathname.startsWith(item.href)))
+    const active = navItemActive(pathname, item.key, item.href, item.external)
     const itemClass = cn(
       'flex w-full items-center rounded-lg text-sm font-medium transition-colors',
       isNarrow ? 'justify-center px-0 py-2.5' : 'justify-start gap-2.5 px-3 py-2',
@@ -198,16 +193,132 @@ export function AppShell() {
           <AsgardSidebarBrand narrow={isNarrow} />
 
           <nav className={cn('flex-1 overflow-y-auto py-3', isNarrow ? 'px-1.5' : 'px-2 py-4')}>
-            <div>
-              <SidebarGroupLabel narrow={isNarrow}>{terms.platformGroup}</SidebarGroupLabel>
-              <ul className="space-y-0.5">{nav.map((item) => renderNavLink(item))}</ul>
-            </div>
+            {groups.map((group, groupIndex) => {
+              const collapseToFlyout = useGroupFlyouts && !group.neverCollapse
+              return (
+                <div key={group.id}>
+                  {groupIndex > 0 ? (
+                    <div
+                      className={cn(
+                        'border-t border-sidebar-border',
+                        isNarrow ? '-mx-1.5 my-3' : '-mx-2 my-4',
+                      )}
+                    />
+                  ) : null}
+
+                  {collapseToFlyout ? (
+                    <ul className="space-y-0.5">
+                      <li>
+                        <SidebarNavGroupFlyout
+                          items={group.items.map((item) => ({
+                            ...item,
+                            enabled: true,
+                          }))}
+                          groupLabel={group.label}
+                          groupIcon={group.icon}
+                          publicViewLabel={terms.publicViewGroup}
+                          publicUsername={username}
+                        />
+                      </li>
+                    </ul>
+                  ) : (
+                    <>
+                      {!isNarrow ? (
+                        <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          {group.label}
+                        </p>
+                      ) : null}
+                      <ul className="space-y-0.5">{group.items.map((item) => renderNavLink(item))}</ul>
+                    </>
+                  )}
+                </div>
+              )
+            })}
           </nav>
 
           <div className={cn('border-t border-sidebar-border py-3', isNarrow ? 'px-2' : 'px-3')}>
             {isNarrow ? (
               <div className="flex flex-col items-center gap-1">
-                <SidebarUtilitiesFlyout />
+                <ToolbarTooltip label={terms.messages} placement="right">
+                  <Button
+                    asChild
+                    variant="secondary"
+                    size="icon"
+                    className={cn(
+                      'relative h-8 w-8',
+                      sendibodActive &&
+                        'bg-sidebar-accent text-sidebar-foreground-active hover:bg-sidebar-accent',
+                    )}
+                  >
+                    <Link
+                      to="/sendibod"
+                      aria-label={
+                        unreadMessageCount > 0
+                          ? `${terms.messages} — ${unreadMessageCount} unread`
+                          : terms.messages
+                      }
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      {unreadMessageCount > 0 ? (
+                        <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                          {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+                        </span>
+                      ) : null}
+                    </Link>
+                  </Button>
+                </ToolbarTooltip>
+                <ToolbarTooltip label={toggleTooltip} placement="right">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={cycleTerminology}
+                    aria-label={toggleTooltip}
+                  >
+                    <BookType className="h-4 w-4" />
+                  </Button>
+                </ToolbarTooltip>
+                <ToolbarTooltip label={paletteTooltip} placement="right">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={cyclePalette}
+                    aria-label={paletteTooltip}
+                  >
+                    <Palette className="h-4 w-4" />
+                  </Button>
+                </ToolbarTooltip>
+                <ToolbarTooltip label={themeLabel} placement="right">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={toggleTheme}
+                    aria-label={themeLabel}
+                  >
+                    {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  </Button>
+                </ToolbarTooltip>
+                <ToolbarTooltip label={terms.settings} placement="right">
+                  <Button
+                    asChild
+                    variant="secondary"
+                    size="icon"
+                    className={cn(
+                      'h-8 w-8',
+                      pathname.startsWith('/thing') &&
+                        'bg-sidebar-accent text-sidebar-foreground-active hover:bg-sidebar-accent',
+                    )}
+                  >
+                    <Link to="/thing" aria-label={terms.settings}>
+                      <Settings className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </ToolbarTooltip>
                 <div className="mt-2 -mx-2 self-stretch border-t border-sidebar-border pt-2">
                   <div className="flex justify-center">
                     <ToolbarTooltip label={displayName} placement="right">
@@ -218,7 +329,35 @@ export function AppShell() {
               </div>
             ) : (
               <>
-                <div className="grid w-full grid-cols-4 gap-1">
+                <div className="grid w-full grid-cols-5 gap-1">
+                  <ToolbarTooltip label={terms.messages}>
+                    <Button
+                      asChild
+                      variant="secondary"
+                      size="icon"
+                      className={cn(
+                        'relative h-8 w-full',
+                        sendibodActive &&
+                          'bg-sidebar-accent text-sidebar-foreground-active hover:bg-sidebar-accent',
+                      )}
+                    >
+                      <Link
+                        to="/sendibod"
+                        aria-label={
+                          unreadMessageCount > 0
+                            ? `${terms.messages} — ${unreadMessageCount} unread`
+                            : terms.messages
+                        }
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        {unreadMessageCount > 0 ? (
+                          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                            {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+                          </span>
+                        ) : null}
+                      </Link>
+                    </Button>
+                  </ToolbarTooltip>
                   <ToolbarTooltip label={toggleTooltip}>
                     <Button
                       type="button"

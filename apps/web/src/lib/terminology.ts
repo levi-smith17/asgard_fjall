@@ -24,6 +24,12 @@ export type Terms = {
   cache: string
   /** Sidebar group: Platform / Pallr. */
   platformGroup: string
+  /** Overview (Yfirlit) — Hlidskjalf. */
+  overviewGroup: string
+  /** Personal (Sjálfr). */
+  fjallPersonalGroup: string
+  /** Extras (Fleira). */
+  fjallExtrasGroup: string
   /** Sidebar group: Public View / Almenningr. */
   publicViewGroup: string
   // Audr (provisions) item types
@@ -87,6 +93,9 @@ const ASGARD: Terms = {
   privacy: 'Frid',
   cache: 'Fordi',
   platformGroup: 'Pallr',
+  overviewGroup: 'Yfirlit',
+  fjallPersonalGroup: 'Sjálfr',
+  fjallExtrasGroup: 'Fleira',
   publicViewGroup: 'Almenningr',
   expenses: 'Surtr',
   expenseSingular: 'Surtr',
@@ -144,6 +153,9 @@ const STANDARD: Terms = {
   privacy: 'Privacy',
   cache: 'Cache',
   platformGroup: 'Platform',
+  overviewGroup: 'Overview',
+  fjallPersonalGroup: 'Personal',
+  fjallExtrasGroup: 'Extras',
   publicViewGroup: 'Public View',
   expenses: 'Expenses',
   expenseSingular: 'Expense',

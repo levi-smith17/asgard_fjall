@@ -1,5 +1,13 @@
+data "aws_ssm_parameter" "fjall_session_secret" {
+  count           = var.fjall_session_secret == "" ? 1 : 0
+  name            = "/asgard-fjall/${var.environment}/FJALL_SESSION_SECRET"
+  with_decryption = true
+}
+
 locals {
   name_prefix = "${var.project_name}-${var.environment}"
+
+  fjall_session_secret = var.fjall_session_secret != "" ? var.fjall_session_secret : try(data.aws_ssm_parameter.fjall_session_secret[0].value, "")
 
   lambda_env = merge(
     {
@@ -10,8 +18,8 @@ locals {
       DYNAMODB_TABLE       = var.dynamodb_table_name
       WEB_URL              = var.web_url
     },
-    var.fjall_session_secret != "" ? {
-      FJALL_SESSION_SECRET = var.fjall_session_secret
+    local.fjall_session_secret != "" ? {
+      FJALL_SESSION_SECRET = local.fjall_session_secret
     } : {},
     var.s3_private_media_bucket_name != null ? {
       S3_PRIVATE_MEDIA_BUCKET = var.s3_private_media_bucket_name
