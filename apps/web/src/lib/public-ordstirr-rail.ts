@@ -44,7 +44,7 @@ export type PublicOrdstirrRailGroup = {
 
 /** Public URL hashes always use Standard English slugs (never Asgard/Cairn terms). */
 export const PUBLIC_SECTION_HASH_BY_ID: Record<PublicOrdstirrRailSectionId, string> = {
-  origins: 'about',
+  origins: 'intro',
   expeditions: 'work-experience',
   training: 'education',
   gear: 'skills',
@@ -75,6 +75,8 @@ const HASH_ALIASES: Record<string, PublicOrdstirrRailSectionId> = {
   companions: 'companions',
   'in-memoriam': 'in-memoriam',
   ordsending: 'ordsending',
+  about: 'origins',
+  intro: 'origins',
   contact: 'ordsending',
 }
 

@@ -6,6 +6,7 @@ import {
   ExternalLink,
   MessageSquare,
   Moon,
+  MoreHorizontal,
   Palette,
   Settings,
   Sun,
@@ -138,39 +139,52 @@ export function AppShell() {
     )
 
     if (item.key === 'ordstirr' && publicOrdstirrHref) {
-      const bookLink = (
-        <Link
-          to={publicOrdstirrHref}
-          aria-label={terms.publicViewGroup}
-          className={cn(
-            'flex w-full items-center rounded-lg text-sm font-medium transition-colors',
-            isNarrow ? 'h-full justify-center px-0 py-2.5' : 'justify-start gap-2.5 px-3 py-2',
-            publicViewActive
-              ? 'bg-sidebar-accent text-sidebar-foreground-active'
-              : 'text-sidebar-foreground hover:bg-muted-hover hover:text-foreground',
-          )}
-        >
-          <BookOpen className="h-[1.125rem] w-[1.125rem] shrink-0" aria-hidden />
-          {!isNarrow ? <span className="truncate">{terms.publicViewGroup}</span> : null}
-        </Link>
-      )
+      if (isNarrow) {
+        const bookLink = (
+          <Link
+            to={publicOrdstirrHref}
+            aria-label={terms.publicViewGroup}
+            className={cn(
+              'flex w-full items-center rounded-lg text-sm font-medium transition-colors',
+              'h-full justify-center px-0 py-2.5',
+              publicViewActive
+                ? 'bg-sidebar-accent text-sidebar-foreground-active'
+                : 'text-sidebar-foreground hover:bg-muted-hover hover:text-foreground',
+            )}
+          >
+            <BookOpen className="h-[1.125rem] w-[1.125rem] shrink-0" aria-hidden />
+          </Link>
+        )
 
-      return (
-        <li key={item.key} className="flex w-full flex-col gap-0.5">
-          {isNarrow ? (
+        return (
+          <li key={item.key} className="flex w-full flex-col gap-0.5">
             <ToolbarTooltip label={item.label} placement="right" className="w-full">
               {link}
             </ToolbarTooltip>
-          ) : (
-            link
-          )}
-          {isNarrow ? (
             <ToolbarTooltip label={terms.publicViewGroup} placement="right" className="w-full">
               {bookLink}
             </ToolbarTooltip>
-          ) : (
-            bookLink
-          )}
+          </li>
+        )
+      }
+
+      return (
+        <li key={item.key} className="flex items-center gap-0.5">
+          <div className="min-w-0 flex-1">{link}</div>
+          <ToolbarTooltip label={terms.publicViewGroup} placement="above">
+            <Link
+              to={publicOrdstirrHref}
+              aria-label={terms.publicViewGroup}
+              className={cn(
+                'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-medium transition-colors',
+                publicViewActive
+                  ? 'bg-sidebar-accent text-sidebar-foreground-active'
+                  : 'text-sidebar-foreground hover:bg-muted-hover hover:text-foreground',
+              )}
+            >
+              <BookOpen className="h-[1.125rem] w-[1.125rem] shrink-0" aria-hidden />
+            </Link>
+          </ToolbarTooltip>
         </li>
       )
     }
@@ -201,55 +215,54 @@ export function AppShell() {
             {groups.map((group, groupIndex) => {
               const collapseToFlyout = useGroupFlyouts && !group.neverCollapse
               return (
-                <div
-                  key={group.id}
-                  className={cn(
-                    group.id === 'overview' &&
-                      isNarrow &&
-                      'flex h-14 max-h-14 items-center',
-                  )}
-                >
+                <div key={group.id}>
                   {groupIndex > 0 ? (
                     <div
                       className={cn(
                         'border-t border-sidebar-border',
-                        isNarrow ? '-mx-1.5 my-2' : '-mx-2 my-4',
+                        isNarrow ? '-mx-1.5' : '-mx-2 my-4',
                       )}
                     />
                   ) : null}
 
-                  {collapseToFlyout ? (
-                    <ul className="w-full space-y-0.5">
-                      <li>
-                        <SidebarNavGroupFlyout
-                          items={group.items.map((item) => ({
-                            ...item,
-                            enabled: true,
-                          }))}
-                          groupLabel={group.label}
-                          groupIcon={group.icon}
-                          publicViewLabel={terms.publicViewGroup}
-                          publicUsername={username}
-                        />
-                      </li>
-                    </ul>
-                  ) : (
-                    <>
-                      {!isNarrow ? (
-                        <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                          {group.label}
-                        </p>
-                      ) : null}
-                      <ul
-                        className={cn(
-                          'w-full space-y-0.5',
-                          group.id === 'overview' && isNarrow && 'h-full',
-                        )}
-                      >
-                        {group.items.map((item) => renderNavLink(item))}
+                  <div
+                    className={cn(
+                      group.id === 'overview' && isNarrow && 'flex h-14 max-h-14 items-center',
+                    )}
+                  >
+                    {collapseToFlyout ? (
+                      <ul className="w-full space-y-0.5">
+                        <li>
+                          <SidebarNavGroupFlyout
+                            items={group.items.map((item) => ({
+                              ...item,
+                              enabled: true,
+                            }))}
+                            groupLabel={group.label}
+                            groupIcon={group.icon}
+                            publicViewLabel={terms.publicViewGroup}
+                            publicUsername={username}
+                          />
+                        </li>
                       </ul>
-                    </>
-                  )}
+                    ) : (
+                      <>
+                        {!isNarrow ? (
+                          <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            {group.label}
+                          </p>
+                        ) : null}
+                        <ul
+                          className={cn(
+                            'w-full space-y-0.5',
+                            group.id === 'overview' && isNarrow && 'h-full',
+                          )}
+                        >
+                          {group.items.map((item) => renderNavLink(item))}
+                        </ul>
+                      </>
+                    )}
+                  </div>
                 </div>
               )
             })}
@@ -257,72 +270,71 @@ export function AppShell() {
 
           <div className={cn('border-t border-sidebar-border py-2', isNarrow ? 'px-1.5' : 'px-3 py-3')}>
             {isNarrow ? (
-              <SidebarFooterFlyout
-                triggerLabel={displayName}
-                trigger={
-                  <span className="relative">
-                    <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
-                    {unreadMessageCount > 0 ? (
-                      <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
-                        {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
-                      </span>
-                    ) : null}
-                  </span>
-                }
-                items={[
-                  {
-                    key: 'sendibod',
-                    label: terms.messages,
-                    to: '/sendibod',
-                    active: sendibodActive,
-                    icon: <MessageSquare className="h-4 w-4" />,
-                    badge:
-                      unreadMessageCount > 0 ? (
-                        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground tabular-nums">
+              <div className="flex w-full flex-col items-center gap-1">
+                <SidebarFooterFlyout
+                  triggerLabel="More"
+                  trigger={
+                    <span className="relative">
+                      <MoreHorizontal className="h-4 w-4" aria-hidden />
+                      {unreadMessageCount > 0 ? (
+                        <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
                           {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
                         </span>
-                      ) : null,
-                  },
-                  {
-                    key: 'terminology',
-                    label: toggleTooltip,
-                    icon: <BookType className="h-4 w-4" />,
-                    onSelect: cycleTerminology,
-                  },
-                  {
-                    key: 'palette',
-                    label: paletteTooltip,
-                    icon: <Palette className="h-4 w-4" />,
-                    onSelect: cyclePalette,
-                  },
-                  {
-                    key: 'theme',
-                    label: themeLabel,
-                    icon:
-                      theme === 'dark' ? (
-                        <Sun className="h-4 w-4" />
-                      ) : (
-                        <Moon className="h-4 w-4" />
-                      ),
-                    onSelect: toggleTheme,
-                  },
-                  {
-                    key: 'settings',
-                    label: terms.settings,
-                    to: '/thing',
-                    active: pathname.startsWith('/thing'),
-                    icon: <Settings className="h-4 w-4" />,
-                  },
-                ]}
-                footer={
-                  <div className="min-w-0 text-left text-sm leading-tight">
-                    <p className="truncate font-medium text-foreground">{displayName}</p>
-                    {displayEmail ? (
-                      <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
-                    ) : null}
+                      ) : null}
+                    </span>
+                  }
+                  items={[
+                    {
+                      key: 'sendibod',
+                      label: terms.messages,
+                      to: '/sendibod',
+                      active: sendibodActive,
+                      icon: <MessageSquare className="h-4 w-4" />,
+                      badge:
+                        unreadMessageCount > 0 ? (
+                          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground tabular-nums">
+                            {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+                          </span>
+                        ) : null,
+                    },
+                    {
+                      key: 'terminology',
+                      label: toggleTooltip,
+                      icon: <BookType className="h-4 w-4" />,
+                      onSelect: cycleTerminology,
+                    },
+                    {
+                      key: 'palette',
+                      label: paletteTooltip,
+                      icon: <Palette className="h-4 w-4" />,
+                      onSelect: cyclePalette,
+                    },
+                    {
+                      key: 'theme',
+                      label: themeLabel,
+                      icon:
+                        theme === 'dark' ? (
+                          <Sun className="h-4 w-4" />
+                        ) : (
+                          <Moon className="h-4 w-4" />
+                        ),
+                      onSelect: toggleTheme,
+                    },
+                    {
+                      key: 'settings',
+                      label: terms.settings,
+                      to: '/thing',
+                      active: pathname.startsWith('/thing'),
+                      icon: <Settings className="h-4 w-4" />,
+                    },
+                  ]}
+                />
+                <ToolbarTooltip label={displayName} placement="right" className="w-full">
+                  <div className="flex w-full items-center justify-center px-0 py-2.5">
+                    <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
                   </div>
-                }
-              />
+                </ToolbarTooltip>
+              </div>
             ) : (
               <>
                 <div className="grid w-full grid-cols-5 gap-1">

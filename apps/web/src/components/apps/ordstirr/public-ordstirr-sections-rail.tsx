@@ -106,10 +106,10 @@ function SectionList({
                     type="button"
                     onClick={() => onSelectSection(section.id)}
                     className={cn(
-                      'flex w-full items-center text-left text-sm font-medium transition-colors',
+                      'flex w-full items-center text-sm font-medium transition-colors',
                       sidebarStyle
-                        ? 'gap-2.5 rounded-lg px-3 py-2'
-                        : 'gap-2 rounded-md px-2 py-1.5',
+                        ? 'justify-start gap-2.5 rounded-lg px-3 py-2'
+                        : 'gap-2 rounded-md px-2 py-1.5 text-left',
                       active
                         ? sidebarStyle
                           ? 'bg-sidebar-accent text-sidebar-foreground-active'

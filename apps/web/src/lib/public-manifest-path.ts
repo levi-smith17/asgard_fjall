@@ -7,14 +7,14 @@ export type PublicManifestPathMatch = {
   view: PublicManifestView
 }
 
-/** In-app Asgard public paths (apex uses short `/`, `/ferd`, `/ordsending`). */
+/** In-app Asgard paths keep `/ferd` + `/ordsending`; apex uses `/about` + `/contact`. */
 export function publicManifestPath(
   username: string,
   view: PublicManifestView = 'manifest',
 ): string {
   if (isApexOrdstirrHost() && username === APEX_ORDSTIRR_USERNAME) {
-    if (view === 'journey') return '/ferd'
-    if (view === 'contact') return '/ordsending'
+    if (view === 'journey') return '/about'
+    if (view === 'contact') return '/contact'
     return '/'
   }
   if (view === 'journey') return `/ordstirr/${username}/ferd`
@@ -27,10 +27,15 @@ export function parsePublicManifestPath(pathname: string): PublicManifestPathMat
     if (pathname === '/' || pathname === '') {
       return { username: APEX_ORDSTIRR_USERNAME, view: 'manifest' }
     }
-    if (pathname === '/ferd' || pathname === '/journey') {
+    // Preferred apex paths + legacy aliases.
+    if (
+      pathname === '/about' ||
+      pathname === '/ferd' ||
+      pathname === '/journey'
+    ) {
       return { username: APEX_ORDSTIRR_USERNAME, view: 'journey' }
     }
-    if (pathname === '/ordsending' || pathname === '/contact') {
+    if (pathname === '/contact' || pathname === '/ordsending') {
       return { username: APEX_ORDSTIRR_USERNAME, view: 'contact' }
     }
   }

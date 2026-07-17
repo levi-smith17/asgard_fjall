@@ -9,12 +9,18 @@ export type ThingRailSection = {
   icon: LucideIcon
 }
 
+export type ThingRailGroup = {
+  id: string
+  label: string
+  sections: ThingRailSection[]
+}
+
 export function ThingSectionsRail({
-  sections,
+  groups,
   activeSection,
   onSelectSection,
 }: {
-  sections: ThingRailSection[]
+  groups: ThingRailGroup[]
   activeSection: string
   onSelectSection: (sectionId: string) => void
 }) {
@@ -23,30 +29,40 @@ export function ThingSectionsRail({
       <div className="flex h-14 min-h-14 max-h-14 shrink-0 items-center border-b border-border px-3">
         <StudioRailTitle icon={Section}>Sections</StudioRailTitle>
       </div>
-      <nav className="min-h-0 flex-1 overflow-y-auto p-2" aria-label="Thing settings sections">
-        <ul className="space-y-1.5">
-          {sections.map((section) => {
-            const Icon = section.icon
-            const active = activeSection === section.id
-            return (
-              <li key={section.id}>
-                <button
-                  type="button"
-                  onClick={() => onSelectSection(section.id)}
-                  className={cn(
-                    'flex w-full items-center gap-2 rounded-lg border bg-card p-2 text-left text-sm font-medium transition-colors',
-                    active
-                      ? 'border-primary/40 bg-primary/10'
-                      : 'border-border hover:border-primary/50',
-                  )}
-                >
-                  <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
-                  <span className="truncate">{section.label}</span>
-                </button>
-              </li>
-            )
-          })}
-        </ul>
+      <nav className="min-h-0 flex-1 overflow-y-auto px-2 py-3" aria-label="Thing settings sections">
+        {groups.map((group, groupIndex) => (
+          <div key={group.id}>
+            {groupIndex > 0 ? (
+              <div className="my-3 border-t border-border" aria-hidden />
+            ) : null}
+            <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              {group.label}
+            </p>
+            <ul className="space-y-1.5">
+              {group.sections.map((section) => {
+                const Icon = section.icon
+                const active = activeSection === section.id
+                return (
+                  <li key={section.id}>
+                    <button
+                      type="button"
+                      onClick={() => onSelectSection(section.id)}
+                      className={cn(
+                        'flex w-full items-center gap-2 rounded-lg border bg-card p-2 text-left text-sm font-medium transition-colors',
+                        active
+                          ? 'border-primary/40 bg-primary/10'
+                          : 'border-border hover:border-primary/50',
+                      )}
+                    >
+                      <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                      <span className="truncate">{section.label}</span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        ))}
       </nav>
     </div>
   )

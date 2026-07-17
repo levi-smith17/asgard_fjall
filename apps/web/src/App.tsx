@@ -51,10 +51,12 @@ function ApexOrdstirrApp() {
   return (
     <Routes>
       <Route path="/" element={<PublicManifestPage view="manifest" username={username} />} />
-      <Route path="/ferd" element={<PublicManifestPage view="journey" username={username} />} />
-      <Route path="/ordsending" element={<PublicManifestPage view="contact" username={username} />} />
-      <Route path="/journey" element={<Navigate to="/ferd" replace />} />
-      <Route path="/contact" element={<Navigate to="/ordsending" replace />} />
+      <Route path="/about" element={<PublicManifestPage view="journey" username={username} />} />
+      <Route path="/contact" element={<PublicManifestPage view="contact" username={username} />} />
+      {/* Legacy aliases → preferred Standard paths */}
+      <Route path="/ferd" element={<Navigate to="/about" replace />} />
+      <Route path="/journey" element={<Navigate to="/about" replace />} />
+      <Route path="/ordsending" element={<Navigate to="/contact" replace />} />
       {PublicSurfaces()}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

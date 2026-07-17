@@ -108,7 +108,23 @@ export type CairnFullSettings = {
 }
 
 export async function fetchCairnFullSettings(): Promise<CairnFullSettings> {
-  return cairnFetch<CairnFullSettings>('/settings')
+  const raw = await cairnFetch<Record<string, any>>('/settings')
+  return {
+    ...raw,
+    itinerary: raw.itinerary ?? raw.dagatal,
+    waypoints: raw.waypoints ?? {
+      defaultSort: raw.laufar?.defaultSort,
+      openInNewTab: raw.laufar?.openInNewTab,
+      waypointsPerPage: raw.laufar?.laufarPerPage ?? raw.laufar?.waypointsPerPage,
+    },
+    logs: raw.logs ?? {
+      logsPerPage: raw.sogur?.sogurPerPage ?? raw.sogur?.logsPerPage,
+      defaultSort: raw.sogur?.defaultSort,
+    },
+    calendars: raw.calendars,
+    calendarSubscriptions: raw.calendarSubscriptions,
+    signals: raw.signals ?? raw.sendibod,
+  } as CairnFullSettings
 }
 
 export type CairnProfile = {

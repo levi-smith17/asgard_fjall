@@ -124,17 +124,21 @@ export function manifestPublicJourneyUrl(
 ): string | null {
   const manifest = manifestPublicUrl(username, customDomain)
   if (!manifest) return null
-  if (/\/ferd\/?$/i.test(manifest)) return manifest
-  if (/\/journey\/?$/i.test(manifest)) {
-    return manifest.replace(/\/journey\/?$/i, '/ferd')
-  }
   if (isApexPublicOrigin(manifest)) {
     try {
       const { pathname } = new URL(manifest)
-      if (!pathname || pathname === '/') return `${APEX_PUBLIC_ORIGIN}/ferd`
+      if (!pathname || pathname === '/') return `${APEX_PUBLIC_ORIGIN}/about`
     } catch {
-      return `${APEX_PUBLIC_ORIGIN}/ferd`
+      return `${APEX_PUBLIC_ORIGIN}/about`
     }
+  }
+  // In-app Almenningr keeps /ferd.
+  if (/\/ferd\/?$/i.test(manifest)) return manifest
+  if (/\/about\/?$/i.test(manifest)) return manifest
+  if (/\/journey\/?$/i.test(manifest)) {
+    return isApexPublicOrigin(manifest)
+      ? manifest.replace(/\/journey\/?$/i, '/about')
+      : manifest.replace(/\/journey\/?$/i, '/ferd')
   }
   return `${manifest.replace(/\/$/, '')}/ferd`
 }

@@ -1,26 +1,17 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Bookmark, CalendarDays, KeyRound, Monitor, NotebookPen, Shield, User } from 'lucide-react'
+import { Bookmark, CalendarDays, KeyRound, NotebookPen, User } from 'lucide-react'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
 import { ThingAccountSettings } from '@/components/thing/thing-account-settings'
-import { ThingAppearanceSettings } from '@/components/thing/thing-appearance-settings'
 import { ThingContextBar } from '@/components/thing/thing-context-bar'
 import { ThingIntegrationsSettings } from '@/components/thing/thing-integrations-settings'
 import { ThingItinerarySettings } from '@/components/thing/thing-itinerary-settings'
 import { ThingLogSettings } from '@/components/thing/thing-log-settings'
-import { ThingPrivacySettings } from '@/components/thing/thing-privacy-settings'
 import { ThingSectionsRail } from '@/components/thing/thing-sections-rail'
 import { ThingWaypointSettings } from '@/components/thing/thing-waypoint-settings'
 import { useTerms } from '@/hooks/use-terminology'
 
-type ThingSection =
-  | 'account'
-  | 'appearance'
-  | 'privacy'
-  | 'integrations'
-  | 'dagatal'
-  | 'sogur'
-  | 'hlidskjalf'
+type ThingSection = 'account' | 'integrations' | 'dagatal' | 'sogur' | 'hlidskjalf'
 
 function ThingSectionShell({
   title,
@@ -44,30 +35,44 @@ function ThingSectionShell({
 
 export function ThingPage() {
   const terms = useTerms()
-  const thingSections = useMemo(
-    () =>
-      [
-        { id: 'account' as const, label: terms.account, icon: User },
-        { id: 'appearance' as const, label: 'Appearance', icon: Monitor },
-        { id: 'privacy' as const, label: terms.privacy, icon: Shield },
-        { id: 'integrations' as const, label: 'Integrations', icon: KeyRound },
-        { id: 'dagatal' as const, label: terms.calendar, icon: CalendarDays },
-        { id: 'sogur' as const, label: terms.notes, icon: NotebookPen },
-        { id: 'hlidskjalf' as const, label: terms.laufar, icon: Bookmark },
-      ] satisfies Array<{ id: ThingSection; label: string; icon: typeof User }>,
-    [terms],
+  const isAsgard = terms.account === 'Heiti'
+  const thingGroups = useMemo(
+    () => [
+      {
+        id: 'account',
+        label: isAsgard ? 'Sjálfr' : 'Account',
+        sections: [{ id: 'account' as const, label: terms.account, icon: User }],
+      },
+      {
+        id: 'apps',
+        label: isAsgard ? 'Forrit' : 'Apps',
+        sections: [
+          { id: 'integrations' as const, label: 'Integrations', icon: KeyRound },
+          { id: 'dagatal' as const, label: terms.calendar, icon: CalendarDays },
+          { id: 'sogur' as const, label: terms.notes, icon: NotebookPen },
+          { id: 'hlidskjalf' as const, label: terms.laufar, icon: Bookmark },
+        ],
+      },
+    ],
+    [isAsgard, terms],
   )
   const [searchParams, setSearchParams] = useSearchParams()
   const sectionParam = searchParams.get('section')
   const activeSection: ThingSection =
-    sectionParam === 'appearance' ||
-    sectionParam === 'privacy' ||
     sectionParam === 'integrations' ||
     sectionParam === 'dagatal' ||
     sectionParam === 'sogur' ||
     sectionParam === 'hlidskjalf'
       ? sectionParam
       : 'account'
+
+  useEffect(() => {
+    if (sectionParam === 'privacy' || sectionParam === 'appearance') {
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete('section')
+      setSearchParams(params, { replace: true })
+    }
+  }, [sectionParam, searchParams, setSearchParams])
 
   function setSection(section: ThingSection) {
     const params = new URLSearchParams(searchParams.toString())
@@ -85,7 +90,7 @@ export function ThingPage() {
       contextBar={<ThingContextBar />}
       rail={
         <ThingSectionsRail
-          sections={thingSections}
+          groups={thingGroups}
           activeSection={activeSection}
           onSelectSection={(section) => setSection(section as ThingSection)}
         />
@@ -98,17 +103,6 @@ export function ThingPage() {
               description={`Calendars, subscriptions, and ${terms.calendar.toLowerCase()} preferences.`}
             >
               <ThingItinerarySettings />
-            </ThingSectionShell>
-          ) : activeSection === 'appearance' ? (
-            <ThingSectionShell
-              title="Appearance"
-              description="Layout defaults and formatting preferences."
-            >
-              <ThingAppearanceSettings />
-            </ThingSectionShell>
-          ) : activeSection === 'privacy' ? (
-            <ThingSectionShell title={terms.privacy} description="Manifest visibility and contact settings.">
-              <ThingPrivacySettings />
             </ThingSectionShell>
           ) : activeSection === 'integrations' ? (
             <ThingSectionShell
@@ -132,7 +126,7 @@ export function ThingPage() {
               <ThingWaypointSettings />
             </ThingSectionShell>
           ) : (
-            <ThingSectionShell title={terms.account} description="Profile and account details.">
+            <ThingSectionShell title={terms.account} description="Profile, appearance, and public settings.">
               <ThingAccountSettings />
             </ThingSectionShell>
           )}

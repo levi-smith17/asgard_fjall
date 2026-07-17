@@ -341,7 +341,7 @@ function ManifestView({ data, terms }: { data: PublicManifestData; terms: Terms 
 
   return (
     <div className="manifest-page mx-auto flex max-w-3xl flex-col gap-12 px-6 py-6 print:mx-0 print:max-w-none print:px-0 print:pb-0">
-      <div id="about" className="flex scroll-mt-6 flex-col gap-6">
+      <div id="intro" className="flex scroll-mt-6 flex-col gap-6">
         <div className="flex items-center gap-4">
           <Avatar
             src={avatar}
