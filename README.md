@@ -103,8 +103,8 @@ Rót, Leidangr, Thjalfun, Bunadr, Vördur, Tindar, Lidsinni, Sjalfsmynd, Foruney
 
 ## Relation to Cairn Summit
 
-- Browser → `https://api.cairn.ing` (and public media CDN as configured)
-- Shared product surface with Cairn Summit and with RealmOps’s Cairn embed
+- Browser → `https://api.asgard.levismith.us` (Cognito JWT; Cairn-style client paths remapped to Asgard routes)
+- Media → `https://media.asgard.levismith.us`
 - Public Ordstirr paths on Fjall use Asgard-style URLs (`/ordstirr/:username`, `/ferd`, `/ordsending`); Cairn custom domains may still host `/manifest/…`
 
 ---

@@ -1,4 +1,5 @@
 import { CAIRN_API_URL } from '@/lib/config'
+import { mapCairnApiPathToAsgard } from '@/lib/map-api-path'
 
 export class CairnApiError extends Error {
   status: number
@@ -26,7 +27,8 @@ export async function cairnFetch<T>(path: string, init?: RequestInit): Promise<T
     headers.set('Content-Type', 'application/json')
   }
 
-  const response = await fetch(`${CAIRN_API_URL}${path}`, {
+  const mappedPath = mapCairnApiPathToAsgard(path)
+  const response = await fetch(`${CAIRN_API_URL}${mappedPath}`, {
     ...init,
     headers,
     credentials: 'omit',

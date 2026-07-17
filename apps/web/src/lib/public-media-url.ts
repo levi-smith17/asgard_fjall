@@ -1,8 +1,8 @@
-/** Public companion / landmark media hosted on Cairn CloudFront. */
+/** Public Ordstirr companion media CDN. */
 const CLOUDFRONT_PUBLIC_MEDIA_URL =
-  import.meta.env.VITE_CLOUDFRONT_PUBLIC_MEDIA_URL?.replace(/\/$/, '') || 'https://media.cairn.ing'
+  import.meta.env.VITE_CLOUDFRONT_PUBLIC_MEDIA_URL?.replace(/\/$/, '') ||
+  'https://media.asgard.levismith.us'
 
-export function publicCompanionMediaUrl(key: string): string {
-  if (/^https?:\/\//i.test(key)) return key
+export function publicMediaUrl(key: string): string {
   return `${CLOUDFRONT_PUBLIC_MEDIA_URL}/${key.replace(/^\//, '')}`
 }

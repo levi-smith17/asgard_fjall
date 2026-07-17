@@ -14,7 +14,7 @@ Repo: `levi-smith17/asgard_fjall`
 | API (Phase C) | Lambda + HTTP API Gateway via Terragrunt → `api.asgard.levismith.us` (Cairn Cognito until cutover) |
 | Media (Phase C) | `media.asgard.levismith.us` (public companions via CloudFront OAC) |
 | Dynamo cutover | `scripts/migrate-dynamo.py` — see `docs/dynamo-cutover.md` |
-| API data (today) | Cairn only (`VITE_CAIRN_API_URL`) until cutover |
+| API data | Clients → `api.asgard.levismith.us` (path remaps at fetch boundary) |
 | Gate auth | Passkeys; `fjall_session`; RP ID `levismith.us` (shared across `asgard` + `fjall` hosts) |
 | Cairn auth | Cognito bearer in browser (preferred) **or** thin BFF later |
 | CI | `main` only; separate Fjall Web vs Fjall API workflows (`deploy-web.yml` / `deploy-api.yml`) |

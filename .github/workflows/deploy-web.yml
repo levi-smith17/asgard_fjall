@@ -27,7 +27,11 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @asgard-fjall/web build
+      - name: Build web
+        env:
+          VITE_CAIRN_API_URL: https://api.asgard.levismith.us
+          VITE_CLOUDFRONT_PUBLIC_MEDIA_URL: https://media.asgard.levismith.us
+        run: pnpm --filter @asgard-fjall/web build
       - uses: actions/upload-artifact@v4
         with:
           name: web-dist
