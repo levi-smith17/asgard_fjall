@@ -32,6 +32,10 @@ export type Terms = {
   fjallExtrasGroup: string
   /** Sidebar group: Public View / Almenningr. */
   publicViewGroup: string
+  /** Color palette: Green / Graenn. */
+  paletteGreen: string
+  /** Color palette: Gold / Gull. */
+  paletteGold: string
   // Audr (provisions) item types
   expenses: string
   expenseSingular: string
@@ -97,6 +101,8 @@ const ASGARD: Terms = {
   fjallPersonalGroup: 'Sjálfr',
   fjallExtrasGroup: 'Fleira',
   publicViewGroup: 'Almenningr',
+  paletteGreen: 'Graenn',
+  paletteGold: 'Gull',
   expenses: 'Surtr',
   expenseSingular: 'Surtr',
   subscriptions: 'Idunn',
@@ -157,6 +163,8 @@ const STANDARD: Terms = {
   fjallPersonalGroup: 'Personal',
   fjallExtrasGroup: 'Extras',
   publicViewGroup: 'Public View',
+  paletteGreen: 'Green',
+  paletteGold: 'Gold',
   expenses: 'Expenses',
   expenseSingular: 'Expense',
   subscriptions: 'Subscriptions',
@@ -230,8 +238,8 @@ export function nextTerminologyStyle(current: TerminologyStyle): TerminologyStyl
 
 export function terminologyToggleTooltip(current: TerminologyStyle): string {
   const next = nextTerminologyStyle(current)
-  if (next === 'STANDARD') return 'Switch to Standard terms'
-  return 'Switch to Asgard terms'
+  if (next === 'STANDARD') return 'Standard Idord'
+  return 'Asgard Terms'
 }
 
 export type ManifestTerms = Pick<

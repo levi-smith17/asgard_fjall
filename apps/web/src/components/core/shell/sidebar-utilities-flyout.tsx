@@ -18,7 +18,8 @@ export function SidebarUtilitiesFlyout() {
   const { pathname } = useLocation()
   const { theme, toggleTheme } = useTheme()
   const { style, terms, cycleTerminology, toggleTooltip } = useTerminology()
-  const { cyclePalette, toggleTooltip: paletteTooltip } = usePalette()
+  const { cyclePalette, nextPalette } = usePalette()
+  const paletteTooltip = nextPalette === 'green' ? terms.paletteGreen : terms.paletteGold
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null)

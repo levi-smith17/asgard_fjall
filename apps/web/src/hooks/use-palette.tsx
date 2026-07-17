@@ -63,6 +63,7 @@ type PaletteContextValue = {
   palette: ColorPalette
   setPalette: (palette: ColorPalette) => void
   cyclePalette: () => void
+  nextPalette: ColorPalette
   paletteLabel: string
   nextPaletteLabel: string
   toggleTooltip: string
@@ -104,6 +105,7 @@ export function PaletteProvider({ children }: { children: ReactNode }) {
       palette,
       setPalette,
       cyclePalette,
+      nextPalette,
       paletteLabel: PALETTE_LABELS[palette],
       nextPaletteLabel: PALETTE_LABELS[nextPalette],
       toggleTooltip: PALETTE_LABELS[nextPalette],

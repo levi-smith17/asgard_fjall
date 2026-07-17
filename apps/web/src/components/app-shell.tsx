@@ -48,7 +48,8 @@ export function AppShell() {
   useAppDocumentTitle()
   const { theme, toggleTheme } = useTheme()
   const { terms, style, cycleTerminology, toggleTooltip } = useTerminology()
-  const { cyclePalette, toggleTooltip: paletteTooltip } = usePalette()
+  const { cyclePalette, nextPalette } = usePalette()
+  const paletteTooltip = nextPalette === 'green' ? terms.paletteGreen : terms.paletteGold
   const { isDesktop, isNarrow, desktopCollapsed, toggleDesktopCollapsed } = useSidebarCollapsed()
   const useGroupFlyouts = !isDesktop
   const groups = getFjallNavGroups(terms)
@@ -237,7 +238,7 @@ export function AppShell() {
                             groupLabel={group.label}
                             groupIcon={group.icon}
                             publicViewLabel={terms.publicViewGroup}
-                            publicUsername={username}
+                            publicUsername={group.id === 'personal' ? username : undefined}
                           />
                         </li>
                       </ul>

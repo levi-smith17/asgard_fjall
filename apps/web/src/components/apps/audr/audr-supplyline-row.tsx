@@ -1,21 +1,21 @@
-import { BanknoteArrowDown, Receipt } from 'lucide-react'
+import { Repeat } from 'lucide-react'
 import { MarkerBadge } from '@/components/apps/marker-badge'
 import { liveMarkersById, toDisplayMarker } from '@/lib/embedded-markers'
-import { fetchFjallBurnReceiptUrl } from '@/lib/data-api'
+import { getEffectiveNextRenewal } from '@/lib/idunn-renewal'
 import { audrFmt } from '@/lib/audr-format'
 import { cn } from '@/lib/utils'
-import type { FjallBurn } from '@/lib/data-types'
+import type { FjallSupplyline } from '@/lib/data-types'
 import type { AudrMarker } from './audr-types'
 
-export function AudrBurnRow({
-  burn,
+export function AudrSupplylineRow({
+  supplyline,
   selected,
   onSelect,
   fundColor,
   fundName,
   markers = [],
 }: {
-  burn: FjallBurn
+  supplyline: FjallSupplyline
   selected: boolean
   onSelect: () => void
   /** Colored Sjodr swatch after the name; omit to hide. */
@@ -24,6 +24,7 @@ export function AudrBurnRow({
   markers?: AudrMarker[]
 }) {
   const liveById = liveMarkersById(markers)
+  const effectiveRenewal = getEffectiveNextRenewal(supplyline.nextRenewal, supplyline.billingCycle)
 
   return (
     <button
@@ -33,18 +34,19 @@ export function AudrBurnRow({
       className={cn(
         'flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors sm:px-6',
         selected ? 'bg-primary/10' : 'hover:bg-muted/50',
+        !supplyline.active && 'opacity-50',
       )}
     >
-      <BanknoteArrowDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+      <Repeat className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
       <div className="w-14 shrink-0 text-xs tabular-nums text-muted-foreground">
-        {new Date(burn.date.slice(0, 10).replace(/-/g, '/')).toLocaleDateString('en-US', {
+        {effectiveRenewal.toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',
         })}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="truncate text-sm font-medium">{burn.name}</span>
+          <span className="truncate text-sm font-medium">{supplyline.name}</span>
           {fundColor ? (
             <span
               className="inline-block h-2 w-2 shrink-0 rounded-full"
@@ -53,34 +55,17 @@ export function AudrBurnRow({
               aria-label={fundName}
             />
           ) : null}
-          {burn.markers.map((entry, i) => {
+          {supplyline.markers.map((entry, i) => {
             const marker = toDisplayMarker(entry, liveById)
             if (!marker) return null
             return <MarkerBadge key={marker.id ?? i} marker={marker} />
           })}
         </div>
-        {burn.notes ? (
-          <div className="truncate text-xs text-muted-foreground">{burn.notes}</div>
+        {supplyline.notes ? (
+          <div className="truncate text-xs text-muted-foreground">{supplyline.notes}</div>
         ) : null}
       </div>
-      {burn.receiptUrl ? (
-        <span
-          role="presentation"
-          onClick={async (e) => {
-            e.stopPropagation()
-            try {
-              const url = await fetchFjallBurnReceiptUrl(burn.receiptUrl!)
-              window.open(url, '_blank')
-            } catch {
-              /* ignore */
-            }
-          }}
-          className="shrink-0 text-muted-foreground hover:text-foreground"
-        >
-          <Receipt className="h-3.5 w-3.5" />
-        </span>
-      ) : null}
-      <div className="shrink-0 text-sm font-medium tabular-nums">{audrFmt(burn.amount)}</div>
+      <div className="shrink-0 text-sm font-medium tabular-nums">{audrFmt(supplyline.amount)}</div>
     </button>
   )
 }

@@ -13,7 +13,7 @@ import {
   type AudrCanvasGroupBy,
   type SurtrCanvasGroup,
 } from '@/lib/audr-format'
-import { effectiveSkattSpent, effectiveSkattUtilization } from '@/lib/audr-skatt-idunn'
+import { effectiveSkattSpent, effectiveSkattUtilization, idunnLinesForMarker } from '@/lib/audr-skatt-idunn'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
 import type {
@@ -26,6 +26,7 @@ import { resolveSjodrColor } from '@/lib/sjodr-color'
 import type { AudrMarker } from './audr-types'
 import { AudrBurnRow } from './audr-burn-row'
 import { AudrFilterBar } from './audr-filter-bar'
+import { AudrSupplylineRow } from './audr-supplyline-row'
 
 export function AudrSurtrCanvas({
   monthName,
@@ -52,6 +53,8 @@ export function AudrSurtrCanvas({
   burnsLoading,
   selectedBurnId,
   onSelectBurn,
+  selectedSupplylineId,
+  onSelectSupplyline,
   onSelectCache,
   onSelectCacheMarker,
   onAddBurn,
@@ -85,6 +88,8 @@ export function AudrSurtrCanvas({
   burnsLoading: boolean
   selectedBurnId: string | null
   onSelectBurn: (id: string) => void
+  selectedSupplylineId: string | null
+  onSelectSupplyline: (id: string) => void
   onSelectCache: (id: string) => void
   onSelectCacheMarker: (markerId: string) => void
   onAddBurn: (markerId?: string) => void
@@ -106,6 +111,12 @@ export function AudrSurtrCanvas({
       ? burns
       : burns.filter((burn) =>
           sjodrFilter === AUDR_UNASSIGNED_SJODR ? !burn.fundId : burn.fundId === sjodrFilter,
+        )
+  const filteredSupplylines =
+    sjodrFilter === 'all'
+      ? supplylines
+      : supplylines.filter((line) =>
+          sjodrFilter === AUDR_UNASSIGNED_SJODR ? !line.fundId : line.fundId === sjodrFilter,
         )
 
   const runGroups = buildSurtrCanvasGroups(filteredBurns, filteredCaches, markers).filter(
@@ -167,7 +178,7 @@ export function AudrSurtrCanvas({
                   .map((group) => group.cache)
                   .filter((cache): cache is FjallCacheUtilization => cache != null)
                 const spent = sectionCaches.reduce(
-                  (sum, cache) => sum + effectiveSkattSpent(cache, supplylines),
+                  (sum, cache) => sum + effectiveSkattSpent(cache, filteredSupplylines),
                   0,
                 )
                 const limit = sectionCaches.reduce((sum, cache) => sum + cache.limit, 0)
@@ -232,13 +243,15 @@ export function AudrSurtrCanvas({
                         key={`${section.fundId ?? AUDR_UNASSIGNED_SJODR}:${group.markerId}`}
                         group={group}
                         markers={markers}
-                        supplylines={supplylines}
+                        supplylines={filteredSupplylines}
                         selectedBurnId={selectedBurnId}
+                        selectedSupplylineId={selectedSupplylineId}
                         fundNameById={fundNameById}
                         fundColorById={fundColorById}
                         showFundBadge={false}
                         stickyClassName=""
                         onSelectBurn={onSelectBurn}
+                        onSelectSupplyline={onSelectSupplyline}
                         onSelectCache={onSelectCache}
                         onSelectCacheMarker={onSelectCacheMarker}
                         onAddBurn={onAddBurn}
@@ -255,13 +268,15 @@ export function AudrSurtrCanvas({
                   key={group.markerId}
                   group={group}
                   markers={markers}
-                  supplylines={supplylines}
+                  supplylines={filteredSupplylines}
                   selectedBurnId={selectedBurnId}
+                  selectedSupplylineId={selectedSupplylineId}
                   fundNameById={fundNameById}
                   fundColorById={fundColorById}
                   showFundBadge
                   stickyClassName="sticky top-0 z-[1]"
                   onSelectBurn={onSelectBurn}
+                  onSelectSupplyline={onSelectSupplyline}
                   onSelectCache={onSelectCache}
                   onSelectCacheMarker={onSelectCacheMarker}
                   onAddBurn={onAddBurn}
@@ -293,11 +308,13 @@ function SkattGroupBlock({
   markers,
   supplylines,
   selectedBurnId,
+  selectedSupplylineId,
   fundNameById,
   fundColorById,
   showFundBadge,
   stickyClassName,
   onSelectBurn,
+  onSelectSupplyline,
   onSelectCache,
   onSelectCacheMarker,
   onAddBurn,
@@ -306,17 +323,20 @@ function SkattGroupBlock({
   markers: AudrMarker[]
   supplylines: FjallSupplyline[]
   selectedBurnId: string | null
+  selectedSupplylineId: string | null
   fundNameById: Map<string, string>
   fundColorById: Map<string, string>
   showFundBadge: boolean
   stickyClassName: string
   onSelectBurn: (id: string) => void
+  onSelectSupplyline: (id: string) => void
   onSelectCache: (id: string) => void
   onSelectCacheMarker: (markerId: string) => void
   onAddBurn: (markerId?: string) => void
 }) {
   const terms = useTerms()
   const { markerId, burns: groupBurns, cache } = group
+  const groupSupplylines = idunnLinesForMarker(supplylines, markerId)
   const groupTotal = groupBurns.reduce((sum, burn) => sum + burn.amount, 0)
   const label = markerShortLabel(markerId, markers, cache)
   const spent = cache ? effectiveSkattSpent(cache, supplylines) : 0
@@ -326,6 +346,7 @@ function SkattGroupBlock({
     showFundBadge && cache?.fundId ? fundColorById.get(cache.fundId) : undefined
   const cacheFundName =
     showFundBadge && cache?.fundId ? fundNameById.get(cache.fundId) : undefined
+  const rowCount = groupBurns.length + groupSupplylines.length
 
   return (
     <div>
@@ -355,8 +376,8 @@ function SkattGroupBlock({
                   aria-label={cacheFundName}
                 />
               ) : null}
-              {groupBurns.length > 0 ? (
-                <span className="font-normal normal-case">({groupBurns.length})</span>
+              {rowCount > 0 ? (
+                <span className="font-normal normal-case">({rowCount})</span>
               ) : null}
             </span>
             <div className="flex shrink-0 items-center gap-3">
@@ -397,7 +418,7 @@ function SkattGroupBlock({
           <Plus className="h-4 w-4" />
         </Button>
       </div>
-      {groupBurns.length > 0 ? (
+      {rowCount > 0 ? (
         <div className="divide-y divide-border">
           {groupBurns.map((burn) => (
             <AudrBurnRow
@@ -416,10 +437,28 @@ function SkattGroupBlock({
               }
             />
           ))}
+          {groupSupplylines.map((line) => (
+            <AudrSupplylineRow
+              key={line.id}
+              supplyline={line}
+              selected={selectedSupplylineId === line.id}
+              onSelect={() => onSelectSupplyline(line.id)}
+              markers={markers}
+              fundColor={
+                showFundBadge && line.fundId ? (fundColorById.get(line.fundId) ?? null) : undefined
+              }
+              fundName={
+                showFundBadge && line.fundId
+                  ? (fundNameById.get(line.fundId) ?? undefined)
+                  : undefined
+              }
+            />
+          ))}
         </div>
       ) : (
         <div className="border-b border-border px-4 py-4 text-xs text-muted-foreground sm:px-6">
-          No {terms.expenses.toLowerCase()} in this {terms.budgets.toLowerCase()} yet.
+          No {terms.expenses.toLowerCase()} or {terms.subscriptions.toLowerCase()} in this{' '}
+          {terms.budgets.toLowerCase()} yet.
         </div>
       )}
     </div>

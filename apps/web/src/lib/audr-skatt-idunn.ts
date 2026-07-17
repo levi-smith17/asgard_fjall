@@ -16,11 +16,19 @@ export function supplylineMonthlyAmount(amount: number, billingCycle: string): n
   }
 }
 
+export function idunnLinesForMarker(
+  supplylines: FjallSupplyline[],
+  markerId: string,
+): FjallSupplyline[] {
+  return supplylines.filter((line) =>
+    line.markers.some((marker) => toMarkerId(marker) === markerId),
+  )
+}
+
 export function idunnSpendForMarker(supplylines: FjallSupplyline[], markerId: string): number {
-  return supplylines
+  return idunnLinesForMarker(supplylines, markerId)
     .filter((line) => line.active)
     .filter((line) => supplylineCountsAgainstSkatt(line.billingCycle))
-    .filter((line) => line.markers.some((marker) => toMarkerId(marker) === markerId))
     .reduce((sum, line) => sum + supplylineMonthlyAmount(line.amount, line.billingCycle), 0)
 }
 

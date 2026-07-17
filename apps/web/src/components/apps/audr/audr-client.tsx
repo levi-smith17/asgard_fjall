@@ -460,6 +460,8 @@ export function AudrClient() {
             burnsLoading={burnQuery.isFetching}
             selectedBurnId={selectedBurnId}
             onSelectBurn={(id) => selectEntity({ kind: 'burn', id })}
+            selectedSupplylineId={selectedSupplylineId}
+            onSelectSupplyline={(id) => selectEntity({ kind: 'supplyline', id })}
             onSelectCache={(id) => selectEntity({ kind: 'cache', id })}
             onSelectCacheMarker={(markerId) =>
               selectEntity(
