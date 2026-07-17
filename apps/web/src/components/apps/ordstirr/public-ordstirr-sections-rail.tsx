@@ -90,8 +90,8 @@ function SectionList({
           ) : null}
           <p
             className={cn(
-              'mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground',
-              sidebarStyle ? 'px-3' : 'px-3',
+              'mb-1 px-3 font-semibold uppercase tracking-wide text-muted-foreground',
+              sidebarStyle ? 'text-xs' : 'text-[10px]',
             )}
           >
             {group.label}
@@ -153,7 +153,7 @@ export function PublicOrdstirrSectionsRail({
   if (variant === 'sidebar') {
     return (
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-column-shell">
-        <AsgardSidebarBrand narrow={false} subtitle={brandName} />
+        <AsgardSidebarBrand narrow={false} size="public" subtitle={brandName} />
         <SectionList
           groups={groups}
           activeSection={activeSection}
