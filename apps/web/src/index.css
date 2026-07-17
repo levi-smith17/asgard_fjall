@@ -43,7 +43,7 @@
     --header-height: 56px;
     --alert-banner-height: 56px;
     --sidebar-brand-height: 112px;
-    --sidebar-brand-height-collapsed: 56px;
+    --sidebar-brand-height-collapsed: 112px;
     --sidebar-width: 3.5rem;
     --sidebar-width-expanded: 228px;
     --scrollbar-thumb: hsl(211 18% 24%);
@@ -89,7 +89,7 @@
     --header-height: 56px;
     --alert-banner-height: 56px;
     --sidebar-brand-height: 112px;
-    --sidebar-brand-height-collapsed: 56px;
+    --sidebar-brand-height-collapsed: 112px;
     --sidebar-width: 3.5rem;
     --sidebar-width-expanded: 228px;
     --scrollbar-thumb: hsl(152 8% 22%);

@@ -17,13 +17,13 @@ export function AsgardSidebarBrand({
   return (
     <div
       className={cn(
-        'flex shrink-0 items-center border-b border-sidebar-border px-2',
+        'box-border flex shrink-0 items-center border-b border-sidebar-border px-2',
         narrow
           ? 'h-[var(--sidebar-brand-height-collapsed)] max-h-[var(--sidebar-brand-height-collapsed)] justify-center'
           : 'h-[var(--sidebar-brand-height)] max-h-[var(--sidebar-brand-height)] justify-start gap-3 px-4',
       )}
     >
-      <AsgardTreeIcon className={cn('w-auto', narrow ? 'h-8' : 'h-[4.5rem]')} />
+      <AsgardTreeIcon className={cn('w-auto', narrow ? 'h-9' : 'h-[4.5rem]')} />
       {!narrow ? (
         <div className="min-w-0 leading-none">
           {terms.productName === 'Cairn' ? (

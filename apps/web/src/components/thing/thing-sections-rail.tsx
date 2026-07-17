@@ -31,14 +31,14 @@ export function ThingSectionsRail({
       </div>
       <nav className="min-h-0 flex-1 overflow-y-auto px-2 py-3" aria-label="Thing settings sections">
         {groups.map((group, groupIndex) => (
-          <div key={group.id}>
+          <div key={group.id} className={cn(groupIndex > 0 && 'mt-1')}>
             {groupIndex > 0 ? (
-              <div className="my-3 border-t border-border" aria-hidden />
+              <div className="mb-3 border-t border-border" aria-hidden />
             ) : null}
-            <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="mb-2 px-1 pt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               {group.label}
             </p>
-            <ul className="space-y-1.5">
+            <ul className="space-y-1.5 pb-2">
               {group.sections.map((section) => {
                 const Icon = section.icon
                 const active = activeSection === section.id

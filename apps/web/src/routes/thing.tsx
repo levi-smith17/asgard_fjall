@@ -41,17 +41,17 @@ export function ThingPage() {
       {
         id: 'account',
         label: isAsgard ? 'Sjálfr' : 'Account',
-        sections: [{ id: 'account' as const, label: terms.account, icon: User }],
-      },
-      {
-        id: 'apps',
-        label: isAsgard ? 'Forrit' : 'Apps',
         sections: [
-          { id: 'integrations' as const, label: 'Integrations', icon: KeyRound },
+          { id: 'account' as const, label: terms.account, icon: User },
           { id: 'dagatal' as const, label: terms.calendar, icon: CalendarDays },
           { id: 'sogur' as const, label: terms.notes, icon: NotebookPen },
           { id: 'hlidskjalf' as const, label: terms.laufar, icon: Bookmark },
         ],
+      },
+      {
+        id: 'apps',
+        label: isAsgard ? 'Forrit' : 'Apps',
+        sections: [{ id: 'integrations' as const, label: 'Integrations', icon: KeyRound }],
       },
     ],
     [isAsgard, terms],

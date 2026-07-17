@@ -2,6 +2,7 @@ import { GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb'
 import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda'
 import { dynamo, TABLE_NAME } from '../../shared/db'
 import { getPk } from '../../shared/auth'
+import { DAGATAL_PREFIX, DAGATAL_SUB_PREFIX, idFromSk } from '../../shared/keys'
 import { ok, serverError, toApiGatewayResponse } from '../../shared/response'
 
 const DEFAULT_SETTINGS = {
@@ -55,14 +56,14 @@ export const handler = async (
         new QueryCommand({
           TableName: TABLE_NAME,
           KeyConditionExpression: 'pk = :pk AND begins_with(sk, :prefix)',
-          ExpressionAttributeValues: { ':pk': pk, ':prefix': 'ITINERARY#' },
+          ExpressionAttributeValues: { ':pk': pk, ':prefix': DAGATAL_PREFIX },
         }),
       ),
       dynamo.send(
         new QueryCommand({
           TableName: TABLE_NAME,
           KeyConditionExpression: 'pk = :pk AND begins_with(sk, :prefix)',
-          ExpressionAttributeValues: { ':pk': pk, ':prefix': 'ITINERARY_SUB#' },
+          ExpressionAttributeValues: { ':pk': pk, ':prefix': DAGATAL_SUB_PREFIX },
         }),
       ),
     ])
@@ -87,12 +88,12 @@ export const handler = async (
 
     const calendars = (calendarsResult.Items ?? []).map(({ ssmPasswordPath: _omit, ...rest }) => ({
       ...rest,
-      id: String(rest.sk).replace('ITINERARY#', ''),
+      id: idFromSk(String(rest.sk), DAGATAL_PREFIX),
     }))
 
     const calendarSubscriptions = (subscriptionsResult.Items ?? []).map((item) => ({
       ...item,
-      id: String(item.sk).replace('ITINERARY_SUB#', ''),
+      id: idFromSk(String(item.sk), DAGATAL_SUB_PREFIX),
     }))
 
     const laufarStored = settings.laufar ?? settings.waypoints ?? {}

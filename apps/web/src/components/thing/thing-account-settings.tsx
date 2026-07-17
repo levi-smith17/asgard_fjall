@@ -131,7 +131,7 @@ export function ThingAccountSettings() {
       </div>
 
       <div className="space-y-5 border-t border-border pt-8">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Appearance</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Layout</p>
         <ThingSettingRow
           label="Sidebar default state"
           description="Whether the sidebar starts expanded or collapsed on page load"
@@ -159,6 +159,10 @@ export function ThingAccountSettings() {
             />
           }
         />
+      </div>
+
+      <div className="space-y-5 border-t border-border pt-8">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Formatting</p>
         <ThingSettingRow
           label="Date format"
           description="How dates are displayed across the platform"
@@ -190,6 +194,23 @@ export function ThingAccountSettings() {
             />
           }
         />
+      </div>
+
+      <div className="space-y-5 border-t border-border pt-8">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Public Profile
+        </p>
+        <ThingSettingRow
+          label="Contact form"
+          description="Allow visitors to send messages through your manifest"
+          control={
+            <Switch
+              checked={contactFormEnabled}
+              onCheckedChange={setContactFormEnabled}
+              aria-label="Contact form"
+            />
+          }
+        />
         <ThingSettingRow
           label="Public default theme"
           description="Theme visitors see on your public Ordstirr profile"
@@ -218,23 +239,6 @@ export function ThingAccountSettings() {
                 { value: 'green', label: 'Green' },
               ]}
               className="w-32"
-            />
-          }
-        />
-      </div>
-
-      <div className="space-y-5 border-t border-border pt-8">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Public Profile
-        </p>
-        <ThingSettingRow
-          label="Contact form"
-          description="Allow visitors to send messages through your manifest"
-          control={
-            <Switch
-              checked={contactFormEnabled}
-              onCheckedChange={setContactFormEnabled}
-              aria-label="Contact form"
             />
           }
         />

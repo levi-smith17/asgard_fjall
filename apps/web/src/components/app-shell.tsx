@@ -102,7 +102,7 @@ export function AppShell() {
     const active = navItemActive(pathname, item.key, item.href, item.external)
     const itemClass = cn(
       'flex w-full items-center rounded-lg text-sm font-medium transition-colors',
-      isNarrow ? 'h-full justify-center px-0 py-2.5' : 'justify-start gap-2.5 px-3 py-2',
+      isNarrow ? 'justify-center px-0 py-2.5' : 'justify-start gap-2.5 px-3 py-2',
       active
         ? 'bg-sidebar-accent text-sidebar-foreground-active'
         : 'text-sidebar-foreground hover:bg-muted-hover hover:text-foreground',
@@ -146,7 +146,7 @@ export function AppShell() {
             aria-label={terms.publicViewGroup}
             className={cn(
               'flex w-full items-center rounded-lg text-sm font-medium transition-colors',
-              'h-full justify-center px-0 py-2.5',
+              'justify-center px-0 py-2.5',
               publicViewActive
                 ? 'bg-sidebar-accent text-sidebar-foreground-active'
                 : 'text-sidebar-foreground hover:bg-muted-hover hover:text-foreground',
@@ -225,11 +225,7 @@ export function AppShell() {
                     />
                   ) : null}
 
-                  <div
-                    className={cn(
-                      group.id === 'overview' && isNarrow && 'flex h-14 max-h-14 items-center',
-                    )}
-                  >
+                  <div className={cn(isNarrow && group.id !== 'overview' && 'py-2')}>
                     {collapseToFlyout ? (
                       <ul className="w-full space-y-0.5">
                         <li>
@@ -252,12 +248,7 @@ export function AppShell() {
                             {group.label}
                           </p>
                         ) : null}
-                        <ul
-                          className={cn(
-                            'w-full space-y-0.5',
-                            group.id === 'overview' && isNarrow && 'h-full',
-                          )}
-                        >
+                        <ul className="w-full space-y-0.5">
                           {group.items.map((item) => renderNavLink(item))}
                         </ul>
                       </>
@@ -270,7 +261,7 @@ export function AppShell() {
 
           <div className={cn('border-t border-sidebar-border py-2', isNarrow ? 'px-1.5' : 'px-3 py-3')}>
             {isNarrow ? (
-              <div className="flex w-full flex-col items-center gap-1">
+              <div className="flex w-full flex-col items-center">
                 <SidebarFooterFlyout
                   triggerLabel="More"
                   trigger={
@@ -329,11 +320,13 @@ export function AppShell() {
                     },
                   ]}
                 />
-                <ToolbarTooltip label={displayName} placement="right" className="w-full">
-                  <div className="flex w-full items-center justify-center px-0 py-2.5">
-                    <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
-                  </div>
-                </ToolbarTooltip>
+                <div className="-mx-1.5 w-[calc(100%+0.75rem)] border-t border-sidebar-border">
+                  <ToolbarTooltip label={displayName} placement="right" className="w-full">
+                    <div className="flex w-full items-center justify-center px-0 py-2.5">
+                      <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
+                    </div>
+                  </ToolbarTooltip>
+                </div>
               </div>
             ) : (
               <>
