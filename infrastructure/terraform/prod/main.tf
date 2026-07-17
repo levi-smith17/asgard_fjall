@@ -13,6 +13,7 @@ module "auth" {
   webauthn_rp_id     = var.webauthn_rp_id
   session_secret     = var.fjall_session_secret
   auth_email         = var.fjall_auth_email
+  auth_sub           = var.fjall_auth_sub
 }
 
 module "cloudfront" {

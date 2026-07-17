@@ -53,6 +53,13 @@ variable "aws_region" {
   default = "us-east-2"
 }
 
+variable "fjall_session_secret" {
+  description = "Shared HMAC secret for Fjall passkey session Bearer tokens (authorizer)."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "s3_private_media_bucket_name" {
   description = "Private media S3 bucket name (Audr receipts). Wired into lambda_env when provided."
   type        = string

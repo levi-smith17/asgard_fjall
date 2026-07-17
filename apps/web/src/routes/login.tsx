@@ -20,8 +20,6 @@ export function LoginPage() {
   const [passkeysConfigured, setPasskeysConfigured] = useState<boolean | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [cognitoEmail, setCognitoEmail] = useState('')
-  const [cognitoPassword, setCognitoPassword] = useState('')
 
   const redirectTo =
     (location.state as { from?: string } | null)?.from?.replace(/\/login$/, '') || '/hlidskjalf'
@@ -73,19 +71,6 @@ export function LoginPage() {
     }
   }
 
-  async function handleCognitoConnect(event: React.FormEvent) {
-    event.preventDefault()
-    setSubmitting(true)
-    setError(null)
-    try {
-      await auth.signInCognito(cognitoEmail.trim(), cognitoPassword)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Data sign-in failed')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
   return (
     <div className="flex min-h-full items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-sm space-y-6 rounded-xl border border-border bg-card p-6 shadow-sm">
@@ -101,7 +86,7 @@ export function LoginPage() {
             {passkeysConfigured
               ? 'Sign in with your passkey'
               : passkeysConfigured === null
-                ? 'Passkey auth offline — connect data session below or start apps/auth'
+                ? 'Passkey auth offline — start apps/auth'
                 : 'Register your first passkey'}
           </p>
         </div>
@@ -141,33 +126,6 @@ export function LoginPage() {
               {submitting ? 'Signing in…' : 'Sign in with passkey'}
             </Button>
           )
-        ) : null}
-
-        {auth.cognitoConfigured ? (
-          <form onSubmit={(e) => void handleCognitoConnect(e)} className="space-y-3 border-t border-border pt-4">
-            <p className="text-xs text-muted-foreground">
-              Data API session (Bearer). Needed for live data after the passkey gate.
-            </p>
-            <Input
-              type="email"
-              required
-              autoComplete="username"
-              placeholder="Email"
-              value={cognitoEmail}
-              onChange={(e) => setCognitoEmail(e.target.value)}
-            />
-            <Input
-              type="password"
-              required
-              autoComplete="current-password"
-              placeholder="Password"
-              value={cognitoPassword}
-              onChange={(e) => setCognitoPassword(e.target.value)}
-            />
-            <Button type="submit" variant="outline" className="w-full" disabled={submitting}>
-              {submitting ? 'Connecting…' : 'Connect data'}
-            </Button>
-          </form>
         ) : null}
 
         {error ? <p className="text-sm text-destructive">{error}</p> : null}

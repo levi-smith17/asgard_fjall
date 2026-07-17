@@ -6,10 +6,12 @@ import type {
 } from 'aws-lambda'
 import { dynamo, TABLE_NAME } from '../../shared/db'
 import { hashApiToken, isApiToken, tokenLookupPk } from '../../shared/api-token'
+import { isFjallSessionToken, parseFjallSessionToken } from '../../shared/fjall-session'
 
 const region = process.env.AWS_REGION ?? 'us-east-2'
 const userPoolId = process.env.COGNITO_USER_POOL_ID
 const clientId = process.env.COGNITO_CLIENT_ID
+const fjallSessionSecret = process.env.FJALL_SESSION_SECRET?.trim()
 
 let jwks: ReturnType<typeof createRemoteJWKSet> | null = null
 
@@ -32,8 +34,12 @@ function parseBearerToken(header: string | undefined): string | null {
   const trimmed = header.trim()
   const bearerMatch = /^Bearer\s+(.+)$/i.exec(trimmed)
   if (bearerMatch?.[1]) return bearerMatch[1]
-  // Fjall/Cairn web may send Cognito ID tokens without a Bearer prefix.
-  if (/^csk_/.test(trimmed) || /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(trimmed)) {
+  // Fjall may send session / Cognito tokens without a Bearer prefix.
+  if (
+    /^csk_/.test(trimmed) ||
+    /^v1\./.test(trimmed) ||
+    /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(trimmed)
+  ) {
     return trimmed
   }
   return null
@@ -122,6 +128,22 @@ export const handler = async (
         context: {
           sub: user.sub,
           authType: 'api_token',
+        },
+      } as APIGatewaySimpleAuthorizerResult
+    }
+
+    if (isFjallSessionToken(token)) {
+      if (!fjallSessionSecret) {
+        console.error('Authorizer denied: FJALL_SESSION_SECRET not configured')
+        return { isAuthorized: false }
+      }
+      const user = parseFjallSessionToken(fjallSessionSecret, token)
+      return {
+        isAuthorized: true,
+        context: {
+          sub: user.sub,
+          email: user.email,
+          authType: 'fjall_session',
         },
       } as APIGatewaySimpleAuthorizerResult
     }

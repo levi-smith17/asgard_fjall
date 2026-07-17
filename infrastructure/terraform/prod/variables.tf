@@ -84,5 +84,11 @@ variable "fjall_session_secret" {
 variable "fjall_auth_email" {
   description = "Single-user email embedded in passkey session payload."
   type        = string
-  default     = "admin@local"
+  default     = "levi@cairn.ing"
+}
+
+variable "fjall_auth_sub" {
+  description = "Dynamo USER# id (migrated Cognito sub)."
+  type        = string
+  default     = "610b75f0-6031-703c-a794-0924826eaa3f"
 }

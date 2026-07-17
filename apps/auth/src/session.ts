@@ -30,6 +30,9 @@ function parseOrigins(env: NodeJS.ProcessEnv): string[] {
   return merged
 }
 
+/** Migrated Cairn Cognito sub — Dynamo rows are keyed USER#<sub>. */
+export const DEFAULT_DATA_USER_SUB = '610b75f0-6031-703c-a794-0924826eaa3f'
+
 export function loadSessionConfig(env: NodeJS.ProcessEnv = process.env): SessionConfig {
   const sessionSecret = env.FJALL_SESSION_SECRET?.trim()
   const origins = parseOrigins(env)
@@ -37,6 +40,7 @@ export function loadSessionConfig(env: NodeJS.ProcessEnv = process.env): Session
   const rpId = env.FJALL_WEBAUTHN_RP_ID?.trim() || 'levismith.us'
   const rpName = env.FJALL_WEBAUTHN_RP_NAME?.trim() || 'Asgard Fjall'
   const email = env.FJALL_AUTH_EMAIL?.trim() || 'admin@local'
+  const sub = env.FJALL_AUTH_SUB?.trim() || DEFAULT_DATA_USER_SUB
 
   if (!sessionSecret) {
     throw new Error('FJALL_SESSION_SECRET is required')
@@ -44,12 +48,17 @@ export function loadSessionConfig(env: NodeJS.ProcessEnv = process.env): Session
 
   return {
     sessionSecret,
-    user: { sub: 'fjall-user', email },
+    user: { sub, email },
     rpId,
     rpName,
     origin,
     origins,
   }
+}
+
+/** True when a Bearer looks like a Fjall session token (`v1.<payload>.<sig>`). */
+export function isFjallSessionToken(token: string): boolean {
+  return token.startsWith(`${SESSION_VERSION}.`)
 }
 
 export function createSessionToken(

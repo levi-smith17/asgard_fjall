@@ -10,6 +10,9 @@ locals {
       DYNAMODB_TABLE       = var.dynamodb_table_name
       WEB_URL              = var.web_url
     },
+    var.fjall_session_secret != "" ? {
+      FJALL_SESSION_SECRET = var.fjall_session_secret
+    } : {},
     var.s3_private_media_bucket_name != null ? {
       S3_PRIVATE_MEDIA_BUCKET = var.s3_private_media_bucket_name
     } : {},

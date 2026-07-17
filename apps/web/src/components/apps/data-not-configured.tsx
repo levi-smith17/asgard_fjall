@@ -48,7 +48,7 @@ export function dataQueryErrorProps(error: unknown, fallback: string) {
     detail: isConfigError
       ? 'The data API is unreachable or not configured.'
       : isTokenError
-        ? 'Sign in with Cognito to access live data.'
+        ? 'Sign in with your passkey to access live data.'
         : undefined,
     isConfigError,
     isTokenError,

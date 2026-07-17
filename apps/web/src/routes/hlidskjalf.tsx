@@ -446,7 +446,7 @@ function OrdstirrSection({
             ? isError
               ? 'Could not load manifest sections.'
               : 'Manifest sections unavailable.'
-            : 'Sign in with Cognito to load manifest cards.'}
+            : 'Sign in with your passkey to load manifest cards.'}
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -557,7 +557,7 @@ function HlidskjalfCanvas() {
         to="/sogur"
         icon={NotebookPen}
         items={logbooks}
-        empty={enabled ? 'No logbooks yet.' : 'Sign in with Cognito to load logbook cards.'}
+        empty={enabled ? 'No logbooks yet.' : 'Sign in with your passkey to load logbook cards.'}
       />
 
       <OrdstirrSection
@@ -579,7 +579,7 @@ function HlidskjalfCanvas() {
               ? 'Could not load starfield networks.'
               : enabled
                 ? 'No starfield networks yet.'
-                : 'Sign in with Cognito to load starfield networks.'
+                : 'Sign in with your passkey to load starfield networks.'
         }
       />
     </div>

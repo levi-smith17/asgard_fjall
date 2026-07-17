@@ -1,6 +1,6 @@
 import { cairnFetch, fetchCairnHealth } from '@/lib/data-client'
 import { CAIRN_API_URL } from '@/lib/config'
-import { isCognitoConfigured } from '@/lib/cognito'
+import { getStoredAccessToken } from '@/lib/webauthn-client'
 import type {
   CairnBurnPage,
   CairnCalendarOption,
@@ -29,13 +29,12 @@ export type CairnStatusResponse = {
 }
 
 /**
- * Fjall talks to Cairn directly (no Asgard BFF token).
- * Treat Cognito + reachable API as "configured" — api.cairn.ing has no `/status`.
+ * Passkey session Bearer + reachable API means live data is available.
  */
 export async function fetchCairnStatus(): Promise<CairnStatusResponse> {
   const health = await fetchCairnHealth()
   return {
-    configured: isCognitoConfigured() && health.ok,
+    configured: Boolean(getStoredAccessToken()) && health.ok,
     baseUrl: CAIRN_API_URL,
   }
 }

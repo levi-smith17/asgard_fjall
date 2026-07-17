@@ -101,6 +101,7 @@ resource "aws_lambda_function" "auth" {
     variables = {
       FJALL_AUTH_TABLE        = aws_dynamodb_table.auth.name
       FJALL_SESSION_SECRET    = var.session_secret
+      FJALL_AUTH_SUB          = var.auth_sub
       FJALL_WEBAUTHN_ORIGIN   = local.webauthn_origins[0]
       FJALL_WEBAUTHN_ORIGINS  = local.webauthn_origins_csv
       FJALL_WEBAUTHN_RP_ID    = var.webauthn_rp_id

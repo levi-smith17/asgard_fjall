@@ -1,50 +1,47 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
-import {
-  getCurrentSession,
-  getIdToken,
-  isCognitoConfigured,
-  sessionToUser,
-  signIn as cognitoSignIn,
-  signOut as cognitoSignOut,
-  type AuthUser,
-} from '@/lib/cognito'
 import { setCairnAuthProvider } from '@/lib/data-client'
 import {
+  clearAccessToken,
+  fetchAccessToken,
   fetchAuthStatus,
   fetchGateMe,
+  getStoredAccessToken,
   logoutGate,
+  storeAccessToken,
   type GateUser,
 } from '@/lib/webauthn-client'
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthorized'
+
+type DataUser = { id: string; email: string }
 
 type AuthState = {
   loading: boolean
   /** Passkey / fjall_session gate. */
   status: AuthStatus
   gateUser: GateUser | null
-  /** Cognito session for Cairn API Bearer (separate from passkey gate). */
-  cairnUser: AuthUser | null
+  /** Data API identity (same as gate after passkey login). */
+  cairnUser: DataUser | null
+  /** @deprecated Cognito removed — always false. */
   cognitoConfigured: boolean
   refresh: () => Promise<void>
+  /** @deprecated Cognito removed. */
   signInCognito: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   /** @deprecated use gateUser / cairnUser */
-  user: GateUser | AuthUser | null
-  /** @deprecated passkey gate always required when auth API is up */
+  user: GateUser | DataUser | null
   configured: boolean
 }
 
 const AuthContext = createContext<AuthState | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const cognitoConfigured = isCognitoConfigured()
   const [status, setStatus] = useState<AuthStatus>('loading')
   const [gateUser, setGateUser] = useState<GateUser | null>(null)
-  const [cairnUser, setCairnUser] = useState<AuthUser | null>(null)
+  const [cairnUser, setCairnUser] = useState<DataUser | null>(null)
 
   useEffect(() => {
-    setCairnAuthProvider(getIdToken)
+    setCairnAuthProvider(async () => getStoredAccessToken())
   }, [])
 
   const refresh = useCallback(async () => {
@@ -52,41 +49,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const me = await fetchGateMe()
       if (!me) {
+        clearAccessToken()
         setGateUser(null)
+        setCairnUser(null)
         setStatus('unauthorized')
-      } else {
-        setGateUser(me)
-        setStatus('authenticated')
+        return
       }
-    } catch {
-      // Auth API unavailable — fall back to Cognito-only gate for local shell.
-      if (cognitoConfigured) {
-        const session = await getCurrentSession()
-        if (session) {
-          const user = sessionToUser(session)
-          setGateUser({ sub: user.id, email: user.email })
-          setCairnUser(user)
-          setStatus('authenticated')
+      setGateUser(me)
+      setStatus('authenticated')
+
+      let token = getStoredAccessToken()
+      if (!token) {
+        const issued = await fetchAccessToken()
+        token = issued?.accessToken ?? null
+        if (issued) {
+          storeAccessToken(issued.accessToken)
+          setCairnUser({ id: issued.sub, email: issued.email })
           return
         }
       }
+      if (token) {
+        setCairnUser({ id: me.sub, email: me.email })
+      } else {
+        setCairnUser(null)
+      }
+    } catch {
+      clearAccessToken()
       setGateUser(null)
+      setCairnUser(null)
       setStatus('unauthorized')
     }
-
-    if (cognitoConfigured) {
-      const session = await getCurrentSession()
-      setCairnUser(session ? sessionToUser(session) : null)
-    } else {
-      setCairnUser(null)
-    }
-  }, [cognitoConfigured])
+  }, [])
 
   useEffect(() => {
     void refresh()
   }, [refresh])
 
-  // Warm auth status (detect whether passkeys exist) without blocking.
   useEffect(() => {
     void fetchAuthStatus().catch(() => undefined)
   }, [])
@@ -96,16 +94,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     status,
     gateUser,
     cairnUser,
-    cognitoConfigured,
+    cognitoConfigured: false,
     refresh,
-    signInCognito: async (email, password) => {
-      const next = await cognitoSignIn(email, password)
-      setCairnUser(next)
-      // When the passkey auth API is offline, Cognito also acts as the app gate.
-      if (!gateUser) {
-        setGateUser({ sub: next.id, email: next.email })
-        setStatus('authenticated')
-      }
+    signInCognito: async () => {
+      throw new Error('Cognito sign-in is disabled — use your passkey')
     },
     signOut: async () => {
       try {
@@ -113,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch {
         /* ignore */
       }
-      cognitoSignOut()
+      clearAccessToken()
       setGateUser(null)
       setCairnUser(null)
       setStatus('unauthorized')

@@ -31,6 +31,7 @@ export type AuthStore = {
     counter: number
     deviceName?: string | null
   }): Promise<void>
+  deleteCredentialById(id: string): Promise<boolean>
   updateCounter(credentialId: string, counter: number): Promise<void>
   putChallenge(kind: ChallengeKind, challenge: string, ttlMs: number): Promise<void>
   takeChallenge(challenge: string, kind: ChallengeKind): Promise<string | null>
@@ -63,6 +64,11 @@ export function createMemoryStore(): AuthStore {
         deviceName: input.deviceName ?? null,
         createdAt: new Date().toISOString(),
       })
+    },
+    async deleteCredentialById(id) {
+      const before = state.credentials.length
+      state.credentials = state.credentials.filter((entry) => entry.id !== id)
+      return state.credentials.length < before
     },
     async updateCounter(credentialId, counter) {
       const item = state.credentials.find((entry) => entry.credentialId === credentialId)
@@ -150,6 +156,25 @@ export function createDynamoStore(tableName: string): AuthStore {
           },
         }),
       )
+    },
+
+    async deleteCredentialById(id) {
+      const result = await client.send(
+        new ScanCommand({
+          TableName: tableName,
+          FilterExpression: 'begins_with(pk, :pk) AND id = :id',
+          ExpressionAttributeValues: { ':pk': 'PASSKEY#', ':id': id },
+        }),
+      )
+      const item = result.Items?.[0]
+      if (!item?.credentialId) return false
+      await client.send(
+        new DeleteCommand({
+          TableName: tableName,
+          Key: { pk: `PASSKEY#${String(item.credentialId)}`, sk: 'CREDENTIAL' },
+        }),
+      )
+      return true
     },
 
     async updateCounter(credentialId, counter) {

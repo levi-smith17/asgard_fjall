@@ -39,6 +39,12 @@ variable "auth_email" {
   default = "admin@local"
 }
 
+variable "auth_sub" {
+  description = "Stable user id for Dynamo USER# keys (migrated Cognito sub)."
+  type        = string
+  default     = "610b75f0-6031-703c-a794-0924826eaa3f"
+}
+
 locals {
   webauthn_hosts    = concat([var.custom_domain], var.additional_domains)
   webauthn_origins  = [for host in local.webauthn_hosts : "https://${host}"]

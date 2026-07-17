@@ -16,7 +16,10 @@ function webAuthnError(error: unknown): { error: string } {
   return { error: error instanceof Error ? error.message : 'Passkey request failed' }
 }
 
-function readSession(c: { req: { header: (name: string) => string | undefined } }, config: SessionConfig) {
+function readSessionCookie(
+  c: { req: { header: (name: string) => string | undefined } },
+  config: SessionConfig,
+): { user: ReturnType<typeof parseSessionToken>; token: string } | null {
   const cookieHeader = c.req.header('cookie') ?? ''
   const match = cookieHeader
     .split(';')
@@ -25,10 +28,20 @@ function readSession(c: { req: { header: (name: string) => string | undefined } 
   const token = match?.slice(SESSION_COOKIE_NAME.length + 1)
   if (!token) return null
   try {
-    return parseSessionToken(config, token)
+    return { user: parseSessionToken(config, token), token }
   } catch {
     return null
   }
+}
+
+function issueSession(
+  c: { header: (name: string, value: string) => void },
+  config: SessionConfig,
+) {
+  const token = createSessionToken(config, config.user)
+  const secure = config.origin.startsWith('https://')
+  c.header('Set-Cookie', formatSessionCookieHeader(token, secure))
+  return token
 }
 
 export function createAuthApp(env: NodeJS.ProcessEnv = process.env) {
@@ -37,18 +50,29 @@ export function createAuthApp(env: NodeJS.ProcessEnv = process.env) {
   const webauthn = createWebAuthnService(config, store)
   const app = new Hono()
 
+  // Public: never list passkey metadata here — manage via RealmOps.
   app.get('/api/auth/status', async (c) => {
     return c.json({
       mode: 'passkey',
       passkeysConfigured: await webauthn.hasPasskeys(),
-      passkeys: await webauthn.listPasskeys(),
     })
   })
 
   app.get('/api/auth/me', async (c) => {
-    const session = readSession(c, config)
+    const session = readSessionCookie(c, config)
     if (!session) return c.json({ error: 'Unauthorized' }, 401)
-    return c.json({ sub: session.sub, email: session.email })
+    return c.json({ sub: session.user.sub, email: session.user.email })
+  })
+
+  /** Mint/reuse Bearer for api.asgard (HttpOnly cookie alone cannot be read by JS). */
+  app.get('/api/auth/access-token', async (c) => {
+    const session = readSessionCookie(c, config)
+    if (!session) return c.json({ error: 'Unauthorized' }, 401)
+    return c.json({
+      accessToken: session.token,
+      sub: session.user.sub,
+      email: session.user.email,
+    })
   })
 
   app.post('/api/auth/logout', async (c) => {
@@ -59,8 +83,9 @@ export function createAuthApp(env: NodeJS.ProcessEnv = process.env) {
 
   app.post('/api/auth/webauthn/register/options', async (c) => {
     try {
+      // Open registration only for bootstrap (zero passkeys). After that, session required.
       if (await webauthn.hasPasskeys()) {
-        const session = readSession(c, config)
+        const session = readSessionCookie(c, config)
         if (!session) return c.json({ error: 'Authentication required' }, 401)
       }
       const body = (await c.req.json().catch(() => ({}))) as { deviceName?: string }
@@ -74,7 +99,7 @@ export function createAuthApp(env: NodeJS.ProcessEnv = process.env) {
   app.post('/api/auth/webauthn/register/verify', async (c) => {
     try {
       if (await webauthn.hasPasskeys()) {
-        const session = readSession(c, config)
+        const session = readSessionCookie(c, config)
         if (!session) return c.json({ error: 'Authentication required' }, 401)
       }
       const body = (await c.req.json()) as {
@@ -83,10 +108,8 @@ export function createAuthApp(env: NodeJS.ProcessEnv = process.env) {
       }
       if (!body.response) return c.json({ error: 'Registration response is required' }, 400)
       await webauthn.verifyRegistration(body.response, body.deviceName ?? null)
-      const token = createSessionToken(config, config.user)
-      const secure = config.origin.startsWith('https://')
-      c.header('Set-Cookie', formatSessionCookieHeader(token, secure))
-      return c.json({ ...config.user, verified: true })
+      const accessToken = issueSession(c, config)
+      return c.json({ ...config.user, verified: true, accessToken })
     } catch (error) {
       return c.json(webAuthnError(error), 400)
     }
@@ -109,10 +132,8 @@ export function createAuthApp(env: NodeJS.ProcessEnv = process.env) {
       const body = (await c.req.json()) as { response?: AuthenticationResponseJSON }
       if (!body.response) return c.json({ error: 'Authentication response is required' }, 400)
       await webauthn.verifyAuthentication(body.response)
-      const token = createSessionToken(config, config.user)
-      const secure = config.origin.startsWith('https://')
-      c.header('Set-Cookie', formatSessionCookieHeader(token, secure))
-      return c.json(config.user)
+      const accessToken = issueSession(c, config)
+      return c.json({ ...config.user, accessToken })
     } catch (error) {
       return c.json(webAuthnError(error), 400)
     }
