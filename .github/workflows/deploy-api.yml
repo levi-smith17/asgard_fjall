@@ -21,7 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     env:
-      AWS_API_ROLE_ARN: ${{ secrets.AWS_API_ROLE_ARN }}
+      # Prefer Environment secret; fall back to Environment variable if misplaced.
+      AWS_API_ROLE_ARN: ${{ secrets.AWS_API_ROLE_ARN || vars.AWS_API_ROLE_ARN }}
       AWS_REGION: us-east-2
       ENVIRONMENT: prod
       LAMBDA_NAME_PREFIX: asgard-fjall-prod
@@ -36,7 +37,12 @@ jobs:
       - name: Verify deploy config
         run: |
           if [ -z "$AWS_API_ROLE_ARN" ]; then
-            echo "Missing AWS_API_ROLE_ARN on Environment prod"
+            echo "::error::Missing AWS_API_ROLE_ARN on GitHub Environment 'prod'."
+            echo "Add it as an Environment secret (not a repo secret alone) at:"
+            echo "  https://github.com/levi-smith17/asgard_fjall/settings/environments"
+            echo "Name: AWS_API_ROLE_ARN"
+            echo "Value: arn:aws:iam::910896517350:role/asgard-fjall-prod-github-api-deploy"
+            echo "Then re-run this workflow."
             exit 1
           fi
           echo "Deploying Lambdas with role $AWS_API_ROLE_ARN"

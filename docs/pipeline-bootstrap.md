@@ -23,6 +23,8 @@ After adding the CNAME, open `https://fjall.levismith.us` on Wi‑Fi. Re-registe
 
 Create Environment **`prod`** on https://github.com/levi-smith17/asgard_fjall/settings/environments
 
+Secrets/variables must be on that **Environment** (open `prod` → Environment secrets), not only under repo Settings → Secrets.
+
 | Type | Name | Value | Workflow |
 |------|------|--------|----------|
 | **Secret** | `AWS_ROLE_ARN` | `arn:aws:iam::910896517350:role/asgard-fjall-prod-github-actions` | Deploy Web |
@@ -43,6 +45,7 @@ gh variable set CLOUDFRONT_DISTRIBUTION_ID --env prod --repo levi-smith17/asgard
   --body 'E1FXGRYGFKZMQB'
 ```
 
+If Deploy API still prints `AWS_API_ROLE_ARN:` empty, the secret is not on Environment `prod` (or the name differs). Re-check under **Environments → prod → Environment secrets**, then re-run the workflow.
 Workflows:
 
 | File | When | What |
