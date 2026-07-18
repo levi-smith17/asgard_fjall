@@ -20,11 +20,41 @@ function parseRenewalDate(nextRenewal: string): Date {
 
 function advanceRenewal(date: Date, billingCycle: FjallBillingCycle): void {
   switch (billingCycle) {
-    case 'WEEKLY': date.setDate(date.getDate() + 7); break
-    case 'BIWEEKLY': date.setDate(date.getDate() + 14); break
-    case 'MONTHLY': date.setMonth(date.getMonth() + 1); break
-    case 'QUARTERLY': date.setMonth(date.getMonth() + 3); break
-    case 'ANNUALLY': date.setFullYear(date.getFullYear() + 1); break
+    case 'WEEKLY':
+      date.setDate(date.getDate() + 7)
+      break
+    case 'BIWEEKLY':
+      date.setDate(date.getDate() + 14)
+      break
+    case 'MONTHLY':
+      date.setMonth(date.getMonth() + 1)
+      break
+    case 'QUARTERLY':
+      date.setMonth(date.getMonth() + 3)
+      break
+    case 'ANNUALLY':
+      date.setFullYear(date.getFullYear() + 1)
+      break
+  }
+}
+
+function retreatRenewal(date: Date, billingCycle: FjallBillingCycle): void {
+  switch (billingCycle) {
+    case 'WEEKLY':
+      date.setDate(date.getDate() - 7)
+      break
+    case 'BIWEEKLY':
+      date.setDate(date.getDate() - 14)
+      break
+    case 'MONTHLY':
+      date.setMonth(date.getMonth() - 1)
+      break
+    case 'QUARTERLY':
+      date.setMonth(date.getMonth() - 3)
+      break
+    case 'ANNUALLY':
+      date.setFullYear(date.getFullYear() - 1)
+      break
   }
 }
 
@@ -43,6 +73,39 @@ export function getEffectiveNextRenewal(
     guard++
   }
   return renewal
+}
+
+/**
+ * Renewal occurrence that falls in the given calendar month (1–12), or null if none.
+ * Walks the billing cycle so past Audr months still resolve after nextRenewal advances.
+ */
+export function getRenewalInMonth(
+  nextRenewal: string,
+  billingCycle: string,
+  month: number,
+  year: number,
+): Date | null {
+  const renewal = parseRenewalDate(nextRenewal)
+  if (Number.isNaN(renewal.getTime())) return null
+
+  const cycle = isBillingCycle(billingCycle) ? billingCycle : 'MONTHLY'
+  const monthStart = startOfDay(new Date(year, month - 1, 1))
+  const monthEnd = startOfDay(new Date(year, month, 0))
+  const cursor = new Date(renewal)
+
+  let guard = 0
+  while (startOfDay(cursor) > monthEnd && guard < 500) {
+    retreatRenewal(cursor, cycle)
+    guard++
+  }
+  while (startOfDay(cursor) < monthStart && guard < 1000) {
+    advanceRenewal(cursor, cycle)
+    guard++
+  }
+
+  const day = startOfDay(cursor)
+  if (day >= monthStart && day <= monthEnd) return cursor
+  return null
 }
 
 export function daysUntilRenewal(

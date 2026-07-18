@@ -1,5 +1,6 @@
 import type { FjallCacheUtilization, FjallSupplyline } from '@/lib/data-types'
 import { toMarkerId } from '@/lib/embedded-markers'
+import { getRenewalInMonth } from '@/lib/idunn-renewal'
 
 const MONTHLY_OR_LESS = new Set(['WEEKLY', 'BIWEEKLY', 'MONTHLY'])
 
@@ -19,10 +20,14 @@ export function supplylineMonthlyAmount(amount: number, billingCycle: string): n
 export function idunnLinesForMarker(
   supplylines: FjallSupplyline[],
   markerId: string,
+  month?: number,
+  year?: number,
 ): FjallSupplyline[] {
-  return supplylines.filter((line) =>
-    line.markers.some((marker) => toMarkerId(marker) === markerId),
-  )
+  return supplylines.filter((line) => {
+    if (!line.markers.some((marker) => toMarkerId(marker) === markerId)) return false
+    if (month == null || year == null) return true
+    return getRenewalInMonth(line.nextRenewal, line.billingCycle, month, year) != null
+  })
 }
 
 export function idunnSpendForMarker(supplylines: FjallSupplyline[], markerId: string): number {

@@ -444,6 +444,8 @@ locals {
     }
 
     # Sögur (Cairn's logs) — Asgard naming.
+    # Saga routes are registered before /sogur/{id} so the static "sagas"
+    # segment cannot be captured as a Thattr id.
     sogur-get = {
       route_key = "GET /sogur"
       memory    = 256
@@ -451,6 +453,31 @@ locals {
     }
     sogur-create = {
       route_key = "POST /sogur"
+      memory    = 128
+      policy    = "write"
+    }
+    sogur-sagas-get = {
+      route_key = "GET /sogur/sagas"
+      memory    = 256
+      policy    = "read"
+    }
+    sogur-sagas-create = {
+      route_key = "POST /sogur/sagas"
+      memory    = 128
+      policy    = "write"
+    }
+    sogur-sagas-update = {
+      route_key = "PUT /sogur/sagas/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    sogur-sagas-delete = {
+      route_key = "DELETE /sogur/sagas/{id}"
+      memory    = 128
+      policy    = "write"
+    }
+    sogur-sagas-reorder = {
+      route_key = "PUT /sogur/sagas/{id}/reorder"
       memory    = 128
       policy    = "write"
     }

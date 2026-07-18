@@ -8,8 +8,12 @@ export type Terms = {
   calendar: string
   messages: string
   resume: string
+  /** Sogur containers: Sögur/Saga or Notebooks/Notebook. */
   notes: string
   notesSingular: string
+  /** Sogur content units: Thaettir/Thattr or Notes/Note. */
+  thaettir: string
+  thattrSingular: string
   starfield: string
   /** Nidjatal — genealogy app (Asgard: Nidjatal). */
   nidjatal: string
@@ -87,6 +91,8 @@ const ASGARD: Terms = {
   resume: 'Ordstirr',
   notes: 'Sögur',
   notesSingular: 'Saga',
+  thaettir: 'Thaettir',
+  thattrSingular: 'Thattr',
   starfield: 'Stjörnur',
   nidjatal: 'Nidjatal',
   nidjatalPerson: 'Ættingi',
@@ -147,8 +153,10 @@ const STANDARD: Terms = {
   calendar: 'Calendar',
   messages: 'Messages',
   resume: 'Profile',
-  notes: 'Notes',
-  notesSingular: 'Note',
+  notes: 'Notebooks',
+  notesSingular: 'Notebook',
+  thaettir: 'Notes',
+  thattrSingular: 'Note',
   starfield: 'Starfield',
   nidjatal: 'Genealogy',
   nidjatalPerson: 'Person',

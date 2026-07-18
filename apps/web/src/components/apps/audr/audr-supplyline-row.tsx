@@ -1,7 +1,7 @@
 import { Repeat } from 'lucide-react'
 import { MarkerBadge } from '@/components/apps/marker-badge'
 import { liveMarkersById, toDisplayMarker } from '@/lib/embedded-markers'
-import { getEffectiveNextRenewal } from '@/lib/idunn-renewal'
+import { getEffectiveNextRenewal, getRenewalInMonth } from '@/lib/idunn-renewal'
 import { audrFmt } from '@/lib/audr-format'
 import { cn } from '@/lib/utils'
 import type { FjallSupplyline } from '@/lib/data-types'
@@ -9,6 +9,8 @@ import type { AudrMarker } from './audr-types'
 
 export function AudrSupplylineRow({
   supplyline,
+  month,
+  year,
   selected,
   onSelect,
   fundColor,
@@ -16,6 +18,8 @@ export function AudrSupplylineRow({
   markers = [],
 }: {
   supplyline: FjallSupplyline
+  month?: number
+  year?: number
   selected: boolean
   onSelect: () => void
   /** Colored Sjodr swatch after the name; omit to hide. */
@@ -24,7 +28,11 @@ export function AudrSupplylineRow({
   markers?: AudrMarker[]
 }) {
   const liveById = liveMarkersById(markers)
-  const effectiveRenewal = getEffectiveNextRenewal(supplyline.nextRenewal, supplyline.billingCycle)
+  const effectiveRenewal =
+    month != null && year != null
+      ? (getRenewalInMonth(supplyline.nextRenewal, supplyline.billingCycle, month, year) ??
+        getEffectiveNextRenewal(supplyline.nextRenewal, supplyline.billingCycle))
+      : getEffectiveNextRenewal(supplyline.nextRenewal, supplyline.billingCycle)
 
   return (
     <button

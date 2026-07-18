@@ -19,6 +19,7 @@ import type {
   SaveFjallWaypointRequest,
 } from '@/lib/data-types'
 import { extractEntityId } from '@/lib/data-format'
+import { toDisplayMarker, toMarkerId } from '@/lib/embedded-markers'
 import { normalizeTerminologyStyle, type TerminologyStyle } from '@/lib/terminology'
 import { parseFjallItineraryEventsPayload, reviveItineraryEvents } from '@/lib/dagatal-events'
 
@@ -473,11 +474,32 @@ export async function fetchFjallWaypointMeta(url: string): Promise<FjallWaypoint
   return fjallFetch<FjallWaypointMeta>(`/waypoints/fetch-meta?url=${encodeURIComponent(url)}`)
 }
 
-// ─── Logs (Sögur) ──────────────────────────────────────────────────────────
+// ─── Logs / Thattr (Sögur) ─────────────────────────────────────────────────
 
 export type FjallLogMarker = {
   markerId: string
   marker: { id: string; name: string; color: string; icon: string | null }
+}
+
+/** Normalize flat embedded Run snapshots and legacy `{ markerId, marker }` junctions. */
+export function normalizeFjallLogMarkers(rawMarkers: unknown): FjallLogMarker[] {
+  if (!Array.isArray(rawMarkers)) return []
+  const out: FjallLogMarker[] = []
+  for (const entry of rawMarkers) {
+    const markerId = toMarkerId(entry)
+    const display = toDisplayMarker(entry)
+    if (!markerId || !display) continue
+    out.push({
+      markerId,
+      marker: {
+        id: display.id,
+        name: display.name,
+        color: display.color,
+        icon: display.icon ?? null,
+      },
+    })
+  }
+  return out
 }
 
 export type FjallLogView = {
@@ -486,6 +508,8 @@ export type FjallLogView = {
   content: string
   position: number | null
   createdAt: string
+  updatedAt?: string | null
+  sagaId: string | null
   trailId: string | null
   waypointId: string | null
   trailName: string | null
@@ -495,14 +519,16 @@ export type FjallLogView = {
 type FjallLogRaw = {
   id?: string
   sk?: string
-  title: string | null
+  title?: string | null
   content: string
   position?: number | null
   createdAt: string
-  trailId: string | null
+  updatedAt?: string | null
+  sagaId?: string | null
+  trailId?: string | null
   waypointId?: string | null
   trail?: { id: string; name: string } | null
-  markers?: FjallLogMarker[]
+  markers?: unknown
 }
 
 function toFjallLogView(raw: FjallLogRaw, trailsById: Map<string, string>): FjallLogView {
@@ -510,14 +536,16 @@ function toFjallLogView(raw: FjallLogRaw, trailsById: Map<string, string>): Fjal
   const trailId = raw.trailId ?? null
   return {
     id,
-    title: raw.title,
+    title: raw.title ?? null,
     content: raw.content,
     position: raw.position ?? null,
     createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt ?? null,
+    sagaId: raw.sagaId ?? null,
     trailId,
     waypointId: raw.waypointId ?? null,
     trailName: raw.trail?.name ?? (trailId ? trailsById.get(trailId) ?? null : null),
-    markers: raw.markers ?? [],
+    markers: normalizeFjallLogMarkers(raw.markers),
   }
 }
 
@@ -531,6 +559,7 @@ export type SaveFjallLogRequest = {
   id?: string
   title: string | null
   content: string
+  sagaId?: string | null
   trailId?: string | null
   waypointId?: string | null
   markerIds?: string[]
@@ -562,6 +591,94 @@ export async function uploadFjallLogImage(file: File, logId: string): Promise<st
   await fetch(data.url, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file })
   if (data.cloudFrontUrl) return data.cloudFrontUrl
   return data.key
+}
+
+// ─── Sagas (Sögur containers) ──────────────────────────────────────────────
+
+export type FjallSagaView = {
+  id: string
+  name: string
+  trailId: string | null
+  trailName: string | null
+  orderedThattrIds: string[]
+  markers: FjallLogMarker[]
+  createdAt: string
+  updatedAt: string | null
+}
+
+type FjallSagaRaw = {
+  id?: string
+  sk?: string
+  name: string
+  trailId?: string | null
+  orderedThattrIds?: string[]
+  markers?: unknown
+  createdAt: string
+  updatedAt?: string | null
+}
+
+function toFjallSagaView(raw: FjallSagaRaw, trailsById: Map<string, string>): FjallSagaView {
+  const id = raw.id ?? (raw.sk ? extractEntityId(raw.sk) : '')
+  const trailId = raw.trailId ?? null
+  return {
+    id,
+    name: raw.name,
+    trailId,
+    trailName: trailId ? trailsById.get(trailId) ?? null : null,
+    orderedThattrIds: Array.isArray(raw.orderedThattrIds) ? raw.orderedThattrIds : [],
+    markers: normalizeFjallLogMarkers(raw.markers),
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt ?? null,
+  }
+}
+
+export async function fetchFjallSagas(): Promise<FjallSagaView[]> {
+  const [sagas, trails] = await Promise.all([
+    fjallFetch<FjallSagaRaw[]>('/logs/sagas'),
+    fetchFjallTrails(),
+  ])
+  const trailsById = new Map(trails.map((trail) => [extractEntityId(trail.sk), trail.name]))
+  return sagas.map((saga) => toFjallSagaView(saga, trailsById))
+}
+
+export type SaveFjallSagaRequest = {
+  id?: string
+  name: string
+  trailId?: string | null
+  markerIds?: string[]
+}
+
+export async function saveFjallSaga(data: SaveFjallSagaRequest): Promise<FjallSagaView> {
+  const { id, ...rest } = data
+  const raw = id
+    ? await fjallFetch<FjallSagaRaw>(`/logs/sagas/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(rest),
+      })
+    : await fjallFetch<FjallSagaRaw>('/logs/sagas', {
+        method: 'POST',
+        body: JSON.stringify(rest),
+      })
+  const trails = await fetchFjallTrails()
+  const trailsById = new Map(trails.map((trail) => [extractEntityId(trail.sk), trail.name]))
+  return toFjallSagaView(raw, trailsById)
+}
+
+export async function deleteFjallSaga(id: string): Promise<void> {
+  await fjallFetch<void>(`/logs/sagas/${id}`, { method: 'DELETE' })
+}
+
+export async function reorderFjallSaga(
+  sagaId: string,
+  orderedThattrIds: string[],
+): Promise<FjallSagaView> {
+  const raw = await fjallFetch<FjallSagaRaw>(`/logs/sagas/${sagaId}/reorder`, {
+    method: 'PUT',
+    body: JSON.stringify({ orderedThattrIds }),
+  })
+  const trails = await fetchFjallTrails()
+  const trailsById = new Map(trails.map((trail) => [extractEntityId(trail.sk), trail.name]))
+  return toFjallSagaView(raw, trailsById)
 }
 
 // ─── Audr (provisions) ─────────────────────────────────────────────────────

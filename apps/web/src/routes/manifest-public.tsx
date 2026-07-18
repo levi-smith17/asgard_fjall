@@ -41,6 +41,8 @@ import {
   formatCompanionAge,
   formatManifestDate,
   formatManifestDateRange,
+  manifestPublicJourneyUrl,
+  manifestPublicUrl,
   sortExpeditionsByDateDesc,
   sortSummitsByDateDesc,
 } from '@/lib/ordstirr-format'
@@ -959,6 +961,11 @@ export function PublicManifestPage({
             currentView={view}
             onSelectSection={handleSelectSection}
             variant="rail"
+            liveUrl={
+              view === 'journey'
+                ? manifestPublicJourneyUrl(username)
+                : manifestPublicUrl(username)
+            }
           />
         </div>
       }

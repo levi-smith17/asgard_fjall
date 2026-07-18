@@ -1,12 +1,23 @@
-import type { FjallLogView } from '@/lib/data-api'
+import type { FjallLogView, FjallSagaView } from '@/lib/data-api'
+import { parseSogurBlocks, sogurBlocksToPlainText } from '@/lib/sogur-blocks'
 
-export type SogurLogbook = {
-  id: string
-  trailId: string
-  name: string
-  logs: FjallLogView[]
-  pageCount: number
-  updatedAt: string
+export const LEGACY_SAGA_PREFIX = '__legacy__'
+
+export type SogurSagaModel = FjallSagaView & {
+  /** Client-only Grein-bucket until attached to a real SAGA# record. */
+  synthetic?: boolean
+}
+
+export function isLegacySagaId(id: string): boolean {
+  return id.startsWith(LEGACY_SAGA_PREFIX)
+}
+
+export function legacySagaId(trailId: string): string {
+  return `${LEGACY_SAGA_PREFIX}${trailId}`
+}
+
+export function trailIdFromLegacySaga(id: string): string | null {
+  return isLegacySagaId(id) ? id.slice(LEGACY_SAGA_PREFIX.length) : null
 }
 
 export function sortFjallLogs(logs: FjallLogView[]): FjallLogView[] {
@@ -18,39 +29,113 @@ export function sortFjallLogs(logs: FjallLogView[]): FjallLogView[] {
   })
 }
 
-export function groupLogsIntoLogbooks(logs: FjallLogView[]): SogurLogbook[] {
-  const map = new Map<string, FjallLogView[]>()
-  for (const log of logs) {
-    if (!log.trailId) continue
-    const bucket = map.get(log.trailId)
-    if (bucket) bucket.push(log)
-    else map.set(log.trailId, [log])
-  }
-
-  const books: SogurLogbook[] = []
-  for (const [trailId, trailLogs] of map.entries()) {
-    const sorted = sortFjallLogs(trailLogs)
-    const latest = sorted.reduce(
-      (max, log) =>
-        new Date(log.createdAt).getTime() > new Date(max).getTime() ? log.createdAt : max,
-      sorted[0]?.createdAt ?? new Date(0).toISOString(),
-    )
-    books.push({
-      id: trailId,
-      trailId,
-      name: sorted[0]?.trailName ?? 'Grein',
-      logs: sorted,
-      pageCount: sorted.length,
-      updatedAt: latest,
-    })
-  }
-  return books.sort((a, b) => a.name.localeCompare(b.name))
+export function thattrPreview(log: FjallLogView, emptyLabel = 'Empty note'): string {
+  const fromTitle = log.title?.trim()
+  if (fromTitle) return fromTitle
+  const plain = sogurBlocksToPlainText(parseSogurBlocks(log.content)).trim()
+  return plain.slice(0, 120) || emptyLabel
 }
 
-export function pagePreview(log: FjallLogView): string {
-  return (
-    log.title ||
-    log.content.replace(/<[^>]*>/g, '').trim().slice(0, 80) ||
-    'Empty page'
+export function thattrSnippet(log: FjallLogView): string {
+  return sogurBlocksToPlainText(parseSogurBlocks(log.content)).trim().slice(0, 160)
+}
+
+function orderLogsForSaga(saga: SogurSagaModel, logs: FjallLogView[]): FjallLogView[] {
+  const byId = new Map(logs.map((log) => [log.id, log]))
+  const ordered: FjallLogView[] = []
+  for (const id of saga.orderedThattrIds) {
+    const log = byId.get(id)
+    if (log) {
+      ordered.push(log)
+      byId.delete(id)
+    }
+  }
+  ordered.push(...sortFjallLogs([...byId.values()]))
+  return ordered
+}
+
+/**
+ * Prefer real SAGA# records. Grein-bucketed Thattr without sagaId become
+ * synthetic sagas so existing data remains visible until materialised.
+ */
+export function buildSogurWorkspace(
+  sagas: FjallSagaView[],
+  logs: FjallLogView[],
+): {
+  sagas: SogurSagaModel[]
+  logsBySagaId: Map<string, FjallLogView[]>
+  standaloneThaettir: FjallLogView[]
+} {
+  const logsBySagaId = new Map<string, FjallLogView[]>()
+  const attached = new Set<string>()
+  const realSagaIds = new Set(sagas.map((saga) => saga.id))
+
+  for (const log of logs) {
+    if (log.sagaId && realSagaIds.has(log.sagaId)) {
+      const bucket = logsBySagaId.get(log.sagaId)
+      if (bucket) bucket.push(log)
+      else logsBySagaId.set(log.sagaId, [log])
+      attached.add(log.id)
+    }
+  }
+
+  const remaining = logs.filter((log) => !attached.has(log.id))
+  const legacyByTrail = new Map<string, FjallLogView[]>()
+  const standaloneThaettir: FjallLogView[] = []
+
+  for (const log of remaining) {
+    if (log.trailId) {
+      const bucket = legacyByTrail.get(log.trailId)
+      if (bucket) bucket.push(log)
+      else legacyByTrail.set(log.trailId, [log])
+    } else {
+      standaloneThaettir.push(log)
+    }
+  }
+
+  const trailsCoveredByReal = new Set(
+    sagas.map((saga) => saga.trailId).filter((id): id is string => Boolean(id)),
   )
+
+  const synthetic: SogurSagaModel[] = []
+  for (const [trailId, trailLogs] of legacyByTrail.entries()) {
+    if (trailsCoveredByReal.has(trailId)) {
+      // Grein already has a real saga — keep leftover Thattr standalone.
+      standaloneThaettir.push(...trailLogs)
+      continue
+    }
+    const sorted = sortFjallLogs(trailLogs)
+    const sagaId = legacySagaId(trailId)
+    const latest = sorted.reduce(
+      (max, log) =>
+        new Date(log.updatedAt ?? log.createdAt).getTime() > new Date(max).getTime()
+          ? (log.updatedAt ?? log.createdAt)
+          : max,
+      sorted[0]?.updatedAt ?? sorted[0]?.createdAt ?? new Date(0).toISOString(),
+    )
+    synthetic.push({
+      id: sagaId,
+      name: sorted[0]?.trailName ?? 'Untitled',
+      trailId,
+      trailName: sorted[0]?.trailName ?? null,
+      orderedThattrIds: sorted.map((log) => log.id),
+      markers: [],
+      createdAt: sorted[0]?.createdAt ?? new Date(0).toISOString(),
+      updatedAt: latest,
+      synthetic: true,
+    })
+    logsBySagaId.set(sagaId, sorted)
+  }
+
+  const mergedSagas = [...sagas, ...synthetic].sort((a, b) => a.name.localeCompare(b.name))
+  for (const saga of mergedSagas) {
+    const sagaLogs = logsBySagaId.get(saga.id) ?? []
+    logsBySagaId.set(saga.id, orderLogsForSaga(saga, sagaLogs))
+  }
+
+  return {
+    sagas: mergedSagas,
+    logsBySagaId,
+    standaloneThaettir: sortFjallLogs(standaloneThaettir),
+  }
 }

@@ -1,4 +1,4 @@
-import { Moon, Palette, Section, Sun } from 'lucide-react'
+import { ExternalLink, Moon, Palette, Section, Sun } from 'lucide-react'
 import { AsgardSidebarBrand } from '@/components/core/brand/asgard-sidebar-brand'
 import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
 import { Button } from '@/components/core/ui/button'
@@ -148,6 +148,7 @@ export function PublicOrdstirrSectionsRail({
   onSelectSection,
   variant = 'rail',
   brandName = 'Levi Smith',
+  liveUrl,
 }: {
   groups: PublicOrdstirrRailGroup[]
   activeSection: PublicOrdstirrRailSectionId | null
@@ -156,6 +157,8 @@ export function PublicOrdstirrSectionsRail({
   /** `sidebar` = true public (apex) chrome; `rail` = embedded Almenningr. */
   variant?: 'rail' | 'sidebar'
   brandName?: string
+  /** Public Live Profile URL — shown as an icon-only external link on the rail. */
+  liveUrl?: string | null
 }) {
   if (variant === 'sidebar') {
     return (
@@ -175,8 +178,21 @@ export function PublicOrdstirrSectionsRail({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="flex h-14 min-h-14 max-h-14 shrink-0 items-center border-b border-border px-3">
+      <div className="flex h-14 min-h-14 max-h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
         <StudioRailTitle icon={Section}>Sections</StudioRailTitle>
+        {liveUrl ? (
+          <ToolbarTooltip label="Live Profile">
+            <a
+              href={liveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted-hover hover:text-foreground"
+              aria-label="Live Profile"
+            >
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+            </a>
+          </ToolbarTooltip>
+        ) : null}
       </div>
       <SectionList
         groups={groups}

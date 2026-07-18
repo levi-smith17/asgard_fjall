@@ -239,7 +239,8 @@ export function ThingItinerarySettings() {
 
   async function refresh() {
     await queryClient.invalidateQueries({ queryKey: ['fjall-full-settings'] })
-    await queryClient.invalidateQueries({ queryKey: ['fjall-itinerary-events'] })
+    await queryClient.invalidateQueries({ queryKey: ['dagatal-events'] })
+    await queryClient.invalidateQueries({ queryKey: ['dagatal-calendars'] })
   }
 
   const savePrefsMutation = useMutation({

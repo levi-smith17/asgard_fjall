@@ -429,6 +429,8 @@ export function AudrClient() {
       canvas={
         <div className="flex h-full min-h-0 flex-col" onPointerDown={handleCanvasPointerDown}>
           <AudrSurtrCanvas
+            month={month}
+            year={year}
             monthName={monthName}
             onPrevMonth={prevMonth}
             onNextMonth={nextMonth}

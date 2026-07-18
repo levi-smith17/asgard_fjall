@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { BookOpen } from 'lucide-react'
+import { toast } from 'sonner'
 import { RailCatalogSkeleton, SogurCanvasSkeleton } from '@/components/core/ui/studio-skeletons'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
 import {
@@ -10,26 +11,47 @@ import {
 } from '@/components/apps/catalog-inspector'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import {
-  createFjallTrail,
+  deleteFjallLog,
+  deleteFjallSaga,
   fetchFjallLogs,
   fetchFjallMarkers,
+  fetchFjallSagas,
   fetchFjallStatus,
   fetchFjallTrails,
   fetchFjallWaypoints,
+  reorderFjallSaga,
   saveFjallLog,
+  saveFjallSaga,
   type FjallLogView,
+  type FjallSagaView,
 } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 import { toMarkerView, toTrailView, toWaypointView } from '@/lib/data-format'
-import { groupLogsIntoLogbooks, sortFjallLogs } from '@/lib/sogur-format'
+import { createSogurBlock, serializeSogurBlocks } from '@/lib/sogur-blocks'
+import {
+  buildSogurWorkspace,
+  isLegacySagaId,
+  thattrPreview,
+  thattrSnippet,
+  type SogurSagaModel,
+} from '@/lib/sogur-format'
 import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
 import { SogurContextBar } from './sogur-context-bar'
-import { SogurLogbook } from './sogur-logbook'
-import { SogurNewSagaInspector } from './sogur-new-saga-inspector'
-import { SogurPageOrderInspector } from './sogur-page-order-inspector'
-import { SogurRail } from './sogur-rail'
+import {
+  SogurCreateInspector,
+  SogurSagaInspector,
+  SogurThattrInspector,
+} from './sogur-inspectors'
+import { SogurSagaCanvas } from './sogur-saga-canvas'
+import {
+  SOGUR_FILTER_ALL,
+  SogurRail,
+  type SogurRailItem,
+  type SogurRailMarker,
+} from './sogur-rail'
+import { saveActiveSogurThattr, SogurThattrEditor } from './sogur-thattr-editor'
 
-type InspectorMode = 'new' | 'reorder'
+type InspectorMode = 'create-saga' | 'create-thattr' | 'edit-saga' | 'edit-thattr'
 
 type CatalogState = {
   tab: FjallCatalogTab
@@ -38,16 +60,36 @@ type CatalogState = {
   markerParent: string | null
 }
 
+function emptyThattrContent(): string {
+  return serializeSogurBlocks([createSogurBlock('rich-text')])
+}
+
+function toRailMarkers(
+  markers: Array<{ markerId: string; marker: { id: string; name: string; color: string; icon: string | null } }>,
+): SogurRailMarker[] {
+  return markers.map((entry) => ({
+    id: entry.marker.id,
+    name: entry.marker.name,
+    color: entry.marker.color,
+    icon: entry.marker.icon,
+  }))
+}
+
 export function SogurWorkspace() {
   const terms = useTerms()
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [search, setSearch] = useState('')
+  const [filterQuery, setFilterQuery] = useState('')
+  const [greinFilterId, setGreinFilterId] = useState(SOGUR_FILTER_ALL)
+  const [runirFilterId, setRunirFilterId] = useState(SOGUR_FILTER_ALL)
   const [creating, setCreating] = useState(false)
+  const [savingMeta, setSavingMeta] = useState(false)
   const [inspectorMode, setInspectorMode] = useState<InspectorMode | null>(null)
   const [inspectorEngaged, setInspectorEngaged] = useState(false)
   const [inspectorPinned, setInspectorPinned] = useInspectorPinned()
   const [catalog, setCatalog] = useState<CatalogState | null>(null)
+  const [editorState, setEditorState] = useState({ dirty: false, saving: false })
+  const [createDefaultSagaId, setCreateDefaultSagaId] = useState<string | null>(null)
 
   const statusQuery = useQuery({
     queryKey: ['fjall-status'],
@@ -59,6 +101,12 @@ export function SogurWorkspace() {
   const logsQuery = useQuery({
     queryKey: ['fjall-logs'],
     queryFn: fetchFjallLogs,
+    enabled: statusQuery.data?.configured === true,
+  })
+
+  const sagasQuery = useQuery({
+    queryKey: ['fjall-sagas'],
+    queryFn: fetchFjallSagas,
     enabled: statusQuery.data?.configured === true,
   })
 
@@ -82,7 +130,8 @@ export function SogurWorkspace() {
 
   const configured = statusQuery.data?.configured === true
   const logs = logsQuery.data ?? []
-  const logbooks = useMemo(() => groupLogsIntoLogbooks(logs), [logs])
+  const apiSagas = sagasQuery.data ?? []
+  const workspace = useMemo(() => buildSogurWorkspace(apiSagas, logs), [apiSagas, logs])
   const trails = useMemo(
     () => (trailsQuery.data ?? []).map(toTrailView).sort((a, b) => a.name.localeCompare(b.name)),
     [trailsQuery.data],
@@ -92,66 +141,236 @@ export function SogurWorkspace() {
     () => rawMarkers.map(toMarkerView).sort((a, b) => a.name.localeCompare(b.name)),
     [rawMarkers],
   )
+  const runir: SogurRailMarker[] = useMemo(
+    () =>
+      markers.map((marker) => ({
+        id: marker.id,
+        name: marker.name,
+        color: marker.color,
+        icon: marker.icon,
+      })),
+    [markers],
+  )
   const waypoints = waypointsQuery.data ?? []
 
-  const usedTrailIds = useMemo(() => new Set(logbooks.map((book) => book.trailId)), [logbooks])
-  const availableGreinar = useMemo(
-    () => trails.filter((trail) => !usedTrailIds.has(trail.id)),
-    [trails, usedTrailIds],
+  const selectedSagaId =
+    searchParams.get('saga') ??
+    // Legacy Grein-bucket URLs used `book=<trailId>`.
+    (searchParams.get('book')
+      ? workspace.sagas.find((saga) => saga.trailId === searchParams.get('book'))?.id ?? null
+      : null)
+  const selectedThattrId = searchParams.get('thattr') ?? searchParams.get('page')
+
+  const selectedSaga = selectedSagaId
+    ? workspace.sagas.find((saga) => saga.id === selectedSagaId) ?? null
+    : null
+  const selectedSagaThaettir = selectedSaga
+    ? workspace.logsBySagaId.get(selectedSaga.id) ?? []
+    : []
+  const selectedThattr = selectedThattrId
+    ? logs.find((log) => log.id === selectedThattrId) ?? null
+    : null
+  const selectedThattrSaga = selectedThattr?.sagaId
+    ? workspace.sagas.find((saga) => saga.id === selectedThattr.sagaId) ?? null
+    : selectedThattr && selectedSaga && selectedSagaThaettir.some((log) => log.id === selectedThattr.id)
+      ? selectedSaga
+      : null
+
+  const contextSaga = selectedThattrSaga ?? selectedSaga
+  const contextThaettir = contextSaga
+    ? (workspace.logsBySagaId.get(contextSaga.id) ?? []).map((log) => ({
+        id: log.id,
+        title: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
+      }))
+    : selectedThattr
+      ? [{ id: selectedThattr.id, title: thattrPreview(selectedThattr, `Untitled ${terms.thattrSingular}`) }]
+      : []
+
+  const railItems = useMemo((): SogurRailItem[] => {
+    const sagaItems: SogurRailItem[] = workspace.sagas.map((saga) => {
+      const sagaLogs = workspace.logsBySagaId.get(saga.id) ?? []
+      return {
+        id: saga.id,
+        kind: 'saga',
+        name: saga.name,
+        trailId: saga.trailId,
+        trailName: saga.trailName,
+        markers: toRailMarkers(saga.markers),
+        firstThattrId: sagaLogs[0]?.id ?? null,
+      }
+    })
+    const standalone: SogurRailItem[] = workspace.standaloneThaettir.map((log) => ({
+      id: log.id,
+      kind: 'thattr',
+      name: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
+      trailId: log.trailId,
+      trailName: log.trailName,
+      markers: toRailMarkers(log.markers),
+      preview: thattrSnippet(log),
+    }))
+    return [...sagaItems, ...standalone]
+  }, [terms.thattrSingular, workspace])
+
+  const nestedThaettir = useMemo((): SogurRailItem[] => {
+    const items: SogurRailItem[] = []
+    for (const saga of workspace.sagas) {
+      for (const log of workspace.logsBySagaId.get(saga.id) ?? []) {
+        items.push({
+          id: log.id,
+          kind: 'thattr',
+          name: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
+          trailId: log.trailId ?? saga.trailId,
+          trailName: log.trailName ?? saga.trailName,
+          markers: toRailMarkers(log.markers),
+          preview: thattrSnippet(log),
+          sagaName: saga.name,
+        })
+      }
+    }
+    return items
+  }, [terms.thattrSingular, workspace])
+
+  const sagaOptions = useMemo(
+    () =>
+      workspace.sagas.map((saga) => ({
+        id: saga.id,
+        name: saga.name,
+        trailId: saga.trailId,
+      })),
+    [workspace.sagas],
   )
 
-  const selectedBookId = searchParams.get('book')
-  const selectedPageId = searchParams.get('page')
-  const selectedBook = selectedBookId
-    ? logbooks.find((book) => book.id === selectedBookId) ?? null
-    : null
-
-  const trailWaypoints = useMemo(() => {
-    if (!selectedBook) return []
+  const thattrLaufar = useMemo(() => {
+    const trailId = selectedThattr?.trailId ?? selectedThattrSaga?.trailId ?? null
     const trailsMap = new Map(trails.map((trail) => [trail.id, trail]))
     return waypoints
       .map((waypoint) => toWaypointView(waypoint, trailsMap))
-      .filter((waypoint) => waypoint.trailId === selectedBook.trailId)
+      .filter((waypoint) => (trailId ? waypoint.trailId === trailId : true))
       .map((waypoint) => ({
         id: waypoint.id,
         title: waypoint.title,
         url: waypoint.url,
         description: waypoint.description,
       }))
-  }, [selectedBook, trails, waypoints])
+  }, [selectedThattr, selectedThattrSaga, trails, waypoints])
 
-  function selectBook(bookId: string, pageId?: string) {
+  const activeLauf = selectedThattr?.waypointId
+    ? thattrLaufar.find((lauf) => lauf.id === selectedThattr.waypointId) ?? null
+    : null
+
+  function setSelection(next: { sagaId?: string | null; thattrId?: string | null }) {
     const params = new URLSearchParams(searchParams.toString())
-    params.set('book', bookId)
-    if (pageId) params.set('page', pageId)
-    else params.delete('page')
+    params.delete('book')
+    params.delete('page')
+    if (next.sagaId) params.set('saga', next.sagaId)
+    else if (next.sagaId === null) params.delete('saga')
+    if (next.thattrId) params.set('thattr', next.thattrId)
+    else if (next.thattrId === null) params.delete('thattr')
     setSearchParams(params)
     setCatalog(null)
-    if (inspectorPinned || inspectorEngaged) setInspectorMode('reorder')
   }
 
-  function selectPage(pageId: string) {
-    if (!selectedBookId) return
-    selectBook(selectedBookId, pageId)
+  async function invalidateSogur() {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['fjall-logs'] }),
+      queryClient.invalidateQueries({ queryKey: ['fjall-sagas'] }),
+    ])
   }
 
-  function handleLogsChange(nextBookLogs: FjallLogView[]) {
-    if (!selectedBook) return
+  function patchLogCache(log: FjallLogView) {
     queryClient.setQueryData(['fjall-logs'], (prev: FjallLogView[] | undefined) => {
-      const others = (prev ?? []).filter((log) => log.trailId !== selectedBook.trailId)
-      return [...others, ...nextBookLogs]
+      const list = prev ?? []
+      const index = list.findIndex((entry) => entry.id === log.id)
+      if (index < 0) return [...list, log]
+      const next = [...list]
+      next[index] = log
+      return next
     })
   }
 
-  function openNewInspector() {
+  function removeLogCache(id: string) {
+    queryClient.setQueryData(['fjall-logs'], (prev: FjallLogView[] | undefined) =>
+      (prev ?? []).filter((log) => log.id !== id),
+    )
+  }
+
+  function patchSagaCache(saga: FjallSagaView) {
+    queryClient.setQueryData(['fjall-sagas'], (prev: FjallSagaView[] | undefined) => {
+      const list = prev ?? []
+      const index = list.findIndex((entry) => entry.id === saga.id)
+      if (index < 0) return [...list, saga]
+      const next = [...list]
+      next[index] = saga
+      return next
+    })
+  }
+
+  /** Persist a Grein-bucket synthetic saga as a real SAGA# before attach/reorder. */
+  async function materializeSaga(saga: SogurSagaModel): Promise<FjallSagaView> {
+    if (!saga.synthetic) {
+      return (
+        apiSagas.find((entry) => entry.id === saga.id) ?? {
+          id: saga.id,
+          name: saga.name,
+          trailId: saga.trailId,
+          trailName: saga.trailName,
+          orderedThattrIds: saga.orderedThattrIds,
+          markers: saga.markers,
+          createdAt: saga.createdAt,
+          updatedAt: saga.updatedAt,
+        }
+      )
+    }
+    const created = await saveFjallSaga({
+      name: saga.name,
+      trailId: saga.trailId,
+      markerIds: saga.markers.map((marker) => marker.markerId),
+    })
+    const sagaLogs = workspace.logsBySagaId.get(saga.id) ?? []
+    for (const log of sagaLogs) {
+      const saved = await saveFjallLog({
+        id: log.id,
+        title: log.title,
+        content: log.content,
+        sagaId: created.id,
+        trailId: created.trailId,
+        waypointId: log.waypointId,
+        markerIds: log.markers.map((marker) => marker.markerId),
+      })
+      patchLogCache(saved)
+    }
+    if (sagaLogs.length) {
+      const reordered = await reorderFjallSaga(
+        created.id,
+        sagaLogs.map((log) => log.id),
+      )
+      patchSagaCache(reordered)
+      await invalidateSogur()
+      return reordered
+    }
+    patchSagaCache(created)
+    await invalidateSogur()
+    return created
+  }
+
+  function openCreate(kind: 'saga' | 'thattr', defaultSagaId: string | null = null) {
     setCatalog(null)
-    setInspectorMode('new')
+    setCreateDefaultSagaId(defaultSagaId)
+    setInspectorMode(kind === 'saga' ? 'create-saga' : 'create-thattr')
     setInspectorEngaged(true)
   }
 
-  function openReorderInspector() {
+  function openInspectSaga(sagaId: string) {
+    setSelection({ sagaId, thattrId: null })
     setCatalog(null)
-    setInspectorMode('reorder')
+    setInspectorMode('edit-saga')
+    setInspectorEngaged(true)
+  }
+
+  function openInspectThattr(thattrId: string, sagaId?: string | null) {
+    setSelection({ sagaId: sagaId ?? selectedSagaId, thattrId })
+    setCatalog(null)
+    setInspectorMode('edit-thattr')
     setInspectorEngaged(true)
   }
 
@@ -159,10 +378,6 @@ export function SogurWorkspace() {
     setInspectorMode(null)
     setInspectorEngaged(true)
     setCatalog({ tab: 'greinar', selectedId: null, markerPath: [], markerParent: null })
-  }
-
-  function handleInspectorPinnedChange(pinned: boolean) {
-    setInspectorPinned(pinned)
   }
 
   const dismissInspector = useCallback(() => {
@@ -193,46 +408,223 @@ export function SogurWorkspace() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [dismissInspector])
 
-  async function handleCreateSaga(input: { trailId?: string; newGreinName?: string }) {
+  // Keep inspector mode aligned with selection when pinned/engaged.
+  useEffect(() => {
+    if (catalog || !inspectorEngaged) return
+    if (inspectorMode === 'create-saga' || inspectorMode === 'create-thattr') return
+    if (selectedThattrId) setInspectorMode('edit-thattr')
+    else if (selectedSagaId) setInspectorMode('edit-saga')
+  }, [catalog, inspectorEngaged, inspectorMode, selectedSagaId, selectedThattrId])
+
+  async function handleCreate(input: {
+    name: string
+    trailId: string | null
+    markerIds: string[]
+    sagaId?: string | null
+  }) {
     setCreating(true)
     try {
-      let trailId = input.trailId
-      if (input.newGreinName) {
-        const trail = await createFjallTrail({ name: input.newGreinName })
-        trailId = trail.id
-        await queryClient.invalidateQueries({ queryKey: ['fjall-trails'] })
+      if (inspectorMode === 'create-saga') {
+        const created = await saveFjallSaga({
+          name: input.name,
+          trailId: input.trailId,
+          markerIds: input.markerIds,
+        })
+        patchSagaCache(created)
+        await invalidateSogur()
+        setSelection({ sagaId: created.id, thattrId: null })
+        setInspectorMode('edit-saga')
+        toast.success(`${terms.notesSingular} created`)
+        return
       }
-      if (!trailId) return
+
+      let sagaId = input.sagaId ?? null
+      let trailId = input.trailId
+      if (sagaId && isLegacySagaId(sagaId)) {
+        const legacy = workspace.sagas.find((saga) => saga.id === sagaId)
+        if (legacy) {
+          const real = await materializeSaga(legacy)
+          sagaId = real.id
+          trailId = real.trailId
+        }
+      } else if (sagaId) {
+        const saga = workspace.sagas.find((entry) => entry.id === sagaId)
+        trailId = saga?.trailId ?? trailId
+      }
 
       const created = await saveFjallLog({
-        title: null,
-        content: '<p></p>',
+        title: input.name,
+        content: emptyThattrContent(),
+        sagaId,
         trailId,
-        markerIds: [],
         waypointId: null,
+        markerIds: input.markerIds,
       })
-      await queryClient.invalidateQueries({ queryKey: ['fjall-logs'] })
-      setInspectorMode('reorder')
-      setInspectorEngaged(true)
-      selectBook(trailId, created.id)
+      patchLogCache(created)
+      await invalidateSogur()
+      setSelection({ sagaId: created.sagaId, thattrId: created.id })
+      setInspectorMode('edit-thattr')
+      toast.success(`${terms.thattrSingular} created`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Create failed')
     } finally {
       setCreating(false)
     }
   }
 
-  function handleCancelNew() {
-    setInspectorMode(selectedBook ? 'reorder' : null)
-    if (!selectedBook) setInspectorEngaged(false)
+  async function handleSaveSaga(input: {
+    name: string
+    trailId: string | null
+    markerIds: string[]
+  }) {
+    if (!selectedSaga) return
+    setSavingMeta(true)
+    try {
+      const base = await materializeSaga(selectedSaga)
+      const saved = await saveFjallSaga({
+        id: base.id,
+        name: input.name,
+        trailId: input.trailId,
+        markerIds: input.markerIds,
+      })
+      patchSagaCache(saved)
+      await invalidateSogur()
+      setSelection({ sagaId: saved.id, thattrId: selectedThattrId })
+      toast.success(`${terms.notesSingular} saved`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Save failed')
+    } finally {
+      setSavingMeta(false)
+    }
   }
 
-  const bookLogs = selectedBook ? sortFjallLogs(selectedBook.logs) : []
-  const activeInspectorMode =
-    catalog ? null : inspectorMode ?? (selectedBook && inspectorEngaged ? 'reorder' : null)
+  async function handleDeleteSaga() {
+    if (!selectedSaga) return
+    setSavingMeta(true)
+    try {
+      if (!selectedSaga.synthetic) {
+        await deleteFjallSaga(selectedSaga.id)
+      } else {
+        // Synthetic Grein buckets: detach by clearing trailId on Thattr.
+        for (const log of workspace.logsBySagaId.get(selectedSaga.id) ?? []) {
+          const saved = await saveFjallLog({
+            id: log.id,
+            title: log.title,
+            content: log.content,
+            sagaId: null,
+            trailId: null,
+            waypointId: log.waypointId,
+            markerIds: log.markers.map((marker) => marker.markerId),
+          })
+          patchLogCache(saved)
+        }
+      }
+      await invalidateSogur()
+      setSelection({ sagaId: null, thattrId: null })
+      dismissInspector()
+      toast.success(`${terms.notesSingular} deleted`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Delete failed')
+    } finally {
+      setSavingMeta(false)
+    }
+  }
+
+  async function handleReorderSaga(orderedIds: string[]) {
+    if (!selectedSaga) return
+    const real = await materializeSaga(selectedSaga)
+    const saved = await reorderFjallSaga(real.id, orderedIds)
+    patchSagaCache(saved)
+    await invalidateSogur()
+    if (selectedSaga.synthetic) setSelection({ sagaId: real.id, thattrId: selectedThattrId })
+  }
+
+  async function handleSaveThattrMeta(input: {
+    title: string
+    sagaId: string | null
+    trailId: string | null
+    markerIds: string[]
+    waypointId: string | null
+  }) {
+    if (!selectedThattr) return
+    setSavingMeta(true)
+    try {
+      let sagaId = input.sagaId
+      let trailId = input.trailId
+      if (sagaId && isLegacySagaId(sagaId)) {
+        const legacy = workspace.sagas.find((saga) => saga.id === sagaId)
+        if (legacy) {
+          const real = await materializeSaga(legacy)
+          sagaId = real.id
+          trailId = real.trailId
+        }
+      }
+      const saved = await saveFjallLog({
+        id: selectedThattr.id,
+        title: input.title,
+        content: selectedThattr.content,
+        sagaId,
+        trailId,
+        waypointId: input.waypointId,
+        markerIds: input.markerIds,
+      })
+      patchLogCache(saved)
+      await invalidateSogur()
+      setSelection({ sagaId: saved.sagaId, thattrId: saved.id })
+      toast.success(`${terms.thattrSingular} saved`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Save failed')
+    } finally {
+      setSavingMeta(false)
+    }
+  }
+
+  async function handleDeleteThattr() {
+    if (!selectedThattr) return
+    setSavingMeta(true)
+    try {
+      await deleteFjallLog(selectedThattr.id)
+      removeLogCache(selectedThattr.id)
+      await invalidateSogur()
+      if (selectedThattr.sagaId || selectedSagaId) {
+        setSelection({ sagaId: selectedThattr.sagaId ?? selectedSagaId, thattrId: null })
+        setInspectorMode('edit-saga')
+      } else {
+        setSelection({ sagaId: null, thattrId: null })
+        dismissInspector()
+      }
+      toast.success(`${terms.thattrSingular} deleted`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Delete failed')
+    } finally {
+      setSavingMeta(false)
+    }
+  }
+
+  const thattrIndex = contextThaettir.findIndex((thattr) => thattr.id === selectedThattrId)
+  const canPrevious = thattrIndex > 0
+  const canNext = thattrIndex >= 0 && thattrIndex < contextThaettir.length - 1
+
+  const activeInspectorMode: InspectorMode | null = catalog
+    ? null
+    : inspectorMode ??
+      (inspectorEngaged
+        ? selectedThattr
+          ? 'edit-thattr'
+          : selectedSaga
+            ? 'edit-saga'
+            : null
+        : null)
+
   const inspectorContentAvailable =
     catalog != null ||
-    activeInspectorMode === 'new' ||
-    (activeInspectorMode === 'reorder' && Boolean(selectedBook))
-  const inspectorOpen = (inspectorPinned || inspectorEngaged || catalog != null) && inspectorContentAvailable
+    activeInspectorMode === 'create-saga' ||
+    activeInspectorMode === 'create-thattr' ||
+    (activeInspectorMode === 'edit-saga' && Boolean(selectedSaga)) ||
+    (activeInspectorMode === 'edit-thattr' && Boolean(selectedThattr))
+
+  const inspectorOpen =
+    (inspectorPinned || inspectorEngaged || catalog != null) && inspectorContentAvailable
   const inspectorState = inspectorOpen
     ? 'open'
     : inspectorContentAvailable
@@ -241,24 +633,63 @@ export function SogurWorkspace() {
 
   const inspectorHint = catalog
     ? `${terms.greinar} & ${terms.runir}`
-    : activeInspectorMode === 'new'
-      ? `Open the inspector to create a ${terms.notesSingular.toLowerCase()}`
-      : 'Open the inspector to reorder pages'
+    : activeInspectorMode === 'create-saga'
+      ? `Create a ${terms.notesSingular.toLowerCase()}`
+      : activeInspectorMode === 'create-thattr'
+        ? `Create a ${terms.thattrSingular.toLowerCase()}`
+        : activeInspectorMode === 'edit-thattr'
+          ? `Edit ${terms.thattrSingular.toLowerCase()}`
+          : `Edit ${terms.notesSingular.toLowerCase()}`
 
   const loading =
     statusQuery.isLoading ||
     (configured &&
-      (logsQuery.isLoading || trailsQuery.isLoading || markersQuery.isLoading || waypointsQuery.isLoading))
+      (logsQuery.isLoading ||
+        sagasQuery.isLoading ||
+        trailsQuery.isLoading ||
+        markersQuery.isLoading ||
+        waypointsQuery.isLoading))
+
+  const showingEditor = Boolean(selectedThattr)
+  const showingSagaOverview = Boolean(selectedSaga && !selectedThattr)
 
   return (
     <StudioLayout
       railLabel={terms.notes}
       contextBar={
         <SogurContextBar
-          sagaCount={logbooks.length}
-          onNewSaga={openNewInspector}
+          sagaName={contextSaga?.name ?? null}
+          thattrName={
+            selectedThattr
+              ? thattrPreview(selectedThattr, `Untitled ${terms.thattrSingular}`)
+              : null
+          }
+          thaettir={contextThaettir}
+          activeThattrId={selectedThattrId}
+          onSelectThattr={(id) =>
+            setSelection({ sagaId: contextSaga?.id ?? selectedSagaId, thattrId: id })
+          }
+          onPrevious={() => {
+            if (!canPrevious) return
+            const prev = contextThaettir[thattrIndex - 1]
+            setSelection({ sagaId: contextSaga?.id ?? selectedSagaId, thattrId: prev.id })
+          }}
+          onNext={() => {
+            if (!canNext) return
+            const next = contextThaettir[thattrIndex + 1]
+            setSelection({ sagaId: contextSaga?.id ?? selectedSagaId, thattrId: next.id })
+          }}
+          canPrevious={canPrevious}
+          canNext={canNext}
+          onOpenLauf={activeLauf?.url ? () => window.open(activeLauf.url, '_blank', 'noopener') : undefined}
+          laufLabel={activeLauf?.title ?? null}
+          onSave={showingEditor ? () => void saveActiveSogurThattr() : undefined}
+          saving={editorState.saving}
+          saveDisabled={!editorState.dirty || editorState.saving}
+          onNewThattr={() => openCreate('thattr', contextSaga?.id ?? null)}
+          onNewSaga={() => openCreate('saga')}
           inspectorPinned={inspectorPinned}
-          onInspectorPinnedChange={handleInspectorPinnedChange}
+          onInspectorPinnedChange={setInspectorPinned}
           showInspectorPin={inspectorContentAvailable}
         />
       }
@@ -267,12 +698,49 @@ export function SogurWorkspace() {
           <RailCatalogSkeleton rows={8} titleWidth="w-16" />
         ) : configured && !loading ? (
           <SogurRail
-            logbooks={logbooks}
-            selectedBookId={selectedBookId}
-            search={search}
-            onSearchChange={setSearch}
-            onSelectBook={selectBook}
-            onNew={openNewInspector}
+            items={railItems}
+            nestedThaettir={nestedThaettir}
+            selectedSagaId={selectedSagaId}
+            selectedThattrId={selectedThattrId}
+            filterQuery={filterQuery}
+            onFilterQueryChange={setFilterQuery}
+            greinFilterId={greinFilterId}
+            onGreinFilterChange={setGreinFilterId}
+            runirFilterId={runirFilterId}
+            onRunirFilterChange={setRunirFilterId}
+            greinar={trails.map((trail) => ({ id: trail.id, name: trail.name }))}
+            runir={runir}
+            onOpenItem={(item) => {
+              if (item.kind === 'saga') {
+                setSelection({ sagaId: item.id, thattrId: null })
+                if (inspectorPinned || inspectorEngaged) {
+                  setInspectorMode('edit-saga')
+                  setInspectorEngaged(true)
+                }
+                return
+              }
+              const sagaId =
+                workspace.sagas.find((saga) =>
+                  (workspace.logsBySagaId.get(saga.id) ?? []).some((log) => log.id === item.id),
+                )?.id ?? null
+              setSelection({ sagaId: sagaId ?? null, thattrId: item.id })
+              if (inspectorPinned || inspectorEngaged) {
+                setInspectorMode('edit-thattr')
+                setInspectorEngaged(true)
+              }
+            }}
+            onOpenFirstThattr={(sagaId, thattrId) => {
+              setSelection({ sagaId, thattrId })
+              if (inspectorPinned || inspectorEngaged) {
+                setInspectorMode('edit-thattr')
+                setInspectorEngaged(true)
+              }
+            }}
+            onInspectItem={(item) => {
+              if (item.kind === 'saga') openInspectSaga(item.id)
+              else openInspectThattr(item.id)
+            }}
+            onNewSaga={() => openCreate('saga')}
             onOpenCatalog={openCatalog}
           />
         ) : undefined
@@ -287,31 +755,38 @@ export function SogurWorkspace() {
             className="flex min-h-0 w-full flex-1 flex-col overflow-hidden"
             onPointerDown={handleCanvasPointerDown}
           >
-            {selectedBook ? (
-              <SogurLogbook
-                bookId={selectedBook.id}
-                bookName={selectedBook.name}
-                trailId={selectedBook.trailId}
-                initialLogs={bookLogs}
-                initialPageId={selectedPageId}
-                markers={rawMarkers}
-                waypoints={trailWaypoints}
-                onLogsChange={handleLogsChange}
-                onOpenPageOrder={openReorderInspector}
+            {showingEditor && selectedThattr ? (
+              <SogurThattrEditor
+                thattr={selectedThattr}
+                onSaved={patchLogCache}
+                onStateChange={setEditorState}
+              />
+            ) : showingSagaOverview && selectedSaga ? (
+              <SogurSagaCanvas
+                sagaName={selectedSaga.name}
+                thaettir={selectedSagaThaettir.map((log) => ({
+                  id: log.id,
+                  title: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
+                  preview: thattrSnippet(log),
+                  markers: toRailMarkers(log.markers),
+                }))}
+                onOpenThattr={(id) => setSelection({ sagaId: selectedSaga.id, thattrId: id })}
+                onInspectThattr={(id) => openInspectThattr(id, selectedSaga.id)}
+                onReorder={handleReorderSaga}
               />
             ) : (
               <div className="flex w-full flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
-                  <BookOpen className="h-10 w-10 text-muted-foreground/40" />
-                  <p className="text-sm font-medium text-foreground">
-                    Select a {terms.notesSingular.toLowerCase()}
-                  </p>
-                  <p className="max-w-sm text-sm text-muted-foreground">
-                    Each {terms.notesSingular.toLowerCase()} belongs to a{' '}
-                    {terms.greinSingular.toLowerCase()}. Pick one from the rail, or create a new{' '}
-                    {terms.notesSingular.toLowerCase()} from the toolbar.
-                  </p>
-                </div>
-              )}
+                <BookOpen className="h-10 w-10 text-muted-foreground/40" />
+                <p className="text-sm font-medium text-foreground">
+                  Select a {terms.notesSingular.toLowerCase()} or {terms.thattrSingular.toLowerCase()}
+                </p>
+                <p className="max-w-sm text-sm text-muted-foreground">
+                  {terms.notes} group ordered {terms.thaettir.toLowerCase()}. Standalone{' '}
+                  {terms.thaettir.toLowerCase()} appear on the rail without a{' '}
+                  {terms.notesSingular.toLowerCase()}.
+                </p>
+              </div>
+            )}
           </div>
         )
       }
@@ -329,7 +804,9 @@ export function SogurWorkspace() {
             selectedId={catalog.selectedId}
             markerPath={catalog.markerPath}
             markerParent={catalog.markerParent}
-            onSelectId={(id) => setCatalog((current) => (current ? { ...current, selectedId: id } : current))}
+            onSelectId={(id) =>
+              setCatalog((current) => (current ? { ...current, selectedId: id } : current))
+            }
             onMarkerPathChange={(path) =>
               setCatalog((current) =>
                 current ? { ...current, markerPath: path, selectedId: null } : current,
@@ -344,21 +821,52 @@ export function SogurWorkspace() {
               )
             }
           />
-        ) : activeInspectorMode === 'new' ? (
-          <SogurNewSagaInspector
-            greinar={availableGreinar}
-            onCancel={handleCancelNew}
-            onCreate={handleCreateSaga}
+        ) : activeInspectorMode === 'create-saga' || activeInspectorMode === 'create-thattr' ? (
+          <SogurCreateInspector
+            kind={activeInspectorMode === 'create-saga' ? 'saga' : 'thattr'}
+            defaultSagaId={createDefaultSagaId}
+            sagas={sagaOptions}
+            greinar={trails.map((trail) => ({ id: trail.id, name: trail.name }))}
+            runir={runir}
             creating={creating}
+            onCreate={handleCreate}
           />
-        ) : selectedBook ? (
-          <SogurPageOrderInspector
-            logs={bookLogs}
-            activePageId={selectedPageId}
-            bookName={selectedBook.name}
-            onLogsChange={handleLogsChange}
-            onSelectPage={selectPage}
-            onClose={dismissInspector}
+        ) : activeInspectorMode === 'edit-saga' && selectedSaga ? (
+          <SogurSagaInspector
+            saga={{
+              id: selectedSaga.id,
+              name: selectedSaga.name,
+              trailId: selectedSaga.trailId,
+              markerIds: selectedSaga.markers.map((marker) => marker.markerId),
+            }}
+            thaettir={selectedSagaThaettir.map((log) => ({
+              id: log.id,
+              title: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
+            }))}
+            greinar={trails.map((trail) => ({ id: trail.id, name: trail.name }))}
+            runir={runir}
+            saving={savingMeta}
+            onSave={handleSaveSaga}
+            onDelete={() => void handleDeleteSaga()}
+            onReorder={handleReorderSaga}
+          />
+        ) : activeInspectorMode === 'edit-thattr' && selectedThattr ? (
+          <SogurThattrInspector
+            thattr={{
+              id: selectedThattr.id,
+              title: selectedThattr.title?.trim() || thattrPreview(selectedThattr),
+              sagaId: selectedThattr.sagaId ?? selectedThattrSaga?.id ?? null,
+              trailId: selectedThattr.trailId,
+              markerIds: selectedThattr.markers.map((marker) => marker.markerId),
+              waypointId: selectedThattr.waypointId,
+            }}
+            sagas={sagaOptions}
+            greinar={trails.map((trail) => ({ id: trail.id, name: trail.name }))}
+            runir={runir}
+            laufar={thattrLaufar}
+            saving={savingMeta}
+            onSave={handleSaveThattrMeta}
+            onDelete={() => void handleDeleteThattr()}
           />
         ) : null
       }

@@ -11,6 +11,14 @@ describe('mapFjallApiPathToAsgard', () => {
     expect(mapFjallApiPathToAsgard('/itinerary/events')).toBe('/dagatal/events')
   })
 
+  it('remaps Sögur / Saga paths via /logs → /sogur', () => {
+    expect(mapFjallApiPathToAsgard('/logs')).toBe('/sogur')
+    expect(mapFjallApiPathToAsgard('/logs/abc')).toBe('/sogur/abc')
+    expect(mapFjallApiPathToAsgard('/logs/sagas')).toBe('/sogur/sagas')
+    expect(mapFjallApiPathToAsgard('/logs/sagas/abc')).toBe('/sogur/sagas/abc')
+    expect(mapFjallApiPathToAsgard('/logs/sagas/abc/reorder')).toBe('/sogur/sagas/abc/reorder')
+  })
+
   it('remaps public Ordstirr paths', () => {
     expect(mapFjallApiPathToAsgard('/public/manifest/levi/journey')).toBe(
       '/public/ordstirr/levi/ferd',

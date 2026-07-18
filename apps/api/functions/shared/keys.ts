@@ -8,6 +8,7 @@ export const SKATT_PREFIX = 'SKATT#'
 export const SJODR_PREFIX = 'SJODR#'
 export const SENDIBOD_PREFIX = 'SENDIBOD#'
 export const SOGUR_PREFIX = 'SOGUR#'
+export const SAGA_PREFIX = 'SAGA#'
 export const KIN_PREFIX = 'KIN#'
 export const DAGATAL_PREFIX = 'DAGATAL#'
 export const DAGATAL_SUB_PREFIX = 'DAGATAL_SUB#'
@@ -52,6 +53,10 @@ export function sendibodReplySk(signalId: string, replyId: string): string {
 
 export function sogurSk(id: string): string {
   return `${SOGUR_PREFIX}${id}`
+}
+
+export function sagaSk(id: string): string {
+  return `${SAGA_PREFIX}${id}`
 }
 
 export function kinSk(id: string): string {

@@ -5,7 +5,8 @@ import { dynamo, TABLE_NAME } from '../../shared/db'
 import { getPk } from '../../shared/auth'
 import { sogurSk } from '../../shared/keys'
 import { resolveRunirById } from '../../shared/runir-resolve'
-import { toApiGatewayResponse, created, badRequest, serverError } from '../../shared/response'
+import { appendThattrToSagaOrder, getSaga } from '../../shared/sagas'
+import { toApiGatewayResponse, created, badRequest, notFound, serverError } from '../../shared/response'
 
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer,
@@ -22,6 +23,19 @@ export const handler = async (
     const sk = sogurSk(id)
     const now = new Date().toISOString()
 
+    const sagaId =
+      typeof body.sagaId === 'string' && body.sagaId.length > 0 ? body.sagaId : null
+
+    let trailId =
+      typeof body.trailId === 'string' && body.trailId.length > 0 ? body.trailId : null
+
+    if (sagaId) {
+      const saga = await getSaga(pk, sagaId)
+      if (!saga) return toApiGatewayResponse(notFound('Saga not found'))
+      trailId =
+        typeof saga.trailId === 'string' && saga.trailId.length > 0 ? saga.trailId : null
+    }
+
     const markerMap = await resolveRunirById(pk, Array.isArray(body.markerIds) ? body.markerIds : [])
     const markers = [...markerMap.values()]
 
@@ -31,7 +45,8 @@ export const handler = async (
       ...(body.title ? { title: body.title } : {}),
       content: body.content,
       ...(typeof body.position === 'number' ? { position: body.position } : {}),
-      ...(body.trailId ? { trailId: body.trailId } : {}),
+      ...(sagaId ? { sagaId } : {}),
+      ...(trailId ? { trailId } : {}),
       ...(body.waypointId ? { waypointId: body.waypointId } : {}),
       markers,
       mediaKeys: [],
@@ -45,6 +60,10 @@ export const handler = async (
         Item: sogur,
       }),
     )
+
+    if (sagaId) {
+      await appendThattrToSagaOrder(pk, sagaId, id)
+    }
 
     return toApiGatewayResponse(created(sogur))
   } catch (err) {

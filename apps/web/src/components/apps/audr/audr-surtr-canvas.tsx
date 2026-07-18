@@ -29,6 +29,8 @@ import { AudrFilterBar } from './audr-filter-bar'
 import { AudrSupplylineRow } from './audr-supplyline-row'
 
 export function AudrSurtrCanvas({
+  month,
+  year,
   monthName,
   onPrevMonth,
   onNextMonth,
@@ -64,6 +66,8 @@ export function AudrSurtrCanvas({
   onBurnPageChange,
   burnPageLoading,
 }: {
+  month: number
+  year: number
   monthName: string
   onPrevMonth: () => void
   onNextMonth: () => void
@@ -243,6 +247,8 @@ export function AudrSurtrCanvas({
                         key={`${section.fundId ?? AUDR_UNASSIGNED_SJODR}:${group.markerId}`}
                         group={group}
                         markers={markers}
+                        month={month}
+                        year={year}
                         supplylines={filteredSupplylines}
                         selectedBurnId={selectedBurnId}
                         selectedSupplylineId={selectedSupplylineId}
@@ -268,6 +274,8 @@ export function AudrSurtrCanvas({
                   key={group.markerId}
                   group={group}
                   markers={markers}
+                  month={month}
+                  year={year}
                   supplylines={filteredSupplylines}
                   selectedBurnId={selectedBurnId}
                   selectedSupplylineId={selectedSupplylineId}
@@ -306,6 +314,8 @@ export function AudrSurtrCanvas({
 function SkattGroupBlock({
   group,
   markers,
+  month,
+  year,
   supplylines,
   selectedBurnId,
   selectedSupplylineId,
@@ -321,6 +331,8 @@ function SkattGroupBlock({
 }: {
   group: SurtrCanvasGroup
   markers: AudrMarker[]
+  month: number
+  year: number
   supplylines: FjallSupplyline[]
   selectedBurnId: string | null
   selectedSupplylineId: string | null
@@ -336,7 +348,7 @@ function SkattGroupBlock({
 }) {
   const terms = useTerms()
   const { markerId, burns: groupBurns, cache } = group
-  const groupSupplylines = idunnLinesForMarker(supplylines, markerId)
+  const groupSupplylines = idunnLinesForMarker(supplylines, markerId, month, year)
   const groupTotal = groupBurns.reduce((sum, burn) => sum + burn.amount, 0)
   const label = markerShortLabel(markerId, markers, cache)
   const spent = cache ? effectiveSkattSpent(cache, supplylines) : 0
@@ -441,6 +453,8 @@ function SkattGroupBlock({
             <AudrSupplylineRow
               key={line.id}
               supplyline={line}
+              month={month}
+              year={year}
               selected={selectedSupplylineId === line.id}
               onSelect={() => onSelectSupplyline(line.id)}
               markers={markers}

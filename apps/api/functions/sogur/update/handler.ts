@@ -1,10 +1,15 @@
-import { UpdateCommand } from '@aws-sdk/lib-dynamodb'
+import { GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb'
 import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda'
 import { dynamo, TABLE_NAME } from '../../shared/db'
 import { getPathId, getPk } from '../../shared/auth'
 import { sogurSk } from '../../shared/keys'
 import { resolveRunirById } from '../../shared/runir-resolve'
-import { toApiGatewayResponse, ok, badRequest, serverError } from '../../shared/response'
+import {
+  appendThattrToSagaOrder,
+  getSaga,
+  removeThattrFromSagaOrder,
+} from '../../shared/sagas'
+import { toApiGatewayResponse, ok, badRequest, notFound, serverError } from '../../shared/response'
 
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer,
@@ -24,6 +29,19 @@ export const handler = async (
 
     const pk = getPk(event)
     const sk = sogurSk(id)
+
+    const existingResult = await dynamo.send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: { pk, sk },
+      }),
+    )
+    if (!existingResult.Item) {
+      return toApiGatewayResponse(notFound('Thattr not found'))
+    }
+    const existing = existingResult.Item
+    const prevSagaId =
+      typeof existing.sagaId === 'string' && existing.sagaId.length > 0 ? existing.sagaId : null
 
     const markerMap = await resolveRunirById(pk, Array.isArray(body.markerIds) ? body.markerIds : [])
     const markers = [...markerMap.values()]
@@ -45,7 +63,34 @@ export const handler = async (
       removeExprs.push('title')
     }
 
-    if (body.trailId) {
+    let nextSagaId = prevSagaId
+    let inheritedTrailId: string | null | undefined
+
+    if ('sagaId' in body) {
+      nextSagaId =
+        typeof body.sagaId === 'string' && body.sagaId.length > 0 ? body.sagaId : null
+
+      if (nextSagaId) {
+        const saga = await getSaga(pk, nextSagaId)
+        if (!saga) return toApiGatewayResponse(notFound('Saga not found'))
+        inheritedTrailId =
+          typeof saga.trailId === 'string' && saga.trailId.length > 0 ? saga.trailId : null
+        setExprs.push('sagaId = :sagaId')
+        exprValues[':sagaId'] = nextSagaId
+      } else {
+        removeExprs.push('sagaId')
+      }
+    }
+
+    // When attaching/changing sagaId, inherit saga.trailId. Otherwise honor body.trailId.
+    if (inheritedTrailId !== undefined) {
+      if (inheritedTrailId) {
+        setExprs.push('trailId = :trailId')
+        exprValues[':trailId'] = inheritedTrailId
+      } else {
+        removeExprs.push('trailId')
+      }
+    } else if (body.trailId) {
       setExprs.push('trailId = :trailId')
       exprValues[':trailId'] = body.trailId
     } else {
@@ -72,6 +117,11 @@ export const handler = async (
         ReturnValues: 'ALL_NEW',
       }),
     )
+
+    if (prevSagaId !== nextSagaId) {
+      if (prevSagaId) await removeThattrFromSagaOrder(pk, prevSagaId, id)
+      if (nextSagaId) await appendThattrToSagaOrder(pk, nextSagaId, id)
+    }
 
     return toApiGatewayResponse(ok(result.Attributes))
   } catch (err) {

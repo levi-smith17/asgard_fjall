@@ -35,10 +35,10 @@ import {
 import { useAuth } from '@/hooks/use-auth'
 import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
 import { useTerminology, useTerms } from '@/hooks/use-terminology'
+import { fetchDagatalEvents } from '@/lib/dagatal-api'
 import {
   createFjallWaypoint,
   deleteFjallWaypoint,
-  fetchFjallItineraryEvents,
   fetchFjallLogs,
   fetchFjallMarkers,
   fetchProvisionsSummary,
@@ -197,9 +197,10 @@ function HlidskjalfSnapshots() {
   })
 
   const itineraryQuery = useQuery({
-    queryKey: ['fjall-snapshot-itinerary'],
-    queryFn: () => fetchFjallItineraryEvents(),
+    queryKey: ['dagatal-events'],
+    queryFn: () => fetchDagatalEvents(),
     enabled: configured,
+    retry: false,
     staleTime: 60_000,
   })
 
@@ -225,7 +226,10 @@ function HlidskjalfSnapshots() {
   const cacheTotalSpent = cacheUtilization.reduce((sum, item) => sum + item.spent, 0)
 
   const upcomingEvents = (itineraryQuery.data?.events ?? [])
-    .filter((event) => event.startDate >= new Date())
+    .filter((event) => {
+      const end = event.endDate ?? event.startDate
+      return end >= new Date()
+    })
     .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
     .slice(0, 3)
 
@@ -350,6 +354,8 @@ function HlidskjalfSnapshots() {
                   <div className="h-3 w-full animate-pulse rounded bg-muted" />
                   <div className="h-3 w-3/5 animate-pulse rounded bg-muted" />
                 </div>
+              ) : itineraryQuery.isError ? (
+                <p className="text-xs text-muted-foreground">Couldn’t load calendar</p>
               ) : upcomingEvents.length === 0 ? (
                 <p className="text-xs text-muted-foreground">No upcoming events</p>
               ) : (
