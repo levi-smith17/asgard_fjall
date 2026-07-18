@@ -2,27 +2,30 @@
 
 > *In Norse myth, a fjall is a mountain — a high place open to the sky. This is the public face of Asgard: the same hall, without the locked armory of the homelab.*
 
-**Asgard Fjall** is the public, personal Asgard-skinned client. It exposes personal productivity apps (journal, profile, provisions, planner, and related surfaces) behind an Asgard shell — and intentionally excludes the private homelab control plane (**RealmOps**).
+**Asgard Fjall** is the public, personal Asgard-skinned client. It exposes personal productivity apps (journal, profile, genealogy, planner, and related surfaces) behind an Asgard shell — and intentionally excludes the private homelab control plane (**RealmOps** / **HeimrOps**).
 
-Private companion: [`levi-smith17/asgard`](https://github.com/levi-smith17/asgard) (RealmOps). Product boundary brief lives there as `docs/asgard-fjall.md`.
+Private companion: [`levi-smith17/asgard`](https://github.com/levi-smith17/asgard) (RealmOps in Standard labels, HeimrOps in Asgard labels). Product boundary brief lives there as `docs/asgard-fjall.md`.
 
 ---
 
 ## What Fjall Does
 
-Fjall gathers personal apps into one cohesive interface with Asgard branding and terminology — without DNS, DHCP, firewall, Pi-hole, Kubernetes, NAS, VMs, or other RealmOps services.
+Fjall gathers personal apps into one cohesive interface with Asgard branding and terminology — without DNS, DHCP, firewall, Pi-hole, Kubernetes, NAS, VMs, or other RealmOps / HeimrOps services.
 
 | Surface | Role |
 |---|---|
-| Basecamp / **Hlidskjalf** | Home — Summit-style cards, snapshots, Stjörnur entry, Laufar rail |
+| Basecamp / **Hlidskjalf** | Home — cards, snapshots, Stjörnur entry, Laufar rail |
 | Finance / **Audr** | Expenses, subscriptions, budgets |
 | Calendar / **Dagatal** | Itinerary calendar |
-| Resume / **Ordstirr** | Public profile editor + live public views |
+| Genealogy / **Nidjatal** | Kin graph with people, parents, partners, and bloodlines |
+| Profile / **Ordstirr** | Public profile editor + live public views |
 | Notes / **Sögur** | First-class Sagas, ordered Thaettir, standalone notes, and a Notion-like block editor |
 | Starfield / **Stjörnur** | Outpost network planner |
 | Messages / **Sendibod** | Contact-form signals |
 | Settings / **Thing** | Account, privacy, itinerary preferences |
 | **Völundr** | External Lattic Forge link |
+
+Authenticated app routes include `/hlidskjalf`, `/audr`, `/dagatal`, `/nidjatal`, `/ordstirr`, `/sogur`, `/stjornur`, `/sendibod`, and `/thing`. Sögur selection uses `/sogur?saga=<id>&thattr=<id>`.
 
 **Out of scope forever:** Heimdall, Urdarbrunnr, The Norns, Jörmungandr, Mimir, Valhalla, Gladsheim, Ratatoskr, Vör, Huginn, Gjallarhorn, Skidbladnir, credentials/alerts cache Thing sections, Spjold board ops. (Skidbladnir’s Fjall deploy tab lives only on private Asgard.)
 
@@ -37,7 +40,8 @@ A sidebar toggle cycles UI labels (**Standard** ↔ **Asgard** by default on Fja
 - **[React Router v7](https://reactrouter.com/)** — client-side routing
 - **[TanStack Query](https://tanstack.com/query)** — data fetching and cache management
 - **[Tailwind CSS v4](https://tailwindcss.com/)** — styling, shared studio two-tier layout with RealmOps
-- **[Tiptap](https://tiptap.dev/)** + **dnd-kit** — Notion-like rich documents, slash commands, block drag-and-drop, and Saga ordering
+- **[Tiptap](https://tiptap.dev/)** — Notion-like rich documents, slash commands, formatting bubbles, images, and block drag handles
+- **[dnd-kit](https://dndkit.com/)** — Saga overview and Thattr order drag-and-drop
 
 ### Data & auth
 - **Fjall API** (`api.asgard.levismith.us`) — browser calls the API directly with passkey session Bearer (no RealmOps BFF / SSM token in the static site)
@@ -48,7 +52,7 @@ A sidebar toggle cycles UI labels (**Standard** ↔ **Asgard** by default on Fja
 - **Terraform** → static web, passkey auth, S3, CloudFront, ACM, and Route53 (`infrastructure/terraform/prod`)
 - **Terragrunt** → Fjall API data, media, HTTP API Gateway, Lambda functions, and custom domains (`infrastructure/terragrunt/prod`)
 - **GitHub Actions** — build/deploy web and update existing Lambda code on `main`
-- **[Turborepo](https://turbo.build/)** + **[pnpm](https://pnpm.io/)** — workspace tooling
+- **[pnpm](https://pnpm.io/)** workspaces — monorepo tooling
 
 ---
 
@@ -73,39 +77,42 @@ asgard_fjall/
 
 Source of truth: `apps/web/src/lib/terminology.ts`. Sidebar subtitle is **Fjall**.
 
-### Legacy Summit labels
+### UI labels
 
-| Key | Standard | Legacy Summit | Asgard |
+The live UI toggles only **Standard ↔ Asgard**. Older Summit names remain useful as historical API vocabulary.
+
+| Key | Standard | Asgard | Historical Summit |
 |---|---|---|---|
-| Finance | Finance | Provisions | Audr |
-| Calendar | Calendar | Itinerary | Dagatal |
-| Messages | Messages | Signals | Sendibod |
-| Resume / profile | Resume | Manifest | Ordstirr |
-| Notes | Notebooks / Notebook | Logbook / Log | Sögur / Saga |
-| Note pages | Notes / Note | Pages / Page | Thaettir / Thattr |
-| Starfield | Starfield | Night Sky | Stjörnur |
+| Finance | Finance | Audr | Provisions |
+| Calendar | Calendar | Dagatal | Itinerary |
+| Messages | Messages | Sendibod | Signals |
+| Profile | Profile | Ordstirr | Manifest |
+| Notes | Notebooks / Notebook | Sögur / Saga | Logbook / Log |
+| Note pages | Notes / Note | Thaettir / Thattr | Pages / Page |
+| Genealogy | Genealogy | Nidjatal | — |
+| Starfield | Starfield | Stjörnur | Night Sky |
 
 ### Ordstirr / profile sections (Asgard names)
 
-Rót, Leidangr, Thjalfun, Bunadr, Vördur, Tindar, Lidsinni, Sjalfsmynd, Foruneyti, Bautasteinn, Ferd Min — with Standard résumé labels and legacy Summit labels in their respective modes.
+Rót, Leidangr, Thjalfun, Bunadr, Vördur, Tindar, Lidsinni, Sjalfsmynd, Foruneyti, Bautasteinn, Ferd Min — with Standard profile labels in Standard mode.
 
 ### Basecamp catalog
 
-| Key | Standard | Legacy Summit | Asgard |
+| Key | Standard | Asgard | Historical Summit |
 |---|---|---|---|
-| Tasks | Tasks | Waypoints | Laufar |
-| Groups | Groups | Trails | Greinar |
-| Tags | Tags | Markers | Rúnir |
+| Tasks | Tasks | Laufar | Waypoints |
+| Groups | Groups | Greinar | Trails |
+| Tags | Tags | Rúnir | Markers |
 
 ### Sögur data model
 
 - A **Saga** is a first-class container with its own name, Grein, Rúnir, and ordered list of Thaettir.
 - A **Thattr** can belong to a Saga or remain standalone. A Saga-owned Thattr inherits its Saga's Grein while retaining its own content, Rúnir, and optional Lauf.
-- The editor stores ordinary Tiptap HTML and presents a transparent, Notion-like canvas with slash commands, H1–H3, lists, quotes, code, dividers, images, contextual formatting, and block drag-and-drop.
+- The editor stores ordinary Tiptap HTML and presents a transparent, Notion-like canvas with slash commands, H1–H3, lists, quotes, code, dividers, images, contextual formatting, and block drag handles. Legacy block JSON is converted to HTML when opened.
 - Older records grouped only by `trailId` are synthesized into legacy Sagas client-side and materialized as real `SAGA#` records when edited or reordered.
 - Saga deletion detaches its Thaettir instead of deleting them.
 
-The API exposes `GET/POST /sogur/sagas`, `PUT/DELETE /sogur/sagas/{id}`, and `PUT /sogur/sagas/{id}/reorder`, alongside the existing `/sogur` Thattr routes.
+The API exposes `GET/POST /sogur/sagas`, `PUT/DELETE /sogur/sagas/{id}`, and `PUT /sogur/sagas/{id}/reorder`, alongside the existing `/sogur` Thattr routes. Browser `/logs…` calls are remapped to `/sogur…` at the fetch boundary.
 
 ---
 
@@ -132,7 +139,11 @@ See `docs/fjall-api-auth.md`.
 
 ```bash
 pnpm install
-pnpm dev
+pnpm dev          # web
+pnpm dev:auth     # local passkey auth on :3002
+pnpm build
+pnpm lint
+pnpm test
 ```
 
 Web defaults to the Vite dev server (typically `http://localhost:5173`). Overlay API / auth values with `VITE_*` env vars as needed — never commit secrets.
@@ -176,7 +187,7 @@ Skidbladnir on private Asgard watches the Fjall repo for release visibility.
 
 ## Project Status
 
-Fjall is actively maintained as the public twin of Asgard RealmOps. It is a personal project and not open for contributions at this time. Explore the codebase or reach out via [levismith.us](https://levismith.us).
+Fjall is actively maintained as the public twin of Asgard RealmOps / HeimrOps. It is a personal project and not open for contributions at this time. Explore the codebase or reach out via [levismith.us](https://levismith.us).
 
 ---
 
