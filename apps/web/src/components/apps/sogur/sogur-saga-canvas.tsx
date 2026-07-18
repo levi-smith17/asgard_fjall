@@ -47,7 +47,7 @@ function SortableThattrCard({
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        'group relative flex min-h-32 flex-col rounded-xl border border-border bg-card/80 p-3 shadow-sm transition-colors hover:border-primary/50',
+        'group relative flex min-h-32 min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card/80 p-3 shadow-sm transition-colors hover:border-primary/50',
         isDragging && 'z-10 opacity-60 shadow-lg',
       )}
     >
@@ -63,8 +63,8 @@ function SortableThattrCard({
             <GripVertical className="h-3.5 w-3.5" aria-hidden />
           </button>
         </ToolbarTooltip>
-        <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left">
-          <span className="truncate text-sm font-semibold">{thattr.title}</span>
+        <button type="button" onClick={onOpen} className="min-w-0 flex-1 overflow-hidden text-left">
+          <span className="block truncate text-sm font-semibold">{thattr.title}</span>
         </button>
         <ToolbarTooltip label={`Edit ${terms.thattrSingular.toLowerCase()}`}>
           <button

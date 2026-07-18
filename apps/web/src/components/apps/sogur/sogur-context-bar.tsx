@@ -112,7 +112,7 @@ export function SogurDocumentBar({
 }) {
   const terms = useTerms()
   const activeIndex = thaettir.findIndex((thattr) => thattr.id === activeThattrId)
-  const showSwitcher = thaettir.length > 0
+  const showSwitcher = Boolean(activeThattrId) && thaettir.length > 0
 
   return (
     <div className={STUDIO_CONTEXT_BAR_CLASS} role="toolbar" aria-label={`${terms.notes} context`}>

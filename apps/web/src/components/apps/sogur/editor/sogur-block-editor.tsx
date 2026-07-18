@@ -1,40 +1,40 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  closestCenter,
-  type DragEndEvent,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
-import {
-  SortableContext,
-  arrayMove,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import Image from '@tiptap/extension-image'
+import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import TextAlign from '@tiptap/extension-text-align'
-import Underline from '@tiptap/extension-underline'
+import { NodeRange } from '@tiptap/extension-node-range'
+import DragHandle from '@tiptap/extension-drag-handle-react'
 import { EditorContent, type Editor, useEditor } from '@tiptap/react'
+import { BubbleMenu } from '@tiptap/react/menus'
 import StarterKit from '@tiptap/starter-kit'
-import { GripVertical, ImageIcon, Plus } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import {
-  createSogurBlock,
-  parseSogurBlocks,
-  serializeSogurBlocks,
-  type SogurBlock,
-  type SogurBlockType,
-} from '@/lib/sogur-blocks'
-import { SogurBlockInsertMenu } from './sogur-block-insert-menu'
-import { SogurBlockToolbar } from './sogur-block-toolbar'
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  Bold,
+  Code2,
+  GripVertical,
+  Heading1,
+  Heading2,
+  Heading3,
+  ImageIcon,
+  Italic,
+  Link as LinkIcon,
+  List,
+  ListOrdered,
+  Minus,
+  Pilcrow,
+  Plus,
+  Quote,
+  Strikethrough,
+  Underline as UnderlineIcon,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { parseSogurBlocks, sogurBlocksToHtml } from '@/lib/sogur-blocks'
+import { SogurBlockInsertMenu, type SogurSlashCommand } from './sogur-block-insert-menu'
 
 export type SogurBlockEditorProps = {
   value: string
@@ -43,245 +43,163 @@ export type SogurBlockEditorProps = {
   className?: string
 }
 
-function TextBlockEditor({
-  block,
-  onChange,
-  onFocus,
-  onDestroy,
-  onSlashInsert,
-}: {
-  block: Extract<SogurBlock, { type: 'rich-text' | 'heading' | 'quote' | 'code' }>
-  onChange: (content: string) => void
-  onFocus: (editor: Editor) => void
-  onDestroy: (editor: Editor) => void
-  onSlashInsert: () => void
-}) {
-  const onChangeRef = useRef(onChange)
-  const onFocusRef = useRef(onFocus)
-  const onDestroyRef = useRef(onDestroy)
-  const onSlashInsertRef = useRef(onSlashInsert)
-  onChangeRef.current = onChange
-  onFocusRef.current = onFocus
-  onDestroyRef.current = onDestroy
-  onSlashInsertRef.current = onSlashInsert
-
-  const extensions = useMemo(
-    () => [
-      StarterKit.configure({
-        heading: block.type === 'heading' ? { levels: [1, 2, 3] } : false,
-        bulletList: block.type === 'rich-text' ? {} : false,
-        orderedList: block.type === 'rich-text' ? {} : false,
-        listItem: block.type === 'rich-text' ? {} : false,
-        horizontalRule: false,
-      }),
-      Underline,
-      Image.configure({ inline: false, allowBase64: false }),
-      Placeholder.configure({
-        placeholder:
-          block.type === 'heading'
-            ? 'Section heading…'
-            : block.type === 'quote'
-              ? 'Quote…'
-              : block.type === 'code'
-                ? 'Code…'
-                : "Write, or press '/' for blocks…",
-      }),
-      TextAlign.configure({ types: ['heading', 'paragraph'] }),
-    ],
-    [block.type],
-  )
-
-  const editor = useEditor(
-    {
-      immediatelyRender: false,
-      extensions,
-      content: block.content,
-      onUpdate: ({ editor: activeEditor }) => onChangeRef.current(activeEditor.getHTML()),
-      onFocus: ({ editor: activeEditor }) => onFocusRef.current(activeEditor),
-      editorProps: {
-        attributes: {
-          class: cn(
-            'tiptap min-h-7 w-full outline-none',
-            'prose max-w-none prose-neutral dark:prose-invert',
-            'prose-p:my-1 prose-li:my-0 prose-img:rounded-lg',
-            block.type === 'heading' &&
-              'prose-headings:my-0 prose-headings:text-3xl prose-headings:font-semibold',
-            block.type === 'quote' && 'prose-blockquote:my-0 prose-blockquote:text-lg',
-            block.type === 'code' && 'prose-pre:my-0 prose-pre:rounded-lg',
-          ),
-        },
-        handleKeyDown: (view, event) => {
-          if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) return false
-          const { $from } = view.state.selection
-          const before = $from.parent.textBetween(0, $from.parentOffset, undefined, '\ufffc')
-          if (before.length > 0 && !/\s$/.test(before)) return false
-          event.preventDefault()
-          onSlashInsertRef.current()
-          return true
-        },
-      },
-    },
-    [block.type],
-  )
-
-  useEffect(() => {
-    if (!editor || editor.getHTML() === block.content) return
-    editor.commands.setContent(block.content, { emitUpdate: false })
-  }, [block.content, editor])
-
-  useEffect(() => {
-    if (!editor) return
-    return () => onDestroyRef.current(editor)
-  }, [editor])
-
-  return editor ? <EditorContent editor={editor} /> : <div className="h-8 animate-pulse rounded bg-muted" />
+/** Convert persisted block JSON or legacy HTML into TipTap HTML. */
+export function sogurValueToEditorHtml(value: string | null | undefined): string {
+  const source = value ?? ''
+  const trimmed = source.trim()
+  if (!trimmed) return '<p></p>'
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+    const html = sogurBlocksToHtml(parseSogurBlocks(source)).trim()
+    return html || '<p></p>'
+  }
+  return source
 }
 
-function ImageBlockEditor({
-  block,
-  onChange,
-  onFocus,
+function ToolbarButton({
+  label,
+  active = false,
+  disabled = false,
+  onClick,
+  children,
 }: {
-  block: Extract<SogurBlock, { type: 'image' }>
-  onChange: (block: Extract<SogurBlock, { type: 'image' }>) => void
-  onFocus: () => void
+  label: string
+  active?: boolean
+  disabled?: boolean
+  onClick: () => void
+  children: React.ReactNode
 }) {
   return (
-    <div className="space-y-3">
-      {block.src ? (
-        <img
-          src={block.src}
-          alt={block.alt}
-          className="max-h-[32rem] w-full rounded-lg border border-border object-contain"
-        />
-      ) : (
-        <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 text-muted-foreground">
-          <ImageIcon className="h-8 w-8" />
-        </div>
+    <button
+      type="button"
+      aria-label={label}
+      aria-pressed={active || undefined}
+      title={label}
+      disabled={disabled}
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={onClick}
+      className={cn(
+        'flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-35',
+        active && 'bg-muted text-foreground',
       )}
-      <div className="grid gap-2 sm:grid-cols-2">
-        <input
-          type="url"
-          value={block.src}
-          placeholder="Image URL"
-          aria-label="Image URL"
-          onFocus={onFocus}
-          onChange={(event) => onChange({ ...block, src: event.target.value })}
-          className="h-9 rounded-md border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-        />
-        <input
-          value={block.alt}
-          placeholder="Alt text"
-          aria-label="Image alt text"
-          onFocus={onFocus}
-          onChange={(event) => onChange({ ...block, alt: event.target.value })}
-          className="h-9 rounded-md border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-        />
-      </div>
-      <input
-        value={block.caption ?? ''}
-        placeholder="Caption (optional)"
-        aria-label="Image caption"
-        onFocus={onFocus}
-        onChange={(event) => onChange({ ...block, caption: event.target.value })}
-        className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-      />
-    </div>
-  )
-}
-
-function SortableSogurBlock({
-  block,
-  index,
-  insertOpen,
-  onOpenInsert,
-  onInsert,
-  onChange,
-  onEditorFocus,
-  onEditorDestroy,
-  activeGutterIndex,
-  onRowPointerEnter,
-  onRowRef,
-  onRegisterFloatingGutter,
-}: {
-  block: SogurBlock
-  index: number
-  insertOpen: boolean
-  onOpenInsert: () => void
-  onInsert: (type: SogurBlockType) => void
-  onChange: (block: SogurBlock) => void
-  onEditorFocus: (editor: Editor | null, type: SogurBlockType | null) => void
-  onEditorDestroy: (editor: Editor) => void
-  activeGutterIndex: number
-  onRowPointerEnter: (index: number) => void
-  onRowRef: (index: number, el: HTMLDivElement | null) => void
-  onRegisterFloatingGutter: (
-    registration: {
-      insert: () => void
-      dragAttributes: ReturnType<typeof useSortable>['attributes']
-      dragListeners: ReturnType<typeof useSortable>['listeners']
-    } | null,
-  ) => void
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: block.id,
-  })
-  const gutterActive = index === activeGutterIndex
-  const attributesRef = useRef(attributes)
-  const listenersRef = useRef(listeners)
-  attributesRef.current = attributes
-  listenersRef.current = listeners
-
-  useEffect(() => {
-    if (!gutterActive) return
-    onRegisterFloatingGutter({
-      insert: onOpenInsert,
-      dragAttributes: attributesRef.current,
-      dragListeners: listenersRef.current,
-    })
-    return () => onRegisterFloatingGutter(null)
-  }, [gutterActive, onOpenInsert, onRegisterFloatingGutter])
-
-  return (
-    <div
-      ref={(el) => {
-        setNodeRef(el)
-        onRowRef(index, el)
-      }}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn('group relative', isDragging && 'z-20 opacity-70')}
-      onPointerEnter={() => onRowPointerEnter(index)}
     >
-      {/* Spacer reserves Lattic-style gutter width while the floating controls slide. */}
-      <div className="flex gap-1.5">
-        <div className="w-11 shrink-0" aria-hidden />
-        <div className="min-w-0 flex-1 rounded-md px-2 py-1 hover:bg-muted/10">
-          {block.type === 'divider' ? (
-            <hr className="my-5 border-border" />
-          ) : block.type === 'image' ? (
-            <ImageBlockEditor
-              block={block}
-              onChange={onChange}
-              onFocus={() => onEditorFocus(null, null)}
-            />
-          ) : (
-            <TextBlockEditor
-              block={block}
-              onChange={(content) => onChange({ ...block, content })}
-              onFocus={(editor) => onEditorFocus(editor, block.type)}
-              onDestroy={onEditorDestroy}
-              onSlashInsert={onOpenInsert}
-            />
-          )}
-        </div>
-      </div>
+      {children}
+    </button>
+  )
+}
 
-      {insertOpen && (
-        <div className="relative ml-[3.125rem]">
-          <SogurBlockInsertMenu onSelect={onInsert} onClose={onOpenInsert} />
-        </div>
-      )}
-    </div>
+function FormattingBubble({ editor }: { editor: Editor }) {
+  const setLink = () => {
+    const previous = editor.getAttributes('link').href as string | undefined
+    const href = window.prompt('Link URL', previous ?? 'https://')
+    if (href === null) return
+    if (!href.trim()) editor.chain().focus().extendMarkRange('link').unsetLink().run()
+    else editor.chain().focus().extendMarkRange('link').setLink({ href: href.trim() }).run()
+  }
+
+  return (
+    <BubbleMenu
+      editor={editor}
+      options={{ placement: 'top', offset: 8 }}
+      shouldShow={({ editor: active, state }) => {
+        const { empty } = state.selection
+        return active.isEditable && !empty && !active.isActive('codeBlock')
+      }}
+      className="flex items-center gap-0.5 rounded-lg border border-border bg-card/95 p-1 shadow-lg backdrop-blur"
+    >
+      <ToolbarButton
+        label="Bold"
+        active={editor.isActive('bold')}
+        onClick={() => editor.chain().focus().toggleBold().run()}
+      >
+        <Bold className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Italic"
+        active={editor.isActive('italic')}
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+      >
+        <Italic className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Underline"
+        active={editor.isActive('underline')}
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
+      >
+        <UnderlineIcon className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Strikethrough"
+        active={editor.isActive('strike')}
+        onClick={() => editor.chain().focus().toggleStrike().run()}
+      >
+        <Strikethrough className="h-4 w-4" />
+      </ToolbarButton>
+      <span className="mx-0.5 h-5 w-px bg-border" aria-hidden />
+      <ToolbarButton
+        label="Heading 1"
+        active={editor.isActive('heading', { level: 1 })}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+      >
+        <Heading1 className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Heading 2"
+        active={editor.isActive('heading', { level: 2 })}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+      >
+        <Heading2 className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Heading 3"
+        active={editor.isActive('heading', { level: 3 })}
+        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+      >
+        <Heading3 className="h-4 w-4" />
+      </ToolbarButton>
+      <span className="mx-0.5 h-5 w-px bg-border" aria-hidden />
+      <ToolbarButton
+        label="Bulleted list"
+        active={editor.isActive('bulletList')}
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+      >
+        <List className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Numbered list"
+        active={editor.isActive('orderedList')}
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+      >
+        <ListOrdered className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Link"
+        active={editor.isActive('link')}
+        onClick={setLink}
+      >
+        <LinkIcon className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Align left"
+        active={editor.isActive({ textAlign: 'left' })}
+        onClick={() => editor.chain().focus().setTextAlign('left').run()}
+      >
+        <AlignLeft className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Align center"
+        active={editor.isActive({ textAlign: 'center' })}
+        onClick={() => editor.chain().focus().setTextAlign('center').run()}
+      >
+        <AlignCenter className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        label="Align right"
+        active={editor.isActive({ textAlign: 'right' })}
+        onClick={() => editor.chain().focus().setTextAlign('right').run()}
+      >
+        <AlignRight className="h-4 w-4" />
+      </ToolbarButton>
+    </BubbleMenu>
   )
 }
 
@@ -291,204 +209,286 @@ export function SogurBlockEditor({
   onImageUpload,
   className,
 }: SogurBlockEditorProps) {
-  const [blocks, setBlocks] = useState<SogurBlock[]>(() => parseSogurBlocks(value).blocks)
-  const [insertAfterId, setInsertAfterId] = useState<string | null>(null)
-  const [activeEditor, setActiveEditor] = useState<Editor | null>(null)
-  const [activeBlockType, setActiveBlockType] = useState<SogurBlockType | null>(null)
-  const [hoveredBlockIndex, setHoveredBlockIndex] = useState<number | null>(null)
-  const [focusedBlockIndex, setFocusedBlockIndex] = useState<number | null>(null)
-  const [gutterTop, setGutterTop] = useState(0)
-  const [floatingGutter, setFloatingGutter] = useState<{
-    insert: () => void
-    dragAttributes: ReturnType<typeof useSortable>['attributes']
-    dragListeners: ReturnType<typeof useSortable>['listeners']
-  } | null>(null)
+  const [slashOpen, setSlashOpen] = useState(false)
+  const [slashQuery, setSlashQuery] = useState('')
+  const [slashPos, setSlashPos] = useState<{ top: number; left: number } | null>(null)
   const lastEmittedRef = useRef<string | null>(null)
-  const listRef = useRef<HTMLDivElement>(null)
-  const rowRefs = useRef<Map<number, HTMLDivElement>>(new Map())
+  const editorShellRef = useRef<HTMLDivElement>(null)
 
-  const activeGutterIndex = hoveredBlockIndex ?? focusedBlockIndex ?? 0
+  const openSlashMenu = useCallback((editorInstance: Editor, query = '') => {
+    const coords = editorInstance.view.coordsAtPos(editorInstance.state.selection.from)
+    const shell = editorShellRef.current?.getBoundingClientRect()
+    if (shell) {
+      setSlashPos({
+        top: coords.bottom - shell.top + 8,
+        left: Math.max(0, coords.left - shell.left),
+      })
+    } else {
+      setSlashPos({ top: 96, left: 48 })
+    }
+    setSlashQuery(query)
+    setSlashOpen(true)
+  }, [])
 
-  useEffect(() => {
-    if (value === lastEmittedRef.current) return
-    setBlocks(parseSogurBlocks(value).blocks)
-    setActiveEditor(null)
-    setActiveBlockType(null)
-  }, [value])
+  const openSlashMenuRef = useRef(openSlashMenu)
+  openSlashMenuRef.current = openSlashMenu
+  const slashOpenRef = useRef(slashOpen)
+  slashOpenRef.current = slashOpen
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
 
-  const commitBlocks = useCallback(
-    (next: SogurBlock[]) => {
-      setBlocks(next)
-      const serialized = serializeSogurBlocks(next)
-      lastEmittedRef.current = serialized
-      onChange(serialized)
+  const insertImage = useCallback(
+    async (editor: Editor) => {
+      if (onImageUpload) {
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = 'image/*'
+        input.onchange = async () => {
+          const file = input.files?.[0]
+          if (!file) return
+          const src = await onImageUpload(file)
+          if (src) editor.chain().focus().setImage({ src, alt: file.name }).run()
+        }
+        input.click()
+        return
+      }
+      const src = window.prompt('Image URL', 'https://')
+      if (src?.trim()) editor.chain().focus().setImage({ src: src.trim() }).run()
     },
-    [onChange],
+    [onImageUpload],
   )
 
-  const insertAfter = (afterId: string | null, type: SogurBlockType) => {
-    const block = createSogurBlock(type)
-    const index = afterId ? blocks.findIndex((candidate) => candidate.id === afterId) + 1 : blocks.length
-    const next = [...blocks]
-    next.splice(index < 0 ? next.length : index, 0, block)
-    commitBlocks(next)
-    setInsertAfterId(null)
-  }
-
-  const measureGutterTop = useCallback(() => {
-    const row = rowRefs.current.get(activeGutterIndex)
-    if (!row) return
-    const next = row.offsetTop + Math.min(20, row.offsetHeight / 2)
-    setGutterTop((prev) => (Math.abs(prev - next) < 0.5 ? prev : next))
-  }, [activeGutterIndex])
-
-  useEffect(() => {
-    measureGutterTop()
-  }, [measureGutterTop, blocks.length, activeGutterIndex])
-
-  useEffect(() => {
-    const list = listRef.current
-    if (!list) return
-    const ro = new ResizeObserver(() => measureGutterTop())
-    ro.observe(list)
-    for (const row of rowRefs.current.values()) ro.observe(row)
-    return () => ro.disconnect()
-  }, [measureGutterTop, blocks.length])
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  const slashCommands: SogurSlashCommand[] = useMemo(
+    () => [
+      {
+        id: 'text',
+        label: 'Text',
+        description: 'Plain paragraph',
+        icon: Pilcrow,
+        keywords: ['paragraph', 'body'],
+        run: (editor) => editor.chain().focus().setParagraph().run(),
+      },
+      {
+        id: 'h1',
+        label: 'Heading 1',
+        description: 'Large section heading',
+        icon: Heading1,
+        keywords: ['h1', 'title'],
+        run: (editor) => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+      },
+      {
+        id: 'h2',
+        label: 'Heading 2',
+        description: 'Medium section heading',
+        icon: Heading2,
+        keywords: ['h2', 'subtitle'],
+        run: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+      },
+      {
+        id: 'h3',
+        label: 'Heading 3',
+        description: 'Small section heading',
+        icon: Heading3,
+        keywords: ['h3'],
+        run: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
+      },
+      {
+        id: 'bullet',
+        label: 'Bulleted list',
+        description: 'Create a simple list',
+        icon: List,
+        keywords: ['ul', 'unordered'],
+        run: (editor) => editor.chain().focus().toggleBulletList().run(),
+      },
+      {
+        id: 'ordered',
+        label: 'Numbered list',
+        description: 'Create a numbered list',
+        icon: ListOrdered,
+        keywords: ['ol', 'ordered'],
+        run: (editor) => editor.chain().focus().toggleOrderedList().run(),
+      },
+      {
+        id: 'quote',
+        label: 'Quote',
+        description: 'Capture a quotation',
+        icon: Quote,
+        keywords: ['blockquote'],
+        run: (editor) => editor.chain().focus().toggleBlockquote().run(),
+      },
+      {
+        id: 'code',
+        label: 'Code',
+        description: 'Code block',
+        icon: Code2,
+        keywords: ['codeblock', 'pre'],
+        run: (editor) => editor.chain().focus().toggleCodeBlock().run(),
+      },
+      {
+        id: 'divider',
+        label: 'Divider',
+        description: 'Visual separator',
+        icon: Minus,
+        keywords: ['hr', 'separator', 'line'],
+        run: (editor) => editor.chain().focus().setHorizontalRule().run(),
+      },
+      {
+        id: 'image',
+        label: 'Image',
+        description: 'Upload or embed an image',
+        icon: ImageIcon,
+        keywords: ['img', 'media', 'photo'],
+        run: (editor) => {
+          void insertImage(editor)
+        },
+      },
+    ],
+    [insertImage],
   )
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    const from = blocks.findIndex((block) => block.id === active.id)
-    const to = blocks.findIndex((block) => block.id === over.id)
-    if (from >= 0 && to >= 0) commitBlocks(arrayMove(blocks, from, to))
-  }
-
-  const registerFloatingGutter = useCallback(
-    (
-      registration: {
-        insert: () => void
-        dragAttributes: ReturnType<typeof useSortable>['attributes']
-        dragListeners: ReturnType<typeof useSortable>['listeners']
-      } | null,
-    ) => {
-      setFloatingGutter(registration)
-    },
+  const extensions = useMemo(
+    () => [
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3] },
+        // StarterKit v3 already includes Underline — do not add it again.
+      }),
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        HTMLAttributes: { class: 'text-primary underline underline-offset-2' },
+      }),
+      Image.configure({ inline: false, allowBase64: false }),
+      Placeholder.configure({
+        placeholder: ({ node }) => {
+          if (node.type.name === 'heading') return 'Heading'
+          return "Type '/' for commands…"
+        },
+      }),
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      NodeRange,
+    ],
     [],
   )
 
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions,
+    content: sogurValueToEditorHtml(value),
+    editorProps: {
+      attributes: {
+        class: cn(
+          'tiptap sogur-notion-editor min-h-[60vh] w-full max-w-none outline-none',
+          'prose prose-neutral dark:prose-invert',
+          'prose-headings:font-semibold prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl',
+          'prose-p:my-2 prose-li:my-0.5 prose-img:rounded-lg',
+          'prose-blockquote:border-l-2 prose-blockquote:border-border prose-blockquote:pl-4',
+        ),
+      },
+      handleKeyDown: (_view, event) => {
+        if (event.key === 'Escape' && slashOpenRef.current) {
+          setSlashOpen(false)
+          return true
+        }
+        return false
+      },
+    },
+    onUpdate: ({ editor: active }) => {
+      const html = active.getHTML()
+      lastEmittedRef.current = html
+      onChangeRef.current(html)
+
+      const { $from } = active.state.selection
+      const text = $from.parent.textBetween(0, $from.parentOffset, undefined, '\ufffc')
+      const match = text.match(/(?:^|\s)\/([^/\n]*)$/)
+      if (match) {
+        openSlashMenuRef.current(active, match[1] ?? '')
+      } else if (slashOpenRef.current) {
+        setSlashOpen(false)
+      }
+    },
+  })
+
+  useEffect(() => {
+    if (!editor) return
+    if (value === lastEmittedRef.current) return
+    const html = sogurValueToEditorHtml(value)
+    lastEmittedRef.current = html
+    editor.commands.setContent(html, { emitUpdate: false })
+  }, [editor, value])
+
+  const runSlashCommand = useCallback(
+    (command: SogurSlashCommand) => {
+      if (!editor) return
+      const { $from } = editor.state.selection
+      const text = $from.parent.textBetween(0, $from.parentOffset, undefined, '\ufffc')
+      const match = text.match(/(?:^|\s)(\/[^/\n]*)$/)
+      if (match) {
+        const from = $from.pos - match[1]!.length
+        editor.chain().focus().deleteRange({ from, to: $from.pos }).run()
+      }
+      command.run(editor)
+      setSlashOpen(false)
+      setSlashQuery('')
+    },
+    [editor],
+  )
+
   return (
-    <div className={cn('flex h-full min-h-0 flex-col overflow-hidden bg-transparent', className)}>
-      <SogurBlockToolbar
-        editor={activeEditor}
-        blockType={activeBlockType}
-        onImageUpload={onImageUpload}
-      />
-      <div
-        className="min-h-0 flex-1 overflow-y-auto bg-transparent"
-        onFocusCapture={(event) => {
-          if (event.target instanceof HTMLInputElement) {
-            setActiveEditor(null)
-            setActiveBlockType(null)
-          }
-        }}
-      >
-        <main className="mx-auto min-h-full w-full max-w-4xl bg-transparent px-8 py-20 sm:px-16 sm:py-24">
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={blocks.map((block) => block.id)} strategy={verticalListSortingStrategy}>
-              <div ref={listRef} className="relative space-y-3">
-                <div
-                  className="pointer-events-none absolute left-0 z-10 flex w-11 -translate-y-1/2 flex-row items-center justify-end gap-0.5 transition-[top] duration-200 ease-out"
-                  style={{ top: gutterTop }}
-                >
-                  <div className="pointer-events-auto flex flex-row items-center justify-end gap-0.5">
-                    <button
-                      type="button"
-                      data-sogur-insert-trigger
-                      aria-label="Insert block below"
-                      onPointerDown={(event) => event.stopPropagation()}
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        floatingGutter?.insert()
-                      }}
-                      className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Drag to reorder block"
-                      className="flex h-8 w-8 cursor-grab items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:cursor-grabbing"
-                      {...(floatingGutter?.dragAttributes ?? {})}
-                      {...(floatingGutter?.dragListeners ?? {})}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <GripVertical className="h-4 w-4" />
-                    </button>
-                  </div>
+    <div className={cn('relative flex h-full min-h-0 flex-col overflow-hidden bg-transparent', className)}>
+      <div className="min-h-0 flex-1 overflow-y-auto bg-transparent">
+        <div
+          ref={editorShellRef}
+          className="relative mx-auto min-h-full w-full max-w-3xl bg-transparent px-12 py-16 sm:px-16 sm:py-20"
+        >
+          {editor ? (
+            <>
+              <DragHandle
+                editor={editor}
+                computePositionConfig={{ placement: 'left-start', strategy: 'absolute' }}
+              >
+                <div className="flex items-center gap-0.5 rounded-md bg-transparent">
+                  <button
+                    type="button"
+                    aria-label="Insert block"
+                    className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => {
+                      editor.chain().focus().run()
+                      openSlashMenu(editor, '')
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Drag to reorder"
+                    className="flex h-7 w-7 cursor-grab items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:cursor-grabbing"
+                    onMouseDown={(event) => event.preventDefault()}
+                  >
+                    <GripVertical className="h-4 w-4" />
+                  </button>
                 </div>
+              </DragHandle>
 
-                {blocks.map((block, index) => (
-                  <SortableSogurBlock
-                    key={block.id}
-                    block={block}
-                    index={index}
-                    insertOpen={insertAfterId === block.id}
-                    onOpenInsert={() =>
-                      setInsertAfterId((current) => (current === block.id ? null : block.id))
-                    }
-                    onInsert={(type) => insertAfter(block.id, type)}
-                    onChange={(nextBlock) =>
-                      commitBlocks(
-                        blocks.map((candidate) =>
-                          candidate.id === nextBlock.id ? nextBlock : candidate,
-                        ),
-                      )
-                    }
-                    onEditorFocus={(editor, type) => {
-                      setActiveEditor(editor)
-                      setActiveBlockType(type)
-                      setFocusedBlockIndex(index)
-                    }}
-                    onEditorDestroy={(editor) => {
-                      setActiveEditor((current) => (current === editor ? null : current))
-                    }}
-                    activeGutterIndex={activeGutterIndex}
-                    onRowPointerEnter={setHoveredBlockIndex}
-                    onRowRef={(rowIndex, el) => {
-                      if (el) rowRefs.current.set(rowIndex, el)
-                      else rowRefs.current.delete(rowIndex)
-                    }}
-                    onRegisterFloatingGutter={registerFloatingGutter}
+              <EditorContent editor={editor} />
+              <FormattingBubble editor={editor} />
+
+              {slashOpen && slashPos ? (
+                <div
+                  className="absolute z-50"
+                  style={{ top: slashPos.top, left: slashPos.left }}
+                >
+                  <SogurBlockInsertMenu
+                    query={slashQuery}
+                    commands={slashCommands}
+                    onSelect={runSlashCommand}
+                    onClose={() => setSlashOpen(false)}
                   />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-
-          <div className="relative ml-11 mt-8">
-            <button
-              type="button"
-              data-sogur-insert-trigger
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={() => setInsertAfterId((current) => (current === '__tail__' ? null : '__tail__'))}
-              className="flex items-center gap-2 py-2 text-sm text-muted-foreground hover:text-foreground"
-            >
-              <Plus className="h-4 w-4" />
-              Add a block
-            </button>
-            {insertAfterId === '__tail__' && (
-              <SogurBlockInsertMenu
-                onSelect={(type) => insertAfter(null, type)}
-                onClose={() => setInsertAfterId(null)}
-              />
-            )}
-          </div>
-        </main>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+        </div>
       </div>
     </div>
   )

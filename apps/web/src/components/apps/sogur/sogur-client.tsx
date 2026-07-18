@@ -27,7 +27,6 @@ import {
 } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 import { toMarkerView, toTrailView, toWaypointView } from '@/lib/data-format'
-import { createSogurBlock, serializeSogurBlocks } from '@/lib/sogur-blocks'
 import {
   buildSogurWorkspace,
   isLegacySagaId,
@@ -61,7 +60,7 @@ type CatalogState = {
 }
 
 function emptyThattrContent(): string {
-  return serializeSogurBlocks([createSogurBlock('rich-text')])
+  return '<p></p>'
 }
 
 function toRailMarkers(
