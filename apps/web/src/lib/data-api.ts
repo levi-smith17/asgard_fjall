@@ -409,14 +409,27 @@ export async function fetchFjallTrails(): Promise<FjallTrail[]> {
   return fjallFetch<FjallTrail[]>('/trails')
 }
 
-export async function createFjallTrail(data: { name: string }): Promise<FjallTrailView> {
+export async function createFjallTrail(data: { name: string; hiddenPages?: string[] }): Promise<FjallTrailView> {
   const trail = await fjallFetch<FjallTrail>('/trails', { method: 'POST', body: JSON.stringify(data) })
-  return { id: extractEntityId(trail.sk), name: trail.name, createdAt: trail.createdAt }
+  return {
+    id: extractEntityId(trail.sk),
+    name: trail.name,
+    hiddenPages: Array.isArray(trail.hiddenPages) ? trail.hiddenPages : null,
+    createdAt: trail.createdAt,
+  }
 }
 
-export async function updateFjallTrail(id: string, data: { name: string }): Promise<FjallTrailView> {
+export async function updateFjallTrail(
+  id: string,
+  data: { name: string; hiddenPages?: string[] },
+): Promise<FjallTrailView> {
   const trail = await fjallFetch<FjallTrail>(`/trails/${id}`, { method: 'PUT', body: JSON.stringify(data) })
-  return { id: extractEntityId(trail.sk), name: trail.name, createdAt: trail.createdAt }
+  return {
+    id: extractEntityId(trail.sk),
+    name: trail.name,
+    hiddenPages: Array.isArray(trail.hiddenPages) ? trail.hiddenPages : null,
+    createdAt: trail.createdAt,
+  }
 }
 
 export async function deleteFjallTrail(id: string): Promise<void> {

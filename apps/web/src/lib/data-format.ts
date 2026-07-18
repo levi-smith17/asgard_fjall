@@ -13,6 +13,7 @@ export function toTrailView(trail: FjallTrail): FjallTrailView {
   return {
     id: extractEntityId(trail.sk),
     name: trail.name,
+    hiddenPages: Array.isArray(trail.hiddenPages) ? trail.hiddenPages : null,
     createdAt: trail.createdAt,
   }
 }

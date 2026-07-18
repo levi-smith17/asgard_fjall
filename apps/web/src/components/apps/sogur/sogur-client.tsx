@@ -27,6 +27,7 @@ import {
 } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 import { toMarkerView, toTrailView, toWaypointView } from '@/lib/data-format'
+import { isGreinVisibleOnPage } from '@/lib/grein-visibility'
 import {
   buildSogurWorkspace,
   isLegacySagaId,
@@ -137,6 +138,21 @@ export function SogurWorkspace() {
     () => (trailsQuery.data ?? []).map(toTrailView).sort((a, b) => a.name.localeCompare(b.name)),
     [trailsQuery.data],
   )
+  /** Greinar visible on Sögur per the per-Grein Page Visibility setting. */
+  const visibleTrails = useMemo(
+    () => trails.filter((trail) => isGreinVisibleOnPage(trail, 'sogur')),
+    [trails],
+  )
+  const hiddenSogurTrailIds = useMemo(
+    () =>
+      new Set(
+        trails.filter((trail) => !isGreinVisibleOnPage(trail, 'sogur')).map((trail) => trail.id),
+      ),
+    [trails],
+  )
+  useEffect(() => {
+    if (hiddenSogurTrailIds.has(greinFilterId)) setGreinFilterId(SOGUR_FILTER_ALL)
+  }, [greinFilterId, hiddenSogurTrailIds])
   const rawMarkers = markersQuery.data ?? []
   const markers = useMemo(
     () => rawMarkers.map(toMarkerView).sort((a, b) => a.name.localeCompare(b.name)),
@@ -186,34 +202,39 @@ export function SogurWorkspace() {
     : []
 
   const railItems = useMemo((): SogurRailItem[] => {
-    const sagaItems: SogurRailItem[] = workspace.sagas.map((saga) => {
-      const sagaLogs = workspace.logsBySagaId.get(saga.id) ?? []
-      return {
-        id: saga.id,
-        kind: 'saga',
-        name: saga.name,
-        trailId: saga.trailId,
-        trailName: saga.trailName,
-        markers: toRailMarkers(saga.markers),
-        thattrCount: sagaLogs.length,
-        firstThattrId: sagaLogs[0]?.id ?? null,
-      }
-    })
-    const standalone: SogurRailItem[] = workspace.standaloneThaettir.map((log) => ({
-      id: log.id,
-      kind: 'thattr',
-      name: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
-      trailId: log.trailId,
-      trailName: log.trailName,
-      markers: toRailMarkers(log.markers),
-      preview: thattrSnippet(log),
-    }))
+    const sagaItems: SogurRailItem[] = workspace.sagas
+      .filter((saga) => !saga.trailId || !hiddenSogurTrailIds.has(saga.trailId))
+      .map((saga) => {
+        const sagaLogs = workspace.logsBySagaId.get(saga.id) ?? []
+        return {
+          id: saga.id,
+          kind: 'saga',
+          name: saga.name,
+          trailId: saga.trailId,
+          trailName: saga.trailName,
+          markers: toRailMarkers(saga.markers),
+          thattrCount: sagaLogs.length,
+          firstThattrId: sagaLogs[0]?.id ?? null,
+        }
+      })
+    const standalone: SogurRailItem[] = workspace.standaloneThaettir
+      .filter((log) => !log.trailId || !hiddenSogurTrailIds.has(log.trailId))
+      .map((log) => ({
+        id: log.id,
+        kind: 'thattr',
+        name: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
+        trailId: log.trailId,
+        trailName: log.trailName,
+        markers: toRailMarkers(log.markers),
+        preview: thattrSnippet(log),
+      }))
     return [...sagaItems, ...standalone]
-  }, [terms.thattrSingular, workspace])
+  }, [terms.thattrSingular, workspace, hiddenSogurTrailIds])
 
   const nestedThaettir = useMemo((): SogurRailItem[] => {
     const items: SogurRailItem[] = []
     for (const saga of workspace.sagas) {
+      if (saga.trailId && hiddenSogurTrailIds.has(saga.trailId)) continue
       for (const log of workspace.logsBySagaId.get(saga.id) ?? []) {
         items.push({
           id: log.id,
@@ -228,7 +249,7 @@ export function SogurWorkspace() {
       }
     }
     return items
-  }, [terms.thattrSingular, workspace])
+  }, [terms.thattrSingular, workspace, hiddenSogurTrailIds])
 
   const sagaOptions = useMemo(
     () =>
@@ -731,7 +752,7 @@ export function SogurWorkspace() {
             onGreinFilterChange={setGreinFilterId}
             runirFilterId={runirFilterId}
             onRunirFilterChange={setRunirFilterId}
-            greinar={trails.map((trail) => ({ id: trail.id, name: trail.name }))}
+            greinar={visibleTrails.map((trail) => ({ id: trail.id, name: trail.name }))}
             runir={runir}
             onOpenItem={(item) => {
               if (item.kind === 'saga') {

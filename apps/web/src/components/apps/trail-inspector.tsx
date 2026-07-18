@@ -6,8 +6,14 @@ import {
   InspectorFormActions,
   InspectorFormHeader,
 } from '@/components/core/ui/inspector-form-actions'
+import { SwitchField } from '@/components/core/ui/switch-field'
 import { useTerms } from '@/hooks/use-terminology'
 import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
+import {
+  greinPageOptions,
+  resolveGreinHiddenPages,
+  type GreinPageId,
+} from '@/lib/grein-visibility'
 
 export function TrailInspector({
   trail,
@@ -22,14 +28,24 @@ export function TrailInspector({
   isNew: boolean
   title?: string
   onBack: () => void
-  onSave: (name: string) => Promise<void>
+  onSave: (values: { name: string; hiddenPages: GreinPageId[] }) => Promise<void>
   onDelete: () => Promise<void>
   isSaving: boolean
 }) {
   const terms = useTerms()
   const [name, setName] = useState(trail?.name ?? '')
+  const [hiddenPages, setHiddenPages] = useState<GreinPageId[]>(() =>
+    trail ? resolveGreinHiddenPages(trail) : [],
+  )
   const [deleteOpen, setDeleteOpen] = useState(false)
   const headerTitle = title ?? (isNew ? `New ${terms.greinSingular}` : `Edit ${terms.greinSingular}`)
+  const pageOptions = greinPageOptions(terms)
+
+  function togglePage(page: GreinPageId, visible: boolean) {
+    setHiddenPages((current) =>
+      visible ? current.filter((id) => id !== page) : [...current.filter((id) => id !== page), page],
+    )
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -39,6 +55,26 @@ export function TrailInspector({
           <span className="text-xs font-medium text-muted-foreground">Name</span>
           <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Research" />
         </label>
+
+        <div className="space-y-2 rounded-lg border border-border p-3">
+          <div className="space-y-0.5">
+            <p className="text-xs font-semibold text-foreground">Page Visibility</p>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Choose where this {terms.greinSingular.toLowerCase()} appears. Turn a page off to
+              exclude it there.
+            </p>
+          </div>
+          <div className="space-y-1 border-t border-border pt-2">
+            {pageOptions.map((page) => (
+              <SwitchField
+                key={page.id}
+                label={page.label}
+                checked={!hiddenPages.includes(page.id)}
+                onCheckedChange={(visible) => togglePage(page.id, visible)}
+              />
+            ))}
+          </div>
+        </div>
       </div>
       <InspectorFormActions
         isNew={isNew}
@@ -47,7 +83,7 @@ export function TrailInspector({
         createLabel={`Create ${terms.greinSingular}`}
         saveLabel="Save"
         deleteLabel={`Delete ${terms.greinSingular.toLowerCase()}`}
-        onSave={() => void onSave(name.trim())}
+        onSave={() => void onSave({ name: name.trim(), hiddenPages })}
         showDelete={!isNew}
         onDelete={() => setDeleteOpen(true)}
         className="px-4"

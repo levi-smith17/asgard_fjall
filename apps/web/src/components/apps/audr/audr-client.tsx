@@ -18,6 +18,7 @@ import {
 } from '@/lib/data-api'
 import { daysUntilRenewal } from '@/lib/idunn-renewal'
 import { toMarkerView, toTrailView } from '@/lib/data-format'
+import { isGreinVisibleOnPage } from '@/lib/grein-visibility'
 import {
   monthYearLabel,
   shiftMonth,
@@ -149,7 +150,11 @@ export function AudrClient() {
     [markersQuery.data],
   )
   const trails = useMemo(
-    () => (trailsQuery.data ?? []).map(toTrailView).sort((a, b) => a.name.localeCompare(b.name)),
+    () =>
+      (trailsQuery.data ?? [])
+        .map(toTrailView)
+        .filter((trail) => isGreinVisibleOnPage(trail, 'audr'))
+        .sort((a, b) => a.name.localeCompare(b.name)),
     [trailsQuery.data],
   )
   const audrMarkers = useMemo(

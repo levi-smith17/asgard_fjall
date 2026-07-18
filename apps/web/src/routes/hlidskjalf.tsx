@@ -50,7 +50,8 @@ import {
   updateFjallWaypoint,
 } from '@/lib/data-api'
 import { extractEntityId, toMarkerView, toTrailView, toWaypointView } from '@/lib/data-format'
-import { findAudrTrailId, isUnderAudrMarkerRoot } from '@/lib/audr-marker-root'
+import { isUnderAudrMarkerRoot } from '@/lib/audr-marker-root'
+import { isGreinVisibleOnPage } from '@/lib/grein-visibility'
 import { buildManifestSectionCards } from '@/lib/hlidskjalf-manifest-cards'
 import { fetchManifest } from '@/lib/manifest-api'
 import { getManifestTerms } from '@/lib/terminology'
@@ -634,11 +635,18 @@ export function HlidskjalfPage() {
     [trailsQuery.data],
   )
   const trailsById = useMemo(() => new Map(trails.map((trail) => [trail.id, trail])), [trails])
-  const audrTrailId = useMemo(() => findAudrTrailId(trails), [trails])
-  /** Greinar available on Hlidskjalf — Audr is managed on the Audr page. */
+  /** Greinar hidden from Hlidskjalf via the per-Grein Page Visibility setting. */
+  const hiddenGreinIds = useMemo(
+    () =>
+      new Set(
+        trails.filter((trail) => !isGreinVisibleOnPage(trail, 'hlidskjalf')).map((trail) => trail.id),
+      ),
+    [trails],
+  )
+  /** Greinar available on Hlidskjalf — those hidden here are managed on their other pages. */
   const hlidskjalfTrails = useMemo(
-    () => (audrTrailId ? trails.filter((trail) => trail.id !== audrTrailId) : trails),
-    [trails, audrTrailId],
+    () => trails.filter((trail) => isGreinVisibleOnPage(trail, 'hlidskjalf')),
+    [trails],
   )
   const markers = useMemo(
     () => (markersQuery.data ?? []).map(toMarkerView).sort((a, b) => a.name.localeCompare(b.name)),
@@ -652,9 +660,7 @@ export function HlidskjalfPage() {
   const waypoints = useMemo(() => {
     let all = (waypointsQuery.data ?? []).map((waypoint) => toWaypointView(waypoint, trailsById))
 
-    if (audrTrailId) {
-      all = all.filter((waypoint) => waypoint.trailId !== audrTrailId)
-    }
+    all = all.filter((waypoint) => !waypoint.trailId || !hiddenGreinIds.has(waypoint.trailId))
 
     if (greinFilterId === LAUFAR_UNASSIGNED_GREIN) {
       all = all.filter((waypoint) => !waypoint.trailId)
@@ -680,7 +686,7 @@ export function HlidskjalfPage() {
   }, [
     greinFilterId,
     laufarFilter,
-    audrTrailId,
+    hiddenGreinIds,
     runirFilterId,
     trailsById,
     waypointsQuery.data,
@@ -784,10 +790,14 @@ export function HlidskjalfPage() {
   }, [dismissInspector])
 
   useEffect(() => {
-    if (audrTrailId && greinFilterId === audrTrailId) {
+    if (
+      greinFilterId !== LAUFAR_FILTER_ALL &&
+      greinFilterId !== LAUFAR_UNASSIGNED_GREIN &&
+      hiddenGreinIds.has(greinFilterId)
+    ) {
       setGreinFilterId(LAUFAR_FILTER_ALL)
     }
-  }, [greinFilterId, audrTrailId])
+  }, [greinFilterId, hiddenGreinIds])
 
   const saveWaypointMutation = useMutation({
     mutationFn: async (values: {

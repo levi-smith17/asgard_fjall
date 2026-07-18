@@ -171,9 +171,9 @@ export function FjallCatalogInspector({
   }
 
   const saveTrail = useMutation({
-    mutationFn: async (name: string) => {
-      if (isNewTrail) return createFjallTrail({ name })
-      return updateFjallTrail(selectedId!, { name })
+    mutationFn: async (values: { name: string; hiddenPages: string[] }) => {
+      if (isNewTrail) return createFjallTrail(values)
+      return updateFjallTrail(selectedId!, values)
     },
     onSuccess: () => {
       toast.success(isNewTrail ? 'Grein created' : 'Grein saved')
@@ -227,8 +227,8 @@ export function FjallCatalogInspector({
             : `Edit ${terms.greinSingular}`
         }
         onBack={onClearSelection}
-        onSave={async (name) => {
-          await saveTrail.mutateAsync(name)
+        onSave={async (values) => {
+          await saveTrail.mutateAsync(values)
         }}
         onDelete={async () => {
           await deleteTrail.mutateAsync()

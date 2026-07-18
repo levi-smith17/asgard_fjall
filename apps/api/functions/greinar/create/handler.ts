@@ -4,6 +4,7 @@ import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 }
 import { dynamo, TABLE_NAME } from '../../shared/db'
 import { getPk } from '../../shared/auth'
 import { greinSk } from '../../shared/keys'
+import { sanitizeHiddenPages } from '../../shared/grein-pages'
 import { badRequest, created, serverError, toApiGatewayResponse } from '../../shared/response'
 
 export const handler = async (
@@ -20,6 +21,7 @@ export const handler = async (
       pk,
       sk,
       name: body.name,
+      hiddenPages: sanitizeHiddenPages(body.hiddenPages) ?? [],
       createdAt: new Date().toISOString(),
     }
 

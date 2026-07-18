@@ -3,6 +3,7 @@ import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 }
 import { dynamo, TABLE_NAME } from '../../shared/db'
 import { getPathId, getPk } from '../../shared/auth'
 import { greinSk } from '../../shared/keys'
+import { sanitizeHiddenPages } from '../../shared/grein-pages'
 import { badRequest, ok, serverError, toApiGatewayResponse } from '../../shared/response'
 
 export const handler = async (
@@ -15,14 +16,25 @@ export const handler = async (
     const body = JSON.parse(event.body ?? '{}')
     if (!body.name) return toApiGatewayResponse(badRequest('name is required'))
 
+    const hiddenPages = sanitizeHiddenPages(body.hiddenPages)
+
+    const setExprs = ['#name = :name']
+    const names: Record<string, string> = { '#name': 'name' }
+    const values: Record<string, unknown> = { ':name': body.name }
+
+    if (hiddenPages !== undefined) {
+      setExprs.push('hiddenPages = :hiddenPages')
+      values[':hiddenPages'] = hiddenPages
+    }
+
     const pk = getPk(event)
     const result = await dynamo.send(
       new UpdateCommand({
         TableName: TABLE_NAME,
         Key: { pk, sk: greinSk(id) },
-        UpdateExpression: 'SET #name = :name',
-        ExpressionAttributeNames: { '#name': 'name' },
-        ExpressionAttributeValues: { ':name': body.name },
+        UpdateExpression: `SET ${setExprs.join(', ')}`,
+        ExpressionAttributeNames: names,
+        ExpressionAttributeValues: values,
         ReturnValues: 'ALL_NEW',
       }),
     )

@@ -33,6 +33,7 @@ export type FjallTrail = {
   pk: string
   sk: string
   name: string
+  hiddenPages?: string[]
   createdAt: string
 }
 
@@ -64,6 +65,8 @@ export type FjallWaypointView = {
 export type FjallTrailView = {
   id: string
   name: string
+  /** Pages the Grein is explicitly hidden from. `null` means unset (legacy default applies). */
+  hiddenPages: string[] | null
   createdAt: string
 }
 
@@ -93,7 +96,7 @@ export type SaveFjallWaypointRequest = {
   readLater?: boolean
 }
 
-export type SaveFjallTrailRequest = { name: string }
+export type SaveFjallTrailRequest = { name: string; hiddenPages?: string[] }
 
 export type SaveFjallMarkerRequest = {
   name: string
