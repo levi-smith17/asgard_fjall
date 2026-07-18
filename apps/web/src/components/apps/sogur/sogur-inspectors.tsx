@@ -304,9 +304,6 @@ export function SogurSagaInspector({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <InspectorChrome>
-        <InspectorChromeTitle eyebrow="Inspector" title={`Edit ${terms.notesSingular}`} />
-      </InspectorChrome>
       <nav className="flex h-14 shrink-0 border-b border-border" aria-label={`${terms.notesSingular} inspector tabs`}>
         <ContextTabButton
           active={tab === 'details'}
@@ -323,6 +320,9 @@ export function SogurSagaInspector({
           {terms.thattrSingular} Order
         </ContextTabButton>
       </nav>
+      <InspectorChrome>
+        <InspectorChromeTitle eyebrow="Inspector" title={`Edit ${terms.notesSingular}`} />
+      </InspectorChrome>
       {tab === 'details' ? (
         <>
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
