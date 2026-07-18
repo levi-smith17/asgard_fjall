@@ -14,7 +14,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, Settings, StickyNote } from 'lucide-react'
+import { GripVertical, Settings } from 'lucide-react'
 import { MarkerColorSwatch } from '@/components/apps/markers-list'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { useTerms } from '@/hooks/use-terminology'
@@ -47,21 +47,11 @@ function SortableThattrCard({
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        'group flex min-h-32 w-64 flex-col rounded-xl border border-border bg-card p-3 shadow-sm transition-colors hover:border-primary/50',
+        'group relative flex min-h-32 flex-col rounded-xl border border-border bg-card/80 p-3 shadow-sm transition-colors hover:border-primary/50',
         isDragging && 'z-10 opacity-60 shadow-lg',
       )}
     >
       <div className="flex items-start gap-1">
-        <button
-          type="button"
-          onClick={onOpen}
-          className="min-w-0 flex-1 text-left"
-        >
-          <span className="flex items-center gap-1.5">
-            <StickyNote className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
-            <span className="truncate text-sm font-semibold">{thattr.title}</span>
-          </span>
-        </button>
         <ToolbarTooltip label={`Move ${terms.thattrSingular.toLowerCase()}`}>
           <button
             type="button"
@@ -73,6 +63,9 @@ function SortableThattrCard({
             <GripVertical className="h-3.5 w-3.5" aria-hidden />
           </button>
         </ToolbarTooltip>
+        <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left">
+          <span className="truncate text-sm font-semibold">{thattr.title}</span>
+        </button>
         <ToolbarTooltip label={`Edit ${terms.thattrSingular.toLowerCase()}`}>
           <button
             type="button"
@@ -111,13 +104,11 @@ function SortableThattrCard({
 }
 
 export function SogurSagaCanvas({
-  sagaName,
   thaettir,
   onOpenThattr,
   onInspectThattr,
   onReorder,
 }: {
-  sagaName: string
   thaettir: SogurSagaCanvasThattr[]
   onOpenThattr: (id: string) => void
   onInspectThattr: (id: string) => void
@@ -147,13 +138,7 @@ export function SogurSagaCanvas({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
-      <div className="shrink-0 border-b border-border px-6 py-4">
-        <h2 className="truncate text-lg font-semibold">{sagaName}</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          {ordered.length} {ordered.length === 1 ? terms.thattrSingular : terms.thaettir}
-        </p>
-      </div>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent">
       <div className="min-h-0 flex-1 overflow-auto px-6 py-6">
         {ordered.length === 0 ? (
           <div className="flex min-h-52 items-center justify-center rounded-xl border border-dashed border-border text-sm text-muted-foreground">
@@ -162,7 +147,7 @@ export function SogurSagaCanvas({
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={ids} strategy={rectSortingStrategy}>
-              <div className="grid auto-cols-[16rem] grid-flow-col grid-rows-5 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {ordered.map((thattr) => (
                   <SortableThattrCard
                     key={thattr.id}

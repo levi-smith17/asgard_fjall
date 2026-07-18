@@ -34,6 +34,7 @@ export type SogurRailItem = {
   trailName: string | null
   markers: SogurRailMarker[]
   preview?: string | null
+  thattrCount?: number
   firstThattrId?: string | null
   sagaName?: string | null
 }
@@ -234,7 +235,16 @@ export function SogurRail({
                         >
                           <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-sm font-medium">{item.name}</span>
+                            <span className="flex items-center gap-1.5">
+                              <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                                {item.name}
+                              </span>
+                              {item.kind === 'saga' && item.thattrCount != null ? (
+                                <span className="shrink-0 tabular-nums text-[10px] text-muted-foreground">
+                                  {item.thattrCount}
+                                </span>
+                              ) : null}
+                            </span>
                             {item.kind === 'thattr' && item.sagaName ? (
                               <span className="block truncate text-[10px] text-muted-foreground">
                                 {item.sagaName}

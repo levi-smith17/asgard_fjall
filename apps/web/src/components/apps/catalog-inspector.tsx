@@ -8,6 +8,7 @@ import { MarkerInspector } from '@/components/apps/marker-inspector'
 import { TrailInspector } from '@/components/apps/trail-inspector'
 import { Button } from '@/components/core/ui/button'
 import { ContextTabButton } from '@/components/core/ui/context-tab'
+import { InspectorChrome, InspectorChromeTitle } from '@/components/core/ui/inspector-chrome'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import {
   createFjallMarker,
@@ -263,21 +264,36 @@ export function FjallCatalogInspector({
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      {lockedTab ? null : <CatalogTabBar active={activeTab} onChange={onTabChange} />}
-      <div className="border-b border-border px-4 py-3">
-        <p className="text-sm font-semibold text-foreground">
-          {effectiveTab === 'greinar'
-            ? terms.greinar
-            : rootMarkerPath.length > 0
-              ? rootMarkerPath[rootMarkerPath.length - 1]
-              : terms.runir}
-        </p>
-        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          {effectiveTab === 'greinar'
-            ? `Organize ${terms.laufar.toLowerCase()} and ${terms.spjold.toLowerCase()} into named ${terms.greinar.toLowerCase()}.`
-            : runirCopy}
-        </p>
-      </div>
+      {lockedTab ? (
+        <InspectorChrome>
+          <InspectorChromeTitle
+            eyebrow="Inspector"
+            title={
+              effectiveTab === 'greinar'
+                ? `Manage ${terms.greinar}`
+                : `Manage ${terms.runir}`
+            }
+          />
+        </InspectorChrome>
+      ) : (
+        <CatalogTabBar active={activeTab} onChange={onTabChange} />
+      )}
+      {lockedTab ? null : (
+        <div className="border-b border-border px-4 py-3">
+          <p className="text-sm font-semibold text-foreground">
+            {effectiveTab === 'greinar'
+              ? terms.greinar
+              : rootMarkerPath.length > 0
+                ? rootMarkerPath[rootMarkerPath.length - 1]
+                : terms.runir}
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            {effectiveTab === 'greinar'
+              ? `Organize ${terms.laufar.toLowerCase()} and ${terms.spjold.toLowerCase()} into named ${terms.greinar.toLowerCase()}.`
+              : runirCopy}
+          </p>
+        </div>
+      )}
       {effectiveTab === 'greinar' ? (
         <GreinarList
           trails={sortedTrails}

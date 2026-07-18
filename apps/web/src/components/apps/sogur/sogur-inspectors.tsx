@@ -137,7 +137,10 @@ export function SogurCreateInspector({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <InspectorChrome>
-        <InspectorChromeTitle eyebrow={`New ${singular.toLowerCase()}`} title={`Create ${singular}`} />
+        <InspectorChromeTitle
+          eyebrow="Inspector"
+          title={`Add ${singular}`}
+        />
       </InspectorChrome>
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
         <div className="space-y-1.5">
@@ -187,7 +190,7 @@ export function SogurCreateInspector({
         isNew
         isSaving={creating}
         canSave={canCreate}
-        createLabel={`Create ${singular.toLowerCase()}`}
+        createLabel={`Add ${singular}`}
         onSave={() =>
           onCreate({
             name: name.trim(),
@@ -289,16 +292,24 @@ export function SogurSagaInspector({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <InspectorChrome>
-        <InspectorChromeTitle eyebrow={terms.notesSingular} title={saga.name} />
+        <InspectorChromeTitle eyebrow="Inspector" title={`Edit ${terms.notesSingular}`} />
       </InspectorChrome>
-      <div className="flex h-10 shrink-0 items-stretch border-b border-border px-2">
-        <ContextTabButton active={tab === 'details'} onClick={() => setTab('details')}>
+      <nav className="flex h-14 shrink-0 border-b border-border" aria-label={`${terms.notesSingular} inspector tabs`}>
+        <ContextTabButton
+          active={tab === 'details'}
+          onClick={() => setTab('details')}
+          className="flex-1 justify-center gap-1.5 text-xs"
+        >
           Edit
         </ContextTabButton>
-        <ContextTabButton active={tab === 'order'} onClick={() => setTab('order')}>
+        <ContextTabButton
+          active={tab === 'order'}
+          onClick={() => setTab('order')}
+          className="flex-1 justify-center gap-1.5 text-xs"
+        >
           {terms.thattrSingular} Order
         </ContextTabButton>
-      </div>
+      </nav>
       {tab === 'details' ? (
         <>
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
@@ -412,7 +423,7 @@ export function SogurThattrInspector({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <InspectorChrome>
-        <InspectorChromeTitle eyebrow={terms.thattrSingular} title={thattr.title} />
+        <InspectorChromeTitle eyebrow="Inspector" title={`Edit ${terms.thattrSingular}`} />
       </InspectorChrome>
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
         <div className="space-y-1.5">

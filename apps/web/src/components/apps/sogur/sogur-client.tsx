@@ -36,7 +36,7 @@ import {
   type SogurSagaModel,
 } from '@/lib/sogur-format'
 import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
-import { SogurContextBar } from './sogur-context-bar'
+import { SogurContextBar, SogurDocumentBar } from './sogur-context-bar'
 import {
   SogurCreateInspector,
   SogurSagaInspector,
@@ -196,6 +196,7 @@ export function SogurWorkspace() {
         trailId: saga.trailId,
         trailName: saga.trailName,
         markers: toRailMarkers(saga.markers),
+        thattrCount: sagaLogs.length,
         firstThattrId: sagaLogs[0]?.id ?? null,
       }
     })
@@ -658,34 +659,7 @@ export function SogurWorkspace() {
       railLabel={terms.notes}
       contextBar={
         <SogurContextBar
-          sagaName={contextSaga?.name ?? null}
-          thattrName={
-            selectedThattr
-              ? thattrPreview(selectedThattr, `Untitled ${terms.thattrSingular}`)
-              : null
-          }
-          thaettir={contextThaettir}
-          activeThattrId={selectedThattrId}
-          onSelectThattr={(id) =>
-            setSelection({ sagaId: contextSaga?.id ?? selectedSagaId, thattrId: id })
-          }
-          onPrevious={() => {
-            if (!canPrevious) return
-            const prev = contextThaettir[thattrIndex - 1]
-            setSelection({ sagaId: contextSaga?.id ?? selectedSagaId, thattrId: prev.id })
-          }}
-          onNext={() => {
-            if (!canNext) return
-            const next = contextThaettir[thattrIndex + 1]
-            setSelection({ sagaId: contextSaga?.id ?? selectedSagaId, thattrId: next.id })
-          }}
-          canPrevious={canPrevious}
-          canNext={canNext}
-          onOpenLauf={activeLauf?.url ? () => window.open(activeLauf.url, '_blank', 'noopener') : undefined}
-          laufLabel={activeLauf?.title ?? null}
-          onSave={showingEditor ? () => void saveActiveSogurThattr() : undefined}
-          saving={editorState.saving}
-          saveDisabled={!editorState.dirty || editorState.saving}
+          sagaCount={workspace.sagas.length}
           onNewThattr={() => openCreate('thattr', contextSaga?.id ?? null)}
           onNewSaga={() => openCreate('saga')}
           inspectorPinned={inspectorPinned}
@@ -755,6 +729,42 @@ export function SogurWorkspace() {
             className="flex min-h-0 w-full flex-1 flex-col overflow-hidden"
             onPointerDown={handleCanvasPointerDown}
           >
+            {showingEditor || showingSagaOverview ? (
+              <SogurDocumentBar
+                sagaName={contextSaga?.name ?? null}
+                thattrName={
+                  selectedThattr
+                    ? thattrPreview(selectedThattr, `Untitled ${terms.thattrSingular}`)
+                    : null
+                }
+                thaettir={contextThaettir}
+                activeThattrId={selectedThattrId}
+                onSelectThattr={(id) =>
+                  setSelection({ sagaId: contextSaga?.id ?? selectedSagaId, thattrId: id })
+                }
+                onPrevious={() => {
+                  if (!canPrevious) return
+                  const prev = contextThaettir[thattrIndex - 1]
+                  setSelection({ sagaId: contextSaga?.id ?? selectedSagaId, thattrId: prev.id })
+                }}
+                onNext={() => {
+                  if (!canNext) return
+                  const next = contextThaettir[thattrIndex + 1]
+                  setSelection({ sagaId: contextSaga?.id ?? selectedSagaId, thattrId: next.id })
+                }}
+                canPrevious={canPrevious}
+                canNext={canNext}
+                onOpenLauf={
+                  activeLauf?.url
+                    ? () => window.open(activeLauf.url, '_blank', 'noopener')
+                    : undefined
+                }
+                laufLabel={activeLauf?.title ?? null}
+                onSave={showingEditor ? () => void saveActiveSogurThattr() : undefined}
+                saving={editorState.saving}
+                saveDisabled={!editorState.dirty || editorState.saving}
+              />
+            ) : null}
             {showingEditor && selectedThattr ? (
               <SogurThattrEditor
                 thattr={selectedThattr}
@@ -763,7 +773,6 @@ export function SogurWorkspace() {
               />
             ) : showingSagaOverview && selectedSaga ? (
               <SogurSagaCanvas
-                sagaName={selectedSaga.name}
                 thaettir={selectedSagaThaettir.map((log) => ({
                   id: log.id,
                   title: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
