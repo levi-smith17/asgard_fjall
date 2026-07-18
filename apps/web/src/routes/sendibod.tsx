@@ -98,25 +98,18 @@ export function SendibodPage() {
     })
   }
 
-  const handleCanvasPointerDown = useCallback(
-    (event: React.PointerEvent) => {
-      if (inspectorPinned || selectedId == null) return
-      const target = event.target as HTMLElement
-      if (target.closest('[data-inspectable]')) return
-      clearSelection()
-    },
-    [inspectorPinned, selectedId, clearSelection],
-  )
+  const dismissInspector = useCallback(() => {
+    if (inspectorPinned || selectedId == null) return
+    clearSelection()
+  }, [inspectorPinned, selectedId, clearSelection])
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape' && !inspectorPinned && selectedId) {
-        clearSelection()
-      }
+      if (event.key === 'Escape') dismissInspector()
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [inspectorPinned, selectedId, clearSelection])
+  }, [dismissInspector])
 
   async function confirmDelete() {
     if (!deleteTarget) return
@@ -144,7 +137,7 @@ export function SendibodPage() {
           ) : !configured ? (
             <DataNotConfiguredNotice />
           ) : (
-            <div className="flex h-full flex-col" onPointerDown={handleCanvasPointerDown}>
+            <div className="flex h-full flex-col">
               <SendibodFilterBar
                 search={search}
                 onSearchChange={setSearch}
@@ -167,6 +160,7 @@ export function SendibodPage() {
         }
         inspectorState={configured && !statusQuery.isLoading ? inspectorState : 'hidden'}
         inspectorHint="Select a message"
+        onDismissInspector={dismissInspector}
         inspector={
           showSettings && settingsQuery.data?.signals ? (
             <div className="flex h-full flex-col">

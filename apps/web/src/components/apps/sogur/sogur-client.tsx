@@ -40,6 +40,7 @@ import {
   SogurCreateInspector,
   SogurSagaInspector,
   SogurThattrInspector,
+  type SogurCreateDraft,
 } from './sogur-inspectors'
 import { SogurSagaCanvas } from './sogur-saga-canvas'
 import {
@@ -89,6 +90,7 @@ export function SogurWorkspace() {
   const [catalog, setCatalog] = useState<CatalogState | null>(null)
   const [editorState, setEditorState] = useState({ dirty: false, saving: false })
   const [createDefaultSagaId, setCreateDefaultSagaId] = useState<string | null>(null)
+  const [createDraft, setCreateDraft] = useState<SogurCreateDraft | null>(null)
 
   const statusQuery = useQuery({
     queryKey: ['fjall-status'],
@@ -354,8 +356,35 @@ export function SogurWorkspace() {
   function openCreate(kind: 'saga' | 'thattr', defaultSagaId: string | null = null) {
     setCatalog(null)
     setCreateDefaultSagaId(defaultSagaId)
+    setCreateDraft(kind === 'thattr' ? { name: '', sagaId: defaultSagaId, markerIds: [] } : null)
     setInspectorMode(kind === 'saga' ? 'create-saga' : 'create-thattr')
     setInspectorEngaged(true)
+  }
+
+  function openThattr(sagaId: string | null, thattrId: string) {
+    setSelection({ sagaId, thattrId })
+    if (inspectorPinned || inspectorEngaged) {
+      setInspectorMode('edit-thattr')
+      setInspectorEngaged(true)
+    }
+  }
+
+  function openSagaFromRail(item: SogurRailItem) {
+    const count = item.thattrCount ?? 0
+    if (count === 1 && item.firstThattrId) {
+      openThattr(item.id, item.firstThattrId)
+      return
+    }
+    if (count === 0) {
+      setSelection({ sagaId: item.id, thattrId: null })
+      openCreate('thattr', item.id)
+      return
+    }
+    setSelection({ sagaId: item.id, thattrId: null })
+    if (inspectorPinned || inspectorEngaged) {
+      setInspectorMode('edit-saga')
+      setInspectorEngaged(true)
+    }
   }
 
   function openInspectSaga(sagaId: string) {
@@ -383,20 +412,8 @@ export function SogurWorkspace() {
     setInspectorEngaged(false)
     setCatalog(null)
     setInspectorMode(null)
+    setCreateDraft(null)
   }, [inspectorPinned])
-
-  function handleCanvasPointerDown(event: React.PointerEvent) {
-    if (inspectorPinned) return
-    const target = event.target as HTMLElement
-    if (
-      target.closest(
-        'a, button, input, select, textarea, [data-inspectable], [data-sogur-editor], .ProseMirror',
-      )
-    ) {
-      return
-    }
-    dismissInspector()
-  }
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -405,6 +422,19 @@ export function SogurWorkspace() {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [dismissInspector])
+
+  // Overview is only for Sagas with 2+ Thaettir — bounce single-Thattr Sagas into the Thattr.
+  // Keep overview while creating a Thattr or editing Saga metadata.
+  useEffect(() => {
+    if (!selectedSaga || selectedThattrId) return
+    if (inspectorMode === 'create-thattr' || inspectorMode === 'edit-saga') return
+    if (selectedSagaThaettir.length !== 1) return
+    const onlyId = selectedSagaThaettir[0]?.id
+    if (!onlyId) return
+    setSelection({ sagaId: selectedSaga.id, thattrId: onlyId })
+    // setSelection is intentionally omitted — it closes over current searchParams.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSaga?.id, selectedThattrId, selectedSagaThaettir.length, selectedSagaThaettir[0]?.id, inspectorMode])
 
   // Keep inspector mode aligned with selection when pinned/engaged.
   useEffect(() => {
@@ -431,7 +461,10 @@ export function SogurWorkspace() {
         patchSagaCache(created)
         await invalidateSogur()
         setSelection({ sagaId: created.id, thattrId: null })
-        setInspectorMode('edit-saga')
+        setCreateDefaultSagaId(created.id)
+        setCreateDraft({ name: '', sagaId: created.id, markerIds: [] })
+        setInspectorMode('create-thattr')
+        setInspectorEngaged(true)
         toast.success(`${terms.notesSingular} created`)
         return
       }
@@ -460,6 +493,7 @@ export function SogurWorkspace() {
       })
       patchLogCache(created)
       await invalidateSogur()
+      setCreateDraft(null)
       setSelection({ sagaId: created.sagaId, thattrId: created.id })
       setInspectorMode('edit-thattr')
       toast.success(`${terms.thattrSingular} created`)
@@ -650,6 +684,24 @@ export function SogurWorkspace() {
 
   const showingEditor = Boolean(selectedThattr)
   const showingSagaOverview = Boolean(selectedSaga && !selectedThattr)
+  const draftThattrForCanvas =
+    showingSagaOverview &&
+    activeInspectorMode === 'create-thattr' &&
+    createDraft &&
+    createDraft.sagaId === selectedSaga?.id
+      ? {
+          id: '__draft-thattr__',
+          title: createDraft.name,
+          preview: '',
+          markers: createDraft.markerIds
+            .map((id) => runir.find((marker) => marker.id === id))
+            .filter((marker): marker is SogurRailMarker => marker != null),
+        }
+      : null
+
+  const handleCreateDraftChange = useCallback((draft: SogurCreateDraft) => {
+    setCreateDraft(draft)
+  }, [])
 
   return (
     <StudioLayout
@@ -683,29 +735,19 @@ export function SogurWorkspace() {
             runir={runir}
             onOpenItem={(item) => {
               if (item.kind === 'saga') {
-                setSelection({ sagaId: item.id, thattrId: null })
-                if (inspectorPinned || inspectorEngaged) {
-                  setInspectorMode('edit-saga')
-                  setInspectorEngaged(true)
-                }
+                openSagaFromRail(item)
                 return
               }
               const sagaId =
                 workspace.sagas.find((saga) =>
                   (workspace.logsBySagaId.get(saga.id) ?? []).some((log) => log.id === item.id),
                 )?.id ?? null
-              setSelection({ sagaId: sagaId ?? null, thattrId: item.id })
-              if (inspectorPinned || inspectorEngaged) {
-                setInspectorMode('edit-thattr')
-                setInspectorEngaged(true)
-              }
+              openThattr(sagaId, item.id)
             }}
-            onOpenFirstThattr={(sagaId, thattrId) => {
-              setSelection({ sagaId, thattrId })
-              if (inspectorPinned || inspectorEngaged) {
-                setInspectorMode('edit-thattr')
-                setInspectorEngaged(true)
-              }
+            onOpenFirstThattr={(sagaId, thattrId) => openThattr(sagaId, thattrId)}
+            onAddThattr={(sagaId) => {
+              setSelection({ sagaId, thattrId: null })
+              openCreate('thattr', sagaId)
             }}
             onInspectItem={(item) => {
               if (item.kind === 'saga') openInspectSaga(item.id)
@@ -722,10 +764,7 @@ export function SogurWorkspace() {
         ) : !configured ? (
           <DataNotConfiguredNotice />
         ) : (
-          <div
-            className="flex min-h-0 w-full flex-1 flex-col overflow-hidden"
-            onPointerDown={handleCanvasPointerDown}
-          >
+          <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
             {showingEditor || showingSagaOverview ? (
               <SogurDocumentBar
                 sagaName={contextSaga?.name ?? null}
@@ -779,6 +818,7 @@ export function SogurWorkspace() {
                   preview: thattrSnippet(log),
                   markers: toRailMarkers(log.markers),
                 }))}
+                draftThattr={draftThattrForCanvas}
                 onOpenThattr={(id) => setSelection({ sagaId: selectedSaga.id, thattrId: id })}
                 onInspectThattr={(id) => openInspectThattr(id, selectedSaga.id)}
                 onReorder={handleReorderSaga}
@@ -801,6 +841,7 @@ export function SogurWorkspace() {
       }
       inspectorState={inspectorState}
       inspectorHint={inspectorHint}
+      onDismissInspector={dismissInspector}
       inspector={
         catalog ? (
           <FjallCatalogInspector
@@ -839,6 +880,9 @@ export function SogurWorkspace() {
             runir={runir}
             creating={creating}
             onCreate={handleCreate}
+            onDraftChange={
+              activeInspectorMode === 'create-thattr' ? handleCreateDraftChange : undefined
+            }
           />
         ) : activeInspectorMode === 'edit-saga' && selectedSaga ? (
           <SogurSagaInspector

@@ -789,14 +789,6 @@ export function HlidskjalfPage() {
     }
   }, [greinFilterId, audrTrailId])
 
-  const handleCanvasPointerDown = (event: React.PointerEvent) => {
-    if (inspectorPinned) return
-    const target = event.target as HTMLElement
-    if (!target.closest('a, button, input, select, textarea, [data-inspectable]')) {
-      dismissInspector()
-    }
-  }
-
   const saveWaypointMutation = useMutation({
     mutationFn: async (values: {
       title: string
@@ -887,7 +879,7 @@ export function HlidskjalfPage() {
         />
       }
       canvas={
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden" onPointerDown={handleCanvasPointerDown}>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <HlidskjalfCanvas />
         </div>
       }
@@ -899,6 +891,7 @@ export function HlidskjalfPage() {
             ? terms.laufar
             : `Select a ${terms.laufarSingular.toLowerCase()}`
       }
+      onDismissInspector={dismissInspector}
       inspector={
         catalogTab ? (
           <FjallCatalogInspector

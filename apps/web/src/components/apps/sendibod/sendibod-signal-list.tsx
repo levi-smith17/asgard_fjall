@@ -27,7 +27,7 @@ export function SendibodSignalList({
 }) {
   const terms = useTerms()
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden" data-inspectable>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto">
         {signals.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 px-4 py-16 text-center text-sm text-muted-foreground">
@@ -42,7 +42,8 @@ export function SendibodSignalList({
             return (
               <div
                 key={signal.id}
-                className={`group flex cursor-pointer items-start justify-between border-b border-border/50 px-4 py-3 transition-colors data-inspectable ${
+                data-inspectable
+                className={`group flex cursor-pointer items-start justify-between border-b border-border/50 px-4 py-3 transition-colors ${
                   isSelected ? 'bg-primary/20' : 'hover:bg-muted/50'
                 } ${!signal.read ? 'font-medium' : ''}`}
                 onClick={() => onSelect(signal.id)}

@@ -216,6 +216,7 @@ export const NidjatalKinNode = memo(function NidjatalKinNode({ data }: NodeProps
 
   return (
     <div
+      data-inspectable
       className={`relative w-52 rounded-lg border border-border/50 bg-card shadow-sm transition-shadow hover:shadow-md cursor-pointer ${ringClass}`}
       onClick={onEdit}
     >

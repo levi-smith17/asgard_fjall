@@ -220,6 +220,21 @@ export function AudrClient() {
   const clearCatalog = useCallback(() => setCatalog(null), [])
   const clearLaufarManage = useCallback(() => setLaufarManage(null), [])
   const clearSjodrManage = useCallback(() => setSjodrManage(null), [])
+
+  const dismissInspector = useCallback(() => {
+    if (inspectorPinned) return
+    clearSelection()
+    clearCatalog()
+    clearLaufarManage()
+    clearSjodrManage()
+  }, [
+    inspectorPinned,
+    clearSelection,
+    clearCatalog,
+    clearLaufarManage,
+    clearSjodrManage,
+  ])
+
   const provisionsRootPath = useMemo(
     () => resolveAudrMarkerRootPath(markers),
     [markers],
@@ -302,42 +317,6 @@ export function AudrClient() {
     [skattBurnsQuery.data?.burn],
   )
 
-  const handleCanvasPointerDown = useCallback(
-    (event: React.PointerEvent) => {
-      if (
-        inspectorPinned ||
-        (selection == null && catalog == null && laufarManage == null && sjodrManage == null)
-      ) {
-        return
-      }
-      const target = event.target as HTMLElement
-      // Toolbar / form controls sit on the canvas; ignore them so inspector
-      // switches (Laufar ↔ Sjodr) are not cleared by pointerdown before click.
-      if (
-        target.closest(
-          'a, button, input, select, textarea, label, [data-inspectable], [data-studio-portal], [role="listbox"], [role="option"]',
-        )
-      ) {
-        return
-      }
-      clearSelection()
-      clearCatalog()
-      clearLaufarManage()
-      clearSjodrManage()
-    },
-    [
-      inspectorPinned,
-      selection,
-      catalog,
-      laufarManage,
-      sjodrManage,
-      clearSelection,
-      clearCatalog,
-      clearLaufarManage,
-      clearSjodrManage,
-    ],
-  )
-
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (
@@ -345,25 +324,12 @@ export function AudrClient() {
         !inspectorPinned &&
         (selection || catalog || laufarManage || sjodrManage)
       ) {
-        clearSelection()
-        clearCatalog()
-        clearLaufarManage()
-        clearSjodrManage()
+        dismissInspector()
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [
-    inspectorPinned,
-    selection,
-    catalog,
-    laufarManage,
-    sjodrManage,
-    clearSelection,
-    clearCatalog,
-    clearLaufarManage,
-    clearSjodrManage,
-  ])
+  }, [inspectorPinned, selection, catalog, laufarManage, sjodrManage, dismissInspector])
 
   const isLoading =
     markersQuery.isLoading ||
@@ -427,7 +393,7 @@ export function AudrClient() {
         )
       }
       canvas={
-        <div className="flex h-full min-h-0 flex-col" onPointerDown={handleCanvasPointerDown}>
+        <div className="flex h-full min-h-0 flex-col">
           <AudrSurtrCanvas
             month={month}
             year={year}
@@ -491,6 +457,7 @@ export function AudrClient() {
               ? terms.sjodr
               : `Select ${terms.expenses.toLowerCase()}, ${terms.subscriptions.toLowerCase()}, or ${terms.budgets.toLowerCase()} to inspect`
       }
+      onDismissInspector={dismissInspector}
       inspector={
         catalog ? (
           <FjallCatalogInspector

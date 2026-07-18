@@ -28,54 +28,56 @@ export type SogurSagaCanvasThattr = {
   markers: SogurRailMarker[]
 }
 
-function SortableThattrCard({
+function ThattrCardChrome({
   thattr,
+  draft = false,
+  dragHandle,
   onOpen,
   onInspect,
 }: {
   thattr: SogurSagaCanvasThattr
-  onOpen: () => void
-  onInspect: () => void
+  draft?: boolean
+  dragHandle?: React.ReactNode
+  onOpen?: () => void
+  onInspect?: () => void
 }) {
   const terms = useTerms()
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: thattr.id,
-  })
+  const title = thattr.title.trim() || `(new ${terms.thattrSingular.toLowerCase()})`
 
   return (
     <article
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        'group relative flex min-h-32 min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card/80 p-3 shadow-sm transition-colors hover:border-primary/50',
-        isDragging && 'z-10 opacity-60 shadow-lg',
+        'group relative flex min-h-32 min-w-0 flex-col overflow-hidden rounded-xl border bg-card/80 p-3 shadow-sm transition-colors',
+        draft
+          ? 'border-dashed border-primary/50 bg-primary/5'
+          : 'border-border hover:border-primary/50',
       )}
     >
       <div className="flex items-start gap-1">
-        <ToolbarTooltip label={`Move ${terms.thattrSingular.toLowerCase()}`}>
-          <button
-            type="button"
-            className="touch-none rounded p-1 text-muted-foreground/50 hover:bg-muted hover:text-muted-foreground"
-            aria-label={`Move ${thattr.title}`}
-            {...attributes}
-            {...listeners}
-          >
-            <GripVertical className="h-3.5 w-3.5" aria-hidden />
+        {dragHandle}
+        {onOpen ? (
+          <button type="button" onClick={onOpen} className="min-w-0 flex-1 overflow-hidden text-left">
+            <span className="block truncate text-sm font-semibold">{title}</span>
           </button>
-        </ToolbarTooltip>
-        <button type="button" onClick={onOpen} className="min-w-0 flex-1 overflow-hidden text-left">
-          <span className="block truncate text-sm font-semibold">{thattr.title}</span>
-        </button>
-        <ToolbarTooltip label={`Edit ${terms.thattrSingular.toLowerCase()}`}>
-          <button
-            type="button"
-            onClick={onInspect}
-            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-            aria-label={`Edit ${thattr.title}`}
-          >
-            <Settings className="h-3.5 w-3.5" aria-hidden />
-          </button>
-        </ToolbarTooltip>
+        ) : (
+          <span className="min-w-0 flex-1 truncate text-left text-sm font-semibold">{title}</span>
+        )}
+        {onInspect ? (
+          <ToolbarTooltip label={`Edit ${terms.thattrSingular.toLowerCase()}`}>
+            <button
+              type="button"
+              onClick={onInspect}
+              className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label={`Edit ${title}`}
+            >
+              <Settings className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          </ToolbarTooltip>
+        ) : draft ? (
+          <span className="rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
+            New
+          </span>
+        ) : null}
       </div>
 
       {thattr.markers.length > 0 ? (
@@ -92,24 +94,74 @@ function SortableThattrCard({
         </div>
       ) : null}
 
-      <button
-        type="button"
-        onClick={onOpen}
-        className="mt-2 line-clamp-3 min-h-0 flex-1 text-left text-xs leading-relaxed text-muted-foreground"
-      >
-        {thattr.preview || `Empty ${terms.thattrSingular.toLowerCase()}`}
-      </button>
+      {onOpen ? (
+        <button
+          type="button"
+          onClick={onOpen}
+          className="mt-2 line-clamp-3 min-h-0 flex-1 text-left text-xs leading-relaxed text-muted-foreground"
+        >
+          {thattr.preview || `Empty ${terms.thattrSingular.toLowerCase()}`}
+        </button>
+      ) : (
+        <p className="mt-2 line-clamp-3 min-h-0 flex-1 text-left text-xs leading-relaxed text-muted-foreground">
+          {thattr.preview || `Start typing in the inspector to name this ${terms.thattrSingular.toLowerCase()}.`}
+        </p>
+      )}
     </article>
+  )
+}
+
+function SortableThattrCard({
+  thattr,
+  onOpen,
+  onInspect,
+}: {
+  thattr: SogurSagaCanvasThattr
+  onOpen: () => void
+  onInspect: () => void
+}) {
+  const terms = useTerms()
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: thattr.id,
+  })
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={cn(isDragging && 'z-10 opacity-60')}
+    >
+      <ThattrCardChrome
+        thattr={thattr}
+        onOpen={onOpen}
+        onInspect={onInspect}
+        dragHandle={
+          <ToolbarTooltip label={`Move ${terms.thattrSingular.toLowerCase()}`}>
+            <button
+              type="button"
+              className="touch-none rounded p-1 text-muted-foreground/50 hover:bg-muted hover:text-muted-foreground"
+              aria-label={`Move ${thattr.title}`}
+              {...attributes}
+              {...listeners}
+            >
+              <GripVertical className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          </ToolbarTooltip>
+        }
+      />
+    </div>
   )
 }
 
 export function SogurSagaCanvas({
   thaettir,
+  draftThattr = null,
   onOpenThattr,
   onInspectThattr,
   onReorder,
 }: {
   thaettir: SogurSagaCanvasThattr[]
+  draftThattr?: SogurSagaCanvasThattr | null
   onOpenThattr: (id: string) => void
   onInspectThattr: (id: string) => void
   onReorder: (orderedIds: string[]) => Promise<void>
@@ -137,10 +189,12 @@ export function SogurSagaCanvas({
     }
   }
 
+  const showEmpty = ordered.length === 0 && !draftThattr
+
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent">
       <div className="min-h-0 flex-1 overflow-auto px-6 py-6">
-        {ordered.length === 0 ? (
+        {showEmpty ? (
           <div className="flex min-h-52 items-center justify-center rounded-xl border border-dashed border-border text-sm text-muted-foreground">
             This {terms.notesSingular.toLowerCase()} has no {terms.thaettir.toLowerCase()} yet.
           </div>
@@ -156,6 +210,9 @@ export function SogurSagaCanvas({
                     onInspect={() => onInspectThattr(thattr.id)}
                   />
                 ))}
+                {draftThattr ? (
+                  <ThattrCardChrome key={draftThattr.id} thattr={draftThattr} draft />
+                ) : null}
               </div>
             </SortableContext>
           </DndContext>

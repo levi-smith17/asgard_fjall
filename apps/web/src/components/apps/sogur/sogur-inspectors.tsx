@@ -48,6 +48,12 @@ type SogurCreateInput = {
   sagaId?: string | null
 }
 
+export type SogurCreateDraft = {
+  name: string
+  sagaId: string | null
+  markerIds: string[]
+}
+
 function AssociationFields({
   trailId,
   onTrailIdChange,
@@ -108,6 +114,7 @@ export function SogurCreateInspector({
   runir,
   creating,
   onCreate,
+  onDraftChange,
 }: {
   kind: 'saga' | 'thattr'
   defaultSagaId?: string | null
@@ -116,6 +123,7 @@ export function SogurCreateInspector({
   runir: SogurRailMarker[]
   creating?: boolean
   onCreate: (input: SogurCreateInput) => void
+  onDraftChange?: (draft: SogurCreateDraft) => void
 }) {
   const terms = useTerms()
   const [name, setName] = useState('')
@@ -130,6 +138,11 @@ export function SogurCreateInspector({
   useEffect(() => {
     if (kind === 'thattr' && selectedSaga) setTrailId(selectedSaga.trailId)
   }, [kind, selectedSaga])
+
+  useEffect(() => {
+    if (kind !== 'thattr') return
+    onDraftChange?.({ name, sagaId, markerIds })
+  }, [kind, name, sagaId, markerIds, onDraftChange])
 
   const singular = kind === 'saga' ? terms.notesSingular : terms.thattrSingular
   const canCreate = name.trim().length > 0 && !creating

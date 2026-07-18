@@ -499,18 +499,6 @@ export function OrdstirrWorkspace() {
     setActiveJourneySection(companion?.passed ? 'in-memoriam' : 'companions')
   }
 
-  function handleCanvasPointerDown(event: React.PointerEvent) {
-    if (inspectorPinned) return
-    const target = event.target as HTMLElement
-    if (
-      !target.closest(
-        'a, button, input, select, textarea, [data-inspectable], [data-ordstirr-editor], .ProseMirror',
-      )
-    ) {
-      dismissInspector()
-    }
-  }
-
   function handleCanvasViewChange(view: OrdstirrCanvasView) {
     if (creatingEntry && selectedEntryId && isDraftEntryId(selectedEntryId)) {
       removeDraftEntry(selectedEntryId)
@@ -712,7 +700,7 @@ export function OrdstirrWorkspace() {
             Unable to load manifest.
           </div>
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden" onPointerDown={handleCanvasPointerDown}>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <OrdstirrRichTextProvider>
                 {canvasView === 'manifest' ? (
                   <OrdstirrCanvas
@@ -752,6 +740,7 @@ export function OrdstirrWorkspace() {
             ? 'Select an entry to edit, or use + to add one'
             : 'Select a section to edit details'
       }
+      onDismissInspector={dismissInspector}
       inspector={canvasView === 'manifest' ? renderManifestInspector() : renderJourneyInspector()}
     />
   )

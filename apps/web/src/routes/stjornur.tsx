@@ -85,15 +85,18 @@ export function StjornurPage() {
   const inspectorOpen = inspectorPinned || inspectorMode.mode !== 'closed'
   const inspectorState = inspectorOpen ? 'open' : 'hint'
 
+  const dismissInspector = useCallback(() => {
+    if (inspectorPinned || inspectorMode.mode === 'closed') return
+    setInspectorMode({ mode: 'closed' })
+  }, [inspectorPinned, inspectorMode.mode])
+
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape' && !inspectorPinned && inspectorMode.mode !== 'closed') {
-        setInspectorMode({ mode: 'closed' })
-      }
+      if (event.key === 'Escape') dismissInspector()
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [inspectorPinned, inspectorMode.mode])
+  }, [dismissInspector])
 
   function openMode(next: StarfieldInspectorMode) {
     setInspectorMode((current) => {
@@ -153,10 +156,7 @@ export function StjornurPage() {
             <DataNotConfiguredNotice />
           ) : (
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <div
-                data-starfield-toolbar
-                onPointerDown={(event) => event.stopPropagation()}
-              >
+              <div data-inspector-dismiss-ignore>
                 <StarfieldControlBar
                   search={filterQuery}
                   onSearchChange={setFilterQuery}
@@ -166,14 +166,7 @@ export function StjornurPage() {
                   systemsActive={inspectorMode.mode === 'systems'}
                 />
               </div>
-              <div
-                className="flex min-h-0 flex-1 flex-col overflow-hidden"
-                onPointerDown={() => {
-                  if (!inspectorPinned && inspectorMode.mode !== 'closed') {
-                    setInspectorMode({ mode: 'closed' })
-                  }
-                }}
-              >
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                 <StarfieldClient
                   networks={networks}
                   outposts={outposts}
@@ -195,6 +188,7 @@ export function StjornurPage() {
         }
         inspectorState={configured && !loading ? inspectorState : 'hidden'}
         inspectorHint="Open resources, systems, or an outpost"
+        onDismissInspector={dismissInspector}
         inspector={
           inspectorContent ??
           (inspectorPinned ? (

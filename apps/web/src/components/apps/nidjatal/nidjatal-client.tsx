@@ -40,6 +40,11 @@ export function NidjatalClient({ kins, seedKinId, onRefresh, panel, onSetPanel }
     onSetPanel({ mode: 'closed' })
   }
 
+  const dismissInspector = useCallback(() => {
+    if (inspectorPinned || panel.mode === 'closed') return
+    closePanel()
+  }, [inspectorPinned, panel.mode, onSetPanel])
+
   function openNew() {
     onSetPanel({ mode: 'kin-form', kinId: null })
   }
@@ -73,13 +78,11 @@ export function NidjatalClient({ kins, seedKinId, onRefresh, panel, onSetPanel }
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape' && !inspectorPinned && panel.mode !== 'closed') {
-        closePanel()
-      }
+      if (event.key === 'Escape') dismissInspector()
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [inspectorPinned, panel.mode])
+  }, [dismissInspector])
 
   return (
     <ReactFlowProvider>
@@ -105,22 +108,21 @@ export function NidjatalClient({ kins, seedKinId, onRefresh, panel, onSetPanel }
                 />
               }
             />
-            <div className="min-h-0 flex-1 overflow-hidden" data-inspectable>
+            <div className="min-h-0 flex-1 overflow-hidden">
               <NidjatalCanvas
                 kins={kinsWithId}
                 selectedKinId={selectedKinId}
                 searchQuery={searchQuery}
                 onKinClick={(id) => onSetPanel({ mode: 'kin-form', kinId: id })}
                 onQuickParentFix={handleQuickParentFix}
-                onPaneClick={() => {
-                  if (!inspectorPinned) closePanel()
-                }}
+                onPaneClick={dismissInspector}
               />
             </div>
           </div>
         }
         inspectorState={inspectorState}
         inspectorHint={`Select a ${terms.nidjatalPerson.toLowerCase()} to edit, or add a new one`}
+        onDismissInspector={dismissInspector}
         inspector={
           panel.mode === 'kin-form' ? (
             <NidjatalKinForm

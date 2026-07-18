@@ -4,6 +4,7 @@ import { InspectorHintRail } from './inspector-hint-rail'
 import { StudioMobileRailContext } from './studio-mobile-rail-context'
 import { StudioRailToggle } from './studio-rail-toggle'
 import { useMediaQuery } from '@/hooks/use-sidebar-collapsed'
+import { shouldIgnoreInspectorDismiss } from '@/lib/inspector-dismiss'
 
 export const INSPECTOR_PANEL_WIDTH = 300
 export const STUDIO_RAIL_WIDTH = 260
@@ -18,6 +19,7 @@ export function StudioLayout({
   inspectorState = 'hidden',
   inspectorHint,
   inspector,
+  onDismissInspector,
 }: {
   contextBar: React.ReactNode
   rail?: React.ReactNode
@@ -27,8 +29,16 @@ export function StudioLayout({
   inspectorState?: InspectorSideState
   inspectorHint?: string
   inspector?: React.ReactNode
+  /** Close the inspector when the canvas is clicked outside interactive targets. */
+  onDismissInspector?: () => void
 }) {
   const inspectorOpen = inspectorState === 'open' && Boolean(inspector)
+
+  function handleCanvasPointerDown(event: React.PointerEvent) {
+    if (!onDismissInspector || !inspectorOpen) return
+    if (shouldIgnoreInspectorDismiss(event.target)) return
+    onDismissInspector()
+  }
   const isDesktop = useMediaQuery('(min-width: 1024px)')
   // Match Tailwind `md` — mount a single inspector tree (portal XOR side panel).
   const isMdUp = useMediaQuery('(min-width: 768px)')
@@ -107,7 +117,12 @@ export function StudioLayout({
               </div>
             </>
           ) : null}
-          <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">{canvas}</div>
+          <div
+            className="relative flex min-w-0 flex-1 flex-col overflow-hidden"
+            onPointerDown={handleCanvasPointerDown}
+          >
+            {canvas}
+          </div>
           {inspectorState === 'hint' && inspectorHint ? (
             <div className="hidden shrink-0 md:block">
               <InspectorHintRail message={inspectorHint} />

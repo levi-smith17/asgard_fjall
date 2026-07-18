@@ -54,6 +54,7 @@ export function SogurRail({
   runir,
   onOpenItem,
   onOpenFirstThattr,
+  onAddThattr,
   onInspectItem,
   onNewSaga,
   onOpenCatalog,
@@ -74,6 +75,7 @@ export function SogurRail({
   runir: SogurRailMarker[]
   onOpenItem: (item: SogurRailItem) => void
   onOpenFirstThattr: (sagaId: string, thattrId: string) => void
+  onAddThattr: (sagaId: string) => void
   onInspectItem: (item: SogurRailItem) => void
   onNewSaga: () => void
   onOpenCatalog: () => void
@@ -213,9 +215,11 @@ export function SogurRail({
               </h3>
               <ul className="space-y-1.5 p-2">
                 {group.items.map((item) => {
+                  const thattrCount = item.thattrCount ?? 0
                   const selected =
                     item.kind === 'saga'
-                      ? selectedSagaId === item.id && !selectedThattrId
+                      ? selectedSagaId === item.id &&
+                        (!selectedThattrId || thattrCount <= 1)
                       : selectedThattrId === item.id
                   const Icon = item.kind === 'saga' ? NotebookPen : StickyNote
                   return (
@@ -271,7 +275,21 @@ export function SogurRail({
                           </span>
                         </button>
                         <div className="flex shrink-0 items-center gap-0.5">
-                          {item.kind === 'saga' && item.firstThattrId ? (
+                          {item.kind === 'saga' && thattrCount <= 1 ? (
+                            <ToolbarTooltip
+                              label={`Add ${terms.thattrSingular.toLowerCase()}`}
+                            >
+                              <button
+                                type="button"
+                                onClick={() => onAddThattr(item.id)}
+                                className="rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                aria-label={`Add ${terms.thattrSingular.toLowerCase()}`}
+                              >
+                                <Plus className="h-3.5 w-3.5" aria-hidden />
+                              </button>
+                            </ToolbarTooltip>
+                          ) : null}
+                          {item.kind === 'saga' && thattrCount >= 2 && item.firstThattrId ? (
                             <ToolbarTooltip label={`Open first ${terms.thattrSingular.toLowerCase()}`}>
                               <button
                                 type="button"
