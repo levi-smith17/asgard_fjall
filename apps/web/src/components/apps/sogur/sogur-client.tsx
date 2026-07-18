@@ -179,11 +179,9 @@ export function SogurWorkspace() {
   const contextThaettir = contextSaga
     ? (workspace.logsBySagaId.get(contextSaga.id) ?? []).map((log) => ({
         id: log.id,
-        title: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
+        title: log.title?.trim() || '(no title)',
       }))
-    : selectedThattr
-      ? [{ id: selectedThattr.id, title: thattrPreview(selectedThattr, `Untitled ${terms.thattrSingular}`) }]
-      : []
+    : []
 
   const railItems = useMemo((): SogurRailItem[] => {
     const sagaItems: SogurRailItem[] = workspace.sagas.map((saga) => {
@@ -732,9 +730,7 @@ export function SogurWorkspace() {
               <SogurDocumentBar
                 sagaName={contextSaga?.name ?? null}
                 thattrName={
-                  selectedThattr
-                    ? thattrPreview(selectedThattr, `Untitled ${terms.thattrSingular}`)
-                    : null
+                  selectedThattr ? selectedThattr.title?.trim() || '(no title)' : null
                 }
                 thaettir={contextThaettir}
                 activeThattrId={selectedThattrId}
@@ -762,6 +758,11 @@ export function SogurWorkspace() {
                 onSave={showingEditor ? () => void saveActiveSogurThattr() : undefined}
                 saving={editorState.saving}
                 saveDisabled={!editorState.dirty || editorState.saving}
+                onInspectThattr={
+                  showingEditor && selectedThattr && contextSaga
+                    ? () => openInspectThattr(selectedThattr.id, contextSaga.id)
+                    : undefined
+                }
               />
             ) : null}
             {showingEditor && selectedThattr ? (

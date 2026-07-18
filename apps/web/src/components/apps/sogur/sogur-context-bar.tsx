@@ -7,6 +7,7 @@ import {
   Loader2,
   NotebookPen,
   Save,
+  Settings,
 } from 'lucide-react'
 import { GlobalSearchTrigger } from '@/components/core/command-palette/global-search-trigger'
 import { ContextBarSplitAddButton } from '@/components/core/ui/context-bar-add-button'
@@ -94,8 +95,10 @@ export function SogurDocumentBar({
   onSave,
   saving,
   saveDisabled,
+  onInspectThattr,
 }: {
   sagaName?: string | null
+  /** Display title for the open Thattr; use a short placeholder when untitled. */
   thattrName?: string | null
   thaettir: Array<{ id: string; title: string }>
   activeThattrId?: string | null
@@ -109,26 +112,32 @@ export function SogurDocumentBar({
   onSave?: () => void
   saving?: boolean
   saveDisabled?: boolean
+  /** Saga-owned Thattr only — opens the edit inspector. */
+  onInspectThattr?: () => void
 }) {
   const terms = useTerms()
   const activeIndex = thaettir.findIndex((thattr) => thattr.id === activeThattrId)
-  const showSwitcher = Boolean(activeThattrId) && thaettir.length > 0
+  const inSaga = Boolean(sagaName)
+  const thattrOpen = Boolean(activeThattrId)
+  // Pagination only inside a Saga with 2+ Thaettir while one is open.
+  const showSwitcher = inSaga && thattrOpen && thaettir.length > 1
+  const displayThattrName = thattrName?.trim() || '(no title)'
 
   return (
     <div className={STUDIO_CONTEXT_BAR_CLASS} role="toolbar" aria-label={`${terms.notes} context`}>
       <div className="flex w-full min-w-0 items-center justify-between gap-2 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center lg:gap-3">
-        <div className="min-w-0 justify-self-start leading-tight">
+        <div className="min-w-0 max-w-full justify-self-start overflow-hidden leading-tight lg:max-w-none">
           <p className="truncate text-sm font-medium text-foreground">
-            {sagaName || thattrName || terms.notesSingular}
+            {sagaName || (thattrOpen ? displayThattrName : terms.notesSingular)}
           </p>
           <p className="truncate text-xs text-muted-foreground">
-            {sagaName && thattrName
-              ? thattrName
+            {sagaName && thattrOpen
+              ? displayThattrName
               : sagaName
                 ? `${thaettir.length} ${
                     thaettir.length === 1 ? terms.thattrSingular : terms.thaettir
                   }`
-                : thattrName
+                : thattrOpen
                   ? `Standalone ${terms.thattrSingular.toLowerCase()}`
                   : terms.thaettir}
           </p>
@@ -160,7 +169,7 @@ export function SogurDocumentBar({
                 >
                   <List className="h-3.5 w-3.5" aria-hidden />
                   <span>
-                    {activeThattrId && activeIndex >= 0 ? activeIndex + 1 : '—'} / {thaettir.length}
+                    {activeIndex >= 0 ? activeIndex + 1 : '—'} / {thaettir.length}
                   </span>
                   <ChevronDown className="h-3 w-3 opacity-60" aria-hidden />
                 </Button>
@@ -183,7 +192,9 @@ export function SogurDocumentBar({
                       <span className="w-5 shrink-0 text-right tabular-nums text-muted-foreground">
                         {index + 1}
                       </span>
-                      <span className="min-w-0 flex-1 truncate font-medium">{thattr.title}</span>
+                      <span className="min-w-0 flex-1 truncate font-medium">
+                        {thattr.title.trim() || '(no title)'}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -208,29 +219,20 @@ export function SogurDocumentBar({
         )}
 
         <div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2 lg:justify-self-end">
-          <ToolbarTooltip
-            label={
-              laufLabel
-                ? `Open ${laufLabel}`
-                : `No ${terms.laufarSingular.toLowerCase()} linked`
-            }
-          >
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className={cn('h-8 w-8', laufLabel && 'text-primary')}
-              disabled={!onOpenLauf}
-              onClick={onOpenLauf}
-              aria-label={
-                laufLabel
-                  ? `Open ${laufLabel}`
-                  : `No ${terms.laufarSingular.toLowerCase()} linked`
-              }
-            >
-              <Bookmark className="h-4 w-4" aria-hidden />
-            </Button>
-          </ToolbarTooltip>
+          {onOpenLauf ? (
+            <ToolbarTooltip label={laufLabel ? `Open ${laufLabel}` : `Open ${terms.laufarSingular}`}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-primary"
+                onClick={onOpenLauf}
+                aria-label={laufLabel ? `Open ${laufLabel}` : `Open ${terms.laufarSingular}`}
+              >
+                <Bookmark className="h-4 w-4" aria-hidden />
+              </Button>
+            </ToolbarTooltip>
+          ) : null}
           {onSave ? (
             <ToolbarTooltip label="Save changes (⌘S)">
               <Button
@@ -247,6 +249,20 @@ export function SogurDocumentBar({
                 ) : (
                   <Save className="h-4 w-4" aria-hidden />
                 )}
+              </Button>
+            </ToolbarTooltip>
+          ) : null}
+          {onInspectThattr ? (
+            <ToolbarTooltip label={`Edit ${terms.thattrSingular.toLowerCase()}`}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={onInspectThattr}
+                aria-label={`Edit ${terms.thattrSingular.toLowerCase()}`}
+              >
+                <Settings className="h-4 w-4" aria-hidden />
               </Button>
             </ToolbarTooltip>
           ) : null}

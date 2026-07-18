@@ -18,7 +18,7 @@ Fjall gathers personal apps into one cohesive interface with Asgard branding and
 | Finance / **Audr** | Expenses, subscriptions, budgets |
 | Calendar / **Dagatal** | Itinerary calendar |
 | Resume / **Ordstirr** | Public profile editor + live public views |
-| Notes / **Sögur** | Logbooks and journal pages |
+| Notes / **Sögur** | First-class Sagas, ordered Thaettir, standalone notes, and a Notion-like block editor |
 | Starfield / **Stjörnur** | Outpost network planner |
 | Messages / **Sendibod** | Contact-form signals |
 | Settings / **Thing** | Account, privacy, itinerary preferences |
@@ -37,6 +37,7 @@ A sidebar toggle cycles UI labels (**Standard** ↔ **Asgard** by default on Fja
 - **[React Router v7](https://reactrouter.com/)** — client-side routing
 - **[TanStack Query](https://tanstack.com/query)** — data fetching and cache management
 - **[Tailwind CSS v4](https://tailwindcss.com/)** — styling, shared studio two-tier layout with RealmOps
+- **[Tiptap](https://tiptap.dev/)** + **dnd-kit** — Notion-like rich documents, slash commands, block drag-and-drop, and Saga ordering
 
 ### Data & auth
 - **Fjall API** (`api.asgard.levismith.us`) — browser calls the API directly with passkey session Bearer (no RealmOps BFF / SSM token in the static site)
@@ -44,8 +45,9 @@ A sidebar toggle cycles UI labels (**Standard** ↔ **Asgard** by default on Fja
 - **API tokens** (`csk_*`) — RealmOps / automation only
 
 ### Infrastructure
-- **Terraform** → S3 + CloudFront + ACM + Route53 alias (`infrastructure/terraform/prod`)
-- **GitHub Actions** — build on `main`, sync to S3, invalidate CloudFront
+- **Terraform** → static web, passkey auth, S3, CloudFront, ACM, and Route53 (`infrastructure/terraform/prod`)
+- **Terragrunt** → Fjall API data, media, HTTP API Gateway, Lambda functions, and custom domains (`infrastructure/terragrunt/prod`)
+- **GitHub Actions** — build/deploy web and update existing Lambda code on `main`
 - **[Turborepo](https://turbo.build/)** + **[pnpm](https://pnpm.io/)** — workspace tooling
 
 ---
@@ -55,9 +57,13 @@ A sidebar toggle cycles UI labels (**Standard** ↔ **Asgard** by default on Fja
 ```
 asgard_fjall/
 ├── apps/
-│   └── web/                 # Vite + React 19 frontend
+│   ├── web/                 # Vite + React 19 frontend
+│   ├── api/                 # Fjall HTTP API Lambda handlers
+│   └── auth/                # Passkey registration/session service
 ├── infrastructure/
-│   └── terraform/prod/      # S3, CloudFront, ACM, Route53, OIDC deploy role
+│   ├── terraform/prod/      # Static web, passkey auth, CloudFront, DNS
+│   └── terragrunt/prod/     # API data, media, HTTP/Lambda, deploy IAM
+├── docs/                    # Architecture, auth, and cutover notes
 └── PORT.md                  # Porting / launch checklist (may lag README)
 ```
 
@@ -75,7 +81,8 @@ Source of truth: `apps/web/src/lib/terminology.ts`. Sidebar subtitle is **Fjall*
 | Calendar | Calendar | Itinerary | Dagatal |
 | Messages | Messages | Signals | Sendibod |
 | Resume / profile | Resume | Manifest | Ordstirr |
-| Notes | Notes / Logbook | Logbook / Log | Sögur / Saga |
+| Notes | Notebooks / Notebook | Logbook / Log | Sögur / Saga |
+| Note pages | Notes / Note | Pages / Page | Thaettir / Thattr |
 | Starfield | Starfield | Night Sky | Stjörnur |
 
 ### Ordstirr / profile sections (Asgard names)
@@ -89,6 +96,16 @@ Rót, Leidangr, Thjalfun, Bunadr, Vördur, Tindar, Lidsinni, Sjalfsmynd, Foruney
 | Tasks | Tasks | Waypoints | Laufar |
 | Groups | Groups | Trails | Greinar |
 | Tags | Tags | Markers | Rúnir |
+
+### Sögur data model
+
+- A **Saga** is a first-class container with its own name, Grein, Rúnir, and ordered list of Thaettir.
+- A **Thattr** can belong to a Saga or remain standalone. A Saga-owned Thattr inherits its Saga's Grein while retaining its own content, Rúnir, and optional Lauf.
+- The editor stores ordinary Tiptap HTML and presents a transparent, Notion-like canvas with slash commands, H1–H3, lists, quotes, code, dividers, images, contextual formatting, and block drag-and-drop.
+- Older records grouped only by `trailId` are synthesized into legacy Sagas client-side and materialized as real `SAGA#` records when edited or reordered.
+- Saga deletion detaches its Thaettir instead of deleting them.
+
+The API exposes `GET/POST /sogur/sagas`, `PUT/DELETE /sogur/sagas/{id}`, and `PUT /sogur/sagas/{id}/reorder`, alongside the existing `/sogur` Thattr routes.
 
 ---
 
@@ -124,8 +141,30 @@ Web defaults to the Vite dev server (typically `http://localhost:5173`). Overlay
 
 ## Deploy
 
-1. One-time: `terraform apply` in `infrastructure/terraform/prod` (S3, CloudFront, ACM, DNS alias, OIDC role)
-2. Push to `main` — GitHub Actions builds the web app, syncs to S3, and invalidates CloudFront
+### Web and passkey infrastructure
+
+One-time or infrastructure changes:
+
+```bash
+cd infrastructure/terraform/prod
+AWS_PROFILE=asgard terraform apply -var-file=prod.tfvars
+```
+
+Pushing to `main` builds the web app, syncs it to S3, and invalidates CloudFront.
+
+### Fjall API infrastructure and code
+
+The cloud API is managed by Terragrunt. In particular, new routes or Lambda functions must be applied from `api-http` **before** the code deploy runs:
+
+```bash
+cd infrastructure/terragrunt/prod/api-http
+AWS_PROFILE=asgard terragrunt apply
+
+cd ../../../..
+AWS_PROFILE=asgard pnpm --filter @asgard-fjall/api deploy:sogur
+```
+
+`deploy:all` and feature deploy scripts update Lambda code; they do not create missing functions, IAM roles, or API Gateway routes. See `infrastructure/terragrunt/README.md` for all API stacks.
 
 | Environment | Domain |
 |---|---|
