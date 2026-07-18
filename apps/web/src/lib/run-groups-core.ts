@@ -1,11 +1,11 @@
-export type RawMarker = {
+export type RawRun = {
   id: string
   name: string
   color: string
   icon?: string | null
 }
 
-export type MarkerLeaf = {
+export type RunLeaf = {
   type: 'leaf'
   id: string
   name: string
@@ -14,47 +14,47 @@ export type MarkerLeaf = {
   icon?: string | null
 }
 
-export type MarkerGroup = {
+export type RunGroup = {
   type: 'group'
   label: string
-  children: MarkerTreeNode[]
+  children: RunTreeNode[]
   id?: string
   color?: string
   icon?: string | null
 }
 
-export type MarkerTreeNode = MarkerLeaf | MarkerGroup
+export type RunTreeNode = RunLeaf | RunGroup
 
-export function buildMarkerTree(markers: RawMarker[]): MarkerTreeNode[] {
-  const root: MarkerTreeNode[] = []
-  for (const marker of markers) {
-    const parts = marker.name.split('/')
-    insertNode(root, parts, marker)
+export function buildRunTree(runir: RawRun[]): RunTreeNode[] {
+  const root: RunTreeNode[] = []
+  for (const run of runir) {
+    const parts = run.name.split('/')
+    insertNode(root, parts, run)
   }
   sortNodes(root)
   return root
 }
 
-function insertNode(nodes: MarkerTreeNode[], parts: string[], marker: RawMarker): void {
+function insertNode(nodes: RunTreeNode[], parts: string[], run: RawRun): void {
   if (parts.length === 1) {
     const existingGroup = nodes.find(
-      (node): node is MarkerGroup => node.type === 'group' && node.label === parts[0],
+      (node): node is RunGroup => node.type === 'group' && node.label === parts[0],
     )
     if (existingGroup) {
-      existingGroup.id = marker.id
-      existingGroup.color = marker.color
-      existingGroup.icon = marker.icon
+      existingGroup.id = run.id
+      existingGroup.color = run.color
+      existingGroup.icon = run.icon
       return
     }
-    nodes.push({ type: 'leaf', id: marker.id, name: marker.name, label: parts[0], color: marker.color, icon: marker.icon })
+    nodes.push({ type: 'leaf', id: run.id, name: run.name, label: parts[0], color: run.color, icon: run.icon })
     return
   }
   const [head, ...rest] = parts
-  let group = nodes.find((node): node is MarkerGroup => node.type === 'group' && node.label === head)
+  let group = nodes.find((node): node is RunGroup => node.type === 'group' && node.label === head)
   if (!group) {
-    const existingLeafIdx = nodes.findIndex((node): node is MarkerLeaf => node.type === 'leaf' && node.label === head)
+    const existingLeafIdx = nodes.findIndex((node): node is RunLeaf => node.type === 'leaf' && node.label === head)
     if (existingLeafIdx !== -1) {
-      const leaf = nodes[existingLeafIdx] as MarkerLeaf
+      const leaf = nodes[existingLeafIdx] as RunLeaf
       group = { type: 'group', label: head, children: [], id: leaf.id, color: leaf.color, icon: leaf.icon }
       nodes.splice(existingLeafIdx, 1, group)
     } else {
@@ -62,10 +62,10 @@ function insertNode(nodes: MarkerTreeNode[], parts: string[], marker: RawMarker)
       nodes.push(group)
     }
   }
-  insertNode(group.children, rest, marker)
+  insertNode(group.children, rest, run)
 }
 
-function sortNodes(nodes: MarkerTreeNode[]): void {
+function sortNodes(nodes: RunTreeNode[]): void {
   nodes.sort((left, right) => {
     if (left.type !== right.type) return left.type === 'group' ? -1 : 1
     return left.label.localeCompare(right.label)
@@ -75,14 +75,14 @@ function sortNodes(nodes: MarkerTreeNode[]): void {
   }
 }
 
-export function getNodesAtPath(tree: MarkerTreeNode[], path: string[]): MarkerTreeNode[] {
+export function getNodesAtPath(tree: RunTreeNode[], path: string[]): RunTreeNode[] {
   if (path.length === 0) return tree
-  const group = tree.find((node): node is MarkerGroup => node.type === 'group' && node.label === path[0])
+  const group = tree.find((node): node is RunGroup => node.type === 'group' && node.label === path[0])
   if (!group) return []
   return getNodesAtPath(group.children, path.slice(1))
 }
 
-export function getAllLeafIds(nodes: MarkerTreeNode[]): string[] {
+export function getAllLeafIds(nodes: RunTreeNode[]): string[] {
   return nodes.flatMap((node) => {
     if (node.type === 'leaf') return [node.id]
     const childIds = getAllLeafIds(node.children)
@@ -90,9 +90,9 @@ export function getAllLeafIds(nodes: MarkerTreeNode[]): string[] {
   })
 }
 
-export type FlatLeaf = { leaf: MarkerLeaf; path: string[] }
+export type FlatLeaf = { leaf: RunLeaf; path: string[] }
 
-export function getAllLeaves(nodes: MarkerTreeNode[], prefix: string[] = []): FlatLeaf[] {
+export function getAllLeaves(nodes: RunTreeNode[], prefix: string[] = []): FlatLeaf[] {
   return nodes.flatMap((node) => {
     if (node.type === 'leaf') return [{ leaf: node, path: [...prefix, node.label] }]
     const selfEntries: FlatLeaf[] = node.id

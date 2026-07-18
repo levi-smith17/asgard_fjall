@@ -5,14 +5,14 @@ export interface NormalizedLauf {
   favicon: string | null
   read: boolean
   readLater: boolean
-  trailId: string | null
-  markers: { markerId: string; marker: { id: string; name: string; color: string; icon: string | null } }[]
+  greinId: string | null
+  runir: { runId: string; run: { id: string; name: string; color: string; icon: string | null } }[]
   createdAt: string
 }
 
 export interface LaufFilterParams {
   search: string
-  markerIds: string[]
+  runIds: string[]
   readLater: boolean
   dateFrom: string
   dateTo: string
@@ -22,7 +22,7 @@ export interface LaufFilterParams {
 export function parseLaufFilterParams(qs: Record<string, string | undefined>): LaufFilterParams {
   return {
     search: qs.search ?? '',
-    markerIds: qs.markerId ? qs.markerId.split(',').filter(Boolean) : [],
+    runIds: qs.runId ? qs.runId.split(',').filter(Boolean) : [],
     readLater: qs.readLater === 'true',
     dateFrom: qs.dateFrom ?? '',
     dateTo: qs.dateTo ?? '',
@@ -39,9 +39,9 @@ export function filterLaufar<T extends NormalizedLauf>(laufar: T[], params: Lauf
       (w) => w.title?.toLowerCase().includes(q) || w.url?.toLowerCase().includes(q),
     )
   }
-  if (params.markerIds.length > 0) {
+  if (params.runIds.length > 0) {
     result = result.filter((w) =>
-      params.markerIds.some((id) => w.markers.some((m) => m.markerId === id)),
+      params.runIds.some((id) => w.runir.some((m) => m.runId === id)),
     )
   }
   if (params.readLater) {

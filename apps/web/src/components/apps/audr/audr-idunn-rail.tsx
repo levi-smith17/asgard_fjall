@@ -5,8 +5,8 @@ import { Select } from '@/components/core/ui/select'
 import { Switch } from '@/components/core/ui/switch'
 import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
-import { MarkerBadge } from '@/components/apps/marker-badge'
-import { liveMarkersById, toDisplayMarker } from '@/lib/embedded-markers'
+import { RunBadge } from '@/components/apps/run-badge'
+import { liveRunirById, toDisplayRun } from '@/lib/embedded-runir'
 import { toggleFjallSupplylineActive } from '@/lib/data-api'
 import { daysUntilRenewal, getEffectiveNextRenewal } from '@/lib/idunn-renewal'
 import { audrFmt } from '@/lib/audr-format'
@@ -15,7 +15,7 @@ import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
 import type { FjallSjodrView, FjallSupplyline } from '@/lib/data-types'
 import { resolveSjodrColor } from '@/lib/sjodr-color'
-import type { AudrMarker } from './audr-types'
+import type { AudrRun } from './audr-types'
 
 const CYCLE_LABELS: Record<string, string> = {
   WEEKLY: 'Wk',
@@ -28,7 +28,7 @@ const CYCLE_LABELS: Record<string, string> = {
 export function AudrIdunnRail({
   supplylines,
   funds,
-  markers = [],
+  runir = [],
   selectedId,
   activeFilter,
   onActiveFilterChange,
@@ -41,7 +41,7 @@ export function AudrIdunnRail({
 }: {
   supplylines: FjallSupplyline[]
   funds: FjallSjodrView[]
-  markers?: AudrMarker[]
+  runir?: AudrRun[]
   selectedId: string | null
   activeFilter: string
   onActiveFilterChange: (value: string) => void
@@ -54,7 +54,7 @@ export function AudrIdunnRail({
 }) {
   const terms = useTerms()
   const fundById = new Map(funds.map((fund) => [fund.id, fund]))
-  const liveById = liveMarkersById(markers)
+  const liveById = liveRunirById(runir)
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="flex h-14 min-h-14 max-h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
@@ -159,7 +159,7 @@ function AudrIdunnRailCard({
   onToggleActive,
 }: {
   supplyline: FjallSupplyline
-  liveById: ReturnType<typeof liveMarkersById>
+  liveById: ReturnType<typeof liveRunirById>
   fundColor?: string | null
   fundName?: string
   selected: boolean
@@ -212,10 +212,10 @@ function AudrIdunnRailCard({
           ) : null}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-1">
-          {supplyline.markers.map((entry, i) => {
-            const marker = toDisplayMarker(entry, liveById)
-            if (!marker) return null
-            return <MarkerBadge key={marker.id ?? i} marker={marker} />
+          {supplyline.runir.map((entry, i) => {
+            const run = toDisplayRun(entry, liveById)
+            if (!run) return null
+            return <RunBadge key={run.id ?? i} run={run} />
           })}
         </div>
         <div className="mt-1.5 flex items-center justify-between gap-2 text-muted-foreground">

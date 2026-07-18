@@ -11,8 +11,8 @@ import {
   InspectorFormHeader,
 } from '@/components/core/ui/inspector-form-actions'
 import { InspectorChrome, InspectorChromeTitle } from '@/components/core/ui/inspector-chrome'
-import { MarkerColorField } from '@/components/apps/marker-color-field'
-import { PRESET_COLORS } from '@/components/apps/markers-list'
+import { RunColorField } from '@/components/apps/run-color-field'
+import { PRESET_COLORS } from '@/components/apps/runir-list'
 import { SwitchField } from '@/components/core/ui/switch-field'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import {
@@ -356,7 +356,7 @@ function SjodrForm({
             className="flex w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </label>
-        <MarkerColorField color={color} onChange={setColor} />
+        <RunColorField color={color} onChange={setColor} />
         <SwitchField
           checked={isDefault}
           onCheckedChange={setIsDefault}

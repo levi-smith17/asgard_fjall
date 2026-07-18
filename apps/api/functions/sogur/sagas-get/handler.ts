@@ -7,7 +7,7 @@ import { toApiGatewayResponse, ok, serverError } from '../../shared/response'
 
 /**
  * List first-class Saga records only (SAGA#*).
- * Legacy trailId-grouped SOGUR# Thattr are not synthesized here —
+ * Legacy greinId-grouped SOGUR# Thattr are not synthesized here —
  * clients may backfill/group those until migrated onto Saga records.
  */
 export const handler = async (

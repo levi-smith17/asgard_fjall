@@ -1,88 +1,88 @@
 import { useEffect, useState } from 'react'
-import type { FjallMarkerView, FjallTrailView, FjallWaypointView } from '@/lib/data-types'
+import type { FjallRunView, FjallGreinView, FjallLaufView } from '@/lib/data-types'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { Input } from '@/components/core/ui/input'
 import {
   InspectorFormActions,
   InspectorFormHeader,
 } from '@/components/core/ui/inspector-form-actions'
-import { MarkerPicker } from '@/components/apps/marker-picker'
+import { RunPicker } from '@/components/apps/run-picker'
 import { Select } from '@/components/core/ui/select'
-import { fetchFjallWaypointMeta } from '@/lib/data-api'
+import { fetchFjallLaufMeta } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 
-export type WaypointDraft = {
+export type LaufDraft = {
   title: string
   url: string
   notes: string
-  trailId: string
-  markerIds: string[]
+  greinId: string
+  runIds: string[]
 }
 
-function draftFromWaypoint(waypoint: FjallWaypointView | null): WaypointDraft {
+function draftFromLauf(lauf: FjallLaufView | null): LaufDraft {
   return {
-    title: waypoint?.title ?? '',
-    url: waypoint?.url ?? '',
-    notes: waypoint?.notes ?? '',
-    trailId: waypoint?.trailId ?? '',
-    markerIds: waypoint?.markers.map((marker) => marker.id) ?? [],
+    title: lauf?.title ?? '',
+    url: lauf?.url ?? '',
+    notes: lauf?.notes ?? '',
+    greinId: lauf?.greinId ?? '',
+    runIds: lauf?.runir.map((run) => run.id) ?? [],
   }
 }
 
-export function WaypointInspector({
-  waypoint,
+export function LaufInspector({
+  lauf,
   isNew,
-  trails,
-  markers,
+  greinar,
+  runir,
   onClose,
   onSave,
   onDelete,
   isSaving,
-  markerPickerInitialPath,
-  defaultMarkerIds,
-  lockedTrailId,
+  runPickerInitialPath,
+  defaultRunIds,
+  lockedGreinId,
   showBack = false,
 }: {
-  waypoint: FjallWaypointView | null
+  lauf: FjallLaufView | null
   isNew: boolean
-  trails: FjallTrailView[]
-  markers: FjallMarkerView[]
+  greinar: FjallGreinView[]
+  runir: FjallRunView[]
   onClose: () => void
-  onSave: (draft: WaypointDraft) => Promise<void>
+  onSave: (draft: LaufDraft) => Promise<void>
   onDelete: () => Promise<void>
   isSaving: boolean
-  markerPickerInitialPath?: string[]
-  /** Applied once when creating a new lauf and no markers are set yet. */
-  defaultMarkerIds?: string[]
-  /** When set, Grein is fixed to this trail and the selector is hidden. */
-  lockedTrailId?: string
+  runPickerInitialPath?: string[]
+  /** Applied once when creating a new lauf and no runir are set yet. */
+  defaultRunIds?: string[]
+  /** When set, Grein is fixed to this grein and the selector is hidden. */
+  lockedGreinId?: string
   showBack?: boolean
 }) {
   const terms = useTerms()
-  const [draft, setDraft] = useState<WaypointDraft>(() => {
-    const initial = draftFromWaypoint(waypoint)
-    const withTrail = lockedTrailId ? { ...initial, trailId: lockedTrailId } : initial
-    if (isNew && defaultMarkerIds?.length && withTrail.markerIds.length === 0) {
-      return { ...withTrail, markerIds: defaultMarkerIds }
+  const [draft, setDraft] = useState<LaufDraft>(() => {
+    const initial = draftFromLauf(lauf)
+    const withGrein = lockedGreinId ? { ...initial, greinId: lockedGreinId } : initial
+    if (isNew && defaultRunIds?.length && withGrein.runIds.length === 0) {
+      return { ...withGrein, runIds: defaultRunIds }
     }
-    return withTrail
+    return withGrein
   })
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [fetchingMeta, setFetchingMeta] = useState(false)
 
   useEffect(() => {
-    const next = draftFromWaypoint(waypoint)
-    const withTrail = lockedTrailId ? { ...next, trailId: lockedTrailId } : next
-    if (isNew && defaultMarkerIds?.length && withTrail.markerIds.length === 0) {
-      setDraft({ ...withTrail, markerIds: defaultMarkerIds })
+    const next = draftFromLauf(lauf)
+    const withGrein = lockedGreinId ? { ...next, greinId: lockedGreinId } : next
+    if (isNew && defaultRunIds?.length && withGrein.runIds.length === 0) {
+      setDraft({ ...withGrein, runIds: defaultRunIds })
       return
     }
-    setDraft(withTrail)
-  }, [waypoint, isNew, defaultMarkerIds, lockedTrailId])
+    setDraft(withGrein)
+  }, [lauf, isNew, defaultRunIds, lockedGreinId])
 
-  const lockedTrail = lockedTrailId
-    ? (trails.find((trail) => trail.id === lockedTrailId) ?? null)
+  const lockedGrein = lockedGreinId
+    ? (greinar.find((grein) => grein.id === lockedGreinId) ?? null)
     : null
 
   async function handleUrlBlur() {
@@ -90,7 +90,7 @@ export function WaypointInspector({
     if (!url || draft.title.trim()) return
     setFetchingMeta(true)
     try {
-      const meta = await fetchFjallWaypointMeta(url)
+      const meta = await fetchFjallLaufMeta(url)
       setDraft((current) => ({
         ...current,
         title: meta.title ?? current.title,
@@ -102,15 +102,15 @@ export function WaypointInspector({
     }
   }
 
-  function setMarkerIds(markerIds: string[]) {
-    setDraft((current) => ({ ...current, markerIds }))
+  function setRunIds(runIds: string[]) {
+    setDraft((current) => ({ ...current, runIds }))
   }
 
-  const rawMarkers = markers.map((marker) => ({
-    id: marker.id,
-    name: marker.name,
-    color: marker.color,
-    icon: marker.icon,
+  const rawRunir = runir.map((run) => ({
+    id: run.id,
+    name: run.name,
+    color: run.color,
+    icon: run.icon,
   }))
 
   const headerTitle = isNew
@@ -157,37 +157,37 @@ export function WaypointInspector({
           />
         </label>
 
-        {lockedTrailId ? (
+        {lockedGreinId ? (
           <div className="block space-y-1.5">
             <span className="text-xs font-medium text-muted-foreground">{terms.greinar}</span>
             <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-foreground">
-              {lockedTrail?.name ?? terms.provisionsGroup}
+              {lockedGrein?.name ?? terms.provisionsGroup}
             </p>
           </div>
         ) : (
           <label className="block space-y-1.5">
             <span className="text-xs font-medium text-muted-foreground">{terms.greinar}</span>
             <Select
-              value={draft.trailId}
-              onChange={(trailId) => setDraft({ ...draft, trailId })}
+              value={draft.greinId}
+              onChange={(greinId) => setDraft({ ...draft, greinId })}
               placeholder={terms.unassigned}
               options={[
                 { value: '', label: terms.unassigned },
-                ...trails.map((trail) => ({ value: trail.id, label: trail.name })),
+                ...greinar.map((grein) => ({ value: grein.id, label: grein.name })),
               ]}
             />
           </label>
         )}
 
-        {markers.length > 0 ? (
+        {runir.length > 0 ? (
           <label className="block min-w-0 space-y-1.5">
             <span className="text-xs font-medium text-muted-foreground">{terms.runir}</span>
-            <MarkerPicker
-              markers={rawMarkers}
-              selected={draft.markerIds}
-              onChange={setMarkerIds}
+            <RunPicker
+              runir={rawRunir}
+              selected={draft.runIds}
+              onChange={setRunIds}
               placeholder={`Select ${terms.runir.toLowerCase()}`}
-              initialPath={markerPickerInitialPath}
+              initialPath={runPickerInitialPath}
             />
           </label>
         ) : null}
@@ -208,7 +208,7 @@ export function WaypointInspector({
       <ConfirmDialog
         open={deleteOpen}
         title={`Delete ${terms.laufarSingular}`}
-        description={`Delete "${waypoint?.title || waypoint?.url}"?`}
+        description={`Delete "${lauf?.title || lauf?.url}"?`}
         confirmLabel="Delete"
         confirmVariant="destructive"
         onConfirm={() => {

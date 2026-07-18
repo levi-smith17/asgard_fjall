@@ -47,7 +47,7 @@ export type Terms = {
   subscriptionSingular: string
   budgets: string
   budgetSingular: string
-  /** Root Run/Marker name for Audr scoping (data root path). */
+  /** Root Run/Run name for Audr scoping (data root path). */
   provisionsGroup: string
   /** Audr funds (Asgard: Sjodr). */
   sjodr: string

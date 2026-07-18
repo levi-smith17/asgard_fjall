@@ -7,12 +7,12 @@ import { toApiGatewayResponse, ok, badRequest, notFound, serverError } from '../
 
 function resolveSkattSk(
   id: string,
-  body: { markerId?: string; month?: number; year?: number },
+  body: { runId?: string; month?: number; year?: number },
 ): string | null {
-  if (body.markerId != null && body.month != null && body.year != null) {
-    return skattSk(body.markerId, body.month, body.year)
+  if (body.runId != null && body.month != null && body.year != null) {
+    return skattSk(body.runId, body.month, body.year)
   }
-  // Legacy composite ids are the sk without the SKATT# prefix (markerId#month#year).
+  // Legacy composite ids are the sk without the SKATT# prefix (runId#month#year).
   if (id.includes('#')) {
     return id.startsWith(SKATT_PREFIX) ? id : `${SKATT_PREFIX}${id}`
   }
@@ -39,10 +39,10 @@ export const handler = async (
     const sk = resolveSkattSk(id, body)
 
     if (!sk) {
-      // UUID-only updates need marker/month/year so we can target the deterministic key
+      // UUID-only updates need run/month/year so we can target the deterministic key
       // without a DynamoDB Query (write roles historically lack Query).
       return toApiGatewayResponse(
-        badRequest('markerId, month, and year are required to update cache'),
+        badRequest('runId, month, and year are required to update cache'),
       )
     }
 

@@ -1,11 +1,11 @@
 import { Repeat } from 'lucide-react'
-import { MarkerBadge } from '@/components/apps/marker-badge'
-import { liveMarkersById, toDisplayMarker } from '@/lib/embedded-markers'
+import { RunBadge } from '@/components/apps/run-badge'
+import { liveRunirById, toDisplayRun } from '@/lib/embedded-runir'
 import { getEffectiveNextRenewal, getRenewalInMonth } from '@/lib/idunn-renewal'
 import { audrFmt } from '@/lib/audr-format'
 import { cn } from '@/lib/utils'
 import type { FjallSupplyline } from '@/lib/data-types'
-import type { AudrMarker } from './audr-types'
+import type { AudrRun } from './audr-types'
 
 export function AudrSupplylineRow({
   supplyline,
@@ -15,7 +15,7 @@ export function AudrSupplylineRow({
   onSelect,
   fundColor,
   fundName,
-  markers = [],
+  runir = [],
 }: {
   supplyline: FjallSupplyline
   month?: number
@@ -25,9 +25,9 @@ export function AudrSupplylineRow({
   /** Colored Sjodr swatch after the name; omit to hide. */
   fundColor?: string | null
   fundName?: string
-  markers?: AudrMarker[]
+  runir?: AudrRun[]
 }) {
-  const liveById = liveMarkersById(markers)
+  const liveById = liveRunirById(runir)
   const effectiveRenewal =
     month != null && year != null
       ? (getRenewalInMonth(supplyline.nextRenewal, supplyline.billingCycle, month, year) ??
@@ -63,10 +63,10 @@ export function AudrSupplylineRow({
               aria-label={fundName}
             />
           ) : null}
-          {supplyline.markers.map((entry, i) => {
-            const marker = toDisplayMarker(entry, liveById)
-            if (!marker) return null
-            return <MarkerBadge key={marker.id ?? i} marker={marker} />
+          {supplyline.runir.map((entry, i) => {
+            const run = toDisplayRun(entry, liveById)
+            if (!run) return null
+            return <RunBadge key={run.id ?? i} run={run} />
           })}
         </div>
         {supplyline.notes ? (

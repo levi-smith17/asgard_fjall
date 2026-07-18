@@ -57,7 +57,7 @@ export function ThingAccountSettings() {
     setImage(account.image ?? '')
     setSidebarDefault(appearance.sidebarDefault)
     setDefaultLandingPage(
-      appearance.defaultLandingPage === '/waypoints' ? '/hlidskjalf' : appearance.defaultLandingPage,
+      appearance.defaultLandingPage === '/laufar' ? '/hlidskjalf' : appearance.defaultLandingPage,
     )
     setDateFormat(appearance.dateFormat)
     setTimeFormat(account.timeFormat)

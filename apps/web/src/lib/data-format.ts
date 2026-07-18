@@ -1,4 +1,4 @@
-import type { FjallMarker, FjallMarkerView, FjallTrail, FjallTrailView, FjallWaypoint, FjallWaypointView } from '@/lib/data-types'
+import type { FjallRun, FjallRunView, FjallGrein, FjallGreinView, FjallLauf, FjallLaufView } from '@/lib/data-types'
 
 export function extractEntityId(sk: string): string {
   const hash = sk.lastIndexOf('#')
@@ -9,43 +9,43 @@ export function secureRemoteAssetUrl(url: string): string {
   return url.startsWith('http://') ? `https://${url.slice('http://'.length)}` : url
 }
 
-export function toTrailView(trail: FjallTrail): FjallTrailView {
+export function toGreinView(grein: FjallGrein): FjallGreinView {
   return {
-    id: extractEntityId(trail.sk),
-    name: trail.name,
-    hiddenPages: Array.isArray(trail.hiddenPages) ? trail.hiddenPages : null,
-    createdAt: trail.createdAt,
+    id: extractEntityId(grein.sk),
+    name: grein.name,
+    hiddenPages: Array.isArray(grein.hiddenPages) ? grein.hiddenPages : null,
+    createdAt: grein.createdAt,
   }
 }
 
-export function toMarkerView(marker: FjallMarker): FjallMarkerView {
+export function toRunView(run: FjallRun): FjallRunView {
   return {
-    id: extractEntityId(marker.sk),
-    name: marker.name,
-    color: marker.color,
-    icon: marker.icon ?? null,
-    createdAt: marker.createdAt,
-    waypointCount: marker.waypointCount ?? 0,
+    id: extractEntityId(run.sk),
+    name: run.name,
+    color: run.color,
+    icon: run.icon ?? null,
+    createdAt: run.createdAt,
+    laufCount: run.laufCount ?? 0,
   }
 }
 
-export function toWaypointView(
-  waypoint: FjallWaypoint,
-  trailsById: Map<string, FjallTrailView>,
-): FjallWaypointView {
-  const trailId = waypoint.trailId ?? null
+export function toLaufView(
+  lauf: FjallLauf,
+  greinarById: Map<string, FjallGreinView>,
+): FjallLaufView {
+  const greinId = lauf.greinId ?? null
   return {
-    id: extractEntityId(waypoint.sk),
-    url: waypoint.url,
-    title: waypoint.title,
-    description: waypoint.description ?? '',
-    favicon: waypoint.favicon ?? '',
-    notes: waypoint.notes ?? '',
-    read: waypoint.read,
-    readLater: waypoint.readLater,
-    trailId,
-    trailName: trailId ? trailsById.get(trailId)?.name ?? null : null,
-    markers: waypoint.markers ?? [],
-    createdAt: waypoint.createdAt,
+    id: extractEntityId(lauf.sk),
+    url: lauf.url,
+    title: lauf.title,
+    description: lauf.description ?? '',
+    favicon: lauf.favicon ?? '',
+    notes: lauf.notes ?? '',
+    read: lauf.read,
+    readLater: lauf.readLater,
+    greinId,
+    greinName: greinId ? greinarById.get(greinId)?.name ?? null : null,
+    runir: lauf.runir ?? [],
+    createdAt: lauf.createdAt,
   }
 }

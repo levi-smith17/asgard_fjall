@@ -1,5 +1,5 @@
 import type { FjallCacheUtilization, FjallSupplyline } from '@/lib/data-types'
-import { toMarkerId } from '@/lib/embedded-markers'
+import { toRunId } from '@/lib/embedded-runir'
 import { getRenewalInMonth } from '@/lib/idunn-renewal'
 
 const MONTHLY_OR_LESS = new Set(['WEEKLY', 'BIWEEKLY', 'MONTHLY'])
@@ -17,21 +17,21 @@ export function supplylineMonthlyAmount(amount: number, billingCycle: string): n
   }
 }
 
-export function idunnLinesForMarker(
+export function idunnLinesForRun(
   supplylines: FjallSupplyline[],
-  markerId: string,
+  runId: string,
   month?: number,
   year?: number,
 ): FjallSupplyline[] {
   return supplylines.filter((line) => {
-    if (!line.markers.some((marker) => toMarkerId(marker) === markerId)) return false
+    if (!line.runir.some((run) => toRunId(run) === runId)) return false
     if (month == null || year == null) return true
     return getRenewalInMonth(line.nextRenewal, line.billingCycle, month, year) != null
   })
 }
 
-export function idunnSpendForMarker(supplylines: FjallSupplyline[], markerId: string): number {
-  return idunnLinesForMarker(supplylines, markerId)
+export function idunnSpendForRun(supplylines: FjallSupplyline[], runId: string): number {
+  return idunnLinesForRun(supplylines, runId)
     .filter((line) => line.active)
     .filter((line) => supplylineCountsAgainstSkatt(line.billingCycle))
     .reduce((sum, line) => sum + supplylineMonthlyAmount(line.amount, line.billingCycle), 0)
@@ -41,7 +41,7 @@ export function effectiveSkattSpent(
   cache: FjallCacheUtilization,
   supplylines: FjallSupplyline[],
 ): number {
-  return cache.spent + idunnSpendForMarker(supplylines, cache.markerId)
+  return cache.spent + idunnSpendForRun(supplylines, cache.runId)
 }
 
 export function effectiveSkattUtilization(

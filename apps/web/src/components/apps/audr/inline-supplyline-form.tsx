@@ -4,10 +4,10 @@ import { Input } from '@/components/core/ui/input'
 import { Button } from '@/components/core/ui/button'
 import { DatePicker } from '@/components/core/ui/date-picker'
 import { Select } from '@/components/core/ui/select'
-import { MarkerPicker } from '@/components/apps/marker-picker'
+import { RunPicker } from '@/components/apps/run-picker'
 import { saveFjallSupplyline } from '@/lib/data-api'
 import { useFormStatus } from '@/hooks/use-form-status'
-import { toMarkerId } from '@/lib/embedded-markers'
+import { toRunId } from '@/lib/embedded-runir'
 import type { FjallSupplyline } from '@/lib/data-types'
 import { toDateInputValue, todayDateInputValue } from '@/lib/date-input'
 import { getDefaultSjodrId } from '@/lib/audr-default-sjodr'
@@ -70,7 +70,7 @@ export function InlineSupplylineForm({
     () => supplyline?.fundId ?? (supplyline ? null : getDefaultSjodrId()),
   )
   const [tagIds, setTagIds] = useState(
-    (supplyline?.markers?.map((t) => toMarkerId(t)).filter(Boolean) as string[]) ?? [],
+    (supplyline?.runir?.map((t) => toRunId(t)).filter(Boolean) as string[]) ?? [],
   )
 
   useEffect(() => {
@@ -86,7 +86,7 @@ export function InlineSupplylineForm({
     setNotes(supplyline?.notes ?? '')
     setFundId(supplyline?.fundId ?? (supplyline ? null : getDefaultSjodrId()))
     setTagIds(
-      (supplyline?.markers?.map((t) => toMarkerId(t)).filter(Boolean) as string[]) ?? [],
+      (supplyline?.runir?.map((t) => toRunId(t)).filter(Boolean) as string[]) ?? [],
     )
   }, [supplyline?.id])
 
@@ -115,7 +115,7 @@ export function InlineSupplylineForm({
           nextRenewal,
           url: normalizedUrl,
           notes: notes.trim() || null,
-          markerIds: tagIds,
+          runIds: tagIds,
           fundId,
           active: supplyline?.active ?? true,
         })
@@ -170,8 +170,8 @@ export function InlineSupplylineForm({
       </label>
       <label className="block space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">{terms.runSingular}</span>
-        <MarkerPicker
-          markers={tags}
+        <RunPicker
+          runir={tags}
           selected={tagIds}
           onChange={setTagIds}
           placeholder={`Select ${terms.runSingular.toLowerCase()}…`}

@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { Pencil, Trash2, ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/core/ui/badge'
 import { Switch } from '@/components/core/ui/switch'
-import { MarkerBadge } from '@/components/apps/marker-badge'
+import { RunBadge } from '@/components/apps/run-badge'
 import { RowActionsMenu } from '@/components/apps/row-actions-menu'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
-import { toDisplayMarker } from '@/lib/embedded-markers'
+import { toDisplayRun } from '@/lib/embedded-runir'
 import { deleteFjallSupplyline, toggleFjallSupplylineActive } from '@/lib/data-api'
 import { daysUntilRenewal, getEffectiveNextRenewal } from '@/lib/idunn-renewal'
 import { InlineSupplylineForm } from './inline-supplyline-form'
@@ -71,10 +71,10 @@ export function SupplylineRow({ supplyline, tags, onSaved, onDeleted }: Props) {
             {renewingSoon ? (
               <Badge className="border-amber-500/30 bg-amber-500/10 px-1.5 py-0 text-xs text-amber-700 dark:text-amber-400">{daysUntil}d</Badge>
             ) : null}
-            {supplyline.markers.map((entry, i) => {
-              const marker = toDisplayMarker(entry)
-              if (!marker) return null
-              return <MarkerBadge key={marker.id ?? i} marker={marker} />
+            {supplyline.runir.map((entry, i) => {
+              const run = toDisplayRun(entry)
+              if (!run) return null
+              return <RunBadge key={run.id ?? i} run={run} />
             })}
           </div>
           <div className="text-xs text-muted-foreground">

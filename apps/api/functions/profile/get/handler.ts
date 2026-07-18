@@ -45,7 +45,7 @@ export const handler = async (
         image: profile.image ?? null,
         isAdmin: profile.isAdmin ?? false,
         signals: unreadSignals,
-        itinerary: 0,
+        dagatal: 0,
       }),
     )
   } catch (err) {

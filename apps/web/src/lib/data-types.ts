@@ -7,14 +7,14 @@ export type FjallStatusResponse = {
   baseUrl: string
 }
 
-export type FjallEmbeddedMarker = {
+export type FjallEmbeddedRun = {
   id: string
   name: string
   color: string
   icon?: string
 }
 
-export type FjallWaypoint = {
+export type FjallLauf = {
   pk: string
   sk: string
   url: string
@@ -24,12 +24,12 @@ export type FjallWaypoint = {
   notes?: string
   read: boolean
   readLater: boolean
-  trailId?: string
-  markers: FjallEmbeddedMarker[]
+  greinId?: string
+  runir: FjallEmbeddedRun[]
   createdAt: string
 }
 
-export type FjallTrail = {
+export type FjallGrein = {
   pk: string
   sk: string
   name: string
@@ -37,17 +37,17 @@ export type FjallTrail = {
   createdAt: string
 }
 
-export type FjallMarker = {
+export type FjallRun = {
   pk: string
   sk: string
   name: string
   color: string
   icon?: string | null
   createdAt: string
-  waypointCount?: number
+  laufCount?: number
 }
 
-export type FjallWaypointView = {
+export type FjallLaufView = {
   id: string
   url: string
   title: string
@@ -56,13 +56,13 @@ export type FjallWaypointView = {
   notes: string
   read: boolean
   readLater: boolean
-  trailId: string | null
-  trailName: string | null
-  markers: FjallEmbeddedMarker[]
+  greinId: string | null
+  greinName: string | null
+  runir: FjallEmbeddedRun[]
   createdAt: string
 }
 
-export type FjallTrailView = {
+export type FjallGreinView = {
   id: string
   name: string
   /** Pages the Grein is explicitly hidden from. `null` means unset (legacy default applies). */
@@ -70,35 +70,35 @@ export type FjallTrailView = {
   createdAt: string
 }
 
-export type FjallMarkerView = {
+export type FjallRunView = {
   id: string
   name: string
   color: string
   icon: string | null
   createdAt: string
-  waypointCount: number
+  laufCount: number
 }
 
-export type FjallWaypointMeta = {
+export type FjallLaufMeta = {
   title: string | null
   favicon: string | null
 }
 
-export type SaveFjallWaypointRequest = {
+export type SaveFjallLaufRequest = {
   title: string
   url: string
   description?: string
   notes?: string
   favicon?: string
-  trailId?: string | null
-  markerIds?: string[]
+  greinId?: string | null
+  runIds?: string[]
   read?: boolean
   readLater?: boolean
 }
 
-export type SaveFjallTrailRequest = { name: string; hiddenPages?: string[] }
+export type SaveFjallGreinRequest = { name: string; hiddenPages?: string[] }
 
-export type SaveFjallMarkerRequest = {
+export type SaveFjallRunRequest = {
   name: string
   color: string
   icon?: string | null
@@ -106,9 +106,9 @@ export type SaveFjallMarkerRequest = {
 
 // — Audr —
 
-export type FjallMarkerJunction = {
-  markerId: string
-  marker: FjallEmbeddedMarker
+export type FjallRunJunction = {
+  runId: string
+  run: FjallEmbeddedRun
 }
 
 export type FjallBurn = {
@@ -119,7 +119,7 @@ export type FjallBurn = {
   notes?: string | null
   receiptUrl?: string | null
   fundId?: string | null
-  markers: FjallMarkerJunction[]
+  runir: FjallRunJunction[]
 }
 
 export type FjallSupplyline = {
@@ -132,13 +132,13 @@ export type FjallSupplyline = {
   notes?: string | null
   active: boolean
   fundId?: string | null
-  markers: FjallMarkerJunction[]
+  runir: FjallRunJunction[]
 }
 
 export type FjallCacheUtilization = {
   id: string
-  markerId: string
-  marker: FjallEmbeddedMarker
+  runId: string
+  run: FjallEmbeddedRun
   limit: number
   spent: number
   utilization: number

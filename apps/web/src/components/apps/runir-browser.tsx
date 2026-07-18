@@ -1,49 +1,49 @@
 import { useMemo } from 'react'
 import { ChevronLeft, Plus, Settings, Tag } from 'lucide-react'
-import type { FjallMarkerView } from '@/lib/data-types'
+import type { FjallRunView } from '@/lib/data-types'
 import { Button } from '@/components/core/ui/button'
 import { FilterInput } from '@/components/core/ui/filter-input'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import {
-  buildMarkerTree,
+  buildRunTree,
   getAllLeafIds,
   getAllLeaves,
   getNodesAtPath,
-} from '@/lib/marker-groups'
+} from '@/lib/run-groups'
 import { cn } from '@/lib/utils'
 
-export type MarkerParentContext = {
+export type RunParentContext = {
   name: string
   color: string
   icon: string | null
 }
 
-export function MarkersBrowser({
-  markers,
+export function RunirBrowser({
+  runir,
   search,
   onSearchChange,
   groupPath,
   selectedId,
   onSelect,
   onNew,
-  onNewSubmarker,
+  onNewSubrun,
   onNavigateInto,
   rootPath = [],
 }: {
-  markers: FjallMarkerView[]
+  runir: FjallRunView[]
   search: string
   onSearchChange?: (value: string) => void
   groupPath: string[]
   selectedId: string | null
   onSelect: (id: string) => void
   onNew: () => void
-  onNewSubmarker: (parent: MarkerParentContext) => void
+  onNewSubrun: (parent: RunParentContext) => void
   onNavigateInto: (path: string[]) => void
   /** When set, navigation cannot go above this path (e.g. `['Audr']`). */
   rootPath?: string[]
 }) {
-  const tree = useMemo(() => buildMarkerTree(markers), [markers])
-  const markerMap = useMemo(() => new Map(markers.map((marker) => [marker.id, marker])), [markers])
+  const tree = useMemo(() => buildRunTree(runir), [runir])
+  const runMap = useMemo(() => new Map(runir.map((run) => [run.id, run])), [runir])
   const currentNodes = useMemo(() => getNodesAtPath(tree, groupPath), [tree, groupPath])
   const allLeaves = useMemo(() => getAllLeaves(tree), [tree])
   const canGoBack = groupPath.length > rootPath.length
@@ -56,23 +56,23 @@ export function MarkersBrowser({
     const rootPrefix = rootPath.length > 0 ? `${rootPath.join('/')}/` : null
     const rootName = rootPath.length > 0 ? rootPath.join('/') : null
     return allLeaves
-      .map(({ leaf }) => markerMap.get(leaf.id))
-      .filter((marker): marker is FjallMarkerView => {
-        if (!marker || !marker.name.toLowerCase().includes(query)) return false
+      .map(({ leaf }) => runMap.get(leaf.id))
+      .filter((run): run is FjallRunView => {
+        if (!run || !run.name.toLowerCase().includes(query)) return false
         if (!rootName) return true
-        return marker.name === rootName || marker.name.startsWith(rootPrefix!)
+        return run.name === rootName || run.name.startsWith(rootPrefix!)
       })
-  }, [allLeaves, markerMap, search, isSearching, rootPath])
+  }, [allLeaves, runMap, search, isSearching, rootPath])
 
-  const currentGroupMarker =
-    groupPath.length > 0 ? markers.find((marker) => marker.name === groupPath.join('/')) ?? null : null
-  const groupMarkerCount = useMemo(() => getAllLeafIds(currentNodes).length, [currentNodes])
+  const currentGroupRun =
+    groupPath.length > 0 ? runir.find((run) => run.name === groupPath.join('/')) ?? null : null
+  const groupRunCount = useMemo(() => getAllLeafIds(currentNodes).length, [currentNodes])
 
   const countLabel = isSearching
     ? `${searchResults.length} result${searchResults.length === 1 ? '' : 's'}`
     : groupPath.length === 0
-      ? `${markers.length} total`
-      : `${groupMarkerCount} total in ${groupPath[groupPath.length - 1]}`
+      ? `${runir.length} total`
+      : `${groupRunCount} total in ${groupPath[groupPath.length - 1]}`
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -101,8 +101,8 @@ export function MarkersBrowser({
           <ToolbarTooltip
             label={
               groupPath.length === 0 && rootPath.length === 0
-                ? 'Add marker'
-                : `Add sub-marker in ${groupPath[groupPath.length - 1] ?? rootPath[rootPath.length - 1]}`
+                ? 'Add run'
+                : `Add sub-run in ${groupPath[groupPath.length - 1] ?? rootPath[rootPath.length - 1]}`
             }
           >
             <Button
@@ -116,10 +116,10 @@ export function MarkersBrowser({
                   return
                 }
                 const path = groupPath.length > 0 ? groupPath : rootPath
-                onNewSubmarker({
+                onNewSubrun({
                   name: path.join('/'),
-                  color: currentGroupMarker?.color ?? '#6b7280',
-                  icon: currentGroupMarker?.icon ?? null,
+                  color: currentGroupRun?.color ?? '#6b7280',
+                  icon: currentGroupRun?.icon ?? null,
                 })
               }}
             >
@@ -135,37 +135,37 @@ export function MarkersBrowser({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {markers.length === 0 ? (
+        {runir.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center px-4 py-16 text-center">
             <Tag className="mb-2 h-8 w-8 text-muted-foreground/40" aria-hidden />
-            <p className="text-sm text-muted-foreground">No markers yet.</p>
+            <p className="text-sm text-muted-foreground">No runir yet.</p>
             <button type="button" onClick={onNew} className="mt-1 text-sm text-primary hover:underline">
-              Create your first marker
+              Create your first run
             </button>
           </div>
         ) : isSearching ? (
           searchResults.length === 0 ? (
             <p className="py-8 text-center text-xs text-muted-foreground">No results</p>
           ) : (
-            searchResults.map((marker) => (
+            searchResults.map((run) => (
               <SearchResultRow
-                key={marker.id}
-                marker={marker}
-                isSelected={selectedId === marker.id}
-                onSelect={() => onSelect(marker.id)}
+                key={run.id}
+                run={run}
+                isSelected={selectedId === run.id}
+                onSelect={() => onSelect(run.id)}
                 onAdd={() =>
-                  onNewSubmarker({ name: marker.name, color: marker.color, icon: marker.icon })
+                  onNewSubrun({ name: run.name, color: run.color, icon: run.icon })
                 }
               />
             ))
           )
-        ) : currentNodes.length === 0 && !(atRoot && currentGroupMarker) ? (
+        ) : currentNodes.length === 0 && !(atRoot && currentGroupRun) ? (
           <div className="flex h-full flex-col items-center justify-center px-4 py-16 text-center">
-            <p className="text-sm text-muted-foreground">No markers in this group.</p>
+            <p className="text-sm text-muted-foreground">No runir in this group.</p>
             <button
               type="button"
               onClick={() =>
-                onNewSubmarker({ name: groupPath.join('/'), color: '#6b7280', icon: null })
+                onNewSubrun({ name: groupPath.join('/'), color: '#6b7280', icon: null })
               }
               className="mt-1 text-sm text-primary hover:underline"
             >
@@ -174,20 +174,20 @@ export function MarkersBrowser({
           </div>
         ) : (
           <>
-          {atRoot && currentGroupMarker ? (
-            <MarkerRow
-              key={`root-${currentGroupMarker.id}`}
-              label={currentGroupMarker.name.split('/').pop() ?? currentGroupMarker.name}
-              color={currentGroupMarker.color}
-              isSelected={selectedId === currentGroupMarker.id}
+          {atRoot && currentGroupRun ? (
+            <RunRow
+              key={`root-${currentGroupRun.id}`}
+              label={currentGroupRun.name.split('/').pop() ?? currentGroupRun.name}
+              color={currentGroupRun.color}
+              isSelected={selectedId === currentGroupRun.id}
               canDrill={false}
-              onOpen={() => onSelect(currentGroupMarker.id)}
-              onEdit={() => onSelect(currentGroupMarker.id)}
+              onOpen={() => onSelect(currentGroupRun.id)}
+              onEdit={() => onSelect(currentGroupRun.id)}
               onAdd={() =>
-                onNewSubmarker({
-                  name: currentGroupMarker.name,
-                  color: currentGroupMarker.color,
-                  icon: currentGroupMarker.icon ?? null,
+                onNewSubrun({
+                  name: currentGroupRun.name,
+                  color: currentGroupRun.color,
+                  icon: currentGroupRun.icon ?? null,
                 })
               }
             />
@@ -197,7 +197,7 @@ export function MarkersBrowser({
             if (node.type === 'group') {
               if (node.id) {
                 return (
-                  <MarkerRow
+                  <RunRow
                     key={node.id}
                     label={node.label}
                     color={node.color!}
@@ -206,7 +206,7 @@ export function MarkersBrowser({
                     onOpen={() => onNavigateInto(currentPath)}
                     onEdit={() => onSelect(node.id!)}
                     onAdd={() =>
-                      onNewSubmarker({
+                      onNewSubrun({
                         name: currentPath.join('/'),
                         color: node.color!,
                         icon: node.icon ?? null,
@@ -221,13 +221,13 @@ export function MarkersBrowser({
                   label={node.label}
                   onOpen={() => onNavigateInto(currentPath)}
                   onAdd={() =>
-                    onNewSubmarker({ name: currentPath.join('/'), color: '#6b7280', icon: null })
+                    onNewSubrun({ name: currentPath.join('/'), color: '#6b7280', icon: null })
                   }
                 />
               )
             }
             return (
-              <MarkerRow
+              <RunRow
                 key={node.id}
                 label={node.label}
                 color={node.color}
@@ -236,7 +236,7 @@ export function MarkersBrowser({
                 onOpen={() => onSelect(node.id)}
                 onEdit={() => onSelect(node.id)}
                 onAdd={() =>
-                  onNewSubmarker({ name: node.name, color: node.color, icon: node.icon ?? null })
+                  onNewSubrun({ name: node.name, color: node.color, icon: node.icon ?? null })
                 }
               />
             )
@@ -248,7 +248,7 @@ export function MarkersBrowser({
   )
 }
 
-function MarkerRow({
+function RunRow({
   label,
   color,
   isSelected,
@@ -287,7 +287,7 @@ function MarkerRow({
         type="button"
         onClick={onAdd}
         className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100"
-        aria-label="Add sub-marker"
+        aria-label="Add sub-run"
       >
         <Plus className="h-3.5 w-3.5" />
       </button>
@@ -328,7 +328,7 @@ function GroupRow({
         type="button"
         onClick={onAdd}
         className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100"
-        aria-label="Add sub-marker"
+        aria-label="Add sub-run"
       >
         <Plus className="h-3.5 w-3.5" />
       </button>
@@ -337,17 +337,17 @@ function GroupRow({
 }
 
 function SearchResultRow({
-  marker,
+  run,
   isSelected,
   onSelect,
   onAdd,
 }: {
-  marker: FjallMarkerView
+  run: FjallRunView
   isSelected: boolean
   onSelect: () => void
   onAdd: () => void
 }) {
-  const segments = marker.name.split('/')
+  const segments = run.name.split('/')
   const label = segments[segments.length - 1]
   const parentPath = segments.slice(0, -1).join(' / ')
 
@@ -359,7 +359,7 @@ function SearchResultRow({
       )}
       onClick={onSelect}
     >
-      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: marker.color }} />
+      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: run.color }} />
       <div className="min-w-0 flex-1">
         {parentPath ? <p className="truncate text-[10px] text-muted-foreground/60">{parentPath}</p> : null}
         <p className="truncate text-sm">{label}</p>
@@ -371,7 +371,7 @@ function SearchResultRow({
           onAdd()
         }}
         className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100"
-        aria-label="Add sub-marker"
+        aria-label="Add sub-run"
       >
         <Plus className="h-3.5 w-3.5" />
       </button>

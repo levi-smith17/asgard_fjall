@@ -692,8 +692,8 @@ locals {
       memory    = 256
       policy    = "read"
     }
-    hlidskjalf-trail-waypoints = {
-      route_key = "GET /hlidskjalf/trail-waypoints"
+    hlidskjalf-grein-laufar = {
+      route_key = "GET /hlidskjalf/grein-laufar"
       memory    = 256
       policy    = "read"
     }

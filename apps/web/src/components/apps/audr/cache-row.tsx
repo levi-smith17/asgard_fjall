@@ -9,7 +9,7 @@ import { useTerms } from '@/hooks/use-terminology'
 
 interface Props {
   cache: FjallCacheUtilization
-  markers: { id: string; name: string; color: string; icon?: string | null }[]
+  runir: { id: string; name: string; color: string; icon?: string | null }[]
   month: number
   year: number
   onSaved: () => void
@@ -25,23 +25,23 @@ const utilizationColor = (pct: number) => {
   return 'bg-primary'
 }
 
-function cacheMarkerLabel(cache: FjallCacheUtilization, markers: Props['markers']): string {
-  const name = markers.find((m) => m.id === cache.markerId)?.name ?? cache.marker?.name
+function cacheRunLabel(cache: FjallCacheUtilization, runir: Props['runir']): string {
+  const name = runir.find((m) => m.id === cache.runId)?.name ?? cache.run?.name
   if (!name || name === 'Uncategorized') return 'Uncategorized'
   return name.split('/').pop() ?? name
 }
 
-export function CacheRow({ cache, markers, month, year, onSaved, onDeleted }: Props) {
+export function CacheRow({ cache, runir, month, year, onSaved, onDeleted }: Props) {
   const terms = useTerms()
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const markerLabel = cacheMarkerLabel(cache, markers)
+  const runLabel = cacheRunLabel(cache, runir)
 
   if (editing) {
     return (
       <InlineCacheForm
         cache={cache}
-        markers={markers}
+        runir={runir}
         month={month}
         year={year}
         onSaved={() => { setEditing(false); onSaved() }}
@@ -54,7 +54,7 @@ export function CacheRow({ cache, markers, month, year, onSaved, onDeleted }: Pr
     <>
       <div className="group px-3 py-2.5 hover:bg-muted/30">
         <div className="mb-1.5 flex items-center justify-between gap-2">
-          <span className="text-sm font-medium">{markerLabel}</span>
+          <span className="text-sm font-medium">{runLabel}</span>
           <div className="flex items-center gap-1">
             <span className="text-xs tabular-nums text-muted-foreground">
               {fmt(cache.spent)} / {fmt(cache.limit)}
@@ -81,7 +81,7 @@ export function CacheRow({ cache, markers, month, year, onSaved, onDeleted }: Pr
       <ConfirmDialog
         open={confirmDelete}
         title={`Remove ${terms.budgetSingular.toLowerCase()}?`}
-        description={<>This will remove the &ldquo;{markerLabel}&rdquo; {terms.budgetSingular.toLowerCase()} limit for this month.</>}
+        description={<>This will remove the &ldquo;{runLabel}&rdquo; {terms.budgetSingular.toLowerCase()} limit for this month.</>}
         confirmLabel="Remove"
         confirmVariant="destructive"
         onCancel={() => setConfirmDelete(false)}

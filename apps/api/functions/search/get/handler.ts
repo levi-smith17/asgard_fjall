@@ -5,7 +5,7 @@ import { getPk } from '../../shared/auth'
 import { LAUF_PREFIX, SOGUR_PREFIX, IDUNN_PREFIX, GREIN_PREFIX, RUN_PREFIX, idFromSk } from '../../shared/keys'
 import { toApiGatewayResponse, ok, badRequest, serverError } from '../../shared/response'
 
-type SearchResultType = 'waypoint' | 'log' | 'provision' | 'trail' | 'marker'
+type SearchResultType = 'lauf' | 'log' | 'provision' | 'grein' | 'run'
 
 interface SearchResult {
   id: string
@@ -43,11 +43,11 @@ export const handler = async (
     const pk = getPk(event)
 
     const prefixes: { prefix: string; type: SearchResultType }[] = [
-      { prefix: LAUF_PREFIX, type: 'waypoint' },
+      { prefix: LAUF_PREFIX, type: 'lauf' },
       { prefix: SOGUR_PREFIX, type: 'log' },
       { prefix: IDUNN_PREFIX, type: 'provision' },
-      { prefix: GREIN_PREFIX, type: 'trail' },
-      { prefix: RUN_PREFIX, type: 'marker' },
+      { prefix: GREIN_PREFIX, type: 'grein' },
+      { prefix: RUN_PREFIX, type: 'run' },
     ]
 
     const queryResults = await Promise.all(
@@ -69,7 +69,7 @@ export const handler = async (
       for (const item of queryResults[i].Items ?? []) {
         const id = idFromSk(String(item.sk), prefix)
 
-        if (type === 'waypoint') {
+        if (type === 'lauf') {
           const titleMatch = matchesQuery(item.title as string, query)
           const bodyMatch =
             matchesQuery(item.url as string, query) ||
@@ -109,7 +109,7 @@ export const handler = async (
             url: `/audr?id=${id}`,
             score: 2,
           })
-        } else if (type === 'trail') {
+        } else if (type === 'grein') {
           const titleMatch = matchesQuery(item.name as string, query)
           if (!titleMatch) continue
           results.push({
@@ -119,7 +119,7 @@ export const handler = async (
             url: `/greinar?id=${id}`,
             score: 2,
           })
-        } else if (type === 'marker') {
+        } else if (type === 'run') {
           const titleMatch = matchesQuery(item.name as string, query)
           if (!titleMatch) continue
           results.push({

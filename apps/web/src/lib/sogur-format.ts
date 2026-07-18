@@ -12,11 +12,11 @@ export function isLegacySagaId(id: string): boolean {
   return id.startsWith(LEGACY_SAGA_PREFIX)
 }
 
-export function legacySagaId(trailId: string): string {
-  return `${LEGACY_SAGA_PREFIX}${trailId}`
+export function legacySagaId(greinId: string): string {
+  return `${LEGACY_SAGA_PREFIX}${greinId}`
 }
 
-export function trailIdFromLegacySaga(id: string): string | null {
+export function greinIdFromLegacySaga(id: string): string | null {
   return isLegacySagaId(id) ? id.slice(LEGACY_SAGA_PREFIX.length) : null
 }
 
@@ -80,32 +80,32 @@ export function buildSogurWorkspace(
   }
 
   const remaining = logs.filter((log) => !attached.has(log.id))
-  const legacyByTrail = new Map<string, FjallLogView[]>()
+  const legacyByGrein = new Map<string, FjallLogView[]>()
   const standaloneThaettir: FjallLogView[] = []
 
   for (const log of remaining) {
-    if (log.trailId) {
-      const bucket = legacyByTrail.get(log.trailId)
+    if (log.greinId) {
+      const bucket = legacyByGrein.get(log.greinId)
       if (bucket) bucket.push(log)
-      else legacyByTrail.set(log.trailId, [log])
+      else legacyByGrein.set(log.greinId, [log])
     } else {
       standaloneThaettir.push(log)
     }
   }
 
-  const trailsCoveredByReal = new Set(
-    sagas.map((saga) => saga.trailId).filter((id): id is string => Boolean(id)),
+  const greinarCoveredByReal = new Set(
+    sagas.map((saga) => saga.greinId).filter((id): id is string => Boolean(id)),
   )
 
   const synthetic: SogurSagaModel[] = []
-  for (const [trailId, trailLogs] of legacyByTrail.entries()) {
-    if (trailsCoveredByReal.has(trailId)) {
+  for (const [greinId, greinLogs] of legacyByGrein.entries()) {
+    if (greinarCoveredByReal.has(greinId)) {
       // Grein already has a real saga — keep leftover Thattr standalone.
-      standaloneThaettir.push(...trailLogs)
+      standaloneThaettir.push(...greinLogs)
       continue
     }
-    const sorted = sortFjallLogs(trailLogs)
-    const sagaId = legacySagaId(trailId)
+    const sorted = sortFjallLogs(greinLogs)
+    const sagaId = legacySagaId(greinId)
     const latest = sorted.reduce(
       (max, log) =>
         new Date(log.updatedAt ?? log.createdAt).getTime() > new Date(max).getTime()
@@ -115,11 +115,11 @@ export function buildSogurWorkspace(
     )
     synthetic.push({
       id: sagaId,
-      name: sorted[0]?.trailName ?? 'Untitled',
-      trailId,
-      trailName: sorted[0]?.trailName ?? null,
+      name: sorted[0]?.greinName ?? 'Untitled',
+      greinId,
+      greinName: sorted[0]?.greinName ?? null,
       orderedThattrIds: sorted.map((log) => log.id),
-      markers: [],
+      runir: [],
       createdAt: sorted[0]?.createdAt ?? new Date(0).toISOString(),
       updatedAt: latest,
       synthetic: true,

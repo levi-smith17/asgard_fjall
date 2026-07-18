@@ -4,11 +4,11 @@ import { Button } from '@/components/core/ui/button'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { InspectorFormActions } from '@/components/core/ui/inspector-form-actions'
 import { deleteFjallBurn, deleteFjallCache, deleteFjallSupplyline } from '@/lib/data-api'
-import { markerShortLabel } from '@/lib/audr-format'
+import { runShortLabel } from '@/lib/audr-format'
 import { useTerms } from '@/hooks/use-terminology'
 import type { Terms } from '@/lib/terminology'
 import type { FjallBurn, FjallCacheUtilization, FjallSupplyline } from '@/lib/data-types'
-import type { AudrMarker, AudrSelection } from './audr-types'
+import type { AudrRun, AudrSelection } from './audr-types'
 import { InlineBurnForm, type AudrSaveActionRef } from './inline-burn-form'
 import { InlineSupplylineForm } from './inline-supplyline-form'
 import { InlineCacheForm } from './inline-cache-form'
@@ -22,29 +22,29 @@ const CACHE_FORM_ID = 'audr-cache-form'
 
 export function AudrInspector({
   selection,
-  markers,
+  runir,
   month,
   year,
   burn,
   supplyline,
   cache,
   skattSupplylines,
-  skattMarkerBurns = [],
-  targetMarkerIds,
+  skattRunBurns = [],
+  targetRunIds,
   onSaved,
   onDeleted,
   onCancel,
 }: {
   selection: AudrSelection
-  markers: AudrMarker[]
+  runir: AudrRun[]
   month: number
   year: number
   burn?: FjallBurn
   supplyline?: FjallSupplyline
   cache?: FjallCacheUtilization
   skattSupplylines: FjallSupplyline[]
-  skattMarkerBurns?: FjallBurn[]
-  targetMarkerIds: Set<string>
+  skattRunBurns?: FjallBurn[]
+  targetRunIds: Set<string>
   onSaved: () => void
   onDeleted: () => void
   onCancel: () => void
@@ -59,8 +59,8 @@ export function AudrInspector({
       <AudrSkattCarryInspector
         targetMonth={month}
         targetYear={year}
-        targetMarkerIds={targetMarkerIds}
-        markers={markers}
+        targetRunIds={targetRunIds}
+        runir={runir}
         onComplete={() => {
           onSaved()
           onCancel()
@@ -69,20 +69,20 @@ export function AudrInspector({
     )
   }
 
-  const title = inspectorTitle(selection, markers, terms, burn, supplyline, cache)
+  const title = inspectorTitle(selection, runir, terms, burn, supplyline, cache)
   const showBurnForm = selection.kind === 'new-burn' || selection.kind === 'burn'
   const showSupplylineForm = selection.kind === 'new-supplyline' || selection.kind === 'supplyline'
   const showCacheForm =
     selection.kind === 'new-cache' ||
     selection.kind === 'cache' ||
-    selection.kind === 'cache-marker'
+    selection.kind === 'cache-run'
 
   const showSave = showBurnForm || showSupplylineForm || showCacheForm
   const isNew =
     selection.kind === 'new-burn' ||
     selection.kind === 'new-supplyline' ||
     selection.kind === 'new-cache' ||
-    selection.kind === 'cache-marker'
+    selection.kind === 'cache-run'
 
   const saveLabel =
     selection.kind === 'burn'
@@ -109,11 +109,11 @@ export function AudrInspector({
             key={
               selection.kind === 'burn'
                 ? selection.id
-                : `new-burn:${selection.kind === 'new-burn' ? (selection.markerId ?? '') : ''}`
+                : `new-burn:${selection.kind === 'new-burn' ? (selection.runId ?? '') : ''}`
             }
             burn={burn}
-            defaultMarkerId={selection.kind === 'new-burn' ? selection.markerId : undefined}
-            tags={markers}
+            defaultRunId={selection.kind === 'new-burn' ? selection.runId : undefined}
+            tags={runir}
             formId={BURN_FORM_ID}
             saveActionRef={saveActionRef}
             onSaved={onSaved}
@@ -128,7 +128,7 @@ export function AudrInspector({
                 : 'new-supplyline'
             }
             supplyline={supplyline}
-            tags={markers}
+            tags={runir}
             formId={SUPPLYLINE_FORM_ID}
             saveActionRef={saveActionRef}
             onSaved={onSaved}
@@ -141,19 +141,19 @@ export function AudrInspector({
               key={
                 selection.kind === 'cache'
                   ? selection.id
-                  : selection.kind === 'cache-marker'
-                    ? `cache-marker:${selection.markerId}`
-                    : `new-cache:${selection.kind === 'new-cache' ? (selection.markerId ?? '') : ''}`
+                  : selection.kind === 'cache-run'
+                    ? `cache-run:${selection.runId}`
+                    : `new-cache:${selection.kind === 'new-cache' ? (selection.runId ?? '') : ''}`
               }
               cache={cache}
-              defaultMarkerId={
-                selection.kind === 'cache-marker'
-                  ? selection.markerId
+              defaultRunId={
+                selection.kind === 'cache-run'
+                  ? selection.runId
                   : selection.kind === 'new-cache'
-                    ? selection.markerId
+                    ? selection.runId
                     : undefined
               }
-              markers={markers}
+              runir={runir}
               month={month}
               year={year}
               formId={CACHE_FORM_ID}
@@ -165,9 +165,9 @@ export function AudrInspector({
                 <div className="border-t border-border" />
                 <AudrSkattAllocationPanel
                   cache={cache}
-                  burns={skattMarkerBurns}
+                  burns={skattRunBurns}
                   supplylines={skattSupplylines}
-                  markers={markers}
+                  runir={runir}
                 />
               </>
             ) : null}
@@ -303,7 +303,7 @@ export function AudrInspector({
             description={
               <>
                 Remove the {terms.budgetSingular.toLowerCase()} limit for{' '}
-                {markerShortLabel(cache.markerId, markers, cache)} this month?
+                {runShortLabel(cache.runId, runir, cache)} this month?
               </>
             }
             confirmLabel="Remove"
@@ -328,7 +328,7 @@ export function AudrInspector({
 
 function inspectorTitle(
   selection: AudrSelection,
-  markers: AudrMarker[],
+  runir: AudrRun[],
   terms: Terms,
   burn?: FjallBurn,
   supplyline?: FjallSupplyline,
@@ -345,10 +345,10 @@ function inspectorTitle(
       return supplyline?.name ?? terms.subscriptionSingular
     case 'new-cache':
       return `Add ${terms.budgetSingular}`
-    case 'cache-marker':
+    case 'cache-run':
       return `Add ${terms.budgetSingular}`
     case 'cache':
-      return markerShortLabel(cache?.markerId ?? '', markers, cache) || terms.budgets
+      return runShortLabel(cache?.runId ?? '', runir, cache) || terms.budgets
     default:
       return terms.provisions
   }

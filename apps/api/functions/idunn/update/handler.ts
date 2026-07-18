@@ -71,10 +71,10 @@ export const handler = async (
       }
     }
 
-    if ('markerIds' in body) {
-      const markerMap = await resolveRunirById(pk, Array.isArray(body.markerIds) ? body.markerIds : [])
-      setExprs.push('markers = :markers')
-      exprValues[':markers'] = [...markerMap.values()]
+    if ('runIds' in body) {
+      const runMap = await resolveRunirById(pk, Array.isArray(body.runIds) ? body.runIds : [])
+      setExprs.push('runir = :runir')
+      exprValues[':runir'] = [...runMap.values()]
     }
 
     if ('fundId' in body) {

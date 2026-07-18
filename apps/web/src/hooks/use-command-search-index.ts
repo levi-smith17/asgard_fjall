@@ -14,9 +14,9 @@ import { searchCommandIndex } from '@/lib/command-search/search'
 import type { CommandSearchArea, CommandSearchEntry } from '@/lib/command-search/types'
 
 const AREA_FOR_TYPE: Record<FjallSearchResultType, CommandSearchArea> = {
-  waypoint: 'Hlidskjalf',
-  trail: 'Catalog',
-  marker: 'Catalog',
+  lauf: 'Hlidskjalf',
+  grein: 'Catalog',
+  run: 'Catalog',
   log: 'Journal',
   provision: 'Audr',
   stop: 'Navigation',

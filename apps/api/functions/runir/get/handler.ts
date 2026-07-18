@@ -29,7 +29,7 @@ export const handler = async (
 
     const laufarCounts = new Map<string, number>()
     for (const lauf of laufarResult.Items ?? []) {
-      for (const run of (lauf.runir ?? []) as Array<{ id?: string }>) {
+      for (const run of (lauf.runir ?? lauf.markers ?? []) as Array<{ id?: string }>) {
         if (!run.id) continue
         laufarCounts.set(run.id, (laufarCounts.get(run.id) ?? 0) + 1)
       }

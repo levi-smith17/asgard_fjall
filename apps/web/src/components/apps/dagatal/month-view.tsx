@@ -3,12 +3,12 @@ import { toLuvi, luviMonthDates, LUVI_DAYS, type CalendarMode } from '@/lib/luvi
 import { contrastColor } from '@/lib/color'
 import { icloudEventsForDay } from '@/lib/dagatal-events'
 import { EventPopover } from './event-popover'
-import type { StopWithMarkers, ICloudEventDisplay } from './dagatal-types'
+import type { StopWithRunir, ICloudEventDisplay } from './dagatal-types'
 
 const GREGORIAN_WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 interface MonthViewProps {
-  stops: StopWithMarkers[]
+  stops: StopWithRunir[]
   icloudEvents: ICloudEventDisplay[]
   anchor: Date
   calendarMode: CalendarMode
@@ -23,7 +23,7 @@ function isSameDay(a: Date, b: Date): boolean {
   )
 }
 
-function stopsForDay(stops: StopWithMarkers[], date: Date): StopWithMarkers[] {
+function stopsForDay(stops: StopWithRunir[], date: Date): StopWithRunir[] {
   return stops.filter(s => {
     const start = new Date(s.startDate)
     const end = s.endDate ? new Date(s.endDate) : new Date(s.startDate)
@@ -43,10 +43,10 @@ function formatPillTime(date: Date): string {
 }
 
 type DayEvent =
-  | { kind: 'stop';   stop: StopWithMarkers }
+  | { kind: 'stop';   stop: StopWithRunir }
   | { kind: 'icloud'; event: ICloudEventDisplay }
 
-function sortedDayEvents(stops: StopWithMarkers[], icloudEvents: ICloudEventDisplay[]): DayEvent[] {
+function sortedDayEvents(stops: StopWithRunir[], icloudEvents: ICloudEventDisplay[]): DayEvent[] {
   const items: DayEvent[] = [
     ...stops.map(s => ({ kind: 'stop' as const, stop: s })),
     ...icloudEvents.map(e => ({ kind: 'icloud' as const, event: e })),
@@ -67,7 +67,7 @@ function EventPills({
   icloudEvents,
   calendarColorMap,
 }: {
-  stops: StopWithMarkers[]
+  stops: StopWithRunir[]
   icloudEvents: ICloudEventDisplay[]
   calendarColorMap: Record<string, string>
 }) {
@@ -78,7 +78,7 @@ function EventPills({
       {events.map(item => {
         if (item.kind === 'stop') {
           const { stop } = item
-          const color = stop.markers[0]?.marker.color ?? (stop.icloudCalendarId ? calendarColorMap[stop.icloudCalendarId] : undefined) ?? '#6b7280'
+          const color = stop.runir[0]?.run.color ?? (stop.icloudCalendarId ? calendarColorMap[stop.icloudCalendarId] : undefined) ?? '#6b7280'
           const timeStr = stop.allDay ? null : formatPillTime(new Date(stop.startDate))
           return (
             <EventPopover

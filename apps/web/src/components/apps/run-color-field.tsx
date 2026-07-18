@@ -1,4 +1,4 @@
-import { MarkerColorSwatch, PRESET_COLORS } from '@/components/apps/markers-list'
+import { RunColorSwatch, PRESET_COLORS } from '@/components/apps/runir-list'
 import { Input } from '@/components/core/ui/input'
 import { cn } from '@/lib/utils'
 
@@ -9,7 +9,7 @@ function normalizeHex(value: string): string | null {
   return null
 }
 
-export function MarkerColorField({
+export function RunColorField({
   color,
   onChange,
 }: {
@@ -36,7 +36,7 @@ export function MarkerColorField({
             )}
             aria-label={`Color ${preset}`}
           >
-            <MarkerColorSwatch color={preset} className="h-4 w-4" />
+            <RunColorSwatch color={preset} className="h-4 w-4" />
           </button>
         ))}
       </div>

@@ -21,8 +21,8 @@ export const handler = async (
     const id = randomUUID()
     const sk = idunnSk(id)
 
-    const markerMap = await resolveRunirById(pk, Array.isArray(body.markerIds) ? body.markerIds : [])
-    const markers = [...markerMap.values()]
+    const runMap = await resolveRunirById(pk, Array.isArray(body.runIds) ? body.runIds : [])
+    const runir = [...runMap.values()]
 
     const idunn = {
       pk,
@@ -36,7 +36,7 @@ export const handler = async (
       ...(body.notes ? { notes: body.notes } : {}),
       ...(body.fundId ? { fundId: body.fundId } : {}),
       active: body.active ?? true,
-      markers,
+      runir,
       createdAt: new Date().toISOString(),
     }
 

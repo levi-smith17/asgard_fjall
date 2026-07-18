@@ -6,8 +6,8 @@ import {
   SlidersHorizontal,
   StickyNote,
 } from 'lucide-react'
-import { MarkerPicker } from '@/components/apps/marker-picker'
-import { MarkerColorSwatch } from '@/components/apps/markers-list'
+import { RunPicker } from '@/components/apps/run-picker'
+import { RunColorSwatch } from '@/components/apps/runir-list'
 import { Button } from '@/components/core/ui/button'
 import { FilterInput } from '@/components/core/ui/filter-input'
 import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils'
 export const SOGUR_FILTER_ALL = '__all__'
 export const SOGUR_FILTER_UNASSIGNED = '__unassigned__'
 
-export type SogurRailMarker = {
+export type SogurRailRun = {
   id: string
   name: string
   color: string
@@ -30,9 +30,9 @@ export type SogurRailItem = {
   id: string
   kind: 'saga' | 'thattr'
   name: string
-  trailId: string | null
-  trailName: string | null
-  markers: SogurRailMarker[]
+  greinId: string | null
+  greinName: string | null
+  runir: SogurRailRun[]
   preview?: string | null
   thattrCount?: number
   firstThattrId?: string | null
@@ -72,7 +72,7 @@ export function SogurRail({
   runirFilterId: string
   onRunirFilterChange: (id: string) => void
   greinar: Array<{ id: string; name: string }>
-  runir: SogurRailMarker[]
+  runir: SogurRailRun[]
   onOpenItem: (item: SogurRailItem) => void
   onOpenFirstThattr: (sagaId: string, thattrId: string) => void
   onAddThattr: (sagaId: string) => void
@@ -91,14 +91,14 @@ export function SogurRail({
     if (
       greinFilterId !== SOGUR_FILTER_ALL &&
       (greinFilterId === SOGUR_FILTER_UNASSIGNED
-        ? item.trailId != null
-        : item.trailId !== greinFilterId)
+        ? item.greinId != null
+        : item.greinId !== greinFilterId)
     ) {
       return false
     }
     if (
       runirFilterId !== SOGUR_FILTER_ALL &&
-      !item.markers.some((marker) => marker.id === runirFilterId)
+      !item.runir.some((run) => run.id === runirFilterId)
     ) {
       return false
     }
@@ -106,15 +106,15 @@ export function SogurRail({
     return [
       item.name,
       item.preview ?? '',
-      item.trailName ?? '',
+      item.greinName ?? '',
       item.sagaName ?? '',
-      ...item.markers.map((marker) => marker.name),
+      ...item.runir.map((run) => run.name),
     ].some((value) => value.toLowerCase().includes(query))
   })
 
   const groups = new Map<string, SogurRailItem[]>()
   for (const item of filtered) {
-    const key = item.trailName || terms.unassigned
+    const key = item.greinName || terms.unassigned
     const bucket = groups.get(key)
     if (bucket) bucket.push(item)
     else groups.set(key, [item])
@@ -181,8 +181,8 @@ export function SogurRail({
             ariaLabel={terms.greinar}
           />
           <div className="min-w-0 flex-1">
-            <MarkerPicker
-              markers={runir}
+            <RunPicker
+              runir={runir}
               selected={runirFilterId !== SOGUR_FILTER_ALL ? [runirFilterId] : []}
               onChange={(ids) => onRunirFilterChange(ids[0] ?? SOGUR_FILTER_ALL)}
               placeholder={terms.runir}
@@ -259,15 +259,15 @@ export function SogurRail({
                                 {item.preview}
                               </span>
                             ) : null}
-                            {item.markers.length > 0 ? (
+                            {item.runir.length > 0 ? (
                               <span className="mt-1 flex flex-wrap gap-0.5">
-                                {item.markers.slice(0, 3).map((marker) => (
+                                {item.runir.slice(0, 3).map((run) => (
                                   <span
-                                    key={marker.id}
+                                    key={run.id}
                                     className="inline-flex items-center gap-0.5 rounded-full bg-muted px-1 py-0.5 text-[9px]"
                                   >
-                                    <MarkerColorSwatch color={marker.color} />
-                                    {marker.name.split('/').pop()}
+                                    <RunColorSwatch color={run.color} />
+                                    {run.name.split('/').pop()}
                                   </span>
                                 ))}
                               </span>

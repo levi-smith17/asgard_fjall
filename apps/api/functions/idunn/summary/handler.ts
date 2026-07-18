@@ -103,26 +103,26 @@ export const handler = async (
       return parts[2] === String(month) && parts[3] === String(year)
     })
 
-    const markerMap = await resolveRunirById(
+    const runMap = await resolveRunirById(
       pk,
       monthSkatt.map((c) => String(c.sk).split('#')[1]),
     )
 
     const skattUtilization = monthSkatt.map((c) => {
       const parts = String(c.sk).split('#')
-      const markerId = parts[1]
-      const resolved = markerMap.get(markerId as string)
+      const runId = parts[1]
+      const resolved = runMap.get(runId as string)
       const spent = monthSurtr
-        .filter((b) => (b.markers ?? []).some((m: { id?: string }) => m.id === markerId))
+        .filter((b) => (b.runir ?? b.markers ?? []).some((m: { id?: string }) => m.id === runId))
         .reduce((sum, b) => sum + (b.amount as number), 0)
       const limit = c.limit as number
       const utilization = limit > 0 ? (spent / limit) * 100 : 0
       return {
         id: c.id ?? String(c.sk).replace(new RegExp(`^${SKATT_PREFIX}`), ''),
-        markerId,
-        marker: {
-          id: markerId,
-          name: c.markerName || resolved?.name || 'Uncategorized',
+        runId,
+        run: {
+          id: runId,
+          name: c.runName || resolved?.name || 'Uncategorized',
           color: resolved?.color || '#6b7280',
         },
         limit: c.limit,

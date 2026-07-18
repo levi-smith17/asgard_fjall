@@ -125,7 +125,9 @@ export const handler = async (
           ...DEFAULT_SETTINGS.laufar,
           ...laufarStored,
           laufarPerPage:
-            laufarStored.laufarPerPage ?? laufarStored.waypointsPerPage ?? DEFAULT_SETTINGS.laufar.laufarPerPage,
+            laufarStored.laufarPerPage ??
+            laufarStored.waypointsPerPage ??
+            DEFAULT_SETTINGS.laufar.laufarPerPage,
         },
         sogur: {
           ...DEFAULT_SETTINGS.sogur,

@@ -1,7 +1,7 @@
 import { fjallFetch } from '@/lib/data-client'
 import type { FjallExternalCalendarEvent } from '@/lib/data-types'
 import type { FjallCalendarSyncStatus } from '@/lib/data-api'
-import { parseFjallItineraryEventsPayload, reviveItineraryEvents } from '@/lib/dagatal-events'
+import { parseFjallDagatalEventsPayload, reviveDagatalEvents } from '@/lib/dagatal-events'
 
 export type DagatalEventsResult = {
   events: FjallExternalCalendarEvent[]
@@ -41,15 +41,15 @@ export async function fetchDagatalEvents(params?: {
   const data = await fjallFetch<{
     events?: Record<string, unknown>[]
     calendarSync?: FjallCalendarSyncStatus[]
-  }>(`/itinerary/events${query ? `?${query}` : ''}`)
+  }>(`/dagatal/events${query ? `?${query}` : ''}`)
 
   return {
-    events: reviveItineraryEvents(parseFjallItineraryEventsPayload(data)),
+    events: reviveDagatalEvents(parseFjallDagatalEventsPayload(data)),
     calendarSync: Array.isArray(data.calendarSync) ? data.calendarSync : [],
     cacheStatus: null,
   }
 }
 
 export async function syncDagatal(): Promise<void> {
-  await fjallFetch('/itinerary/sync', { method: 'POST', body: '{}' })
+  await fjallFetch('/dagatal/sync', { method: 'POST', body: '{}' })
 }

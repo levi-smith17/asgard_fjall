@@ -10,23 +10,23 @@ import {
   carryOverFjallCacheToMonth,
   carrySelectedFjallCacheToMonth,
 } from '@/lib/skatt-carry-over'
-import { audrFmt, monthYearLabel, shiftMonth, markerShortLabel } from '@/lib/audr-format'
+import { audrFmt, monthYearLabel, shiftMonth, runShortLabel } from '@/lib/audr-format'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
 import { InspectorChrome, InspectorChromeTitle } from '@/components/core/ui/inspector-chrome'
-import type { AudrMarker } from './audr-types'
+import type { AudrRun } from './audr-types'
 
 export function AudrSkattCarryInspector({
   targetMonth,
   targetYear,
-  targetMarkerIds,
-  markers,
+  targetRunIds,
+  runir,
   onComplete,
 }: {
   targetMonth: number
   targetYear: number
-  targetMarkerIds: Set<string>
-  markers: AudrMarker[]
+  targetRunIds: Set<string>
+  runir: AudrRun[]
   onComplete: () => void
 }) {
   const terms = useTerms()
@@ -44,27 +44,27 @@ export function AudrSkattCarryInspector({
   const sourceItems = sourceQuery.data?.cacheUtilization ?? []
 
   const selectableItems = useMemo(
-    () => sourceItems.filter((item) => !targetMarkerIds.has(item.markerId)),
-    [sourceItems, targetMarkerIds],
+    () => sourceItems.filter((item) => !targetRunIds.has(item.runId)),
+    [sourceItems, targetRunIds],
   )
 
-  function toggleItem(markerId: string) {
+  function toggleItem(runId: string) {
     setSelected((prev) => {
       const next = new Set(prev)
-      if (next.has(markerId)) next.delete(markerId)
-      else next.add(markerId)
+      if (next.has(runId)) next.delete(runId)
+      else next.add(runId)
       return next
     })
   }
 
   function selectAllSelectable() {
-    setSelected(new Set(selectableItems.map((item) => item.markerId)))
+    setSelected(new Set(selectableItems.map((item) => item.runId)))
   }
 
   async function handleCarrySelected() {
     const items = sourceItems
-      .filter((item) => selected.has(item.markerId))
-      .map((item) => ({ markerId: item.markerId, limit: item.limit }))
+      .filter((item) => selected.has(item.runId))
+      .map((item) => ({ runId: item.runId, limit: item.limit }))
     if (items.length === 0) return
 
     setCarrying(true)
@@ -180,9 +180,9 @@ export function AudrSkattCarryInspector({
         ) : (
           <ul className="divide-y divide-border">
             {sourceItems.map((item) => {
-              const alreadyPresent = targetMarkerIds.has(item.markerId)
-              const label = markerShortLabel(item.markerId, markers, item)
-              const checked = selected.has(item.markerId)
+              const alreadyPresent = targetRunIds.has(item.runId)
+              const label = runShortLabel(item.runId, runir, item)
+              const checked = selected.has(item.runId)
 
               return (
                 <li key={item.id}>
@@ -197,7 +197,7 @@ export function AudrSkattCarryInspector({
                       className="h-4 w-4 rounded border-border"
                       checked={checked}
                       disabled={alreadyPresent || carrying}
-                      onChange={() => toggleItem(item.markerId)}
+                      onChange={() => toggleItem(item.runId)}
                     />
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium">{label}</div>

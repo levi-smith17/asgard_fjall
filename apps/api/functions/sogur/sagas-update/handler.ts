@@ -6,7 +6,8 @@ import { sagaSk } from '../../shared/keys'
 import { resolveRunirById } from '../../shared/runir-resolve'
 import {
   getSaga,
-  propagateSagaTrailId,
+  propagateSagaGreinId,
+  sagaGreinId,
 } from '../../shared/sagas'
 import { toApiGatewayResponse, ok, badRequest, notFound, serverError } from '../../shared/response'
 
@@ -26,28 +27,27 @@ export const handler = async (
     const existing = await getSaga(pk, id)
     if (!existing) return toApiGatewayResponse(notFound('Saga not found'))
 
-    const markerMap = await resolveRunirById(pk, Array.isArray(body.markerIds) ? body.markerIds : [])
-    const markers = [...markerMap.values()]
+    const runMap = await resolveRunirById(pk, Array.isArray(body.runIds) ? body.runIds : [])
+    const runir = [...runMap.values()]
 
-    const nextTrailId =
-      typeof body.trailId === 'string' && body.trailId.length > 0 ? body.trailId : null
-    const prevTrailId =
-      typeof existing.trailId === 'string' && existing.trailId.length > 0 ? existing.trailId : null
+    const nextGreinId =
+      typeof body.greinId === 'string' && body.greinId.length > 0 ? body.greinId : null
+    const prevGreinId = sagaGreinId(existing)
 
-    const setExprs = ['#name = :name', 'markers = :markers', 'updatedAt = :updatedAt']
+    const setExprs = ['#name = :name', 'runir = :runir', 'updatedAt = :updatedAt']
     const removeExprs: string[] = []
     const exprNames: Record<string, string> = { '#name': 'name' }
     const exprValues: Record<string, unknown> = {
       ':name': body.name.trim(),
-      ':markers': markers,
+      ':runir': runir,
       ':updatedAt': new Date().toISOString(),
     }
 
-    if (nextTrailId) {
-      setExprs.push('trailId = :trailId')
-      exprValues[':trailId'] = nextTrailId
+    if (nextGreinId) {
+      setExprs.push('greinId = :greinId')
+      exprValues[':greinId'] = nextGreinId
     } else {
-      removeExprs.push('trailId')
+      removeExprs.push('greinId')
     }
 
     let UpdateExpression = `SET ${setExprs.join(', ')}`
@@ -64,9 +64,9 @@ export const handler = async (
       }),
     )
 
-    if (nextTrailId !== prevTrailId) {
+    if (nextGreinId !== prevGreinId) {
       const ordered = Array.isArray(existing.orderedThattrIds) ? existing.orderedThattrIds : []
-      await propagateSagaTrailId(pk, ordered, nextTrailId)
+      await propagateSagaGreinId(pk, ordered, nextGreinId)
     }
 
     return toApiGatewayResponse(ok(result.Attributes))

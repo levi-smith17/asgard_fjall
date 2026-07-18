@@ -24,7 +24,7 @@ import {
   type FjallCatalogTab,
 } from '@/components/apps/catalog-inspector'
 import { dataQueryErrorProps } from '@/components/apps/data-not-configured'
-import { WaypointInspector } from '@/components/apps/waypoint-inspector'
+import { LaufInspector } from '@/components/apps/lauf-inspector'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
 import { HlidskjalfContextBar } from '@/components/hlidskjalf/hlidskjalf-context-bar'
 import {
@@ -37,20 +37,20 @@ import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
 import { useTerminology, useTerms } from '@/hooks/use-terminology'
 import { fetchDagatalEvents } from '@/lib/dagatal-api'
 import {
-  createFjallWaypoint,
-  deleteFjallWaypoint,
+  createFjallLauf,
+  deleteFjallLauf,
   fetchFjallLogs,
-  fetchFjallMarkers,
+  fetchFjallRunir,
   fetchProvisionsSummary,
   fetchFjallSignals,
   fetchFjallStarfieldNetworks,
   fetchFjallStatus,
-  fetchFjallTrails,
-  fetchFjallWaypoints,
-  updateFjallWaypoint,
+  fetchFjallGreinar,
+  fetchFjallLaufar,
+  updateFjallLauf,
 } from '@/lib/data-api'
-import { extractEntityId, toMarkerView, toTrailView, toWaypointView } from '@/lib/data-format'
-import { isUnderAudrMarkerRoot } from '@/lib/audr-marker-root'
+import { extractEntityId, toRunView, toGreinView, toLaufView } from '@/lib/data-format'
+import { isUnderAudrRunRoot } from '@/lib/audr-run-root'
 import { isGreinVisibleOnPage } from '@/lib/grein-visibility'
 import { buildManifestSectionCards } from '@/lib/hlidskjalf-manifest-cards'
 import { fetchManifest } from '@/lib/manifest-api'
@@ -74,7 +74,7 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
-function parseMarkerPath(value: string | null): string[] {
+function parseRunPath(value: string | null): string[] {
   if (!value?.trim()) return []
   return value.split('/').filter(Boolean)
 }
@@ -197,7 +197,7 @@ function HlidskjalfSnapshots() {
     staleTime: 60_000,
   })
 
-  const itineraryQuery = useQuery({
+  const dagatalQuery = useQuery({
     queryKey: ['dagatal-events'],
     queryFn: () => fetchDagatalEvents(),
     enabled: configured,
@@ -226,7 +226,7 @@ function HlidskjalfSnapshots() {
   const cacheTotalLimit = cacheUtilization.reduce((sum, item) => sum + item.limit, 0)
   const cacheTotalSpent = cacheUtilization.reduce((sum, item) => sum + item.spent, 0)
 
-  const upcomingEvents = (itineraryQuery.data?.events ?? [])
+  const upcomingEvents = (dagatalQuery.data?.events ?? [])
     .filter((event) => {
       const end = event.endDate ?? event.startDate
       return end >= new Date()
@@ -350,12 +350,12 @@ function HlidskjalfSnapshots() {
             </PanelShell>
 
             <PanelShell href="/dagatal" label={terms.calendar} icon={CalendarDays}>
-              {itineraryQuery.isLoading ? (
+              {dagatalQuery.isLoading ? (
                 <div className="space-y-1.5">
                   <div className="h-3 w-full animate-pulse rounded bg-muted" />
                   <div className="h-3 w-3/5 animate-pulse rounded bg-muted" />
                 </div>
-              ) : itineraryQuery.isError ? (
+              ) : dagatalQuery.isError ? (
                 <p className="text-xs text-muted-foreground">Couldn’t load calendar</p>
               ) : upcomingEvents.length === 0 ? (
                 <p className="text-xs text-muted-foreground">No upcoming events</p>
@@ -496,9 +496,9 @@ function HlidskjalfCanvas() {
     retry: false,
   })
 
-  const trailsQuery = useQuery({
-    queryKey: ['fjall-trails'],
-    queryFn: fetchFjallTrails,
+  const greinarQuery = useQuery({
+    queryKey: ['fjall-greinar'],
+    queryFn: fetchFjallGreinar,
     enabled,
     retry: false,
   })
@@ -517,28 +517,28 @@ function HlidskjalfCanvas() {
     retry: false,
   })
 
-  const trails = trailsQuery.data ?? []
-  const trailsById = new Map(trails.map((trail) => [extractEntityId(trail.sk), trail.name]))
+  const greinar = greinarQuery.data ?? []
+  const greinarById = new Map(greinar.map((grein) => [extractEntityId(grein.sk), grein.name]))
   const logs = logsQuery.data ?? []
 
   const logbooks = (() => {
-    const byTrail = new Map<string, { id: string; title: string; subtitle: string; stamp: string }>()
+    const byGrein = new Map<string, { id: string; title: string; subtitle: string; stamp: string }>()
     for (const log of logs) {
-      const key = log.trailId ?? '__unfiled__'
+      const key = log.greinId ?? '__unfiled__'
       const stamp = String(log.createdAt ?? '')
-      const existing = byTrail.get(key)
+      const existing = byGrein.get(key)
       if (existing && stamp <= existing.stamp) continue
       const plain = stripHtml(log.content ?? '')
-      byTrail.set(key, {
+      byGrein.set(key, {
         id: key,
-        title: log.trailName ?? (log.trailId ? trailsById.get(log.trailId) : null) ?? 'Unfiled',
+        title: log.greinName ?? (log.greinId ? greinarById.get(log.greinId) : null) ?? 'Unfiled',
         subtitle:
           (log.title ? `${log.title} — ` : '') +
           (plain.length > 100 ? `${plain.slice(0, 100)}…` : plain || 'No excerpt'),
         stamp,
       })
     }
-    return [...byTrail.values()].slice(0, 6)
+    return [...byGrein.values()].slice(0, 6)
   })()
 
   const manifestCards = useMemo(
@@ -606,80 +606,80 @@ export function HlidskjalfPage() {
   const laufarId = searchParams.get('laufar')
   const catalogTab = (searchParams.get('catalog') as FjallCatalogTab | null) ?? null
   const catalogId = searchParams.get('catalogId')
-  const markerPath = parseMarkerPath(searchParams.get('markerPath'))
-  const markerParent = searchParams.get('markerParent')
+  const runPath = parseRunPath(searchParams.get('runPath'))
+  const runParent = searchParams.get('runParent')
 
-  const waypointsQuery = useQuery({
-    queryKey: ['fjall-waypoints'],
-    queryFn: fetchFjallWaypoints,
+  const laufarQuery = useQuery({
+    queryKey: ['fjall-laufar'],
+    queryFn: fetchFjallLaufar,
     retry: false,
   })
-  const trailsQuery = useQuery({
-    queryKey: ['fjall-trails'],
-    queryFn: fetchFjallTrails,
+  const greinarQuery = useQuery({
+    queryKey: ['fjall-greinar'],
+    queryFn: fetchFjallGreinar,
     retry: false,
   })
-  const markersQuery = useQuery({
-    queryKey: ['fjall-markers'],
-    queryFn: fetchFjallMarkers,
+  const runirQuery = useQuery({
+    queryKey: ['fjall-runir'],
+    queryFn: fetchFjallRunir,
     retry: false,
   })
 
   const dataErrorProps = useMemo(() => {
-    const error = waypointsQuery.error ?? trailsQuery.error ?? markersQuery.error
+    const error = laufarQuery.error ?? greinarQuery.error ?? runirQuery.error
     return dataQueryErrorProps(error, 'Data request failed')
-  }, [markersQuery.error, trailsQuery.error, waypointsQuery.error])
+  }, [runirQuery.error, greinarQuery.error, laufarQuery.error])
 
-  const trails = useMemo(
-    () => (trailsQuery.data ?? []).map(toTrailView).sort((a, b) => a.name.localeCompare(b.name)),
-    [trailsQuery.data],
+  const greinar = useMemo(
+    () => (greinarQuery.data ?? []).map(toGreinView).sort((a, b) => a.name.localeCompare(b.name)),
+    [greinarQuery.data],
   )
-  const trailsById = useMemo(() => new Map(trails.map((trail) => [trail.id, trail])), [trails])
+  const greinarById = useMemo(() => new Map(greinar.map((grein) => [grein.id, grein])), [greinar])
   /** Greinar hidden from Hlidskjalf via the per-Grein Page Visibility setting. */
   const hiddenGreinIds = useMemo(
     () =>
       new Set(
-        trails.filter((trail) => !isGreinVisibleOnPage(trail, 'hlidskjalf')).map((trail) => trail.id),
+        greinar.filter((grein) => !isGreinVisibleOnPage(grein, 'hlidskjalf')).map((grein) => grein.id),
       ),
-    [trails],
+    [greinar],
   )
   /** Greinar available on Hlidskjalf — those hidden here are managed on their other pages. */
-  const hlidskjalfTrails = useMemo(
-    () => trails.filter((trail) => isGreinVisibleOnPage(trail, 'hlidskjalf')),
-    [trails],
+  const hlidskjalfGreinar = useMemo(
+    () => greinar.filter((grein) => isGreinVisibleOnPage(grein, 'hlidskjalf')),
+    [greinar],
   )
-  const markers = useMemo(
-    () => (markersQuery.data ?? []).map(toMarkerView).sort((a, b) => a.name.localeCompare(b.name)),
-    [markersQuery.data],
+  const runir = useMemo(
+    () => (runirQuery.data ?? []).map(toRunView).sort((a, b) => a.name.localeCompare(b.name)),
+    [runirQuery.data],
   )
-  const hlidskjalfMarkers = useMemo(
-    () => markers.filter((marker) => !isUnderAudrMarkerRoot(marker.name)),
-    [markers],
+  const hlidskjalfRunir = useMemo(
+    () => runir.filter((run) => !isUnderAudrRunRoot(run.name)),
+    [runir],
   )
 
-  const waypoints = useMemo(() => {
-    let all = (waypointsQuery.data ?? []).map((waypoint) => toWaypointView(waypoint, trailsById))
+  const laufar = useMemo(() => {
+    let all = (laufarQuery.data ?? []).map((lauf) => toLaufView(lauf, greinarById))
 
-    all = all.filter((waypoint) => !waypoint.trailId || !hiddenGreinIds.has(waypoint.trailId))
+    all = all.filter((lauf) => !lauf.greinId || !hiddenGreinIds.has(lauf.greinId))
 
     if (greinFilterId === LAUFAR_UNASSIGNED_GREIN) {
-      all = all.filter((waypoint) => !waypoint.trailId)
+      all = all.filter((lauf) => !lauf.greinId)
     } else if (greinFilterId !== LAUFAR_FILTER_ALL) {
-      all = all.filter((waypoint) => waypoint.trailId === greinFilterId)
+      all = all.filter((lauf) => lauf.greinId === greinFilterId)
     }
 
     if (runirFilterId !== LAUFAR_FILTER_ALL) {
-      all = all.filter((waypoint) => waypoint.markers.some((marker) => marker.id === runirFilterId))
+      all = all.filter((lauf) => lauf.runir.some((run) => run.id === runirFilterId))
     }
 
     if (!laufarFilter.trim()) return all
-    return all.filter((waypoint) => {
+    return all.filter((lauf) => {
       const haystack = [
-        waypoint.title,
-        waypoint.url,
-        waypoint.notes,
-        waypoint.trailName ?? '',
-        ...waypoint.markers.map((marker) => marker.name),
+        lauf.title,
+        lauf.url,
+        lauf.notes,
+        lauf.greinName ?? '',
+        ...lauf.runir.map((run) => run.name),
       ].join(' ')
       return includesFoldedSearch(haystack, laufarFilter)
     })
@@ -688,19 +688,19 @@ export function HlidskjalfPage() {
     laufarFilter,
     hiddenGreinIds,
     runirFilterId,
-    trailsById,
-    waypointsQuery.data,
+    greinarById,
+    laufarQuery.data,
   ])
 
   const laufarGroups = useMemo(() => {
-    const byTrail = new Map<string, typeof waypoints>()
-    for (const waypoint of waypoints) {
-      const label = waypoint.trailName ?? terms.unassigned
-      const bucket = byTrail.get(label) ?? []
-      bucket.push(waypoint)
-      byTrail.set(label, bucket)
+    const byGrein = new Map<string, typeof laufar>()
+    for (const lauf of laufar) {
+      const label = lauf.greinName ?? terms.unassigned
+      const bucket = byGrein.get(label) ?? []
+      bucket.push(lauf)
+      byGrein.set(label, bucket)
     }
-    return [...byTrail.entries()]
+    return [...byGrein.entries()]
       .sort(([left], [right]) => {
         if (left === terms.unassigned) return 1
         if (right === terms.unassigned) return -1
@@ -708,13 +708,13 @@ export function HlidskjalfPage() {
       })
       .map(([label, items]) => ({
         label,
-        waypoints: items.sort((a, b) => a.title.localeCompare(b.title)),
+        laufar: items.sort((a, b) => a.title.localeCompare(b.title)),
       }))
-  }, [terms.unassigned, waypoints])
+  }, [terms.unassigned, laufar])
 
-  const selectedWaypoint =
+  const selectedLauf =
     laufarId && laufarId !== 'new'
-      ? (waypoints.find((waypoint) => waypoint.id === laufarId) ?? null)
+      ? (laufar.find((lauf) => lauf.id === laufarId) ?? null)
       : null
   const isNewLaufar = laufarId === 'new'
 
@@ -732,8 +732,8 @@ export function HlidskjalfPage() {
       params.delete('laufar')
       params.delete('catalog')
       params.delete('catalogId')
-      params.delete('markerPath')
-      params.delete('markerParent')
+      params.delete('runPath')
+      params.delete('runParent')
     })
   }, [patchParams])
 
@@ -743,8 +743,8 @@ export function HlidskjalfPage() {
         params.set('laufar', id)
         params.delete('catalog')
         params.delete('catalogId')
-        params.delete('markerPath')
-        params.delete('markerParent')
+        params.delete('runPath')
+        params.delete('runParent')
       })
     },
     [patchParams],
@@ -756,8 +756,8 @@ export function HlidskjalfPage() {
         params.set('catalog', tab)
         params.delete('laufar')
         params.delete('catalogId')
-        params.delete('markerPath')
-        params.delete('markerParent')
+        params.delete('runPath')
+        params.delete('runParent')
       })
     },
     [patchParams],
@@ -769,8 +769,8 @@ export function HlidskjalfPage() {
         params.set('catalog', tab)
         params.set('catalogId', 'new')
         params.delete('laufar')
-        params.delete('markerPath')
-        params.delete('markerParent')
+        params.delete('runPath')
+        params.delete('runParent')
       })
     },
     [patchParams],
@@ -799,27 +799,27 @@ export function HlidskjalfPage() {
     }
   }, [greinFilterId, hiddenGreinIds])
 
-  const saveWaypointMutation = useMutation({
+  const saveLaufMutation = useMutation({
     mutationFn: async (values: {
       title: string
       url: string
       notes: string
-      trailId: string
-      markerIds: string[]
+      greinId: string
+      runIds: string[]
     }) => {
       const payload = {
         title: values.title,
         url: values.url,
         notes: values.notes,
-        trailId: values.trailId || null,
-        markerIds: values.markerIds,
+        greinId: values.greinId || null,
+        runIds: values.runIds,
       }
-      if (isNewLaufar) return createFjallWaypoint(payload)
-      return updateFjallWaypoint(laufarId!, payload)
+      if (isNewLaufar) return createFjallLauf(payload)
+      return updateFjallLauf(laufarId!, payload)
     },
     onSuccess: () => {
       toast.success(isNewLaufar ? `${terms.laufarSingular} created` : `${terms.laufarSingular} saved`)
-      void queryClient.invalidateQueries({ queryKey: ['fjall-waypoints'] })
+      void queryClient.invalidateQueries({ queryKey: ['fjall-laufar'] })
       if (isNewLaufar) clearCatalogSelection()
     },
     onError: (error) =>
@@ -830,11 +830,11 @@ export function HlidskjalfPage() {
       ),
   })
 
-  const deleteWaypointMutation = useMutation({
-    mutationFn: () => deleteFjallWaypoint(laufarId!),
+  const deleteLaufMutation = useMutation({
+    mutationFn: () => deleteFjallLauf(laufarId!),
     onSuccess: () => {
       toast.success(`${terms.laufarSingular} deleted`)
-      void queryClient.invalidateQueries({ queryKey: ['fjall-waypoints'] })
+      void queryClient.invalidateQueries({ queryKey: ['fjall-laufar'] })
       clearCatalogSelection()
     },
     onError: (error) =>
@@ -850,8 +850,8 @@ export function HlidskjalfPage() {
   const inspectorState = inspectorOpen ? 'open' : 'hint'
 
   const laufarUnavailable =
-    (waypointsQuery.isError || trailsQuery.isError || markersQuery.isError) &&
-    !waypointsQuery.isLoading
+    (laufarQuery.isError || greinarQuery.isError || runirQuery.isError) &&
+    !laufarQuery.isLoading
       ? dataErrorProps.isConfigError || dataErrorProps.isTokenError
         ? (dataErrorProps.detail ?? 'Data API is not configured.')
         : 'Could not load laufar.'
@@ -879,12 +879,12 @@ export function HlidskjalfPage() {
           onGreinFilterChange={setGreinFilterId}
           runirFilterId={runirFilterId}
           onRunirFilterChange={setRunirFilterId}
-          trails={hlidskjalfTrails}
-          markers={hlidskjalfMarkers}
+          greinar={hlidskjalfGreinar}
+          runir={hlidskjalfRunir}
           onInspect={selectLaufar}
           onOpenUrl={(url) => window.open(url, '_blank', 'noopener,noreferrer')}
           onOpenCatalog={() => openCatalog('greinar')}
-          isLoading={waypointsQuery.isLoading && !waypointsQuery.data}
+          isLoading={laufarQuery.isLoading && !laufarQuery.data}
           unavailableMessage={laufarUnavailable}
         />
       }
@@ -910,55 +910,55 @@ export function HlidskjalfPage() {
               patchParams((params) => {
                 params.set('catalog', tab)
                 params.delete('catalogId')
-                params.delete('markerPath')
-                params.delete('markerParent')
+                params.delete('runPath')
+                params.delete('runParent')
               })
             }}
-            trails={trails}
-            markers={hlidskjalfMarkers}
+            greinar={greinar}
+            runir={hlidskjalfRunir}
             selectedId={catalogId}
-            markerPath={markerPath}
-            markerParent={markerParent}
+            runPath={runPath}
+            runParent={runParent}
             onSelectId={(id) => {
               patchParams((params) => {
                 if (id) params.set('catalogId', id)
                 else params.delete('catalogId')
               })
             }}
-            onMarkerPathChange={(path) => {
+            onRunPathChange={(path) => {
               patchParams((params) => {
-                if (path.length) params.set('markerPath', path.join('/'))
-                else params.delete('markerPath')
+                if (path.length) params.set('runPath', path.join('/'))
+                else params.delete('runPath')
                 params.delete('catalogId')
               })
             }}
-            onMarkerParentChange={(parent) => {
+            onRunParentChange={(parent) => {
               patchParams((params) => {
-                if (parent) params.set('markerParent', parent)
-                else params.delete('markerParent')
+                if (parent) params.set('runParent', parent)
+                else params.delete('runParent')
               })
             }}
             onClearSelection={() => {
               patchParams((params) => {
                 params.delete('catalogId')
-                params.delete('markerParent')
+                params.delete('runParent')
               })
             }}
           />
         ) : laufarId ? (
-          <WaypointInspector
-            waypoint={selectedWaypoint}
+          <LaufInspector
+            lauf={selectedLauf}
             isNew={isNewLaufar}
-            trails={hlidskjalfTrails}
-            markers={hlidskjalfMarkers}
+            greinar={hlidskjalfGreinar}
+            runir={hlidskjalfRunir}
             onClose={clearCatalogSelection}
             onSave={async (values) => {
-              await saveWaypointMutation.mutateAsync(values)
+              await saveLaufMutation.mutateAsync(values)
             }}
             onDelete={async () => {
-              await deleteWaypointMutation.mutateAsync()
+              await deleteLaufMutation.mutateAsync()
             }}
-            isSaving={saveWaypointMutation.isPending}
+            isSaving={saveLaufMutation.isPending}
           />
         ) : inspectorPinned ? (
           <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">

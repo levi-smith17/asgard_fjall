@@ -5,7 +5,7 @@ import { dynamo, TABLE_NAME } from '../../shared/db'
 import { getPk } from '../../shared/auth'
 import { sogurSk } from '../../shared/keys'
 import { resolveRunirById } from '../../shared/runir-resolve'
-import { appendThattrToSagaOrder, getSaga } from '../../shared/sagas'
+import { appendThattrToSagaOrder, getSaga, sagaGreinId } from '../../shared/sagas'
 import { toApiGatewayResponse, created, badRequest, notFound, serverError } from '../../shared/response'
 
 export const handler = async (
@@ -26,18 +26,17 @@ export const handler = async (
     const sagaId =
       typeof body.sagaId === 'string' && body.sagaId.length > 0 ? body.sagaId : null
 
-    let trailId =
-      typeof body.trailId === 'string' && body.trailId.length > 0 ? body.trailId : null
+    let greinId =
+      typeof body.greinId === 'string' && body.greinId.length > 0 ? body.greinId : null
 
     if (sagaId) {
       const saga = await getSaga(pk, sagaId)
       if (!saga) return toApiGatewayResponse(notFound('Saga not found'))
-      trailId =
-        typeof saga.trailId === 'string' && saga.trailId.length > 0 ? saga.trailId : null
+      greinId = sagaGreinId(saga)
     }
 
-    const markerMap = await resolveRunirById(pk, Array.isArray(body.markerIds) ? body.markerIds : [])
-    const markers = [...markerMap.values()]
+    const runMap = await resolveRunirById(pk, Array.isArray(body.runIds) ? body.runIds : [])
+    const runir = [...runMap.values()]
 
     const sogur = {
       pk,
@@ -46,9 +45,9 @@ export const handler = async (
       content: body.content,
       ...(typeof body.position === 'number' ? { position: body.position } : {}),
       ...(sagaId ? { sagaId } : {}),
-      ...(trailId ? { trailId } : {}),
-      ...(body.waypointId ? { waypointId: body.waypointId } : {}),
-      markers,
+      ...(greinId ? { greinId } : {}),
+      ...(body.laufId ? { laufId: body.laufId } : {}),
+      runir,
       mediaKeys: [],
       createdAt: now,
       updatedAt: now,

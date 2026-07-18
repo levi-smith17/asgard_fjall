@@ -1,17 +1,17 @@
-import { MarkerBadge } from '@/components/apps/marker-badge'
-import { liveMarkersById, toDisplayMarker, toMarkerId } from '@/lib/embedded-markers'
+import { RunBadge } from '@/components/apps/run-badge'
+import { liveRunirById, toDisplayRun, toRunId } from '@/lib/embedded-runir'
 import { audrFmt, skattUtilizationColor } from '@/lib/audr-format'
 import {
   effectiveSkattSpent,
   effectiveSkattUtilization,
-  idunnSpendForMarker,
+  idunnSpendForRun,
   supplylineCountsAgainstSkatt,
   supplylineMonthlyAmount,
 } from '@/lib/audr-skatt-idunn'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
 import type { FjallBurn, FjallCacheUtilization, FjallSupplyline } from '@/lib/data-types'
-import type { AudrMarker } from './audr-types'
+import type { AudrRun } from './audr-types'
 
 const CYCLE_LABELS: Record<string, string> = {
   WEEKLY: 'Wk',
@@ -25,23 +25,23 @@ export function AudrSkattAllocationPanel({
   cache,
   burns,
   supplylines,
-  markers = [],
+  runir = [],
 }: {
   cache: FjallCacheUtilization
   burns: FjallBurn[]
   supplylines: FjallSupplyline[]
-  markers?: AudrMarker[]
+  runir?: AudrRun[]
 }) {
   const terms = useTerms()
-  const liveById = liveMarkersById(markers)
+  const liveById = liveRunirById(runir)
   const idunnLines = supplylines.filter(
     (line) =>
       line.active &&
       supplylineCountsAgainstSkatt(line.billingCycle) &&
-      line.markers.some((entry) => toMarkerId(entry) === cache.markerId),
+      line.runir.some((entry) => toRunId(entry) === cache.runId),
   )
   const surtrSpend = cache.spent
-  const idunnSpend = idunnSpendForMarker(supplylines, cache.markerId)
+  const idunnSpend = idunnSpendForRun(supplylines, cache.runId)
   const totalSpent = effectiveSkattSpent(cache, supplylines)
   const utilization = effectiveSkattUtilization(cache, supplylines)
 
@@ -127,10 +127,10 @@ export function AudrSkattAllocationPanel({
                 <div className="min-w-0">
                   <p className="truncate font-medium text-foreground">{line.name}</p>
                   <div className="mt-0.5 flex flex-wrap gap-1">
-                    {line.markers.map((entry, index) => {
-                      const marker = toDisplayMarker(entry, liveById)
-                      if (!marker) return null
-                      return <MarkerBadge key={marker.id ?? index} marker={marker} />
+                    {line.runir.map((entry, index) => {
+                      const run = toDisplayRun(entry, liveById)
+                      if (!run) return null
+                      return <RunBadge key={run.id ?? index} run={run} />
                     })}
                   </div>
                   <p className="mt-1 text-muted-foreground">

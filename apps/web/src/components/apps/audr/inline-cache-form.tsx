@@ -2,7 +2,7 @@ import { useState, useId, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Input } from '@/components/core/ui/input'
 import { Button } from '@/components/core/ui/button'
-import { MarkerPicker } from '@/components/apps/marker-picker'
+import { RunPicker } from '@/components/apps/run-picker'
 import { saveFjallCache } from '@/lib/data-api'
 import { useFormStatus } from '@/hooks/use-form-status'
 import type { FjallCacheUtilization } from '@/lib/data-types'
@@ -13,8 +13,8 @@ import { FundPicker } from './fund-picker'
 
 interface Props {
   cache?: FjallCacheUtilization
-  defaultMarkerId?: string
-  markers: { id: string; name: string; color: string; icon?: string | null }[]
+  defaultRunId?: string
+  runir: { id: string; name: string; color: string; icon?: string | null }[]
   month: number
   year: number
   formId?: string
@@ -25,8 +25,8 @@ interface Props {
 
 export function InlineCacheForm({
   cache,
-  defaultMarkerId,
-  markers,
+  defaultRunId,
+  runir,
   month,
   year,
   formId: formIdProp,
@@ -38,27 +38,27 @@ export function InlineCacheForm({
   const generatedId = useId()
   const formId = formIdProp ?? generatedId
   const { saving, handleSubmit } = useFormStatus()
-  const [markerId, setMarkerId] = useState(cache?.markerId ?? defaultMarkerId ?? '')
+  const [runId, setRunId] = useState(cache?.runId ?? defaultRunId ?? '')
   const [limit, setLimit] = useState(cache?.limit != null ? String(cache.limit) : '')
   const [fundId, setFundId] = useState<string | null>(
     () => cache?.fundId ?? (cache ? null : getDefaultSjodrId()),
   )
 
   useEffect(() => {
-    setMarkerId(cache?.markerId ?? defaultMarkerId ?? '')
+    setRunId(cache?.runId ?? defaultRunId ?? '')
     setLimit(cache?.limit != null ? String(cache.limit) : '')
     setFundId(cache?.fundId ?? (cache ? null : getDefaultSjodrId()))
-  }, [cache?.id, defaultMarkerId])
+  }, [cache?.id, defaultRunId])
 
   async function save() {
-    if (!markerId || !limit) {
+    if (!runId || !limit) {
       toast.error(`Select a ${terms.runSingular.toLowerCase()} and enter a limit.`)
       return
     }
     await handleSubmit(async () => {
       await saveFjallCache({
         id: cache?.id,
-        markerId,
+        runId,
         limit: parseFloat(limit),
         month,
         year,
@@ -85,10 +85,10 @@ export function InlineCacheForm({
     <form id={formId} onSubmit={onSubmit} className="space-y-4 px-5 py-4 text-sm">
       <label className="block space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">{terms.runSingular}</span>
-        <MarkerPicker
-          markers={markers}
-          selected={markerId ? [markerId] : []}
-          onChange={(ids) => setMarkerId(ids[0] ?? '')}
+        <RunPicker
+          runir={runir}
+          selected={runId ? [runId] : []}
+          onChange={(ids) => setRunId(ids[0] ?? '')}
           placeholder={`Select ${terms.runSingular.toLowerCase()}…`}
           singleSelect
           initialPath={['Audr']}

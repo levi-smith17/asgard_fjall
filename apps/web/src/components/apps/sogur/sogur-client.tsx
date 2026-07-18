@@ -14,11 +14,11 @@ import {
   deleteFjallLog,
   deleteFjallSaga,
   fetchFjallLogs,
-  fetchFjallMarkers,
+  fetchFjallRunir,
   fetchFjallSagas,
   fetchFjallStatus,
-  fetchFjallTrails,
-  fetchFjallWaypoints,
+  fetchFjallGreinar,
+  fetchFjallLaufar,
   reorderFjallSaga,
   saveFjallLog,
   saveFjallSaga,
@@ -26,7 +26,7 @@ import {
   type FjallSagaView,
 } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
-import { toMarkerView, toTrailView, toWaypointView } from '@/lib/data-format'
+import { toRunView, toGreinView, toLaufView } from '@/lib/data-format'
 import { isGreinVisibleOnPage } from '@/lib/grein-visibility'
 import {
   buildSogurWorkspace,
@@ -48,7 +48,7 @@ import {
   SOGUR_FILTER_ALL,
   SogurRail,
   type SogurRailItem,
-  type SogurRailMarker,
+  type SogurRailRun,
 } from './sogur-rail'
 import { saveActiveSogurThattr, SogurThattrEditor } from './sogur-thattr-editor'
 
@@ -57,22 +57,22 @@ type InspectorMode = 'create-saga' | 'create-thattr' | 'edit-saga' | 'edit-thatt
 type CatalogState = {
   tab: FjallCatalogTab
   selectedId: string | null
-  markerPath: string[]
-  markerParent: string | null
+  runPath: string[]
+  runParent: string | null
 }
 
 function emptyThattrContent(): string {
   return '<p></p>'
 }
 
-function toRailMarkers(
-  markers: Array<{ markerId: string; marker: { id: string; name: string; color: string; icon: string | null } }>,
-): SogurRailMarker[] {
-  return markers.map((entry) => ({
-    id: entry.marker.id,
-    name: entry.marker.name,
-    color: entry.marker.color,
-    icon: entry.marker.icon,
+function toRailRunir(
+  runir: Array<{ runId: string; run: { id: string; name: string; color: string; icon: string | null } }>,
+): SogurRailRun[] {
+  return runir.map((entry) => ({
+    id: entry.run.id,
+    name: entry.run.name,
+    color: entry.run.color,
+    icon: entry.run.icon,
   }))
 }
 
@@ -112,21 +112,21 @@ export function SogurWorkspace() {
     enabled: statusQuery.data?.configured === true,
   })
 
-  const trailsQuery = useQuery({
-    queryKey: ['fjall-trails'],
-    queryFn: fetchFjallTrails,
+  const greinarQuery = useQuery({
+    queryKey: ['fjall-greinar'],
+    queryFn: fetchFjallGreinar,
     enabled: statusQuery.data?.configured === true,
   })
 
-  const markersQuery = useQuery({
-    queryKey: ['fjall-markers'],
-    queryFn: fetchFjallMarkers,
+  const runirQuery = useQuery({
+    queryKey: ['fjall-runir'],
+    queryFn: fetchFjallRunir,
     enabled: statusQuery.data?.configured === true,
   })
 
-  const waypointsQuery = useQuery({
-    queryKey: ['fjall-waypoints'],
-    queryFn: fetchFjallWaypoints,
+  const laufarQuery = useQuery({
+    queryKey: ['fjall-laufar'],
+    queryFn: fetchFjallLaufar,
     enabled: statusQuery.data?.configured === true,
   })
 
@@ -134,47 +134,47 @@ export function SogurWorkspace() {
   const logs = logsQuery.data ?? []
   const apiSagas = sagasQuery.data ?? []
   const workspace = useMemo(() => buildSogurWorkspace(apiSagas, logs), [apiSagas, logs])
-  const trails = useMemo(
-    () => (trailsQuery.data ?? []).map(toTrailView).sort((a, b) => a.name.localeCompare(b.name)),
-    [trailsQuery.data],
+  const greinar = useMemo(
+    () => (greinarQuery.data ?? []).map(toGreinView).sort((a, b) => a.name.localeCompare(b.name)),
+    [greinarQuery.data],
   )
   /** Greinar visible on Sögur per the per-Grein Page Visibility setting. */
-  const visibleTrails = useMemo(
-    () => trails.filter((trail) => isGreinVisibleOnPage(trail, 'sogur')),
-    [trails],
+  const visibleGreinar = useMemo(
+    () => greinar.filter((grein) => isGreinVisibleOnPage(grein, 'sogur')),
+    [greinar],
   )
-  const hiddenSogurTrailIds = useMemo(
+  const hiddenSogurGreinIds = useMemo(
     () =>
       new Set(
-        trails.filter((trail) => !isGreinVisibleOnPage(trail, 'sogur')).map((trail) => trail.id),
+        greinar.filter((grein) => !isGreinVisibleOnPage(grein, 'sogur')).map((grein) => grein.id),
       ),
-    [trails],
+    [greinar],
   )
   useEffect(() => {
-    if (hiddenSogurTrailIds.has(greinFilterId)) setGreinFilterId(SOGUR_FILTER_ALL)
-  }, [greinFilterId, hiddenSogurTrailIds])
-  const rawMarkers = markersQuery.data ?? []
-  const markers = useMemo(
-    () => rawMarkers.map(toMarkerView).sort((a, b) => a.name.localeCompare(b.name)),
-    [rawMarkers],
+    if (hiddenSogurGreinIds.has(greinFilterId)) setGreinFilterId(SOGUR_FILTER_ALL)
+  }, [greinFilterId, hiddenSogurGreinIds])
+  const rawRunir = runirQuery.data ?? []
+  const runir = useMemo(
+    () => rawRunir.map(toRunView).sort((a, b) => a.name.localeCompare(b.name)),
+    [rawRunir],
   )
-  const runir: SogurRailMarker[] = useMemo(
+  const railRunir: SogurRailRun[] = useMemo(
     () =>
-      markers.map((marker) => ({
-        id: marker.id,
-        name: marker.name,
-        color: marker.color,
-        icon: marker.icon,
+      runir.map((run) => ({
+        id: run.id,
+        name: run.name,
+        color: run.color,
+        icon: run.icon,
       })),
-    [markers],
+    [runir],
   )
-  const waypoints = waypointsQuery.data ?? []
+  const laufar = laufarQuery.data ?? []
 
   const selectedSagaId =
     searchParams.get('saga') ??
-    // Legacy Grein-bucket URLs used `book=<trailId>`.
+    // Legacy Grein-bucket URLs used `book=<greinId>`.
     (searchParams.get('book')
-      ? workspace.sagas.find((saga) => saga.trailId === searchParams.get('book'))?.id ?? null
+      ? workspace.sagas.find((saga) => saga.greinId === searchParams.get('book'))?.id ?? null
       : null)
   const selectedThattrId = searchParams.get('thattr') ?? searchParams.get('page')
 
@@ -203,80 +203,80 @@ export function SogurWorkspace() {
 
   const railItems = useMemo((): SogurRailItem[] => {
     const sagaItems: SogurRailItem[] = workspace.sagas
-      .filter((saga) => !saga.trailId || !hiddenSogurTrailIds.has(saga.trailId))
+      .filter((saga) => !saga.greinId || !hiddenSogurGreinIds.has(saga.greinId))
       .map((saga) => {
         const sagaLogs = workspace.logsBySagaId.get(saga.id) ?? []
         return {
           id: saga.id,
           kind: 'saga',
           name: saga.name,
-          trailId: saga.trailId,
-          trailName: saga.trailName,
-          markers: toRailMarkers(saga.markers),
+          greinId: saga.greinId,
+          greinName: saga.greinName,
+          runir: toRailRunir(saga.runir),
           thattrCount: sagaLogs.length,
           firstThattrId: sagaLogs[0]?.id ?? null,
         }
       })
     const standalone: SogurRailItem[] = workspace.standaloneThaettir
-      .filter((log) => !log.trailId || !hiddenSogurTrailIds.has(log.trailId))
+      .filter((log) => !log.greinId || !hiddenSogurGreinIds.has(log.greinId))
       .map((log) => ({
         id: log.id,
         kind: 'thattr',
         name: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
-        trailId: log.trailId,
-        trailName: log.trailName,
-        markers: toRailMarkers(log.markers),
+        greinId: log.greinId,
+        greinName: log.greinName,
+        runir: toRailRunir(log.runir),
         preview: thattrSnippet(log),
       }))
     return [...sagaItems, ...standalone]
-  }, [terms.thattrSingular, workspace, hiddenSogurTrailIds])
+  }, [terms.thattrSingular, workspace, hiddenSogurGreinIds])
 
   const nestedThaettir = useMemo((): SogurRailItem[] => {
     const items: SogurRailItem[] = []
     for (const saga of workspace.sagas) {
-      if (saga.trailId && hiddenSogurTrailIds.has(saga.trailId)) continue
+      if (saga.greinId && hiddenSogurGreinIds.has(saga.greinId)) continue
       for (const log of workspace.logsBySagaId.get(saga.id) ?? []) {
         items.push({
           id: log.id,
           kind: 'thattr',
           name: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
-          trailId: log.trailId ?? saga.trailId,
-          trailName: log.trailName ?? saga.trailName,
-          markers: toRailMarkers(log.markers),
+          greinId: log.greinId ?? saga.greinId,
+          greinName: log.greinName ?? saga.greinName,
+          runir: toRailRunir(log.runir),
           preview: thattrSnippet(log),
           sagaName: saga.name,
         })
       }
     }
     return items
-  }, [terms.thattrSingular, workspace, hiddenSogurTrailIds])
+  }, [terms.thattrSingular, workspace, hiddenSogurGreinIds])
 
   const sagaOptions = useMemo(
     () =>
       workspace.sagas.map((saga) => ({
         id: saga.id,
         name: saga.name,
-        trailId: saga.trailId,
+        greinId: saga.greinId,
       })),
     [workspace.sagas],
   )
 
   const thattrLaufar = useMemo(() => {
-    const trailId = selectedThattr?.trailId ?? selectedThattrSaga?.trailId ?? null
-    const trailsMap = new Map(trails.map((trail) => [trail.id, trail]))
-    return waypoints
-      .map((waypoint) => toWaypointView(waypoint, trailsMap))
-      .filter((waypoint) => (trailId ? waypoint.trailId === trailId : true))
-      .map((waypoint) => ({
-        id: waypoint.id,
-        title: waypoint.title,
-        url: waypoint.url,
-        description: waypoint.description,
+    const greinId = selectedThattr?.greinId ?? selectedThattrSaga?.greinId ?? null
+    const greinarMap = new Map(greinar.map((grein) => [grein.id, grein]))
+    return laufar
+      .map((lauf) => toLaufView(lauf, greinarMap))
+      .filter((lauf) => (greinId ? lauf.greinId === greinId : true))
+      .map((lauf) => ({
+        id: lauf.id,
+        title: lauf.title,
+        url: lauf.url,
+        description: lauf.description,
       }))
-  }, [selectedThattr, selectedThattrSaga, trails, waypoints])
+  }, [selectedThattr, selectedThattrSaga, greinar, laufar])
 
-  const activeLauf = selectedThattr?.waypointId
-    ? thattrLaufar.find((lauf) => lauf.id === selectedThattr.waypointId) ?? null
+  const activeLauf = selectedThattr?.laufId
+    ? thattrLaufar.find((lauf) => lauf.id === selectedThattr.laufId) ?? null
     : null
 
   function setSelection(next: { sagaId?: string | null; thattrId?: string | null }) {
@@ -333,10 +333,10 @@ export function SogurWorkspace() {
         apiSagas.find((entry) => entry.id === saga.id) ?? {
           id: saga.id,
           name: saga.name,
-          trailId: saga.trailId,
-          trailName: saga.trailName,
+          greinId: saga.greinId,
+          greinName: saga.greinName,
           orderedThattrIds: saga.orderedThattrIds,
-          markers: saga.markers,
+          runir: saga.runir,
           createdAt: saga.createdAt,
           updatedAt: saga.updatedAt,
         }
@@ -344,8 +344,8 @@ export function SogurWorkspace() {
     }
     const created = await saveFjallSaga({
       name: saga.name,
-      trailId: saga.trailId,
-      markerIds: saga.markers.map((marker) => marker.markerId),
+      greinId: saga.greinId,
+      runIds: saga.runir.map((run) => run.runId),
     })
     const sagaLogs = workspace.logsBySagaId.get(saga.id) ?? []
     for (const log of sagaLogs) {
@@ -354,9 +354,9 @@ export function SogurWorkspace() {
         title: log.title,
         content: log.content,
         sagaId: created.id,
-        trailId: created.trailId,
-        waypointId: log.waypointId,
-        markerIds: log.markers.map((marker) => marker.markerId),
+        greinId: created.greinId,
+        laufId: log.laufId,
+        runIds: log.runir.map((run) => run.runId),
       })
       patchLogCache(saved)
     }
@@ -377,7 +377,7 @@ export function SogurWorkspace() {
   function openCreate(kind: 'saga' | 'thattr', defaultSagaId: string | null = null) {
     setCatalog(null)
     setCreateDefaultSagaId(defaultSagaId)
-    setCreateDraft(kind === 'thattr' ? { name: '', sagaId: defaultSagaId, markerIds: [] } : null)
+    setCreateDraft(kind === 'thattr' ? { name: '', sagaId: defaultSagaId, runIds: [] } : null)
     setInspectorMode(kind === 'saga' ? 'create-saga' : 'create-thattr')
     setInspectorEngaged(true)
   }
@@ -425,7 +425,7 @@ export function SogurWorkspace() {
   function openCatalog() {
     setInspectorMode(null)
     setInspectorEngaged(true)
-    setCatalog({ tab: 'greinar', selectedId: null, markerPath: [], markerParent: null })
+    setCatalog({ tab: 'greinar', selectedId: null, runPath: [], runParent: null })
   }
 
   const dismissInspector = useCallback(() => {
@@ -467,8 +467,8 @@ export function SogurWorkspace() {
 
   async function handleCreate(input: {
     name: string
-    trailId: string | null
-    markerIds: string[]
+    greinId: string | null
+    runIds: string[]
     sagaId?: string | null
   }) {
     setCreating(true)
@@ -476,14 +476,14 @@ export function SogurWorkspace() {
       if (inspectorMode === 'create-saga') {
         const created = await saveFjallSaga({
           name: input.name,
-          trailId: input.trailId,
-          markerIds: input.markerIds,
+          greinId: input.greinId,
+          runIds: input.runIds,
         })
         patchSagaCache(created)
         await invalidateSogur()
         setSelection({ sagaId: created.id, thattrId: null })
         setCreateDefaultSagaId(created.id)
-        setCreateDraft({ name: '', sagaId: created.id, markerIds: [] })
+        setCreateDraft({ name: '', sagaId: created.id, runIds: [] })
         setInspectorMode('create-thattr')
         setInspectorEngaged(true)
         toast.success(`${terms.notesSingular} created`)
@@ -491,26 +491,26 @@ export function SogurWorkspace() {
       }
 
       let sagaId = input.sagaId ?? null
-      let trailId = input.trailId
+      let greinId = input.greinId
       if (sagaId && isLegacySagaId(sagaId)) {
         const legacy = workspace.sagas.find((saga) => saga.id === sagaId)
         if (legacy) {
           const real = await materializeSaga(legacy)
           sagaId = real.id
-          trailId = real.trailId
+          greinId = real.greinId
         }
       } else if (sagaId) {
         const saga = workspace.sagas.find((entry) => entry.id === sagaId)
-        trailId = saga?.trailId ?? trailId
+        greinId = saga?.greinId ?? greinId
       }
 
       const created = await saveFjallLog({
         title: input.name,
         content: emptyThattrContent(),
         sagaId,
-        trailId,
-        waypointId: null,
-        markerIds: input.markerIds,
+        greinId,
+        laufId: null,
+        runIds: input.runIds,
       })
       patchLogCache(created)
       await invalidateSogur()
@@ -527,8 +527,8 @@ export function SogurWorkspace() {
 
   async function handleSaveSaga(input: {
     name: string
-    trailId: string | null
-    markerIds: string[]
+    greinId: string | null
+    runIds: string[]
   }) {
     if (!selectedSaga) return
     setSavingMeta(true)
@@ -537,8 +537,8 @@ export function SogurWorkspace() {
       const saved = await saveFjallSaga({
         id: base.id,
         name: input.name,
-        trailId: input.trailId,
-        markerIds: input.markerIds,
+        greinId: input.greinId,
+        runIds: input.runIds,
       })
       patchSagaCache(saved)
       await invalidateSogur()
@@ -558,16 +558,16 @@ export function SogurWorkspace() {
       if (!selectedSaga.synthetic) {
         await deleteFjallSaga(selectedSaga.id)
       } else {
-        // Synthetic Grein buckets: detach by clearing trailId on Thattr.
+        // Synthetic Grein buckets: detach by clearing greinId on Thattr.
         for (const log of workspace.logsBySagaId.get(selectedSaga.id) ?? []) {
           const saved = await saveFjallLog({
             id: log.id,
             title: log.title,
             content: log.content,
             sagaId: null,
-            trailId: null,
-            waypointId: log.waypointId,
-            markerIds: log.markers.map((marker) => marker.markerId),
+            greinId: null,
+            laufId: log.laufId,
+            runIds: log.runir.map((run) => run.runId),
           })
           patchLogCache(saved)
         }
@@ -595,21 +595,21 @@ export function SogurWorkspace() {
   async function handleSaveThattrMeta(input: {
     title: string
     sagaId: string | null
-    trailId: string | null
-    markerIds: string[]
-    waypointId: string | null
+    greinId: string | null
+    runIds: string[]
+    laufId: string | null
   }) {
     if (!selectedThattr) return
     setSavingMeta(true)
     try {
       let sagaId = input.sagaId
-      let trailId = input.trailId
+      let greinId = input.greinId
       if (sagaId && isLegacySagaId(sagaId)) {
         const legacy = workspace.sagas.find((saga) => saga.id === sagaId)
         if (legacy) {
           const real = await materializeSaga(legacy)
           sagaId = real.id
-          trailId = real.trailId
+          greinId = real.greinId
         }
       }
       const saved = await saveFjallLog({
@@ -617,9 +617,9 @@ export function SogurWorkspace() {
         title: input.title,
         content: selectedThattr.content,
         sagaId,
-        trailId,
-        waypointId: input.waypointId,
-        markerIds: input.markerIds,
+        greinId,
+        laufId: input.laufId,
+        runIds: input.runIds,
       })
       patchLogCache(saved)
       await invalidateSogur()
@@ -699,9 +699,9 @@ export function SogurWorkspace() {
     (configured &&
       (logsQuery.isLoading ||
         sagasQuery.isLoading ||
-        trailsQuery.isLoading ||
-        markersQuery.isLoading ||
-        waypointsQuery.isLoading))
+        greinarQuery.isLoading ||
+        runirQuery.isLoading ||
+        laufarQuery.isLoading))
 
   const showingEditor = Boolean(selectedThattr)
   const showingSagaOverview = Boolean(selectedSaga && !selectedThattr)
@@ -714,9 +714,9 @@ export function SogurWorkspace() {
           id: '__draft-thattr__',
           title: createDraft.name,
           preview: '',
-          markers: createDraft.markerIds
-            .map((id) => runir.find((marker) => marker.id === id))
-            .filter((marker): marker is SogurRailMarker => marker != null),
+          runir: createDraft.runIds
+            .map((id) => railRunir.find((run) => run.id === id))
+            .filter((run): run is SogurRailRun => run != null),
         }
       : null
 
@@ -752,8 +752,8 @@ export function SogurWorkspace() {
             onGreinFilterChange={setGreinFilterId}
             runirFilterId={runirFilterId}
             onRunirFilterChange={setRunirFilterId}
-            greinar={visibleTrails.map((trail) => ({ id: trail.id, name: trail.name }))}
-            runir={runir}
+            greinar={visibleGreinar.map((grein) => ({ id: grein.id, name: grein.name }))}
+            runir={railRunir}
             onOpenItem={(item) => {
               if (item.kind === 'saga') {
                 openSagaFromRail(item)
@@ -837,7 +837,7 @@ export function SogurWorkspace() {
                   id: log.id,
                   title: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
                   preview: thattrSnippet(log),
-                  markers: toRailMarkers(log.markers),
+                  runir: toRailRunir(log.runir),
                 }))}
                 draftThattr={draftThattrForCanvas}
                 onOpenThattr={(id) => setSelection({ sagaId: selectedSaga.id, thattrId: id })}
@@ -868,27 +868,27 @@ export function SogurWorkspace() {
           <FjallCatalogInspector
             activeTab={catalog.tab}
             onTabChange={(tab) =>
-              setCatalog({ tab, selectedId: null, markerPath: [], markerParent: null })
+              setCatalog({ tab, selectedId: null, runPath: [], runParent: null })
             }
-            trails={trails}
-            markers={markers}
+            greinar={greinar}
+            runir={runir}
             selectedId={catalog.selectedId}
-            markerPath={catalog.markerPath}
-            markerParent={catalog.markerParent}
+            runPath={catalog.runPath}
+            runParent={catalog.runParent}
             onSelectId={(id) =>
               setCatalog((current) => (current ? { ...current, selectedId: id } : current))
             }
-            onMarkerPathChange={(path) =>
+            onRunPathChange={(path) =>
               setCatalog((current) =>
-                current ? { ...current, markerPath: path, selectedId: null } : current,
+                current ? { ...current, runPath: path, selectedId: null } : current,
               )
             }
-            onMarkerParentChange={(parent) =>
-              setCatalog((current) => (current ? { ...current, markerParent: parent } : current))
+            onRunParentChange={(parent) =>
+              setCatalog((current) => (current ? { ...current, runParent: parent } : current))
             }
             onClearSelection={() =>
               setCatalog((current) =>
-                current ? { ...current, selectedId: null, markerParent: null } : current,
+                current ? { ...current, selectedId: null, runParent: null } : current,
               )
             }
           />
@@ -897,8 +897,8 @@ export function SogurWorkspace() {
             kind={activeInspectorMode === 'create-saga' ? 'saga' : 'thattr'}
             defaultSagaId={createDefaultSagaId}
             sagas={sagaOptions}
-            greinar={trails.map((trail) => ({ id: trail.id, name: trail.name }))}
-            runir={runir}
+            greinar={greinar.map((grein) => ({ id: grein.id, name: grein.name }))}
+            runir={railRunir}
             creating={creating}
             onCreate={handleCreate}
             onDraftChange={
@@ -910,15 +910,15 @@ export function SogurWorkspace() {
             saga={{
               id: selectedSaga.id,
               name: selectedSaga.name,
-              trailId: selectedSaga.trailId,
-              markerIds: selectedSaga.markers.map((marker) => marker.markerId),
+              greinId: selectedSaga.greinId,
+              runIds: selectedSaga.runir.map((run) => run.runId),
             }}
             thaettir={selectedSagaThaettir.map((log) => ({
               id: log.id,
               title: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
             }))}
-            greinar={trails.map((trail) => ({ id: trail.id, name: trail.name }))}
-            runir={runir}
+            greinar={greinar.map((grein) => ({ id: grein.id, name: grein.name }))}
+            runir={railRunir}
             saving={savingMeta}
             onSave={handleSaveSaga}
             onDelete={() => void handleDeleteSaga()}
@@ -930,13 +930,13 @@ export function SogurWorkspace() {
               id: selectedThattr.id,
               title: selectedThattr.title?.trim() || thattrPreview(selectedThattr),
               sagaId: selectedThattr.sagaId ?? selectedThattrSaga?.id ?? null,
-              trailId: selectedThattr.trailId,
-              markerIds: selectedThattr.markers.map((marker) => marker.markerId),
-              waypointId: selectedThattr.waypointId,
+              greinId: selectedThattr.greinId,
+              runIds: selectedThattr.runir.map((run) => run.runId),
+              laufId: selectedThattr.laufId,
             }}
             sagas={sagaOptions}
-            greinar={trails.map((trail) => ({ id: trail.id, name: trail.name }))}
-            runir={runir}
+            greinar={greinar.map((grein) => ({ id: grein.id, name: grein.name }))}
+            runir={railRunir}
             laufar={thattrLaufar}
             saving={savingMeta}
             onSave={handleSaveThattrMeta}

@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/core/ui/po
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
 
-export type SogurWaypointOption = {
+export type SogurLaufOption = {
   id: string
   title: string
   url: string
@@ -13,21 +13,21 @@ export type SogurWaypointOption = {
 }
 
 export function SogurLaufarPicker({
-  waypoints,
+  laufar,
   selectedId,
   onChange,
   greinName,
 }: {
-  waypoints: SogurWaypointOption[]
+  laufar: SogurLaufOption[]
   selectedId: string | null
-  onChange: (waypointId: string | null) => void
+  onChange: (laufId: string | null) => void
   greinName: string
 }) {
   const terms = useTerms()
   const [open, setOpen] = useState(false)
-  const selected = waypoints.find((waypoint) => waypoint.id === selectedId) ?? null
+  const selected = laufar.find((lauf) => lauf.id === selectedId) ?? null
 
-  if (waypoints.length === 0) return null
+  if (laufar.length === 0) return null
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -54,7 +54,7 @@ export function SogurLaufarPicker({
             {greinName} {terms.laufar.toLowerCase()}
           </span>
           <span className="ml-auto text-[10px] tabular-nums text-muted-foreground">
-            {waypoints.length}
+            {laufar.length}
           </span>
         </div>
         <div className="max-h-72 overflow-y-auto">
@@ -71,31 +71,31 @@ export function SogurLaufarPicker({
           >
             No {terms.laufarSingular.toLowerCase()}
           </button>
-          {waypoints.map((waypoint) => (
+          {laufar.map((lauf) => (
             <div
-              key={waypoint.id}
+              key={lauf.id}
               className={cn(
                 'flex items-start gap-2 border-t border-border px-3 py-2 transition-colors hover:bg-muted/50',
-                selectedId === waypoint.id && 'bg-primary/10',
+                selectedId === lauf.id && 'bg-primary/10',
               )}
             >
               <button
                 type="button"
                 onClick={() => {
-                  onChange(waypoint.id)
+                  onChange(lauf.id)
                   setOpen(false)
                 }}
                 className="min-w-0 flex-1 text-left"
               >
-                <p className="truncate text-xs font-medium">{waypoint.title}</p>
-                {waypoint.description ? (
+                <p className="truncate text-xs font-medium">{lauf.title}</p>
+                {lauf.description ? (
                   <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
-                    {waypoint.description}
+                    {lauf.description}
                   </p>
                 ) : null}
               </button>
               <a
-                href={waypoint.url}
+                href={lauf.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="shrink-0 pt-0.5 text-muted-foreground/50 transition-colors hover:text-muted-foreground"

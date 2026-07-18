@@ -46,9 +46,9 @@ export const handler = async (
       items = items.filter((e) => String(e.name).toLowerCase().includes(term))
     }
 
-    if (params.markerId) {
+    if (params.runId) {
       items = items.filter((e) =>
-        (e.markers ?? []).some((m: { id?: string }) => m.id === params.markerId),
+        (e.runir ?? e.markers ?? []).some((m: { id?: string }) => m.id === params.runId),
       )
     }
 

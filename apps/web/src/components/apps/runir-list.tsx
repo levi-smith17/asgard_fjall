@@ -1,5 +1,5 @@
 import { Plus } from 'lucide-react'
-import type { FjallMarkerView } from '@/lib/data-types'
+import type { FjallRunView } from '@/lib/data-types'
 import { Button } from '@/components/core/ui/button'
 import { AppPanelHeader } from '@/components/apps/split-canvas'
 import { ASGARD_PRIMARY_HEX } from '@/lib/brand-colors'
@@ -31,7 +31,7 @@ const PRESET_COLORS = [
   '#1e293b',
 ]
 
-export function MarkerColorSwatch({
+export function RunColorSwatch({
   color,
   className,
 }: {
@@ -52,15 +52,15 @@ export function MarkerColorSwatch({
 
 export { PRESET_COLORS }
 
-export function MarkersList({
-  markers,
+export function RunirList({
+  runir,
   selectedId,
   searchQuery,
   onSearchChange,
   onSelect,
   onNew,
 }: {
-  markers: FjallMarkerView[]
+  runir: FjallRunView[]
   selectedId: string | null
   searchQuery: string
   onSearchChange: (value: string) => void
@@ -70,9 +70,9 @@ export function MarkersList({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <AppPanelHeader
-        title="Markers"
+        title="Runir"
         actions={
-          <Button type="button" size="icon" variant="secondary" className="h-7 w-7" onClick={onNew} aria-label="New marker">
+          <Button type="button" size="icon" variant="secondary" className="h-7 w-7" onClick={onNew} aria-label="New run">
             <Plus className="h-3.5 w-3.5" aria-hidden />
           </Button>
         }
@@ -82,29 +82,29 @@ export function MarkersList({
           type="search"
           value={searchQuery}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search markers…"
+          placeholder="Search runir…"
           className="h-8 w-full rounded-md border border-border bg-input px-2.5 text-xs"
         />
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {markers.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-muted-foreground">No markers match.</p>
+        {runir.length === 0 ? (
+          <p className="px-4 py-6 text-sm text-muted-foreground">No runir match.</p>
         ) : (
           <ul>
-            {markers.map((marker) => (
-              <li key={marker.id}>
+            {runir.map((run) => (
+              <li key={run.id}>
                 <button
                   type="button"
-                  onClick={() => onSelect(marker.id)}
+                  onClick={() => onSelect(run.id)}
                   className={cn(
                     'flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-muted-hover',
-                    selectedId === marker.id && 'bg-primary/10 text-primary',
+                    selectedId === run.id && 'bg-primary/10 text-primary',
                   )}
                 >
-                  <MarkerColorSwatch color={marker.color} />
-                  <span className="min-w-0 flex-1 truncate font-medium">{marker.name}</span>
+                  <RunColorSwatch color={run.color} />
+                  <span className="min-w-0 flex-1 truncate font-medium">{run.name}</span>
                   <span className="shrink-0 text-[11px] text-muted-foreground">
-                    {marker.waypointCount}
+                    {run.laufCount}
                   </span>
                 </button>
               </li>

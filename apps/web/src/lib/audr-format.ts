@@ -1,5 +1,5 @@
 import type { FjallBurn, FjallCacheUtilization, FjallSjodrView } from '@/lib/data-types'
-import { markerDisplayName, toMarkerId } from '@/lib/embedded-markers'
+import { runDisplayName, toRunId } from '@/lib/embedded-runir'
 
 export const AUDR_UNASSIGNED_SJODR = 'unassigned'
 export type AudrCanvasGroupBy = 'run' | 'sjodr'
@@ -13,28 +13,28 @@ export function skattUtilizationColor(pct: number) {
   return 'bg-primary'
 }
 
-export function burnMarkerKey(burn: FjallBurn): string {
-  return toMarkerId(burn.markers[0]) ?? 'uncategorized'
+export function burnRunKey(burn: FjallBurn): string {
+  return toRunId(burn.runir[0]) ?? 'uncategorized'
 }
 
-export function markerShortLabel(
-  markerId: string,
-  markers: { id: string; name: string }[],
+export function runShortLabel(
+  runId: string,
+  runir: { id: string; name: string }[],
   cache?: FjallCacheUtilization,
 ): string {
-  if (markerId === 'uncategorized') return 'Uncategorized'
+  if (runId === 'uncategorized') return 'Uncategorized'
   const name =
-    markers.find((m) => m.id === markerId)?.name ??
-    cache?.marker?.name ??
-    markerDisplayName(cache?.marker)
+    runir.find((m) => m.id === runId)?.name ??
+    cache?.run?.name ??
+    runDisplayName(cache?.run)
   if (!name) return 'Uncategorized'
   return name.split('/').pop() ?? name
 }
 
-export function groupBurnsByMarker(burns: FjallBurn[]) {
+export function groupBurnsByRun(burns: FjallBurn[]) {
   const groups = new Map<string, FjallBurn[]>()
   for (const burn of burns) {
-    const key = burnMarkerKey(burn)
+    const key = burnRunKey(burn)
     const list = groups.get(key) ?? []
     list.push(burn)
     groups.set(key, list)
@@ -43,7 +43,7 @@ export function groupBurnsByMarker(burns: FjallBurn[]) {
 }
 
 export type SurtrCanvasGroup = {
-  markerId: string
+  runId: string
   burns: FjallBurn[]
   cache?: FjallCacheUtilization
 }
@@ -51,35 +51,35 @@ export type SurtrCanvasGroup = {
 export function buildSurtrCanvasGroups(
   burns: FjallBurn[],
   cacheUtilization: FjallCacheUtilization[],
-  markers: { id: string; name: string }[] = [],
+  runir: { id: string; name: string }[] = [],
 ): SurtrCanvasGroup[] {
-  const burnGroups = groupBurnsByMarker(burns)
-  const markerIds = new Set<string>()
-  for (const cache of cacheUtilization) markerIds.add(cache.markerId)
-  for (const markerId of burnGroups.keys()) markerIds.add(markerId)
+  const burnGroups = groupBurnsByRun(burns)
+  const runIds = new Set<string>()
+  for (const cache of cacheUtilization) runIds.add(cache.runId)
+  for (const runId of burnGroups.keys()) runIds.add(runId)
 
-  return [...markerIds]
+  return [...runIds]
     .sort((a, b) =>
-      markerShortLabel(
+      runShortLabel(
         a,
-        markers,
-        cacheUtilization.find((entry) => entry.markerId === a),
+        runir,
+        cacheUtilization.find((entry) => entry.runId === a),
       ).localeCompare(
-        markerShortLabel(
+        runShortLabel(
           b,
-          markers,
-          cacheUtilization.find((entry) => entry.markerId === b),
+          runir,
+          cacheUtilization.find((entry) => entry.runId === b),
         ),
         undefined,
         { sensitivity: 'base' },
       ),
     )
-    .map((markerId) => ({
-      markerId,
-      burns: [...(burnGroups.get(markerId) ?? [])].sort(
+    .map((runId) => ({
+      runId,
+      burns: [...(burnGroups.get(runId) ?? [])].sort(
         (left, right) => new Date(right.date).getTime() - new Date(left.date).getTime(),
       ),
-      cache: cacheUtilization.find((entry) => entry.markerId === markerId),
+      cache: cacheUtilization.find((entry) => entry.runId === runId),
     }))
 }
 
@@ -104,7 +104,7 @@ export function buildSurtrSjodrSections(
   burns: FjallBurn[],
   cacheUtilization: FjallCacheUtilization[],
   funds: FjallSjodrView[],
-  markers: { id: string; name: string }[] = [],
+  runir: { id: string; name: string }[] = [],
 ): SurtrSjodrSection[] {
   const fundNameById = new Map(funds.map((fund) => [fund.id, fund.name]))
   const keys = new Set<string>()
@@ -129,7 +129,7 @@ export function buildSurtrSjodrSections(
         fundId == null
           ? 'Unassigned'
           : (fundNameById.get(fundId) ?? 'Unknown fund'),
-      groups: buildSurtrCanvasGroups(sectionBurns, sectionCaches, markers),
+      groups: buildSurtrCanvasGroups(sectionBurns, sectionCaches, runir),
     }
   })
 }

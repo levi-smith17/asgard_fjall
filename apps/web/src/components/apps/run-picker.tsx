@@ -4,17 +4,17 @@ import { ArrowLeft, Check, ChevronRight, Search, Tag } from 'lucide-react'
 import { Button } from '@/components/core/ui/button'
 import { cn } from '@/lib/utils'
 import {
-  buildMarkerTree,
+  buildRunTree,
   getAllLeafIds,
   getAllLeaves,
   getNodesAtPath,
   type FlatLeaf,
-  type MarkerGroup,
-  type RawMarker,
-} from '@/lib/marker-groups'
+  type RunGroup,
+  type RawRun,
+} from '@/lib/run-groups'
 
-type MarkerPickerProps = {
-  markers: RawMarker[]
+type RunPickerProps = {
+  runir: RawRun[]
   selected: string[]
   onChange: (ids: string[]) => void
   placeholder?: string
@@ -26,18 +26,18 @@ type MarkerPickerProps = {
   triggerClassName?: string
 }
 
-export function MarkerPicker({
-  markers,
+export function RunPicker({
+  runir,
   selected,
   onChange,
-  placeholder = 'Markers',
+  placeholder = 'Runir',
   compact = false,
   toolbar = false,
   inline = false,
   singleSelect = false,
   initialPath,
   triggerClassName,
-}: MarkerPickerProps) {
+}: RunPickerProps) {
   const [open, setOpen] = useState(false)
   const [path, setPath] = useState<string[]>(initialPath ?? [])
   const [search, setSearch] = useState('')
@@ -50,7 +50,7 @@ export function MarkerPicker({
   )
   const usePortal = toolbar || compact
 
-  const tree = useMemo(() => buildMarkerTree(markers), [markers])
+  const tree = useMemo(() => buildRunTree(runir), [runir])
   const allLeaves = useMemo(() => getAllLeaves(tree), [tree])
   const currentNodes = useMemo(() => getNodesAtPath(tree, path), [tree, path])
 
@@ -137,33 +137,33 @@ export function MarkerPicker({
     onChange(Array.from(new Set([...selected, ...currentGroupLeafIds])))
   }
 
-  const selectedMarkers = markers.filter((marker) => selected.includes(marker.id))
+  const selectedRunir = runir.filter((run) => selected.includes(run.id))
   const triggerContent =
-    selectedMarkers.length === 0 ? (
+    selectedRunir.length === 0 ? (
       <span className={toolbar ? 'text-foreground' : 'text-muted-foreground'}>{placeholder}</span>
     ) : singleSelect ? (
       <span className="flex min-w-0 items-center gap-1.5">
         <span
           className="inline-block h-2 w-2 shrink-0 rounded-full"
-          style={{ backgroundColor: selectedMarkers[0].color }}
+          style={{ backgroundColor: selectedRunir[0].color }}
         />
-        <span className="truncate">{selectedMarkers[0].name.split('/').pop()}</span>
+        <span className="truncate">{selectedRunir[0].name.split('/').pop()}</span>
       </span>
     ) : (
       <span className="flex min-w-0 items-center gap-1.5">
         <span className="flex shrink-0 items-center gap-0.5">
-          {selectedMarkers.slice(0, 5).map((marker) => (
+          {selectedRunir.slice(0, 5).map((run) => (
             <span
-              key={marker.id}
+              key={run.id}
               className="inline-block h-2 w-2 shrink-0 rounded-full"
-              style={{ backgroundColor: marker.color }}
+              style={{ backgroundColor: run.color }}
             />
           ))}
         </span>
         <span className="truncate">
-          {selectedMarkers.length <= 5
-            ? selectedMarkers.map((marker) => marker.name.split('/').pop()).join(', ')
-            : `${selectedMarkers.length} selected`}
+          {selectedRunir.length <= 5
+            ? selectedRunir.map((run) => run.name.split('/').pop()).join(', ')
+            : `${selectedRunir.length} selected`}
         </span>
       </span>
     )
@@ -174,7 +174,7 @@ export function MarkerPicker({
   )
 
   const panel = (
-    <MarkerPickerPanel
+    <RunPickerPanel
       panelRef={panelRef}
       searchRef={searchRef}
       search={search}
@@ -239,7 +239,7 @@ export function MarkerPicker({
   )
 }
 
-function MarkerPickerPanel({
+function RunPickerPanel({
   panelRef,
   searchRef,
   search,
@@ -379,7 +379,7 @@ function MarkerPickerPanel({
             ) : null}
 
             {currentNodes.length === 0 ? (
-              <p className="py-4 text-center text-xs text-muted-foreground">No markers</p>
+              <p className="py-4 text-center text-xs text-muted-foreground">No runir</p>
             ) : (
               currentNodes.map((node) =>
                 node.type === 'group' ? (
@@ -393,8 +393,8 @@ function MarkerPickerPanel({
                       setPath((current) => [...current, node.label])
                     }}
                     singleSelect={singleSelect}
-                    markerSelected={node.id ? selected.includes(node.id) : false}
-                    onToggleMarker={node.id ? () => toggleId(node.id!) : undefined}
+                    runSelected={node.id ? selected.includes(node.id) : false}
+                    onToggleRun={node.id ? () => toggleId(node.id!) : undefined}
                   />
                 ) : (
                   <LeafRow
@@ -435,30 +435,30 @@ function GroupRow({
   totalCount,
   onDrillIn,
   singleSelect,
-  markerSelected,
-  onToggleMarker,
+  runSelected,
+  onToggleRun,
 }: {
-  node: MarkerGroup
+  node: RunGroup
   selectedCount: number
   totalCount: number
   onDrillIn: () => void
   singleSelect: boolean
-  markerSelected: boolean
-  onToggleMarker?: () => void
+  runSelected: boolean
+  onToggleRun?: () => void
 }) {
   return (
     <div className="flex w-full items-center text-xs transition-colors hover:bg-muted/60">
-      {node.id && onToggleMarker ? (
+      {node.id && onToggleRun ? (
         <button
           type="button"
           onClick={(event) => {
             event.stopPropagation()
-            onToggleMarker()
+            onToggleRun()
           }}
           className="flex shrink-0 items-center gap-1.5 py-1.5 pl-3 pr-2"
           title={`Select "${node.label}"`}
         >
-          {!singleSelect ? <PickerCheckbox checked={markerSelected} /> : null}
+          {!singleSelect ? <PickerCheckbox checked={runSelected} /> : null}
           <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: node.color }} />
         </button>
       ) : null}

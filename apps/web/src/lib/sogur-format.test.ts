@@ -15,10 +15,10 @@ function log(partial: Partial<FjallLogView> & Pick<FjallLogView, 'id'>): FjallLo
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: null,
     sagaId: null,
-    trailId: null,
-    waypointId: null,
-    trailName: null,
-    markers: [],
+    greinId: null,
+    laufId: null,
+    greinName: null,
+    runir: [],
     ...partial,
   }
 }
@@ -29,10 +29,10 @@ describe('buildSogurWorkspace', () => {
       {
         id: 'saga-1',
         name: 'Voyage',
-        trailId: 'trail-1',
-        trailName: 'North',
+        greinId: 'grein-1',
+        greinName: 'North',
         orderedThattrIds: ['b', 'a'],
-        markers: [],
+        runir: [],
         createdAt: '2026-01-01T00:00:00.000Z',
         updatedAt: null,
       },
@@ -48,19 +48,19 @@ describe('buildSogurWorkspace', () => {
     expect(workspace.standaloneThaettir.map((entry) => entry.id)).toEqual(['c'])
   })
 
-  it('synthesizes legacy Grein buckets for trailId-only Thattr', () => {
+  it('synthesizes legacy Grein buckets for greinId-only Thattr', () => {
     const logs = [
       log({
         id: 'old-1',
-        trailId: 'trail-9',
-        trailName: 'Legacy Grein',
+        greinId: 'grein-9',
+        greinName: 'Legacy Grein',
         title: 'Page one',
         createdAt: '2026-01-02T00:00:00.000Z',
       }),
       log({
         id: 'old-2',
-        trailId: 'trail-9',
-        trailName: 'Legacy Grein',
+        greinId: 'grein-9',
+        greinName: 'Legacy Grein',
         title: 'Page two',
         createdAt: '2026-01-01T00:00:00.000Z',
       }),
@@ -70,7 +70,7 @@ describe('buildSogurWorkspace', () => {
     const saga = workspace.sagas[0]!
     expect(saga.synthetic).toBe(true)
     expect(isLegacySagaId(saga.id)).toBe(true)
-    expect(saga.id).toBe(legacySagaId('trail-9'))
+    expect(saga.id).toBe(legacySagaId('grein-9'))
     expect(saga.name).toBe('Legacy Grein')
     expect(workspace.logsBySagaId.get(saga.id)?.map((entry) => entry.id)).toEqual([
       'old-2',
@@ -79,22 +79,22 @@ describe('buildSogurWorkspace', () => {
     expect(workspace.standaloneThaettir).toHaveLength(0)
   })
 
-  it('keeps leftover trailId Thattr standalone when a real saga already owns that Grein', () => {
+  it('keeps leftover greinId Thattr standalone when a real saga already owns that Grein', () => {
     const sagas: FjallSagaView[] = [
       {
         id: 'saga-1',
         name: 'Real',
-        trailId: 'trail-1',
-        trailName: 'Shared',
+        greinId: 'grein-1',
+        greinName: 'Shared',
         orderedThattrIds: ['attached'],
-        markers: [],
+        runir: [],
         createdAt: '2026-01-01T00:00:00.000Z',
         updatedAt: null,
       },
     ]
     const logs = [
-      log({ id: 'attached', sagaId: 'saga-1', trailId: 'trail-1' }),
-      log({ id: 'orphan', trailId: 'trail-1', title: 'Orphan' }),
+      log({ id: 'attached', sagaId: 'saga-1', greinId: 'grein-1' }),
+      log({ id: 'orphan', greinId: 'grein-1', title: 'Orphan' }),
     ]
     const workspace = buildSogurWorkspace(sagas, logs)
     expect(workspace.sagas).toHaveLength(1)

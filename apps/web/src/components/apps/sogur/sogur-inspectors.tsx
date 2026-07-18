@@ -15,7 +15,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical } from 'lucide-react'
-import { MarkerPicker } from '@/components/apps/marker-picker'
+import { RunPicker } from '@/components/apps/run-picker'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { ContextTabButton } from '@/components/core/ui/context-tab'
 import { Input } from '@/components/core/ui/input'
@@ -27,13 +27,13 @@ import { InspectorFormActions } from '@/components/core/ui/inspector-form-action
 import { Select } from '@/components/core/ui/select'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
-import type { SogurRailMarker } from './sogur-rail'
-import type { SogurWaypointOption } from './sogur-laufar-picker'
+import type { SogurRailRun } from './sogur-rail'
+import type { SogurLaufOption } from './sogur-laufar-picker'
 
 export type SogurSagaOption = {
   id: string
   name: string
-  trailId: string | null
+  greinId: string | null
 }
 
 export type SogurInspectorThattr = {
@@ -43,35 +43,35 @@ export type SogurInspectorThattr = {
 
 type SogurCreateInput = {
   name: string
-  trailId: string | null
-  markerIds: string[]
+  greinId: string | null
+  runIds: string[]
   sagaId?: string | null
 }
 
 export type SogurCreateDraft = {
   name: string
   sagaId: string | null
-  markerIds: string[]
+  runIds: string[]
 }
 
 function AssociationFields({
-  trailId,
-  onTrailIdChange,
-  markerIds,
-  onMarkerIdsChange,
+  greinId,
+  onGreinIdChange,
+  runIds,
+  onRunIdsChange,
   greinar,
   runir,
-  trailDisabled,
-  trailHelp,
+  greinDisabled,
+  greinHelp,
 }: {
-  trailId: string | null
-  onTrailIdChange: (id: string | null) => void
-  markerIds: string[]
-  onMarkerIdsChange: (ids: string[]) => void
+  greinId: string | null
+  onGreinIdChange: (id: string | null) => void
+  runIds: string[]
+  onRunIdsChange: (ids: string[]) => void
   greinar: Array<{ id: string; name: string }>
-  runir: SogurRailMarker[]
-  trailDisabled?: boolean
-  trailHelp?: string
+  runir: SogurRailRun[]
+  greinDisabled?: boolean
+  greinHelp?: string
 }) {
   const terms = useTerms()
   return (
@@ -82,22 +82,22 @@ function AssociationFields({
         </label>
         <Select
           id="sogur-grein"
-          value={trailId ?? ''}
-          onChange={(value) => onTrailIdChange(value || null)}
+          value={greinId ?? ''}
+          onChange={(value) => onGreinIdChange(value || null)}
           options={[
             { value: '', label: terms.unassigned },
             ...greinar.map((grein) => ({ value: grein.id, label: grein.name })),
           ]}
-          disabled={trailDisabled}
+          disabled={greinDisabled}
         />
-        {trailHelp ? <p className="text-[11px] text-muted-foreground">{trailHelp}</p> : null}
+        {greinHelp ? <p className="text-[11px] text-muted-foreground">{greinHelp}</p> : null}
       </div>
       <div className="space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">{terms.runir}</span>
-        <MarkerPicker
-          markers={runir}
-          selected={markerIds}
-          onChange={onMarkerIdsChange}
+        <RunPicker
+          runir={runir}
+          selected={runIds}
+          onChange={onRunIdsChange}
           placeholder={terms.runir}
           triggerClassName="w-full"
         />
@@ -120,7 +120,7 @@ export function SogurCreateInspector({
   defaultSagaId?: string | null
   sagas: SogurSagaOption[]
   greinar: Array<{ id: string; name: string }>
-  runir: SogurRailMarker[]
+  runir: SogurRailRun[]
   creating?: boolean
   onCreate: (input: SogurCreateInput) => void
   onDraftChange?: (draft: SogurCreateDraft) => void
@@ -129,20 +129,20 @@ export function SogurCreateInspector({
   const [name, setName] = useState('')
   const [sagaId, setSagaId] = useState<string | null>(defaultSagaId)
   const selectedSaga = sagas.find((saga) => saga.id === sagaId) ?? null
-  const [trailId, setTrailId] = useState<string | null>(selectedSaga?.trailId ?? null)
-  const [markerIds, setMarkerIds] = useState<string[]>([])
+  const [greinId, setGreinId] = useState<string | null>(selectedSaga?.greinId ?? null)
+  const [runIds, setRunIds] = useState<string[]>([])
 
   useEffect(() => {
     setSagaId(defaultSagaId)
   }, [defaultSagaId])
   useEffect(() => {
-    if (kind === 'thattr' && selectedSaga) setTrailId(selectedSaga.trailId)
+    if (kind === 'thattr' && selectedSaga) setGreinId(selectedSaga.greinId)
   }, [kind, selectedSaga])
 
   useEffect(() => {
     if (kind !== 'thattr') return
-    onDraftChange?.({ name, sagaId, markerIds })
-  }, [kind, name, sagaId, markerIds, onDraftChange])
+    onDraftChange?.({ name, sagaId, runIds })
+  }, [kind, name, sagaId, runIds, onDraftChange])
 
   const singular = kind === 'saga' ? terms.notesSingular : terms.thattrSingular
   const canCreate = name.trim().length > 0 && !creating
@@ -185,14 +185,14 @@ export function SogurCreateInspector({
           </div>
         ) : null}
         <AssociationFields
-          trailId={trailId}
-          onTrailIdChange={setTrailId}
-          markerIds={markerIds}
-          onMarkerIdsChange={setMarkerIds}
+          greinId={greinId}
+          onGreinIdChange={setGreinId}
+          runIds={runIds}
+          onRunIdsChange={setRunIds}
           greinar={greinar}
           runir={runir}
-          trailDisabled={kind === 'thattr' && selectedSaga != null}
-          trailHelp={
+          greinDisabled={kind === 'thattr' && selectedSaga != null}
+          greinHelp={
             kind === 'thattr' && selectedSaga
               ? `${terms.greinSingular} is inherited from ${selectedSaga.name}.`
               : undefined
@@ -207,8 +207,8 @@ export function SogurCreateInspector({
         onSave={() =>
           onCreate({
             name: name.trim(),
-            trailId: selectedSaga?.trailId ?? trailId,
-            markerIds,
+            greinId: selectedSaga?.greinId ?? greinId,
+            runIds,
             ...(kind === 'thattr' ? { sagaId } : {}),
           })
         }
@@ -258,22 +258,22 @@ export function SogurSagaInspector({
   saga: {
     id: string
     name: string
-    trailId: string | null
-    markerIds: string[]
+    greinId: string | null
+    runIds: string[]
   }
   thaettir: SogurInspectorThattr[]
   greinar: Array<{ id: string; name: string }>
-  runir: SogurRailMarker[]
+  runir: SogurRailRun[]
   saving?: boolean
-  onSave: (input: { name: string; trailId: string | null; markerIds: string[] }) => void
+  onSave: (input: { name: string; greinId: string | null; runIds: string[] }) => void
   onDelete: () => void
   onReorder: (orderedIds: string[]) => Promise<void>
 }) {
   const terms = useTerms()
   const [tab, setTab] = useState<'details' | 'order'>('details')
   const [name, setName] = useState(saga.name)
-  const [trailId, setTrailId] = useState<string | null>(saga.trailId)
-  const [markerIds, setMarkerIds] = useState(saga.markerIds)
+  const [greinId, setGreinId] = useState<string | null>(saga.greinId)
+  const [runIds, setRunIds] = useState(saga.runIds)
   const [ordered, setOrdered] = useState(thaettir)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
@@ -281,8 +281,8 @@ export function SogurSagaInspector({
 
   useEffect(() => {
     setName(saga.name)
-    setTrailId(saga.trailId)
-    setMarkerIds(saga.markerIds)
+    setGreinId(saga.greinId)
+    setRunIds(saga.runIds)
   }, [saga])
   useEffect(() => setOrdered(thaettir), [thaettir])
 
@@ -333,10 +333,10 @@ export function SogurSagaInspector({
               <Input id="saga-name" value={name} onChange={(event) => setName(event.target.value)} />
             </div>
             <AssociationFields
-              trailId={trailId}
-              onTrailIdChange={setTrailId}
-              markerIds={markerIds}
-              onMarkerIdsChange={setMarkerIds}
+              greinId={greinId}
+              onGreinIdChange={setGreinId}
+              runIds={runIds}
+              onRunIdsChange={setRunIds}
               greinar={greinar}
               runir={runir}
             />
@@ -345,7 +345,7 @@ export function SogurSagaInspector({
             isNew={false}
             isSaving={saving}
             canSave={name.trim().length > 0}
-            onSave={() => onSave({ name: name.trim(), trailId, markerIds })}
+            onSave={() => onSave({ name: name.trim(), greinId, runIds })}
             onDelete={() => setConfirmDelete(true)}
             showDelete
             deleteLabel={`Delete ${terms.notesSingular.toLowerCase()}`}
@@ -395,21 +395,21 @@ export function SogurThattrInspector({
     id: string
     title: string
     sagaId: string | null
-    trailId: string | null
-    markerIds: string[]
-    waypointId: string | null
+    greinId: string | null
+    runIds: string[]
+    laufId: string | null
   }
   sagas: SogurSagaOption[]
   greinar: Array<{ id: string; name: string }>
-  runir: SogurRailMarker[]
-  laufar: SogurWaypointOption[]
+  runir: SogurRailRun[]
+  laufar: SogurLaufOption[]
   saving?: boolean
   onSave: (input: {
     title: string
     sagaId: string | null
-    trailId: string | null
-    markerIds: string[]
-    waypointId: string | null
+    greinId: string | null
+    runIds: string[]
+    laufId: string | null
   }) => void
   onDelete: () => void
 }) {
@@ -417,20 +417,20 @@ export function SogurThattrInspector({
   const [title, setTitle] = useState(thattr.title)
   const [sagaId, setSagaId] = useState<string | null>(thattr.sagaId)
   const selectedSaga = sagas.find((saga) => saga.id === sagaId) ?? null
-  const [trailId, setTrailId] = useState<string | null>(thattr.trailId)
-  const [markerIds, setMarkerIds] = useState(thattr.markerIds)
-  const [waypointId, setWaypointId] = useState<string | null>(thattr.waypointId)
+  const [greinId, setGreinId] = useState<string | null>(thattr.greinId)
+  const [runIds, setRunIds] = useState(thattr.runIds)
+  const [laufId, setLaufId] = useState<string | null>(thattr.laufId)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   useEffect(() => {
     setTitle(thattr.title)
     setSagaId(thattr.sagaId)
-    setTrailId(thattr.trailId)
-    setMarkerIds(thattr.markerIds)
-    setWaypointId(thattr.waypointId)
+    setGreinId(thattr.greinId)
+    setRunIds(thattr.runIds)
+    setLaufId(thattr.laufId)
   }, [thattr])
   useEffect(() => {
-    if (selectedSaga) setTrailId(selectedSaga.trailId)
+    if (selectedSaga) setGreinId(selectedSaga.greinId)
   }, [selectedSaga])
 
   return (
@@ -460,14 +460,14 @@ export function SogurThattrInspector({
           />
         </div>
         <AssociationFields
-          trailId={trailId}
-          onTrailIdChange={setTrailId}
-          markerIds={markerIds}
-          onMarkerIdsChange={setMarkerIds}
+          greinId={greinId}
+          onGreinIdChange={setGreinId}
+          runIds={runIds}
+          onRunIdsChange={setRunIds}
           greinar={greinar}
           runir={runir}
-          trailDisabled={selectedSaga != null}
-          trailHelp={
+          greinDisabled={selectedSaga != null}
+          greinHelp={
             selectedSaga
               ? `${terms.greinSingular} is inherited from ${selectedSaga.name}.`
               : undefined
@@ -479,8 +479,8 @@ export function SogurThattrInspector({
           </label>
           <Select
             id="thattr-lauf"
-            value={waypointId ?? ''}
-            onChange={(value) => setWaypointId(value || null)}
+            value={laufId ?? ''}
+            onChange={(value) => setLaufId(value || null)}
             options={[
               { value: '', label: `No ${terms.laufarSingular.toLowerCase()}` },
               ...laufar.map((lauf) => ({ value: lauf.id, label: lauf.title })),
@@ -496,9 +496,9 @@ export function SogurThattrInspector({
           onSave({
             title: title.trim(),
             sagaId,
-            trailId: selectedSaga?.trailId ?? trailId,
-            markerIds,
-            waypointId,
+            greinId: selectedSaga?.greinId ?? greinId,
+            runIds,
+            laufId,
           })
         }
         onDelete={() => setConfirmDelete(true)}

@@ -10,21 +10,21 @@ import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
 import { useDebounce } from '@/hooks/use-debounce'
 import {
   fetchFjallBurnPage,
-  fetchFjallMarkers,
+  fetchFjallRunir,
   fetchProvisionsSummary,
   fetchFjallSjodr,
   fetchFjallSupplylinesFiltered,
-  fetchFjallTrails,
+  fetchFjallGreinar,
 } from '@/lib/data-api'
 import { daysUntilRenewal } from '@/lib/idunn-renewal'
-import { toMarkerView, toTrailView } from '@/lib/data-format'
+import { toRunView, toGreinView } from '@/lib/data-format'
 import { isGreinVisibleOnPage } from '@/lib/grein-visibility'
 import {
   monthYearLabel,
   shiftMonth,
   type AudrCanvasGroupBy,
 } from '@/lib/audr-format'
-import { resolveAudrMarkerRootPath } from '@/lib/audr-marker-root'
+import { resolveAudrRunRootPath } from '@/lib/audr-run-root'
 import { loadAudrCanvasGroupBy, saveAudrCanvasGroupBy } from '@/lib/audr-group-by'
 import { totalEffectiveSkattUtilization } from '@/lib/audr-skatt-idunn'
 import { useTerms } from '@/hooks/use-terminology'
@@ -39,8 +39,8 @@ import type { AudrSelection } from './audr-types'
 type CatalogState = {
   tab: FjallCatalogTab
   selectedId: string | null
-  markerPath: string[]
-  markerParent: string | null
+  runPath: string[]
+  runParent: string | null
 }
 
 type PanelManageState = {
@@ -76,13 +76,13 @@ export function AudrClient() {
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [year, setYear] = useState(now.getFullYear())
   const [search, setSearch] = useState('')
-  const [markerFilter, setMarkerFilter] = useState('all')
+  const [runFilter, setRunFilter] = useState('all')
   const [sjodrFilter, setSjodrFilter] = useState('all')
   const [groupBy, setGroupBy] = useState<AudrCanvasGroupBy>(() => loadAudrCanvasGroupBy())
   const [idunnActiveFilter, setIdunnActiveFilter] = useState('true')
   const debouncedSearch = useDebounce(search, 300)
   const surtrFiltersActive =
-    search !== '' || markerFilter !== 'all' || sjodrFilter !== 'all'
+    search !== '' || runFilter !== 'all' || sjodrFilter !== 'all'
   const idunnFiltersActive = idunnActiveFilter !== 'true'
 
   const [selection, setSelection] = useState<AudrSelection | null>(null)
@@ -91,14 +91,14 @@ export function AudrClient() {
   const [sjodrManage, setSjodrManage] = useState<PanelManageState | null>(null)
   const [burnPage, setBurnPage] = useState(1)
 
-  const markersQuery = useQuery({
-    queryKey: ['fjall-markers'],
-    queryFn: fetchFjallMarkers,
+  const runirQuery = useQuery({
+    queryKey: ['fjall-runir'],
+    queryFn: fetchFjallRunir,
   })
 
-  const trailsQuery = useQuery({
-    queryKey: ['fjall-trails'],
-    queryFn: fetchFjallTrails,
+  const greinarQuery = useQuery({
+    queryKey: ['fjall-greinar'],
+    queryFn: fetchFjallGreinar,
   })
 
   const summaryQuery = useQuery({
@@ -108,14 +108,14 @@ export function AudrClient() {
   })
 
   const burnQuery = useQuery({
-    queryKey: ['audr', 'burn', month, year, burnPage, debouncedSearch, markerFilter, sjodrFilter],
+    queryKey: ['audr', 'burn', month, year, burnPage, debouncedSearch, runFilter, sjodrFilter],
     queryFn: () =>
       fetchFjallBurnPage({
         month,
         year,
         page: burnPage,
         search: debouncedSearch || undefined,
-        markerId: markerFilter !== 'all' ? markerFilter : undefined,
+        runId: runFilter !== 'all' ? runFilter : undefined,
         fundId: sjodrFilter !== 'all' ? sjodrFilter : undefined,
       }),
     placeholderData: keepPreviousData,
@@ -143,29 +143,29 @@ export function AudrClient() {
 
   useEffect(() => {
     setBurnPage(1)
-  }, [month, year, debouncedSearch, markerFilter, sjodrFilter])
+  }, [month, year, debouncedSearch, runFilter, sjodrFilter])
 
-  const markers = useMemo(
-    () => (markersQuery.data ?? []).map(toMarkerView).sort((a, b) => a.name.localeCompare(b.name)),
-    [markersQuery.data],
+  const runir = useMemo(
+    () => (runirQuery.data ?? []).map(toRunView).sort((a, b) => a.name.localeCompare(b.name)),
+    [runirQuery.data],
   )
-  const trails = useMemo(
+  const greinar = useMemo(
     () =>
-      (trailsQuery.data ?? [])
-        .map(toTrailView)
-        .filter((trail) => isGreinVisibleOnPage(trail, 'audr'))
+      (greinarQuery.data ?? [])
+        .map(toGreinView)
+        .filter((grein) => isGreinVisibleOnPage(grein, 'audr'))
         .sort((a, b) => a.name.localeCompare(b.name)),
-    [trailsQuery.data],
+    [greinarQuery.data],
   )
-  const audrMarkers = useMemo(
+  const audrRunir = useMemo(
     () =>
-      markers.map((m) => ({
+      runir.map((m) => ({
         id: m.id,
         name: m.name,
         color: m.color,
         icon: m.icon ?? null,
       })),
-    [markers],
+    [runir],
   )
 
   const summary = summaryQuery.data?.summary
@@ -182,13 +182,13 @@ export function AudrClient() {
   )
   const skattSupplylines = skattSupplylinesQuery.data ?? []
 
-  const cacheByMarkerId = useMemo(
-    () => new Map(cacheUtilization.map((c) => [c.markerId, c])),
+  const cacheByRunId = useMemo(
+    () => new Map(cacheUtilization.map((c) => [c.runId, c])),
     [cacheUtilization],
   )
 
-  const targetMarkerIds = useMemo(
-    () => new Set(cacheUtilization.map((c) => c.markerId)),
+  const targetRunIds = useMemo(
+    () => new Set(cacheUtilization.map((c) => c.runId)),
     [cacheUtilization],
   )
 
@@ -241,8 +241,8 @@ export function AudrClient() {
   ])
 
   const provisionsRootPath = useMemo(
-    () => resolveAudrMarkerRootPath(markers),
-    [markers],
+    () => resolveAudrRunRootPath(runir),
+    [runir],
   )
 
   const openCatalog = useCallback(() => {
@@ -252,8 +252,8 @@ export function AudrClient() {
     setCatalog({
       tab: 'runir',
       selectedId: null,
-      markerPath: provisionsRootPath,
-      markerParent: null,
+      runPath: provisionsRootPath,
+      runParent: null,
     })
   }, [provisionsRootPath])
 
@@ -295,26 +295,26 @@ export function AudrClient() {
   const selectedCache =
     selection?.kind === 'cache'
       ? cacheUtilization.find((c) => c.id === selection.id)
-      : selection?.kind === 'cache-marker'
-        ? cacheByMarkerId.get(selection.markerId)
+      : selection?.kind === 'cache-run'
+        ? cacheByRunId.get(selection.runId)
         : undefined
 
-  const selectedSkattMarkerId = selectedCache?.markerId ?? null
+  const selectedSkattRunId = selectedCache?.runId ?? null
 
   const skattBurnsQuery = useQuery({
-    queryKey: ['audr', 'burn', month, year, 'skatt-inspector', selectedSkattMarkerId],
+    queryKey: ['audr', 'burn', month, year, 'skatt-inspector', selectedSkattRunId],
     queryFn: () =>
       fetchFjallBurnPage({
         month,
         year,
         page: 1,
-        markerId: selectedSkattMarkerId!,
+        runId: selectedSkattRunId!,
       }),
-    enabled: Boolean(selectedSkattMarkerId),
+    enabled: Boolean(selectedSkattRunId),
     placeholderData: keepPreviousData,
   })
 
-  const skattMarkerBurns = useMemo(
+  const skattRunBurns = useMemo(
     () =>
       [...(skattBurnsQuery.data?.burn ?? [])].sort(
         (left, right) => new Date(right.date).getTime() - new Date(left.date).getTime(),
@@ -337,7 +337,7 @@ export function AudrClient() {
   }, [inspectorPinned, selection, catalog, laufarManage, sjodrManage, dismissInspector])
 
   const isLoading =
-    markersQuery.isLoading ||
+    runirQuery.isLoading ||
     summaryQuery.isLoading ||
     burnQuery.isLoading ||
     supplylinesQuery.isLoading
@@ -384,7 +384,7 @@ export function AudrClient() {
           <AudrIdunnRail
             supplylines={supplylines}
             funds={sjodrQuery.data ?? []}
-            markers={audrMarkers}
+            runir={audrRunir}
             selectedId={selectedSupplylineId}
             activeFilter={idunnActiveFilter}
             onActiveFilterChange={setIdunnActiveFilter}
@@ -407,8 +407,8 @@ export function AudrClient() {
             onNextMonth={nextMonth}
             search={search}
             onSearchChange={setSearch}
-            markerFilter={markerFilter}
-            onMarkerFilterChange={setMarkerFilter}
+            runFilter={runFilter}
+            onRunFilterChange={setRunFilter}
             sjodrFilter={sjodrFilter}
             onSjodrFilterChange={setSjodrFilter}
             groupBy={groupBy}
@@ -416,12 +416,12 @@ export function AudrClient() {
               setGroupBy(value)
               saveAudrCanvasGroupBy(value)
             }}
-            markers={audrMarkers}
+            runir={audrRunir}
             funds={sjodrQuery.data ?? []}
             filtersActive={surtrFiltersActive}
             onClearFilters={() => {
               setSearch('')
-              setMarkerFilter('all')
+              setRunFilter('all')
               setSjodrFilter('all')
             }}
             onBringSkatt={() => selectEntity({ kind: 'skatt-carry' })}
@@ -436,14 +436,14 @@ export function AudrClient() {
             selectedSupplylineId={selectedSupplylineId}
             onSelectSupplyline={(id) => selectEntity({ kind: 'supplyline', id })}
             onSelectCache={(id) => selectEntity({ kind: 'cache', id })}
-            onSelectCacheMarker={(markerId) =>
+            onSelectCacheRun={(runId) =>
               selectEntity(
-                cacheByMarkerId.has(markerId)
-                  ? { kind: 'cache', id: cacheByMarkerId.get(markerId)!.id }
-                  : { kind: 'cache-marker', markerId },
+                cacheByRunId.has(runId)
+                  ? { kind: 'cache', id: cacheByRunId.get(runId)!.id }
+                  : { kind: 'cache-run', runId },
               )
             }
-            onAddBurn={(markerId) => selectEntity({ kind: 'new-burn', markerId })}
+            onAddBurn={(runId) => selectEntity({ kind: 'new-burn', runId })}
             burnPage={burnPage}
             burnTotal={burnTotal}
             burnPageSize={burnPageSize}
@@ -471,37 +471,37 @@ export function AudrClient() {
               setCatalog({
                 tab,
                 selectedId: null,
-                markerPath: provisionsRootPath,
-                markerParent: null,
+                runPath: provisionsRootPath,
+                runParent: null,
               })
             }
-            trails={trails}
-            markers={markers}
+            greinar={greinar}
+            runir={runir}
             selectedId={catalog.selectedId}
-            markerPath={catalog.markerPath}
-            markerParent={catalog.markerParent}
+            runPath={catalog.runPath}
+            runParent={catalog.runParent}
             onSelectId={(id) => setCatalog((current) => (current ? { ...current, selectedId: id } : current))}
-            onMarkerPathChange={(path) =>
+            onRunPathChange={(path) =>
               setCatalog((current) =>
-                current ? { ...current, markerPath: path, selectedId: null } : current,
+                current ? { ...current, runPath: path, selectedId: null } : current,
               )
             }
-            onMarkerParentChange={(parent) =>
-              setCatalog((current) => (current ? { ...current, markerParent: parent } : current))
+            onRunParentChange={(parent) =>
+              setCatalog((current) => (current ? { ...current, runParent: parent } : current))
             }
             onClearSelection={() =>
               setCatalog((current) =>
-                current ? { ...current, selectedId: null, markerParent: null } : current,
+                current ? { ...current, selectedId: null, runParent: null } : current,
               )
             }
             lockedTab="runir"
-            rootMarkerPath={provisionsRootPath}
+            rootRunPath={provisionsRootPath}
           />
         ) : laufarManage ? (
           <AudrLaufarInspector
-            trails={trails}
-            markers={markers}
-            rootMarkerName={provisionsRootPath[0] ?? terms.provisionsGroup}
+            greinar={greinar}
+            runir={runir}
+            rootRunName={provisionsRootPath[0] ?? terms.provisionsGroup}
             selectedId={laufarManage.selectedId}
             onSelectId={(id) =>
               setLaufarManage((current) => (current ? { ...current, selectedId: id } : current))
@@ -521,15 +521,15 @@ export function AudrClient() {
         ) : selection ? (
           <AudrInspector
             selection={selection}
-            markers={audrMarkers}
+            runir={audrRunir}
             month={month}
             year={year}
             burn={selectedBurn}
             supplyline={selectedSupplyline}
             cache={selectedCache}
             skattSupplylines={skattSupplylines}
-            skattMarkerBurns={skattMarkerBurns}
-            targetMarkerIds={targetMarkerIds}
+            skattRunBurns={skattRunBurns}
+            targetRunIds={targetRunIds}
             onSaved={() => {
               refresh()
               clearSelection()

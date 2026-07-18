@@ -6,7 +6,11 @@ export type SagaRecord = {
   pk: string
   sk: string
   name: string
+  greinId?: string | null
+  /** @deprecated Legacy English attribute — dual-read until migrate-domain-attrs.py runs. */
   trailId?: string | null
+  runir?: unknown[]
+  /** @deprecated Legacy English attribute — dual-read until migrate-domain-attrs.py runs. */
   markers?: unknown[]
   orderedThattrIds?: string[]
   createdAt?: string
@@ -25,6 +29,12 @@ export async function getSaga(pk: string, sagaId: string): Promise<SagaRecord | 
 
 export function sagaIdFromRecord(saga: SagaRecord): string {
   return idFromSk(saga.sk, SAGA_PREFIX)
+}
+
+/** Prefer greinId; fall back to legacy trailId until migrate-domain-attrs.py runs. */
+export function sagaGreinId(saga: Pick<SagaRecord, 'greinId' | 'trailId'>): string | null {
+  const value = saga.greinId ?? saga.trailId
+  return typeof value === 'string' && value.length > 0 ? value : null
 }
 
 /** Append a Thattr id to the saga order (idempotent if already present). */
@@ -80,7 +90,7 @@ export async function removeThattrFromSagaOrder(
   )
 }
 
-/** Detach all Thattr in orderedThattrIds: clear sagaId, keep trailId. */
+/** Detach all Thattr in orderedThattrIds: clear sagaId, keep greinId. */
 export async function detachSagaThattr(
   pk: string,
   orderedThattrIds: string[],
@@ -102,25 +112,25 @@ export async function detachSagaThattr(
   )
 }
 
-/** Propagate saga trailId (or clear) onto all ordered Thattr. */
-export async function propagateSagaTrailId(
+/** Propagate saga greinId (or clear) onto all ordered Thattr. */
+export async function propagateSagaGreinId(
   pk: string,
   orderedThattrIds: string[],
-  trailId: string | null,
+  greinId: string | null,
 ): Promise<void> {
   const unique = [...new Set(orderedThattrIds.filter(Boolean))]
   const now = new Date().toISOString()
 
   await Promise.all(
     unique.map((thattrId) => {
-      if (trailId) {
+      if (greinId) {
         return dynamo.send(
           new UpdateCommand({
             TableName: TABLE_NAME,
             Key: { pk, sk: sogurSk(thattrId) },
-            UpdateExpression: 'SET trailId = :trailId, updatedAt = :updatedAt',
+            UpdateExpression: 'SET greinId = :greinId, updatedAt = :updatedAt',
             ExpressionAttributeValues: {
-              ':trailId': trailId,
+              ':greinId': greinId,
               ':updatedAt': now,
             },
           }),
@@ -130,7 +140,7 @@ export async function propagateSagaTrailId(
         new UpdateCommand({
           TableName: TABLE_NAME,
           Key: { pk, sk: sogurSk(thattrId) },
-          UpdateExpression: 'REMOVE trailId SET updatedAt = :updatedAt',
+          UpdateExpression: 'REMOVE greinId, trailId SET updatedAt = :updatedAt',
           ExpressionAttributeValues: { ':updatedAt': now },
         }),
       )

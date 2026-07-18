@@ -4,14 +4,14 @@ import { toast } from 'sonner'
 import { Input } from '@/components/core/ui/input'
 import { Button } from '@/components/core/ui/button'
 import { DatePicker } from '@/components/core/ui/date-picker'
-import { MarkerPicker } from '@/components/apps/marker-picker'
+import { RunPicker } from '@/components/apps/run-picker'
 import {
   fetchFjallBurnReceiptUrl,
   saveFjallBurn,
   uploadFjallBurnReceipt,
 } from '@/lib/data-api'
 import { useFormStatus } from '@/hooks/use-form-status'
-import { toMarkerId } from '@/lib/embedded-markers'
+import { toRunId } from '@/lib/embedded-runir'
 import type { FjallBurn } from '@/lib/data-types'
 import { toDateInputValue, todayDateInputValue } from '@/lib/date-input'
 import { getDefaultSjodrId } from '@/lib/audr-default-sjodr'
@@ -22,7 +22,7 @@ export type AudrSaveActionRef = MutableRefObject<(() => Promise<void>) | null>
 
 interface Props {
   burn?: FjallBurn
-  defaultMarkerId?: string
+  defaultRunId?: string
   tags: { id: string; name: string; color: string; icon?: string | null }[]
   formId?: string
   saveActionRef?: AudrSaveActionRef
@@ -32,7 +32,7 @@ interface Props {
 
 export function InlineBurnForm({
   burn,
-  defaultMarkerId,
+  defaultRunId,
   tags,
   formId: formIdProp,
   saveActionRef,
@@ -55,8 +55,8 @@ export function InlineBurnForm({
   )
   const [tagIds, setTagIds] = useState(
   () =>
-    (burn?.markers?.map((t) => toMarkerId(t)).filter(Boolean) as string[]) ??
-    (defaultMarkerId ? [defaultMarkerId] : []),
+    (burn?.runir?.map((t) => toRunId(t)).filter(Boolean) as string[]) ??
+    (defaultRunId ? [defaultRunId] : []),
   )
   const [receiptKey, setReceiptKey] = useState<string | null>(burn?.receiptUrl ?? null)
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
@@ -72,14 +72,14 @@ export function InlineBurnForm({
     setNotes(burn?.notes ?? '')
     setFundId(burn?.fundId ?? (burn ? null : getDefaultSjodrId()))
     setTagIds(
-      (burn?.markers?.map((t) => toMarkerId(t)).filter(Boolean) as string[]) ??
-        (defaultMarkerId ? [defaultMarkerId] : []),
+      (burn?.runir?.map((t) => toRunId(t)).filter(Boolean) as string[]) ??
+        (defaultRunId ? [defaultRunId] : []),
     )
     setReceiptKey(burn?.receiptUrl ?? null)
     setReceiptPreview(null)
     setReceiptViewUrl(null)
     // Intentionally keyed on id so background refetches do not wipe in-progress edits.
-  }, [burn?.id, defaultMarkerId])
+  }, [burn?.id, defaultRunId])
 
   useEffect(() => {
     if (burn?.receiptUrl && !receiptPreview) {
@@ -120,7 +120,7 @@ export function InlineBurnForm({
         amount: parseFloat(amount) || 0,
         date,
         notes: notes || null,
-        markerIds: tagIds,
+        runIds: tagIds,
         receiptUrl: receiptKey,
         fundId,
       })
@@ -166,8 +166,8 @@ export function InlineBurnForm({
       </label>
       <label className="block space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">{terms.runSingular}</span>
-        <MarkerPicker
-          markers={tags}
+        <RunPicker
+          runir={tags}
           selected={tagIds}
           onChange={setTagIds}
           placeholder={`Select ${terms.runSingular.toLowerCase()}…`}

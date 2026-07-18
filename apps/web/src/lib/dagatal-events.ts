@@ -30,7 +30,7 @@ function eventOccursOnDay(event: ICloudEventDisplay, date: Date): boolean {
   return start <= dayEnd && end >= dayStart
 }
 
-export function reviveItineraryEvents(events: FjallExternalCalendarEvent[]): FjallExternalCalendarEvent[] {
+export function reviveDagatalEvents(events: FjallExternalCalendarEvent[]): FjallExternalCalendarEvent[] {
   return events.map((event) => ({
     ...event,
     startDate: new Date(event.startDate),
@@ -38,7 +38,7 @@ export function reviveItineraryEvents(events: FjallExternalCalendarEvent[]): Fja
   }))
 }
 
-export function filterItineraryEventsToRange(
+export function filterDagatalEventsToRange(
   events: FjallExternalCalendarEvent[],
   from: string,
   to: string,
@@ -57,7 +57,7 @@ export function icloudEventsForDay(events: ICloudEventDisplay[], date: Date): IC
   return events.filter((event) => eventOccursOnDay(event, date))
 }
 
-export function mapFjallItineraryEvent(raw: Record<string, unknown>): FjallExternalCalendarEvent | null {
+export function mapFjallDagatalEvent(raw: Record<string, unknown>): FjallExternalCalendarEvent | null {
   const startRaw = raw.startDate ?? raw.start_date ?? raw.start
   if (startRaw == null || startRaw === '') return null
   const endRaw = raw.endDate ?? raw.end_date ?? raw.end
@@ -81,17 +81,17 @@ export function mapFjallItineraryEvent(raw: Record<string, unknown>): FjallExter
   }
 }
 
-export function parseFjallItineraryEventsPayload(data: unknown): FjallExternalCalendarEvent[] {
-  const records = extractItineraryEventRecords(data)
+export function parseFjallDagatalEventsPayload(data: unknown): FjallExternalCalendarEvent[] {
+  const records = extractDagatalEventRecords(data)
   const events: FjallExternalCalendarEvent[] = []
   for (const record of records) {
-    const mapped = mapFjallItineraryEvent(record)
+    const mapped = mapFjallDagatalEvent(record)
     if (mapped) events.push(mapped)
   }
   return events
 }
 
-function extractItineraryEventRecords(data: unknown): Record<string, unknown>[] {
+function extractDagatalEventRecords(data: unknown): Record<string, unknown>[] {
   if (Array.isArray(data)) {
     return data.filter((item): item is Record<string, unknown> => item != null && typeof item === 'object')
   }

@@ -15,17 +15,17 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, Settings } from 'lucide-react'
-import { MarkerColorSwatch } from '@/components/apps/markers-list'
+import { RunColorSwatch } from '@/components/apps/runir-list'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
-import type { SogurRailMarker } from './sogur-rail'
+import type { SogurRailRun } from './sogur-rail'
 
 export type SogurSagaCanvasThattr = {
   id: string
   title: string
   preview: string
-  markers: SogurRailMarker[]
+  runir: SogurRailRun[]
 }
 
 function ThattrCardChrome({
@@ -80,15 +80,15 @@ function ThattrCardChrome({
         ) : null}
       </div>
 
-      {thattr.markers.length > 0 ? (
+      {thattr.runir.length > 0 ? (
         <div className="mt-2 flex flex-wrap gap-1">
-          {thattr.markers.slice(0, 4).map((marker) => (
+          {thattr.runir.slice(0, 4).map((run) => (
             <span
-              key={marker.id}
+              key={run.id}
               className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
             >
-              <MarkerColorSwatch color={marker.color} />
-              {marker.name.split('/').pop()}
+              <RunColorSwatch color={run.color} />
+              {run.name.split('/').pop()}
             </span>
           ))}
         </div>

@@ -17,7 +17,7 @@ import {
   deleteFjallICloudCalendar,
   fetchFjallFullSettings,
   fetchFjallStatus,
-  saveFjallItinerarySettings,
+  saveFjallDagatalSettings,
   updateFjallICloudCalendar,
   type FjallCalendarEntry,
 } from '@/lib/data-api'
@@ -192,7 +192,7 @@ function ICloudCalendarRow({
   )
 }
 
-export function ThingItinerarySettings() {
+export function ThingDagatalSettings() {
   const terms = useTerms()
   const queryClient = useQueryClient()
 
@@ -209,7 +209,7 @@ export function ThingItinerarySettings() {
     retry: false,
   })
 
-  const itinerary = settingsQuery.data?.itinerary
+  const dagatal = settingsQuery.data?.dagatal
   const calendars = settingsQuery.data?.calendars ?? []
   const subscriptions = settingsQuery.data?.calendarSubscriptions ?? []
 
@@ -230,12 +230,12 @@ export function ThingItinerarySettings() {
   const [subColor, setSubColor] = useState(ASGARD_PRIMARY_HEX)
 
   useEffect(() => {
-    if (!itinerary) return
-    setDefaultView(itinerary.defaultView)
-    setFirstDayOfWeek(itinerary.firstDayOfWeek)
-    setDefaultEventDuration(itinerary.defaultEventDuration)
-    setShowWeekNumbers(itinerary.showWeekNumbers)
-  }, [itinerary])
+    if (!dagatal) return
+    setDefaultView(dagatal.defaultView)
+    setFirstDayOfWeek(dagatal.firstDayOfWeek)
+    setDefaultEventDuration(dagatal.defaultEventDuration)
+    setShowWeekNumbers(dagatal.showWeekNumbers)
+  }, [dagatal])
 
   async function refresh() {
     await queryClient.invalidateQueries({ queryKey: ['fjall-full-settings'] })
@@ -245,7 +245,7 @@ export function ThingItinerarySettings() {
 
   const savePrefsMutation = useMutation({
     mutationFn: () =>
-      saveFjallItinerarySettings({
+      saveFjallDagatalSettings({
         defaultView,
         firstDayOfWeek,
         defaultEventDuration,
@@ -302,7 +302,7 @@ export function ThingItinerarySettings() {
     return <DataNotConfiguredNotice />
   }
 
-  if (settingsQuery.isLoading || !itinerary) {
+  if (settingsQuery.isLoading || !dagatal) {
     return <FormFieldsSkeleton fields={5} />
   }
 

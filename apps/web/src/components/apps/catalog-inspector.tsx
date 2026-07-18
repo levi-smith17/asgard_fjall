@@ -2,21 +2,21 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
-import type { FjallMarkerView, FjallTrailView } from '@/lib/data-types'
-import { MarkersBrowser, type MarkerParentContext } from '@/components/apps/markers-browser'
-import { MarkerInspector } from '@/components/apps/marker-inspector'
-import { TrailInspector } from '@/components/apps/trail-inspector'
+import type { FjallRunView, FjallGreinView } from '@/lib/data-types'
+import { RunirBrowser, type RunParentContext } from '@/components/apps/runir-browser'
+import { RunInspector } from '@/components/apps/run-inspector'
+import { GreinInspector } from '@/components/apps/grein-inspector'
 import { Button } from '@/components/core/ui/button'
 import { ContextTabButton } from '@/components/core/ui/context-tab'
 import { InspectorChrome, InspectorChromeTitle } from '@/components/core/ui/inspector-chrome'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import {
-  createFjallMarker,
-  createFjallTrail,
-  deleteFjallMarker,
-  deleteFjallTrail,
-  updateFjallMarker,
-  updateFjallTrail,
+  createFjallRun,
+  createFjallGrein,
+  deleteFjallRun,
+  deleteFjallGrein,
+  updateFjallRun,
+  updateFjallGrein,
 } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
@@ -57,12 +57,12 @@ function CatalogTabBar({
 }
 
 function GreinarList({
-  trails,
+  greinar,
   selectedId,
   onSelect,
   onNew,
 }: {
-  trails: FjallTrailView[]
+  greinar: FjallGreinView[]
   selectedId: string | null
   onSelect: (id: string) => void
   onNew: () => void
@@ -71,7 +71,7 @@ function GreinarList({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
-        <span className="text-xs text-muted-foreground">{trails.length} total</span>
+        <span className="text-xs text-muted-foreground">{greinar.length} total</span>
         <ToolbarTooltip label={`New ${terms.greinSingular.toLowerCase()}`}>
           <Button
             type="button"
@@ -86,21 +86,21 @@ function GreinarList({
         </ToolbarTooltip>
       </div>
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
-        {trails.length === 0 ? (
+        {greinar.length === 0 ? (
           <p className="px-3 py-4 text-xs text-muted-foreground">No greinar yet.</p>
         ) : (
           <ul>
-            {trails.map((trail) => (
-              <li key={trail.id}>
+            {greinar.map((grein) => (
+              <li key={grein.id}>
                 <button
                   type="button"
-                  onClick={() => onSelect(trail.id)}
+                  onClick={() => onSelect(grein.id)}
                   className={cn(
                     'flex w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted-hover',
-                    selectedId === trail.id && 'bg-primary/10 text-primary',
+                    selectedId === grein.id && 'bg-primary/10 text-primary',
                   )}
                 >
-                  <span className="truncate font-medium">{trail.name}</span>
+                  <span className="truncate font-medium">{grein.name}</span>
                 </button>
               </li>
             ))}
@@ -114,77 +114,77 @@ function GreinarList({
 export function FjallCatalogInspector({
   activeTab,
   onTabChange,
-  trails,
-  markers,
+  greinar,
+  runir,
   selectedId,
-  markerPath,
-  markerParent,
+  runPath,
+  runParent,
   onSelectId,
-  onMarkerPathChange,
-  onMarkerParentChange,
+  onRunPathChange,
+  onRunParentChange,
   onClearSelection,
   lockedTab,
-  rootMarkerPath = [],
+  rootRunPath = [],
 }: {
   activeTab: FjallCatalogTab
   onTabChange: (tab: FjallCatalogTab) => void
-  trails: FjallTrailView[]
-  markers: FjallMarkerView[]
+  greinar: FjallGreinView[]
+  runir: FjallRunView[]
   selectedId: string | null
-  markerPath: string[]
-  markerParent: string | null
+  runPath: string[]
+  runParent: string | null
   onSelectId: (id: string | null) => void
-  onMarkerPathChange: (path: string[]) => void
-  onMarkerParentChange: (parent: string | null) => void
+  onRunPathChange: (path: string[]) => void
+  onRunParentChange: (parent: string | null) => void
   onClearSelection: () => void
   /** When set, hide the tab bar and keep the inspector on this tab. */
   lockedTab?: FjallCatalogTab
   /** When set, Runir browsing cannot navigate above this path. */
-  rootMarkerPath?: string[]
+  rootRunPath?: string[]
 }) {
   const terms = useTerms()
   const queryClient = useQueryClient()
-  const [markerFilter, setMarkerFilter] = useState('')
+  const [runFilter, setRunFilter] = useState('')
   const effectiveTab = lockedTab ?? activeTab
 
-  const sortedTrails = useMemo(
-    () => [...trails].sort((a, b) => a.name.localeCompare(b.name)),
-    [trails],
+  const sortedGreinar = useMemo(
+    () => [...greinar].sort((a, b) => a.name.localeCompare(b.name)),
+    [greinar],
   )
 
-  const selectedTrail =
+  const selectedGrein =
     effectiveTab === 'greinar' && selectedId && selectedId !== 'new'
-      ? (trails.find((trail) => trail.id === selectedId) ?? null)
+      ? (greinar.find((grein) => grein.id === selectedId) ?? null)
       : null
-  const isNewTrail = effectiveTab === 'greinar' && selectedId === 'new'
+  const isNewGrein = effectiveTab === 'greinar' && selectedId === 'new'
 
-  const selectedMarker =
+  const selectedRun =
     effectiveTab === 'runir' && selectedId && selectedId !== 'new'
-      ? (markers.find((marker) => marker.id === selectedId) ?? null)
+      ? (runir.find((run) => run.id === selectedId) ?? null)
       : null
-  const isNewMarker = effectiveTab === 'runir' && selectedId === 'new'
+  const isNewRun = effectiveTab === 'runir' && selectedId === 'new'
 
   const invalidateFjall = () => {
-    void queryClient.invalidateQueries({ queryKey: ['fjall-trails'] })
-    void queryClient.invalidateQueries({ queryKey: ['fjall-markers'] })
-    void queryClient.invalidateQueries({ queryKey: ['fjall-waypoints'] })
+    void queryClient.invalidateQueries({ queryKey: ['fjall-greinar'] })
+    void queryClient.invalidateQueries({ queryKey: ['fjall-runir'] })
+    void queryClient.invalidateQueries({ queryKey: ['fjall-laufar'] })
   }
 
-  const saveTrail = useMutation({
+  const saveGrein = useMutation({
     mutationFn: async (values: { name: string; hiddenPages: string[] }) => {
-      if (isNewTrail) return createFjallTrail(values)
-      return updateFjallTrail(selectedId!, values)
+      if (isNewGrein) return createFjallGrein(values)
+      return updateFjallGrein(selectedId!, values)
     },
     onSuccess: () => {
-      toast.success(isNewTrail ? 'Grein created' : 'Grein saved')
+      toast.success(isNewGrein ? 'Grein created' : 'Grein saved')
       invalidateFjall()
       onClearSelection()
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Failed to save grein'),
   })
 
-  const deleteTrail = useMutation({
-    mutationFn: () => deleteFjallTrail(selectedId!),
+  const deleteGrein = useMutation({
+    mutationFn: () => deleteFjallGrein(selectedId!),
     onSuccess: () => {
       toast.success('Grein deleted')
       invalidateFjall()
@@ -193,21 +193,21 @@ export function FjallCatalogInspector({
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Failed to delete'),
   })
 
-  const saveMarker = useMutation({
+  const saveRun = useMutation({
     mutationFn: async (values: { name: string; color: string; icon: string | null }) => {
-      if (isNewMarker) return createFjallMarker(values)
-      return updateFjallMarker(selectedId!, values)
+      if (isNewRun) return createFjallRun(values)
+      return updateFjallRun(selectedId!, values)
     },
     onSuccess: () => {
-      toast.success(isNewMarker ? `${terms.runSingular} created` : `${terms.runSingular} saved`)
+      toast.success(isNewRun ? `${terms.runSingular} created` : `${terms.runSingular} saved`)
       invalidateFjall()
       onClearSelection()
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Failed to save run'),
   })
 
-  const deleteMarker = useMutation({
-    mutationFn: () => deleteFjallMarker(selectedId!),
+  const deleteRun = useMutation({
+    mutationFn: () => deleteFjallRun(selectedId!),
     onSuccess: () => {
       toast.success(`${terms.runSingular} deleted`)
       invalidateFjall()
@@ -218,48 +218,48 @@ export function FjallCatalogInspector({
 
   if (effectiveTab === 'greinar' && selectedId) {
     return (
-      <TrailInspector
-        trail={selectedTrail}
-        isNew={isNewTrail}
+      <GreinInspector
+        grein={selectedGrein}
+        isNew={isNewGrein}
         title={
-          isNewTrail
+          isNewGrein
             ? `New ${terms.greinSingular}`
             : `Edit ${terms.greinSingular}`
         }
         onBack={onClearSelection}
         onSave={async (values) => {
-          await saveTrail.mutateAsync(values)
+          await saveGrein.mutateAsync(values)
         }}
         onDelete={async () => {
-          await deleteTrail.mutateAsync()
+          await deleteGrein.mutateAsync()
         }}
-        isSaving={saveTrail.isPending}
+        isSaving={saveGrein.isPending}
       />
     )
   }
 
   if (effectiveTab === 'runir' && selectedId) {
     return (
-      <MarkerInspector
-        marker={selectedMarker}
-        isNew={isNewMarker}
-        parentPrefix={markerParent}
-        title={isNewMarker ? `New ${terms.runSingular}` : `Edit ${terms.runSingular}`}
+      <RunInspector
+        run={selectedRun}
+        isNew={isNewRun}
+        parentPrefix={runParent}
+        title={isNewRun ? `New ${terms.runSingular}` : `Edit ${terms.runSingular}`}
         onBack={onClearSelection}
         onSave={async (values) => {
-          await saveMarker.mutateAsync(values)
+          await saveRun.mutateAsync(values)
         }}
         onDelete={async () => {
-          await deleteMarker.mutateAsync()
+          await deleteRun.mutateAsync()
         }}
-        isSaving={saveMarker.isPending}
+        isSaving={saveRun.isPending}
       />
     )
   }
 
   const runirCopy =
-    rootMarkerPath.length > 0
-      ? `Manage ${rootMarkerPath.join('/')} and its nested ${terms.runir.toLowerCase()}.`
+    rootRunPath.length > 0
+      ? `Manage ${rootRunPath.join('/')} and its nested ${terms.runir.toLowerCase()}.`
       : `Tag ${terms.laufar.toLowerCase()} with hierarchical ${terms.runir.toLowerCase()}.`
 
   return (
@@ -283,8 +283,8 @@ export function FjallCatalogInspector({
           <p className="text-sm font-semibold text-foreground">
             {effectiveTab === 'greinar'
               ? terms.greinar
-              : rootMarkerPath.length > 0
-                ? rootMarkerPath[rootMarkerPath.length - 1]
+              : rootRunPath.length > 0
+                ? rootRunPath[rootRunPath.length - 1]
                 : terms.runir}
           </p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
@@ -296,36 +296,36 @@ export function FjallCatalogInspector({
       )}
       {effectiveTab === 'greinar' ? (
         <GreinarList
-          trails={sortedTrails}
+          greinar={sortedGreinar}
           selectedId={selectedId}
           onSelect={onSelectId}
           onNew={() => onSelectId('new')}
         />
       ) : (
-        <MarkersBrowser
-          markers={markers}
-          search={markerFilter}
-          onSearchChange={setMarkerFilter}
-          groupPath={markerPath}
+        <RunirBrowser
+          runir={runir}
+          search={runFilter}
+          onSearchChange={setRunFilter}
+          groupPath={runPath}
           selectedId={selectedId}
           onSelect={(id) => onSelectId(id)}
           onNew={() => onSelectId('new')}
-          onNewSubmarker={(parent: MarkerParentContext) => {
-            onMarkerParentChange(parent.name)
+          onNewSubrun={(parent: RunParentContext) => {
+            onRunParentChange(parent.name)
             onSelectId('new')
           }}
           onNavigateInto={(path) => {
             if (
-              rootMarkerPath.length > 0 &&
-              (path.length < rootMarkerPath.length ||
-                !rootMarkerPath.every((segment, index) => path[index] === segment))
+              rootRunPath.length > 0 &&
+              (path.length < rootRunPath.length ||
+                !rootRunPath.every((segment, index) => path[index] === segment))
             ) {
               return
             }
-            onMarkerPathChange(path)
+            onRunPathChange(path)
             onSelectId(null)
           }}
-          rootPath={rootMarkerPath}
+          rootPath={rootRunPath}
         />
       )}
     </div>

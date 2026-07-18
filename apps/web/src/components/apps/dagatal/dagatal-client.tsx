@@ -3,18 +3,18 @@ import { useQuery } from '@tanstack/react-query'
 import { luviNavLabel, type CalendarMode } from '@/lib/luvi'
 import { fetchDagatalEvents } from '@/lib/dagatal-api'
 import { dagatalEventRange } from '@/lib/dagatal-range'
-import { filterItineraryEventsToRange } from '@/lib/dagatal-events'
+import { filterDagatalEventsToRange } from '@/lib/dagatal-events'
 import { cn } from '@/lib/utils'
 import { MonthView } from './month-view'
 import { WeekView } from './week-view'
 import { DayView } from './day-view'
 import { DagatalToolbar } from './dagatal-toolbar'
-import type { CalendarOption, StopWithMarkers } from './dagatal-types'
+import type { CalendarOption, StopWithRunir } from './dagatal-types'
 
 type CalendarView = 'month' | 'week' | 'day'
 
 interface DagatalClientProps {
-  stops: StopWithMarkers[]
+  stops: StopWithRunir[]
   calendars: CalendarOption[]
   onEventsMetaChange?: (meta: { count: number; loading: boolean; error: string | null }) => void
   onReload: () => void
@@ -105,7 +105,7 @@ export function DagatalClient({ stops, calendars, onEventsMetaChange, onReload }
   const cacheStatus = eventsQuery.data?.cacheStatus
   const syncIssues = calendarSync.filter((entry) => entry.status !== 'ok')
   const eventsInRange = useMemo(
-    () => filterItineraryEventsToRange(filteredEvents, eventRange.from, eventRange.to),
+    () => filterDagatalEventsToRange(filteredEvents, eventRange.from, eventRange.to),
     [filteredEvents, eventRange.from, eventRange.to],
   )
   const eventsLoading = eventsQuery.isLoading || eventsQuery.isFetching

@@ -4,6 +4,7 @@ import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 }
 import { dynamo, TABLE_NAME } from '../../shared/db'
 import { getPk } from '../../shared/auth'
 import { skattSk, SKATT_PREFIX } from '../../shared/keys'
+import { readRunId } from '../../shared/legacy-attrs'
 import { toApiGatewayResponse, ok, badRequest, serverError } from '../../shared/response'
 
 export const handler = async (
@@ -46,31 +47,38 @@ export const handler = async (
       return parts[2] === String(prevMonth) && parts[3] === String(prevYear)
     })
 
-    const existingMarkerIds = new Set(
+    const existingRunIds = new Set(
       (currentResult.Items ?? [])
         .filter((b) => {
           const parts = String(b.sk).split('#')
           return parts[2] === String(month) && parts[3] === String(year)
         })
-        .map((b) => b.markerId),
+        .map((b) => readRunId(b))
+        .filter((id): id is string => id != null),
     )
 
-    const toCreate = prevBudgets.filter((b) => !existingMarkerIds.has(b.markerId))
+    const toCreate = prevBudgets.filter((b) => {
+      const id = readRunId(b)
+      return id != null && !existingRunIds.has(id)
+    })
 
     if (toCreate.length === 0) {
       return toApiGatewayResponse(ok({ count: 0 }))
     }
 
-    const newItems = toCreate.map((b) => ({
-      pk,
-      sk: skattSk(b.markerId as string, month, year),
-      id: randomUUID(),
-      markerId: b.markerId,
-      markerName: b.markerName,
-      limit: b.limit,
-      month,
-      year,
-    }))
+    const newItems = toCreate.map((b) => {
+      const runId = readRunId(b)!
+      return {
+        pk,
+        sk: skattSk(runId, month, year),
+        id: randomUUID(),
+        runId,
+        runName: b.runName ?? b.markerName,
+        limit: b.limit,
+        month,
+        year,
+      }
+    })
 
     const chunks: (typeof newItems)[] = []
     for (let i = 0; i < newItems.length; i += 25) {

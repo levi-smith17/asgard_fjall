@@ -44,7 +44,7 @@ export const handler = async (
     const pk = getPk(event)
     const id = randomUUID()
     const sk = laufSk(id)
-    const runir = await resolveRunir(pk, Array.isArray(body.runirIds) ? body.runirIds : [])
+    const runir = await resolveRunir(pk, Array.isArray(body.runIds) ? body.runIds : Array.isArray(body.runirIds) ? body.runirIds : Array.isArray(body.markerIds) ? body.markerIds : [])
 
     const lauf = {
       pk,
@@ -56,14 +56,14 @@ export const handler = async (
       ...(body.notes ? { notes: body.notes } : {}),
       read: false,
       readLater: false,
-      ...(body.greinId ? { greinId: body.greinId } : {}),
+      ...((body.greinId ?? body.trailId) ? { greinId: body.greinId ?? body.trailId } : {}),
       runir,
       createdAt: new Date().toISOString(),
     }
 
     const item: Record<string, unknown> = { ...lauf }
-    if (body.greinId) {
-      item.gsi1pk = `${GREIN_PREFIX}${body.greinId}`
+    if (body.greinId ?? body.trailId) {
+      item.gsi1pk = `${GREIN_PREFIX}${body.greinId ?? body.trailId}`
       item.gsi1sk = sk
     }
 

@@ -13,23 +13,23 @@ export const handler = async (
   try {
     const body = JSON.parse(event.body ?? '{}')
 
-    if (!body.markerId || body.limit === undefined || body.month === undefined || body.year === undefined) {
-      return toApiGatewayResponse(badRequest('markerId, limit, month, and year are required'))
+    if (!body.runId || body.limit === undefined || body.month === undefined || body.year === undefined) {
+      return toApiGatewayResponse(badRequest('runId, limit, month, and year are required'))
     }
 
     const pk = getPk(event)
     const id = randomUUID()
-    const sk = skattSk(body.markerId, body.month, body.year)
+    const sk = skattSk(body.runId, body.month, body.year)
 
-    const markerMap = await resolveRunirById(pk, [body.markerId as string])
-    const marker = markerMap.get(body.markerId as string)
+    const runMap = await resolveRunirById(pk, [body.runId as string])
+    const run = runMap.get(body.runId as string)
 
     const skatt = {
       pk,
       sk,
       id,
-      markerId: body.markerId,
-      markerName: body.markerName ?? marker?.name ?? '',
+      runId: body.runId,
+      runName: body.runName ?? run?.name ?? '',
       limit: body.limit,
       month: body.month,
       year: body.year,

@@ -5,10 +5,10 @@ import { StudioLayout } from '@/components/core/layout/studio-layout'
 import { ThingAccountSettings } from '@/components/thing/thing-account-settings'
 import { ThingContextBar } from '@/components/thing/thing-context-bar'
 import { ThingIntegrationsSettings } from '@/components/thing/thing-integrations-settings'
-import { ThingItinerarySettings } from '@/components/thing/thing-itinerary-settings'
+import { ThingDagatalSettings } from '@/components/thing/thing-dagatal-settings'
 import { ThingLogSettings } from '@/components/thing/thing-log-settings'
 import { ThingSectionsRail } from '@/components/thing/thing-sections-rail'
-import { ThingWaypointSettings } from '@/components/thing/thing-waypoint-settings'
+import { ThingLaufSettings } from '@/components/thing/thing-lauf-settings'
 import { useTerms } from '@/hooks/use-terminology'
 
 type ThingSection = 'account' | 'integrations' | 'dagatal' | 'sogur' | 'hlidskjalf'
@@ -102,7 +102,7 @@ export function ThingPage() {
               title={terms.calendar}
               description={`Calendars, subscriptions, and ${terms.calendar.toLowerCase()} preferences.`}
             >
-              <ThingItinerarySettings />
+              <ThingDagatalSettings />
             </ThingSectionShell>
           ) : activeSection === 'integrations' ? (
             <ThingSectionShell
@@ -123,7 +123,7 @@ export function ThingPage() {
               title={terms.laufar}
               description={`${terms.laufar} display and behavior preferences.`}
             >
-              <ThingWaypointSettings />
+              <ThingLaufSettings />
             </ThingSectionShell>
           ) : (
             <ThingSectionShell title={terms.account} description="Profile, appearance, and public settings.">

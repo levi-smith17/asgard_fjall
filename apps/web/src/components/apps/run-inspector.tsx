@@ -1,18 +1,18 @@
 import { useState } from 'react'
-import type { FjallMarkerView } from '@/lib/data-types'
+import type { FjallRunView } from '@/lib/data-types'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { Input } from '@/components/core/ui/input'
 import {
   InspectorFormActions,
   InspectorFormHeader,
 } from '@/components/core/ui/inspector-form-actions'
-import { MarkerColorField } from '@/components/apps/marker-color-field'
-import { PRESET_COLORS } from '@/components/apps/markers-list'
+import { RunColorField } from '@/components/apps/run-color-field'
+import { PRESET_COLORS } from '@/components/apps/runir-list'
 import { useTerms } from '@/hooks/use-terminology'
 import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 
-export function MarkerInspector({
-  marker,
+export function RunInspector({
+  run,
   isNew,
   parentPrefix,
   title,
@@ -21,7 +21,7 @@ export function MarkerInspector({
   onDelete,
   isSaving,
 }: {
-  marker: FjallMarkerView | null
+  run: FjallRunView | null
   isNew: boolean
   parentPrefix?: string | null
   title?: string
@@ -31,16 +31,16 @@ export function MarkerInspector({
   isSaving: boolean
 }) {
   const terms = useTerms()
-  const markerParts = marker?.name.split('/') ?? []
+  const runParts = run?.name.split('/') ?? []
   const derivedParent =
-    !isNew && !parentPrefix && markerParts.length > 1
-      ? markerParts.slice(0, -1).join('/')
+    !isNew && !parentPrefix && runParts.length > 1
+      ? runParts.slice(0, -1).join('/')
       : null
   const effectiveParent = parentPrefix || derivedParent
   const [segment, setSegment] = useState(
-    effectiveParent ? (marker?.name.split('/').pop() ?? '') : (marker?.name ?? ''),
+    effectiveParent ? (run?.name.split('/').pop() ?? '') : (run?.name ?? ''),
   )
-  const [color, setColor] = useState(marker?.color ?? PRESET_COLORS[12])
+  const [color, setColor] = useState(run?.color ?? PRESET_COLORS[12])
   const [deleteOpen, setDeleteOpen] = useState(false)
 
   const fullName = effectiveParent ? `${effectiveParent}/${segment.trim()}` : segment.trim()
@@ -66,7 +66,7 @@ export function MarkerInspector({
           )}
         </label>
 
-        <MarkerColorField color={color} onChange={setColor} />
+        <RunColorField color={color} onChange={setColor} />
       </div>
       <InspectorFormActions
         isNew={isNew}
@@ -79,7 +79,7 @@ export function MarkerInspector({
           void onSave({
             name: fullName,
             color,
-            icon: marker?.icon ?? null,
+            icon: run?.icon ?? null,
           })
         }
         showDelete={!isNew}
@@ -90,7 +90,7 @@ export function MarkerInspector({
       <ConfirmDialog
         open={deleteOpen}
         title={`Delete ${terms.runSingular.toLowerCase()}`}
-        description={`Delete "${marker?.name}"?`}
+        description={`Delete "${run?.name}"?`}
         confirmLabel="Delete"
         confirmVariant="destructive"
         onConfirm={() => {

@@ -55,11 +55,11 @@ export function buildFjallNavigationEntries(terms: Terms): CommandSearchEntry[] 
     {
       id: 'nav-settings-dagatal',
       label: terms.settings,
-      subtitle: `${terms.calendar} — calendars and itinerary preferences`,
+      subtitle: `${terms.calendar} — calendars and dagatal preferences`,
       productPill: product,
       areaPill: 'Settings',
       path: thingSectionPath('dagatal'),
-      keywords: ['settings', 'thing', 'dagatal', 'calendar', 'icloud', 'itinerary'],
+      keywords: ['settings', 'thing', 'dagatal', 'calendar', 'icloud', 'dagatal'],
     },
   ]
 

@@ -8,7 +8,7 @@ import { toApiGatewayResponse, noContent, badRequest, notFound, serverError } fr
 
 /**
  * Deletes the Saga record only. Child Thattr are detached (sagaId removed)
- * and retain any inherited trailId — safer than cascading deletes.
+ * and retain any inherited greinId — safer than cascading deletes.
  */
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer,

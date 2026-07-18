@@ -2,10 +2,10 @@ import { toLuvi, type CalendarMode } from '@/lib/luvi'
 import { contrastColor } from '@/lib/color'
 import { icloudEventsForDay } from '@/lib/dagatal-events'
 import { EventPopover } from './event-popover'
-import type { StopWithMarkers, ICloudEventDisplay } from './dagatal-types'
+import type { StopWithRunir, ICloudEventDisplay } from './dagatal-types'
 
 interface DayViewProps {
-  stops: StopWithMarkers[]
+  stops: StopWithRunir[]
   icloudEvents: ICloudEventDisplay[]
   anchor: Date
   calendarMode: CalendarMode
@@ -20,7 +20,7 @@ function isSameDay(a: Date, b: Date): boolean {
   )
 }
 
-function stopsForDay(stops: StopWithMarkers[], date: Date): StopWithMarkers[] {
+function stopsForDay(stops: StopWithRunir[], date: Date): StopWithRunir[] {
   return stops.filter(s => {
     const start = new Date(s.startDate)
     const end = s.endDate ? new Date(s.endDate) : new Date(s.startDate)
@@ -113,7 +113,7 @@ export function DayView({ stops, icloudEvents, anchor, calendarMode, calendarCol
                 </EventPopover>
               ))}
               {allDayStops.map(stop => {
-                const color = stop.markers[0]?.marker.color ?? (stop.icloudCalendarId ? calendarColorMap[stop.icloudCalendarId] : undefined) ?? '#6b7280'
+                const color = stop.runir[0]?.run.color ?? (stop.icloudCalendarId ? calendarColorMap[stop.icloudCalendarId] : undefined) ?? '#6b7280'
                 return (
                   <EventPopover
                     key={stop.id}
@@ -130,11 +130,11 @@ export function DayView({ stops, icloudEvents, anchor, calendarMode, calendarCol
                       style={{ backgroundColor: color, color: contrastColor(color) }}
                     >
                       <span className="font-medium text-sm flex-1 truncate">{stop.title}</span>
-                      {stop.markers.length > 0 && (
+                      {stop.runir.length > 0 && (
                         <div className="flex gap-1 shrink-0">
-                          {stop.markers.slice(0, 3).map(m => (
-                            <span key={m.markerId} className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/20 hidden sm:inline">
-                              {m.marker.name}
+                          {stop.runir.slice(0, 3).map(m => (
+                            <span key={m.runId} className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/20 hidden sm:inline">
+                              {m.run.name}
                             </span>
                           ))}
                         </div>
@@ -154,7 +154,7 @@ export function DayView({ stops, icloudEvents, anchor, calendarMode, calendarCol
             </div>
             <div className="flex flex-col gap-2">
               {timedStops.map(stop => {
-                const color = stop.markers[0]?.marker.color ?? (stop.icloudCalendarId ? calendarColorMap[stop.icloudCalendarId] : undefined) ?? '#6b7280'
+                const color = stop.runir[0]?.run.color ?? (stop.icloudCalendarId ? calendarColorMap[stop.icloudCalendarId] : undefined) ?? '#6b7280'
                 const startDate = new Date(stop.startDate)
                 const endDate = stop.endDate ? new Date(stop.endDate) : null
                 return (
@@ -176,11 +176,11 @@ export function DayView({ stops, icloudEvents, anchor, calendarMode, calendarCol
                           {formatTime(startDate)}{endDate && ` – ${formatTime(endDate)}`}
                         </div>
                         {stop.notes && <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{stop.notes}</div>}
-                        {stop.markers.length > 0 && (
+                        {stop.runir.length > 0 && (
                           <div className="flex gap-1 mt-1.5 flex-wrap">
-                            {stop.markers.map(m => (
-                              <span key={m.markerId} className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: m.marker.color, color: contrastColor(m.marker.color) }}>
-                                {m.marker.name}
+                            {stop.runir.map(m => (
+                              <span key={m.runId} className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: m.run.color, color: contrastColor(m.run.color) }}>
+                                {m.run.name}
                               </span>
                             ))}
                           </div>

@@ -12,6 +12,7 @@ export function mapFjallApiPathToAsgard(pathWithQuery: string): string {
     [/^\/public\/manifest\/([^/]+)\/contact(?=\/|$)/, '/public/ordstirr/$1/ordsending'],
     [/^\/public\/manifest(?=\/|$)/, '/public/ordstirr'],
     [/^\/settings\/api-token(?=\/|$)/, '/thing/api-token'],
+    // Legacy Summit / English path aliases (keep until external callers cut over).
     [/^\/settings\/itinerary(?=\/|$)/, '/thing/dagatal'],
     [/^\/settings\/waypoints(?=\/|$)/, '/thing/laufar'],
     [/^\/settings\/logs(?=\/|$)/, '/thing/sogur'],

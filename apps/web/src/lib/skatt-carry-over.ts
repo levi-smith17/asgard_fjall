@@ -7,7 +7,7 @@ export type FjallCacheCarryOverResult = {
 }
 
 export type FjallCacheCarryItem = {
-  markerId: string
+  runId: string
   limit: number
 }
 
@@ -16,7 +16,7 @@ function previousMonth(month: number, year: number): { month: number; year: numb
   return { month: month - 1, year }
 }
 
-/** Copy selected Skatt limits into a target month (skips markers already present). */
+/** Copy selected Skatt limits into a target month (skips runir already present). */
 export async function carrySelectedFjallCacheToMonth(
   targetMonth: number,
   targetYear: number,
@@ -25,23 +25,23 @@ export async function carrySelectedFjallCacheToMonth(
   if (items.length === 0) return { created: 0, skipped: 0 }
 
   const targetSummary = await fetchProvisionsSummary(targetMonth, targetYear)
-  const existingMarkerIds = new Set(targetSummary.cacheUtilization.map((b) => b.markerId))
+  const existingRunIds = new Set(targetSummary.cacheUtilization.map((b) => b.runId))
 
   let created = 0
   let skipped = 0
 
   for (const item of items) {
-    if (existingMarkerIds.has(item.markerId)) {
+    if (existingRunIds.has(item.runId)) {
       skipped++
       continue
     }
     await saveFjallCache({
-      markerId: item.markerId,
+      runId: item.runId,
       limit: item.limit,
       month: targetMonth,
       year: targetYear,
     })
-    existingMarkerIds.add(item.markerId)
+    existingRunIds.add(item.runId)
     created++
   }
 
@@ -57,19 +57,19 @@ export async function carryOverFjallCacheToMonth(
   const maxMonthsBack = options?.maxMonthsBack ?? 24
 
   const targetSummary = await fetchProvisionsSummary(targetMonth, targetYear)
-  const existingMarkerIds = new Set(targetSummary.cacheUtilization.map((b) => b.markerId))
+  const existingRunIds = new Set(targetSummary.cacheUtilization.map((b) => b.runId))
 
   let { month, year } = previousMonth(targetMonth, targetYear)
 
   for (let i = 0; i < maxMonthsBack; i++) {
     const summary = await fetchProvisionsSummary(month, year)
-    const toCreate = summary.cacheUtilization.filter((b) => !existingMarkerIds.has(b.markerId))
+    const toCreate = summary.cacheUtilization.filter((b) => !existingRunIds.has(b.runId))
 
     if (toCreate.length > 0) {
       const result = await carrySelectedFjallCacheToMonth(
         targetMonth,
         targetYear,
-        toCreate.map((b) => ({ markerId: b.markerId, limit: b.limit })),
+        toCreate.map((b) => ({ runId: b.runId, limit: b.limit })),
       )
       if (result.created === 0) {
         ;({ month, year } = previousMonth(month, year))

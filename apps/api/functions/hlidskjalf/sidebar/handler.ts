@@ -137,12 +137,12 @@ export const handler = async (
     })
     const cacheTotalLimit = monthCaches.reduce((sum, c) => sum + Number(c.limit ?? 0), 0)
     const cacheTotalSpent = monthCaches.reduce((sum, c) => {
-      const markerId = String(c.sk).split('#')[1]
+      const runId = String(c.sk).split('#')[1]
       return (
         sum +
         monthBurns
           .filter((b) =>
-            ((b.markers as { id: string }[] | undefined) ?? []).some((m) => m.id === markerId),
+            (((b.runir ?? b.markers) as { id: string }[] | undefined) ?? []).some((m) => m.id === runId),
           )
           .reduce((s, b) => s + Number(b.amount), 0)
       )
@@ -183,7 +183,8 @@ export const handler = async (
         startDate: s.startDate,
         endDate: s.endDate ?? null,
         allDay: s.allDay ?? false,
-        color: (s.markers as { color?: string }[] | undefined)?.[0]?.color ?? '#007AFF',
+        color:
+          ((s.runir ?? s.markers) as { color?: string }[] | undefined)?.[0]?.color ?? '#007AFF',
       }))
 
     return toApiGatewayResponse(
@@ -233,7 +234,7 @@ export const handler = async (
           latestMessages,
           emailAccounts: [],
         },
-        itinerarySummary: {
+        dagatalSummary: {
           stops: upcomingStops,
         },
       }),

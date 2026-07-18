@@ -5,23 +5,23 @@ import type {
   FjallBurnPage,
   FjallCalendarOption,
   FjallExternalCalendarEvent,
-  FjallMarker,
-  FjallMarkerView,
+  FjallRun,
+  FjallRunView,
   AudrSummary,
   FjallSjodr,
   FjallSjodrView,
   FjallSupplyline,
-  FjallTrail,
-  FjallTrailView,
-  FjallWaypoint,
-  FjallWaypointMeta,
+  FjallGrein,
+  FjallGreinView,
+  FjallLauf,
+  FjallLaufMeta,
   SaveFjallSjodrRequest,
-  SaveFjallWaypointRequest,
+  SaveFjallLaufRequest,
 } from '@/lib/data-types'
 import { extractEntityId } from '@/lib/data-format'
-import { toDisplayMarker, toMarkerId } from '@/lib/embedded-markers'
+import { toDisplayRun, toRunId } from '@/lib/embedded-runir'
 import { normalizeTerminologyStyle, type TerminologyStyle } from '@/lib/terminology'
-import { parseFjallItineraryEventsPayload, reviveItineraryEvents } from '@/lib/dagatal-events'
+import { parseFjallDagatalEventsPayload, reviveDagatalEvents } from '@/lib/dagatal-events'
 
 // ─── Status ────────────────────────────────────────────────────────────────
 
@@ -89,16 +89,16 @@ export type FjallFullSettings = {
     manifestVisibility: 'PUBLIC' | 'UNLISTED' | 'PRIVATE'
     contactFormEnabled: boolean
   }
-  itinerary: {
+  dagatal: {
     defaultView: 'MONTH' | 'WEEK' | 'DAY'
     firstDayOfWeek: 'SUNDAY' | 'MONDAY'
     defaultEventDuration: number
     showWeekNumbers: boolean
   }
-  waypoints: {
+  laufar: {
     defaultSort: 'NEWEST' | 'OLDEST' | 'TITLE_ASC' | 'TITLE_DESC'
     openInNewTab: boolean
-    waypointsPerPage: number
+    laufarPerPage: number
   }
   logs: {
     logsPerPage: number
@@ -118,11 +118,11 @@ export async function fetchFjallFullSettings(): Promise<FjallFullSettings> {
       ...account,
       defaultTerminology: normalizeTerminologyStyle(account.defaultTerminology),
     },
-    itinerary: raw.itinerary ?? raw.dagatal,
-    waypoints: raw.waypoints ?? {
+    dagatal: raw.dagatal,
+    laufar: raw.laufar ?? {
       defaultSort: raw.laufar?.defaultSort,
       openInNewTab: raw.laufar?.openInNewTab,
-      waypointsPerPage: raw.laufar?.laufarPerPage ?? raw.laufar?.waypointsPerPage,
+      laufarPerPage: raw.laufar?.laufarPerPage ?? raw.laufar?.laufarPerPage,
     },
     logs: raw.logs ?? {
       logsPerPage: raw.sogur?.sogurPerPage ?? raw.sogur?.logsPerPage,
@@ -167,8 +167,8 @@ export async function saveFjallListedSetting(listed: boolean): Promise<void> {
   })
 }
 
-export async function saveFjallItinerarySettings(data: Record<string, unknown>): Promise<void> {
-  await fjallFetch('/settings/itinerary', {
+export async function saveFjallDagatalSettings(data: Record<string, unknown>): Promise<void> {
+  await fjallFetch('/settings/dagatal', {
     method: 'PUT',
     body: JSON.stringify(data),
   })
@@ -181,8 +181,8 @@ export async function saveFjallAppearanceSettings(data: Record<string, unknown>)
   })
 }
 
-export async function saveFjallWaypointSettings(data: Record<string, unknown>): Promise<void> {
-  await fjallFetch('/settings/waypoints', {
+export async function saveFjallLaufSettings(data: Record<string, unknown>): Promise<void> {
+  await fjallFetch('/settings/laufar', {
     method: 'PUT',
     body: JSON.stringify(data),
   })
@@ -219,7 +219,7 @@ export async function addFjallICloudCalendar(data: {
   name: string
   color: string
 }): Promise<void> {
-  await fjallFetch('/itinerary', {
+  await fjallFetch('/dagatal', {
     method: 'POST',
     body: JSON.stringify(data),
   })
@@ -229,25 +229,25 @@ export async function updateFjallICloudCalendar(
   id: string,
   data: Record<string, unknown>,
 ): Promise<void> {
-  await fjallFetch(`/itinerary/${id}`, {
+  await fjallFetch(`/dagatal/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   })
 }
 
 export async function deleteFjallICloudCalendar(id: string): Promise<void> {
-  await fjallFetch<void>(`/itinerary/${id}`, { method: 'DELETE' })
+  await fjallFetch<void>(`/dagatal/${id}`, { method: 'DELETE' })
 }
 
 export async function addFjallCalendarSubscription(data: Record<string, unknown>): Promise<void> {
-  await fjallFetch('/itinerary-subscriptions', {
+  await fjallFetch('/dagatal-subscriptions', {
     method: 'POST',
     body: JSON.stringify(data),
   })
 }
 
 export async function deleteFjallCalendarSubscription(id: string): Promise<void> {
-  await fjallFetch<void>(`/itinerary-subscriptions/${id}`, { method: 'DELETE' })
+  await fjallFetch<void>(`/dagatal-subscriptions/${id}`, { method: 'DELETE' })
 }
 
 export type FjallStarfieldNetwork = {
@@ -267,7 +267,7 @@ export async function fetchFjallStarfieldNetworks(): Promise<FjallStarfieldNetwo
   }))
 }
 
-export type FjallSearchResultType = 'waypoint' | 'log' | 'provision' | 'stop' | 'trail' | 'marker'
+export type FjallSearchResultType = 'lauf' | 'log' | 'provision' | 'stop' | 'grein' | 'run'
 
 export type FjallSearchResult = {
   id: string
@@ -289,8 +289,8 @@ export function mapLegacySearchUrlToFjall(url: string): string {
 
     if (path.startsWith('/logs')) return `/sogur${search}`
     if (path.startsWith('/provisions')) return `/audr${search}`
-    if (path.startsWith('/itinerary')) return `/dagatal${search}`
-    if (path.startsWith('/waypoints') || path.startsWith('/trails') || path.startsWith('/markers')) {
+    if (path.startsWith('/dagatal')) return `/dagatal${search}`
+    if (path.startsWith('/laufar') || path.startsWith('/greinar') || path.startsWith('/runir')) {
       return `/hlidskjalf${search}`
     }
     if (path.startsWith('/manifest') || path.startsWith('/ordstirr')) return `/ordstirr${search}`
@@ -403,108 +403,108 @@ export async function deleteFjallSjodr(id: string): Promise<void> {
   await fjallFetch<void>(`/sjodr/${id}`, { method: 'DELETE' })
 }
 
-// ─── Trails ────────────────────────────────────────────────────────────────
+// ─── Greinar ────────────────────────────────────────────────────────────────
 
-export async function fetchFjallTrails(): Promise<FjallTrail[]> {
-  return fjallFetch<FjallTrail[]>('/trails')
+export async function fetchFjallGreinar(): Promise<FjallGrein[]> {
+  return fjallFetch<FjallGrein[]>('/greinar')
 }
 
-export async function createFjallTrail(data: { name: string; hiddenPages?: string[] }): Promise<FjallTrailView> {
-  const trail = await fjallFetch<FjallTrail>('/trails', { method: 'POST', body: JSON.stringify(data) })
+export async function createFjallGrein(data: { name: string; hiddenPages?: string[] }): Promise<FjallGreinView> {
+  const grein = await fjallFetch<FjallGrein>('/greinar', { method: 'POST', body: JSON.stringify(data) })
   return {
-    id: extractEntityId(trail.sk),
-    name: trail.name,
-    hiddenPages: Array.isArray(trail.hiddenPages) ? trail.hiddenPages : null,
-    createdAt: trail.createdAt,
+    id: extractEntityId(grein.sk),
+    name: grein.name,
+    hiddenPages: Array.isArray(grein.hiddenPages) ? grein.hiddenPages : null,
+    createdAt: grein.createdAt,
   }
 }
 
-export async function updateFjallTrail(
+export async function updateFjallGrein(
   id: string,
   data: { name: string; hiddenPages?: string[] },
-): Promise<FjallTrailView> {
-  const trail = await fjallFetch<FjallTrail>(`/trails/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+): Promise<FjallGreinView> {
+  const grein = await fjallFetch<FjallGrein>(`/greinar/${id}`, { method: 'PUT', body: JSON.stringify(data) })
   return {
-    id: extractEntityId(trail.sk),
-    name: trail.name,
-    hiddenPages: Array.isArray(trail.hiddenPages) ? trail.hiddenPages : null,
-    createdAt: trail.createdAt,
+    id: extractEntityId(grein.sk),
+    name: grein.name,
+    hiddenPages: Array.isArray(grein.hiddenPages) ? grein.hiddenPages : null,
+    createdAt: grein.createdAt,
   }
 }
 
-export async function deleteFjallTrail(id: string): Promise<void> {
-  await fjallFetch<void>(`/trails/${id}`, { method: 'DELETE' })
+export async function deleteFjallGrein(id: string): Promise<void> {
+  await fjallFetch<void>(`/greinar/${id}`, { method: 'DELETE' })
 }
 
-// ─── Markers ───────────────────────────────────────────────────────────────
+// ─── Runir ───────────────────────────────────────────────────────────────
 
-export async function fetchFjallMarkers(): Promise<FjallMarker[]> {
-  return fjallFetch<FjallMarker[]>('/markers')
+export async function fetchFjallRunir(): Promise<FjallRun[]> {
+  return fjallFetch<FjallRun[]>('/runir')
 }
 
-export async function createFjallMarker(data: { name: string; color: string; icon?: string | null }): Promise<FjallMarkerView> {
-  const marker = await fjallFetch<FjallMarker>('/markers', { method: 'POST', body: JSON.stringify(data) })
-  return { id: extractEntityId(marker.sk), name: marker.name, color: marker.color, icon: marker.icon ?? null, createdAt: marker.createdAt, waypointCount: marker.waypointCount ?? 0 }
+export async function createFjallRun(data: { name: string; color: string; icon?: string | null }): Promise<FjallRunView> {
+  const run = await fjallFetch<FjallRun>('/runir', { method: 'POST', body: JSON.stringify(data) })
+  return { id: extractEntityId(run.sk), name: run.name, color: run.color, icon: run.icon ?? null, createdAt: run.createdAt, laufCount: run.laufCount ?? 0 }
 }
 
-export async function updateFjallMarker(id: string, data: { name: string; color: string; icon?: string | null }): Promise<FjallMarkerView> {
-  const marker = await fjallFetch<FjallMarker>(`/markers/${id}`, { method: 'PUT', body: JSON.stringify(data) })
-  return { id: extractEntityId(marker.sk), name: marker.name, color: marker.color, icon: marker.icon ?? null, createdAt: marker.createdAt, waypointCount: marker.waypointCount ?? 0 }
+export async function updateFjallRun(id: string, data: { name: string; color: string; icon?: string | null }): Promise<FjallRunView> {
+  const run = await fjallFetch<FjallRun>(`/runir/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+  return { id: extractEntityId(run.sk), name: run.name, color: run.color, icon: run.icon ?? null, createdAt: run.createdAt, laufCount: run.laufCount ?? 0 }
 }
 
-export async function deleteFjallMarker(id: string): Promise<void> {
-  await fjallFetch<void>(`/markers/${id}`, { method: 'DELETE' })
+export async function deleteFjallRun(id: string): Promise<void> {
+  await fjallFetch<void>(`/runir/${id}`, { method: 'DELETE' })
 }
 
-// ─── Waypoints ─────────────────────────────────────────────────────────────
+// ─── Laufar ─────────────────────────────────────────────────────────────
 
-export async function fetchFjallWaypoints(): Promise<FjallWaypoint[]> {
-  return fjallFetch<FjallWaypoint[]>('/waypoints')
+export async function fetchFjallLaufar(): Promise<FjallLauf[]> {
+  return fjallFetch<FjallLauf[]>('/laufar')
 }
 
-export async function createFjallWaypoint(data: SaveFjallWaypointRequest): Promise<FjallWaypoint> {
-  return fjallFetch<FjallWaypoint>('/waypoints', {
+export async function createFjallLauf(data: SaveFjallLaufRequest): Promise<FjallLauf> {
+  return fjallFetch<FjallLauf>('/laufar', {
     method: 'POST',
     body: JSON.stringify(data),
   })
 }
 
-export async function updateFjallWaypoint(
+export async function updateFjallLauf(
   id: string,
-  data: Partial<SaveFjallWaypointRequest>,
-): Promise<FjallWaypoint> {
-  return fjallFetch<FjallWaypoint>(`/waypoints/${id}`, {
+  data: Partial<SaveFjallLaufRequest>,
+): Promise<FjallLauf> {
+  return fjallFetch<FjallLauf>(`/laufar/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   })
 }
 
-export async function deleteFjallWaypoint(id: string): Promise<void> {
-  await fjallFetch<void>(`/waypoints/${id}`, { method: 'DELETE' })
+export async function deleteFjallLauf(id: string): Promise<void> {
+  await fjallFetch<void>(`/laufar/${id}`, { method: 'DELETE' })
 }
 
-export async function fetchFjallWaypointMeta(url: string): Promise<FjallWaypointMeta> {
-  return fjallFetch<FjallWaypointMeta>(`/waypoints/fetch-meta?url=${encodeURIComponent(url)}`)
+export async function fetchFjallLaufMeta(url: string): Promise<FjallLaufMeta> {
+  return fjallFetch<FjallLaufMeta>(`/laufar/fetch-meta?url=${encodeURIComponent(url)}`)
 }
 
 // ─── Logs / Thattr (Sögur) ─────────────────────────────────────────────────
 
-export type FjallLogMarker = {
-  markerId: string
-  marker: { id: string; name: string; color: string; icon: string | null }
+export type FjallLogRun = {
+  runId: string
+  run: { id: string; name: string; color: string; icon: string | null }
 }
 
-/** Normalize flat embedded Run snapshots and legacy `{ markerId, marker }` junctions. */
-export function normalizeFjallLogMarkers(rawMarkers: unknown): FjallLogMarker[] {
-  if (!Array.isArray(rawMarkers)) return []
-  const out: FjallLogMarker[] = []
-  for (const entry of rawMarkers) {
-    const markerId = toMarkerId(entry)
-    const display = toDisplayMarker(entry)
-    if (!markerId || !display) continue
+/** Normalize flat embedded Run snapshots and legacy `{ runId, run }` junctions. */
+export function normalizeFjallLogRunir(rawRunir: unknown): FjallLogRun[] {
+  if (!Array.isArray(rawRunir)) return []
+  const out: FjallLogRun[] = []
+  for (const entry of rawRunir) {
+    const runId = toRunId(entry)
+    const display = toDisplayRun(entry)
+    if (!runId || !display) continue
     out.push({
-      markerId,
-      marker: {
+      runId,
+      run: {
         id: display.id,
         name: display.name,
         color: display.color,
@@ -523,10 +523,10 @@ export type FjallLogView = {
   createdAt: string
   updatedAt?: string | null
   sagaId: string | null
-  trailId: string | null
-  waypointId: string | null
-  trailName: string | null
-  markers: FjallLogMarker[]
+  greinId: string | null
+  laufId: string | null
+  greinName: string | null
+  runir: FjallLogRun[]
 }
 
 type FjallLogRaw = {
@@ -538,15 +538,15 @@ type FjallLogRaw = {
   createdAt: string
   updatedAt?: string | null
   sagaId?: string | null
-  trailId?: string | null
-  waypointId?: string | null
-  trail?: { id: string; name: string } | null
-  markers?: unknown
+  greinId?: string | null
+  laufId?: string | null
+  grein?: { id: string; name: string } | null
+  runir?: unknown
 }
 
-function toFjallLogView(raw: FjallLogRaw, trailsById: Map<string, string>): FjallLogView {
+function toFjallLogView(raw: FjallLogRaw, greinarById: Map<string, string>): FjallLogView {
   const id = raw.id ?? (raw.sk ? extractEntityId(raw.sk) : '')
-  const trailId = raw.trailId ?? null
+  const greinId = raw.greinId ?? null
   return {
     id,
     title: raw.title ?? null,
@@ -555,17 +555,17 @@ function toFjallLogView(raw: FjallLogRaw, trailsById: Map<string, string>): Fjal
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt ?? null,
     sagaId: raw.sagaId ?? null,
-    trailId,
-    waypointId: raw.waypointId ?? null,
-    trailName: raw.trail?.name ?? (trailId ? trailsById.get(trailId) ?? null : null),
-    markers: normalizeFjallLogMarkers(raw.markers),
+    greinId,
+    laufId: raw.laufId ?? null,
+    greinName: raw.grein?.name ?? (greinId ? greinarById.get(greinId) ?? null : null),
+    runir: normalizeFjallLogRunir(raw.runir),
   }
 }
 
 export async function fetchFjallLogs(): Promise<FjallLogView[]> {
-  const [logs, trails] = await Promise.all([fjallFetch<FjallLogRaw[]>('/logs'), fetchFjallTrails()])
-  const trailsById = new Map(trails.map((trail) => [extractEntityId(trail.sk), trail.name]))
-  return logs.map((log) => toFjallLogView(log, trailsById))
+  const [logs, greinar] = await Promise.all([fjallFetch<FjallLogRaw[]>('/logs'), fetchFjallGreinar()])
+  const greinarById = new Map(greinar.map((grein) => [extractEntityId(grein.sk), grein.name]))
+  return logs.map((log) => toFjallLogView(log, greinarById))
 }
 
 export type SaveFjallLogRequest = {
@@ -573,9 +573,9 @@ export type SaveFjallLogRequest = {
   title: string | null
   content: string
   sagaId?: string | null
-  trailId?: string | null
-  waypointId?: string | null
-  markerIds?: string[]
+  greinId?: string | null
+  laufId?: string | null
+  runIds?: string[]
 }
 
 export async function saveFjallLog(data: SaveFjallLogRequest): Promise<FjallLogView> {
@@ -583,9 +583,9 @@ export async function saveFjallLog(data: SaveFjallLogRequest): Promise<FjallLogV
   const raw = id
     ? await fjallFetch<FjallLogRaw>(`/logs/${id}`, { method: 'PUT', body: JSON.stringify(rest) })
     : await fjallFetch<FjallLogRaw>('/logs', { method: 'POST', body: JSON.stringify(rest) })
-  const trails = await fetchFjallTrails()
-  const trailsById = new Map(trails.map((trail) => [extractEntityId(trail.sk), trail.name]))
-  return toFjallLogView(raw, trailsById)
+  const greinar = await fetchFjallGreinar()
+  const greinarById = new Map(greinar.map((grein) => [extractEntityId(grein.sk), grein.name]))
+  return toFjallLogView(raw, greinarById)
 }
 
 export async function deleteFjallLog(id: string): Promise<void> {
@@ -611,10 +611,10 @@ export async function uploadFjallLogImage(file: File, logId: string): Promise<st
 export type FjallSagaView = {
   id: string
   name: string
-  trailId: string | null
-  trailName: string | null
+  greinId: string | null
+  greinName: string | null
   orderedThattrIds: string[]
-  markers: FjallLogMarker[]
+  runir: FjallLogRun[]
   createdAt: string
   updatedAt: string | null
 }
@@ -623,42 +623,42 @@ type FjallSagaRaw = {
   id?: string
   sk?: string
   name: string
-  trailId?: string | null
+  greinId?: string | null
   orderedThattrIds?: string[]
-  markers?: unknown
+  runir?: unknown
   createdAt: string
   updatedAt?: string | null
 }
 
-function toFjallSagaView(raw: FjallSagaRaw, trailsById: Map<string, string>): FjallSagaView {
+function toFjallSagaView(raw: FjallSagaRaw, greinarById: Map<string, string>): FjallSagaView {
   const id = raw.id ?? (raw.sk ? extractEntityId(raw.sk) : '')
-  const trailId = raw.trailId ?? null
+  const greinId = raw.greinId ?? null
   return {
     id,
     name: raw.name,
-    trailId,
-    trailName: trailId ? trailsById.get(trailId) ?? null : null,
+    greinId,
+    greinName: greinId ? greinarById.get(greinId) ?? null : null,
     orderedThattrIds: Array.isArray(raw.orderedThattrIds) ? raw.orderedThattrIds : [],
-    markers: normalizeFjallLogMarkers(raw.markers),
+    runir: normalizeFjallLogRunir(raw.runir),
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt ?? null,
   }
 }
 
 export async function fetchFjallSagas(): Promise<FjallSagaView[]> {
-  const [sagas, trails] = await Promise.all([
+  const [sagas, greinar] = await Promise.all([
     fjallFetch<FjallSagaRaw[]>('/logs/sagas'),
-    fetchFjallTrails(),
+    fetchFjallGreinar(),
   ])
-  const trailsById = new Map(trails.map((trail) => [extractEntityId(trail.sk), trail.name]))
-  return sagas.map((saga) => toFjallSagaView(saga, trailsById))
+  const greinarById = new Map(greinar.map((grein) => [extractEntityId(grein.sk), grein.name]))
+  return sagas.map((saga) => toFjallSagaView(saga, greinarById))
 }
 
 export type SaveFjallSagaRequest = {
   id?: string
   name: string
-  trailId?: string | null
-  markerIds?: string[]
+  greinId?: string | null
+  runIds?: string[]
 }
 
 export async function saveFjallSaga(data: SaveFjallSagaRequest): Promise<FjallSagaView> {
@@ -672,9 +672,9 @@ export async function saveFjallSaga(data: SaveFjallSagaRequest): Promise<FjallSa
         method: 'POST',
         body: JSON.stringify(rest),
       })
-  const trails = await fetchFjallTrails()
-  const trailsById = new Map(trails.map((trail) => [extractEntityId(trail.sk), trail.name]))
-  return toFjallSagaView(raw, trailsById)
+  const greinar = await fetchFjallGreinar()
+  const greinarById = new Map(greinar.map((grein) => [extractEntityId(grein.sk), grein.name]))
+  return toFjallSagaView(raw, greinarById)
 }
 
 export async function deleteFjallSaga(id: string): Promise<void> {
@@ -689,9 +689,9 @@ export async function reorderFjallSaga(
     method: 'PUT',
     body: JSON.stringify({ orderedThattrIds }),
   })
-  const trails = await fetchFjallTrails()
-  const trailsById = new Map(trails.map((trail) => [extractEntityId(trail.sk), trail.name]))
-  return toFjallSagaView(raw, trailsById)
+  const greinar = await fetchFjallGreinar()
+  const greinarById = new Map(greinar.map((grein) => [extractEntityId(grein.sk), grein.name]))
+  return toFjallSagaView(raw, greinarById)
 }
 
 // ─── Audr (provisions) ─────────────────────────────────────────────────────
@@ -705,28 +705,28 @@ export type FjallBurnQueryParams = {
   year: number
   page?: number
   search?: string
-  markerId?: string
+  runId?: string
   fundId?: string
 }
 
 export async function fetchFjallBurnPage(params: FjallBurnQueryParams): Promise<FjallBurnPage> {
   const qs = new URLSearchParams({ month: String(params.month), year: String(params.year), page: String(params.page ?? 1) })
   if (params.search) qs.set('search', params.search)
-  if (params.markerId) qs.set('markerId', params.markerId)
+  if (params.runId) qs.set('runId', params.runId)
   if (params.fundId) qs.set('fundId', params.fundId)
   return fjallFetch<FjallBurnPage>(`/burn?${qs}`)
 }
 
 export type FjallSupplylineQueryParams = {
   search?: string
-  markerId?: string
+  runId?: string
   active?: string
 }
 
 export async function fetchFjallSupplylinesFiltered(params: FjallSupplylineQueryParams = {}): Promise<FjallSupplyline[]> {
   const qs = new URLSearchParams()
   if (params.search) qs.set('search', params.search)
-  if (params.markerId) qs.set('markerId', params.markerId)
+  if (params.runId) qs.set('runId', params.runId)
   if (params.active) qs.set('active', params.active)
   const query = qs.toString()
   return fjallFetch<FjallSupplyline[]>(`/supplylines${query ? `?${query}` : ''}`)
@@ -783,7 +783,7 @@ export async function deleteFjallCache(id: string): Promise<void> {
   await fjallFetch<void>(`/cache/${id}`, { method: 'DELETE' })
 }
 
-// ─── Dagatal (itinerary) ───────────────────────────────────────────────────
+// ─── Dagatal (dagatal) ───────────────────────────────────────────────────
 
 export type FjallCalendarSyncStatus = {
   calendarId: string
@@ -795,26 +795,26 @@ export type FjallCalendarSyncStatus = {
   message?: string
 }
 
-export type FjallItineraryEventsResult = {
+export type FjallDagatalEventsResult = {
   events: FjallExternalCalendarEvent[]
   calendarSync: FjallCalendarSyncStatus[]
 }
 
-export async function fetchFjallItineraryCalendars(): Promise<FjallCalendarOption[]> {
+export async function fetchFjallDagatalCalendars(): Promise<FjallCalendarOption[]> {
   const settings = await fetchFjallFullSettings()
   const calendars = (settings.calendars ?? []).map((c) => ({ id: c.id, name: c.name, color: c.color }))
   const subscriptions = (settings.calendarSubscriptions ?? []).map((s) => ({ id: s.id, name: s.name, color: s.color }))
   return [...calendars, ...subscriptions]
 }
 
-export async function fetchFjallItineraryEvents(params?: { from?: string; to?: string }): Promise<FjallItineraryEventsResult> {
+export async function fetchFjallDagatalEvents(params?: { from?: string; to?: string }): Promise<FjallDagatalEventsResult> {
   const qs = new URLSearchParams()
   if (params?.from) qs.set('from', params.from)
   if (params?.to) qs.set('to', params.to)
   const query = qs.toString()
-  const data = await fjallFetch<{ events?: Record<string, unknown>[]; calendarSync?: FjallCalendarSyncStatus[] }>(`/itinerary/events${query ? `?${query}` : ''}`)
+  const data = await fjallFetch<{ events?: Record<string, unknown>[]; calendarSync?: FjallCalendarSyncStatus[] }>(`/dagatal/events${query ? `?${query}` : ''}`)
   return {
-    events: reviveItineraryEvents(parseFjallItineraryEventsPayload(data)),
+    events: reviveDagatalEvents(parseFjallDagatalEventsPayload(data)),
     calendarSync: Array.isArray(data.calendarSync) ? data.calendarSync : [],
   }
 }

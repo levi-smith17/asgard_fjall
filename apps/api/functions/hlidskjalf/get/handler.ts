@@ -4,6 +4,7 @@ import { dynamo, TABLE_NAME } from '../../shared/db'
 import { getPk } from '../../shared/auth'
 import { GREIN_PREFIX, LAUF_PREFIX, RUN_PREFIX, SOGUR_PREFIX } from '../../shared/keys'
 import { filterLaufar, parseLaufFilterParams, sortLaufar } from '../../shared/lauf-filters'
+import { readEmbeddedRunir, readGreinId, readLaufId } from '../../shared/legacy-attrs'
 import { toApiGatewayResponse, ok, serverError } from '../../shared/response'
 
 const PAGE_SIZE = 15
@@ -21,21 +22,19 @@ function queryAll(pk: string, prefix: string) {
 
 type EmbeddedRun = { id: string; name: string; color: string; icon?: string | null }
 
-function toMarkerEntry(m: EmbeddedRun) {
+function toRunEntry(m: EmbeddedRun) {
   return {
-    markerId: m.id,
-    marker: { id: m.id, name: m.name, color: m.color, icon: m.icon ?? null },
+    runId: m.id,
+    run: { id: m.id, name: m.name, color: m.color, icon: m.icon ?? null },
   }
 }
 
 function embeddedRuns(item: Record<string, unknown>): EmbeddedRun[] {
-  const runir = (item.runir ?? item.markers) as EmbeddedRun[] | undefined
-  return runir ?? []
+  return readEmbeddedRunir<EmbeddedRun>(item)
 }
 
-function trailIdFrom(item: Record<string, unknown>): string | null {
-  const greinId = item.greinId ?? item.trailId
-  return greinId != null ? String(greinId) : null
+function greinIdFrom(item: Record<string, unknown>): string | null {
+  return readGreinId(item)
 }
 
 export const handler = async (
@@ -46,8 +45,8 @@ export const handler = async (
     const qs = event.queryStringParameters ?? {}
     const page = Math.max(1, parseInt(qs.page ?? '1', 10))
     const filterParams = parseLaufFilterParams(qs)
-    const filterTrailId = qs.trailId && qs.trailId !== 'all' ? qs.trailId : null
-    const { search, markerIds, readLater, dateFrom, dateTo, sort } = filterParams
+    const filterGreinId = qs.greinId && qs.greinId !== 'all' ? qs.greinId : null
+    const { search, runIds, readLater, dateFrom, dateTo, sort } = filterParams
 
     const [greinarResult, laufarResult, runirResult, sogurResult] = await Promise.all([
       queryAll(pk, GREIN_PREFIX),
@@ -56,7 +55,7 @@ export const handler = async (
       queryAll(pk, SOGUR_PREFIX),
     ])
 
-    const rawTrails = (greinarResult.Items ?? []).map((t) => ({
+    const rawGreinar = (greinarResult.Items ?? []).map((t) => ({
       id: String(t.sk).split('#').pop() as string,
       name: t.name as string,
       createdAt: t.createdAt as string,
@@ -69,94 +68,94 @@ export const handler = async (
       icon: m.icon ?? null,
     }))
 
-    const allWaypointsByTrail = new Map<string, number>()
+    const allLaufarByGrein = new Map<string, number>()
     for (const w of laufarResult.Items ?? []) {
-      const tid = trailIdFrom(w)
-      if (tid) allWaypointsByTrail.set(tid, (allWaypointsByTrail.get(tid) ?? 0) + 1)
+      const tid = greinIdFrom(w)
+      if (tid) allLaufarByGrein.set(tid, (allLaufarByGrein.get(tid) ?? 0) + 1)
     }
 
-    let waypoints = (laufarResult.Items ?? []).map((w) => ({
+    let laufar = (laufarResult.Items ?? []).map((w) => ({
       id: String(w.sk).split('#').pop() as string,
       title: w.title as string,
       url: w.url as string,
       favicon: w.favicon ?? null,
       read: w.read ?? false,
       readLater: w.readLater ?? false,
-      trailId: trailIdFrom(w),
-      markers: embeddedRuns(w).map(toMarkerEntry),
+      greinId: greinIdFrom(w),
+      runir: embeddedRuns(w).map(toRunEntry),
       createdAt: w.createdAt as string,
     }))
 
-    waypoints = filterLaufar(waypoints, filterParams)
-    if (filterTrailId) {
-      waypoints = waypoints.filter((w) => w.trailId === filterTrailId)
+    laufar = filterLaufar(laufar, filterParams)
+    if (filterGreinId) {
+      laufar = laufar.filter((w) => w.greinId === filterGreinId)
     }
 
-    waypoints = sortLaufar(waypoints, sort)
+    laufar = sortLaufar(laufar, sort)
 
-    const filteredWaypointsByTrail = new Map<string, typeof waypoints>()
-    for (const w of waypoints) {
-      const tid = w.trailId
+    const filteredLaufarByGrein = new Map<string, typeof laufar>()
+    for (const w of laufar) {
+      const tid = w.greinId
       if (tid) {
-        if (!filteredWaypointsByTrail.has(tid)) filteredWaypointsByTrail.set(tid, [])
-        filteredWaypointsByTrail.get(tid)!.push(w)
+        if (!filteredLaufarByGrein.has(tid)) filteredLaufarByGrein.set(tid, [])
+        filteredLaufarByGrein.get(tid)!.push(w)
       }
     }
 
     const allLogs = (sogurResult.Items ?? []).map((l) => ({
       id: String(l.sk).split('#').pop() as string,
       content: l.content as string,
-      trailId: trailIdFrom(l),
-      waypointId: l.waypointId != null ? String(l.waypointId) : null,
-      markers: embeddedRuns(l).map(toMarkerEntry),
+      greinId: greinIdFrom(l),
+      laufId: readLaufId(l),
+      runir: embeddedRuns(l).map(toRunEntry),
       createdAt: l.createdAt as string,
     }))
 
-    const logCountByTrail = new Map<string, number>()
-    const logsByWaypoint = new Map<string, typeof allLogs>()
+    const logCountByGrein = new Map<string, number>()
+    const logsByLauf = new Map<string, typeof allLogs>()
     for (const log of allLogs) {
-      if (log.trailId) {
-        logCountByTrail.set(log.trailId, (logCountByTrail.get(log.trailId) ?? 0) + 1)
+      if (log.greinId) {
+        logCountByGrein.set(log.greinId, (logCountByGrein.get(log.greinId) ?? 0) + 1)
       }
-      if (log.waypointId) {
-        if (!logsByWaypoint.has(log.waypointId)) logsByWaypoint.set(log.waypointId, [])
-        logsByWaypoint.get(log.waypointId)!.push(log)
+      if (log.laufId) {
+        if (!logsByLauf.has(log.laufId)) logsByLauf.set(log.laufId, [])
+        logsByLauf.get(log.laufId)!.push(log)
       }
     }
 
-    const hasWaypointFilter = !!(search || markerIds.length > 0 || readLater || dateFrom || dateTo)
+    const hasLaufFilter = !!(search || runIds.length > 0 || readLater || dateFrom || dateTo)
 
-    let activeTrails = rawTrails.filter((t) => {
-      const hasFilteredWaypoints = (filteredWaypointsByTrail.get(t.id)?.length ?? 0) > 0
-      const hasLogs = (logCountByTrail.get(t.id) ?? 0) > 0
-      if (hasWaypointFilter) return hasFilteredWaypoints
-      return hasFilteredWaypoints || hasLogs
+    let activeGreinar = rawGreinar.filter((t) => {
+      const hasFilteredLaufar = (filteredLaufarByGrein.get(t.id)?.length ?? 0) > 0
+      const hasLogs = (logCountByGrein.get(t.id) ?? 0) > 0
+      if (hasLaufFilter) return hasFilteredLaufar
+      return hasFilteredLaufar || hasLogs
     })
 
-    if (filterTrailId) {
-      activeTrails = activeTrails.filter((t) => t.id === filterTrailId)
+    if (filterGreinId) {
+      activeGreinar = activeGreinar.filter((t) => t.id === filterGreinId)
     }
 
     if (sort === 'oldest') {
-      activeTrails.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      activeGreinar.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
     } else if (sort === 'newest') {
-      activeTrails.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      activeGreinar.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     } else {
-      activeTrails.sort((a, b) => a.name.localeCompare(b.name))
+      activeGreinar.sort((a, b) => a.name.localeCompare(b.name))
     }
 
     const skip = (page - 1) * PAGE_SIZE
-    const pageTrails = activeTrails.slice(skip, skip + PAGE_SIZE)
-    const hasMore = skip + PAGE_SIZE < activeTrails.length
+    const pageGreinar = activeGreinar.slice(skip, skip + PAGE_SIZE)
+    const hasMore = skip + PAGE_SIZE < activeGreinar.length
 
     const filteredCountMap: Record<string, number> = {}
-    const folders = pageTrails.map((t) => {
-      const trailWaypoints = filteredWaypointsByTrail.get(t.id) ?? []
-      filteredCountMap[t.id] = trailWaypoints.length
+    const folders = pageGreinar.map((t) => {
+      const greinLaufar = filteredLaufarByGrein.get(t.id) ?? []
+      filteredCountMap[t.id] = greinLaufar.length
 
-      const topWaypoints = trailWaypoints.slice(0, LAUFAR_PER_GREIN).map((w) => ({
+      const topLaufar = greinLaufar.slice(0, LAUFAR_PER_GREIN).map((w) => ({
         ...w,
-        logs: (logsByWaypoint.get(w.id) ?? [])
+        logs: (logsByLauf.get(w.id) ?? [])
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .slice(0, 1),
       }))
@@ -164,15 +163,15 @@ export const handler = async (
       return {
         id: t.id,
         name: t.name,
-        waypoints: topWaypoints,
+        laufar: topLaufar,
         _count: {
-          waypoints: allWaypointsByTrail.get(t.id) ?? 0,
-          logs: logCountByTrail.get(t.id) ?? 0,
+          laufar: allLaufarByGrein.get(t.id) ?? 0,
+          logs: logCountByGrein.get(t.id) ?? 0,
         },
       }
     })
 
-    const allFolders = rawTrails.map((t) => ({ id: t.id, name: t.name }))
+    const allFolders = rawGreinar.map((t) => ({ id: t.id, name: t.name }))
 
     return toApiGatewayResponse(
       ok({

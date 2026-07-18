@@ -67,7 +67,7 @@ export const handler = async (
     }
 
     if (hasContentUpdate) {
-      const runir = await resolveRunir(pk, Array.isArray(body.runirIds) ? body.runirIds : [])
+      const runir = await resolveRunir(pk, Array.isArray(body.runIds) ? body.runIds : Array.isArray(body.runirIds) ? body.runirIds : Array.isArray(body.markerIds) ? body.markerIds : [])
       setExprs.push('#title = :title', '#url = :url', 'runir = :runir')
       exprNames['#title'] = 'title'
       exprNames['#url'] = 'url'
@@ -93,10 +93,10 @@ export const handler = async (
       } else {
         removeExprs.push('favicon')
       }
-      if (body.greinId) {
+      if (body.greinId ?? body.trailId) {
         setExprs.push('greinId = :greinId', 'gsi1pk = :gsi1pk', 'gsi1sk = :gsi1sk')
-        exprValues[':greinId'] = body.greinId
-        exprValues[':gsi1pk'] = `${GREIN_PREFIX}${body.greinId}`
+        exprValues[':greinId'] = body.greinId ?? body.trailId
+        exprValues[':gsi1pk'] = `${GREIN_PREFIX}${body.greinId ?? body.trailId}`
         exprValues[':gsi1sk'] = sk
       } else {
         removeExprs.push('greinId', 'gsi1pk', 'gsi1sk')

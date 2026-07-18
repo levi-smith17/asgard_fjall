@@ -1,4 +1,4 @@
-import { PRESET_COLORS } from '@/components/apps/markers-list'
+import { PRESET_COLORS } from '@/components/apps/runir-list'
 
 /** Stable display color for a Sjodr when none is stored yet (Runir-like dots). */
 export function resolveSjodrColor(

@@ -40,7 +40,7 @@ export function ThingAppearanceSettings() {
   useEffect(() => {
     if (!appearance || !account) return
     setSidebarDefault(appearance.sidebarDefault)
-    setDefaultLandingPage(appearance.defaultLandingPage === '/waypoints' ? '/hlidskjalf' : appearance.defaultLandingPage)
+    setDefaultLandingPage(appearance.defaultLandingPage === '/laufar' ? '/hlidskjalf' : appearance.defaultLandingPage)
     setDateFormat(appearance.dateFormat)
     setTimeFormat(account.timeFormat)
     setPublicDefaultTheme(appearance.publicDefaultTheme ?? 'SYSTEM')

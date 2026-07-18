@@ -1,4 +1,4 @@
-export type StopWithMarkers = {
+export type StopWithRunir = {
   id: string
   title: string
   notes: string | null
@@ -7,9 +7,9 @@ export type StopWithMarkers = {
   endDate: Date | null
   allDay: boolean
   icloudCalendarId: string | null
-  markers: {
-    markerId: string
-    marker: { id: string; name: string; color: string; icon: string | null }
+  runir: {
+    runId: string
+    run: { id: string; name: string; color: string; icon: string | null }
   }[]
 }
 

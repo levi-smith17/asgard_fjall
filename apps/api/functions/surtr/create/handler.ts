@@ -21,8 +21,8 @@ export const handler = async (
     const id = randomUUID()
     const sk = surtrSk(id)
 
-    const markerMap = await resolveRunirById(pk, Array.isArray(body.markerIds) ? body.markerIds : [])
-    const markers = [...markerMap.values()]
+    const runMap = await resolveRunirById(pk, Array.isArray(body.runIds) ? body.runIds : [])
+    const runir = [...runMap.values()]
 
     const surtr = {
       pk,
@@ -34,7 +34,7 @@ export const handler = async (
       ...(body.notes ? { notes: body.notes } : {}),
       ...(body.receiptUrl ? { receiptUrl: body.receiptUrl } : {}),
       ...(body.fundId ? { fundId: body.fundId } : {}),
-      markers,
+      runir,
       createdAt: new Date().toISOString(),
     }
 

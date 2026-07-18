@@ -3,14 +3,14 @@ import { toLuvi, luviWeekDates, LUVI_DAYS, type CalendarMode } from '@/lib/luvi'
 import { contrastColor } from '@/lib/color'
 import { icloudEventsForDay } from '@/lib/dagatal-events'
 import { EventPopover } from './event-popover'
-import type { StopWithMarkers, ICloudEventDisplay } from './dagatal-types'
+import type { StopWithRunir, ICloudEventDisplay } from './dagatal-types'
 
 const PX_PER_HOUR = 56
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
 const COL_TEMPLATE = '48px repeat(7, minmax(0, 1fr))'
 
 interface WeekViewProps {
-  stops: StopWithMarkers[]
+  stops: StopWithRunir[]
   icloudEvents: ICloudEventDisplay[]
   anchor: Date
   calendarMode: CalendarMode
@@ -25,7 +25,7 @@ function isSameDay(a: Date, b: Date): boolean {
   )
 }
 
-function stopsForDay(stops: StopWithMarkers[], date: Date): StopWithMarkers[] {
+function stopsForDay(stops: StopWithRunir[], date: Date): StopWithRunir[] {
   return stops.filter(s => {
     const start = new Date(s.startDate)
     const end = s.endDate ? new Date(s.endDate) : new Date(s.startDate)
@@ -123,7 +123,7 @@ function GregorianWeekGrid({ stops, icloudEvents, anchor, calendarMode, calendar
                 return (
                   <div key={i} className="border-r last:border-r-0 p-0.5 flex flex-col gap-0.5 min-h-[28px]">
                     {dayStops.map(stop => {
-                      const color = stop.markers[0]?.marker.color ?? (stop.icloudCalendarId ? calendarColorMap[stop.icloudCalendarId] : undefined) ?? '#6b7280'
+                      const color = stop.runir[0]?.run.color ?? (stop.icloudCalendarId ? calendarColorMap[stop.icloudCalendarId] : undefined) ?? '#6b7280'
                       return (
                         <EventPopover
                           key={stop.id}
@@ -204,7 +204,7 @@ function GregorianWeekGrid({ stops, icloudEvents, anchor, calendarMode, calendar
                 ))}
 
                 {dayStops.map(stop => {
-                  const color = stop.markers[0]?.marker.color ?? (stop.icloudCalendarId ? calendarColorMap[stop.icloudCalendarId] : undefined) ?? '#6b7280'
+                  const color = stop.runir[0]?.run.color ?? (stop.icloudCalendarId ? calendarColorMap[stop.icloudCalendarId] : undefined) ?? '#6b7280'
                   const { top, height } = eventPosition(new Date(stop.startDate), stop.endDate ? new Date(stop.endDate) : null)
                   return (
                     <EventPopover
@@ -267,14 +267,14 @@ function SimpleEventColumn({
   day: _day, stops, icloudEvents, calendarColorMap,
 }: {
   day: Date
-  stops: StopWithMarkers[]
+  stops: StopWithRunir[]
   icloudEvents: ICloudEventDisplay[]
   calendarColorMap: Record<string, string>
 }) {
   return (
     <div className="border-r last:border-r-0 p-1 flex flex-col gap-1 min-h-[160px]">
       {stops.map(stop => {
-        const color = stop.markers[0]?.marker.color ?? (stop.icloudCalendarId ? calendarColorMap[stop.icloudCalendarId] : undefined) ?? '#6b7280'
+        const color = stop.runir[0]?.run.color ?? (stop.icloudCalendarId ? calendarColorMap[stop.icloudCalendarId] : undefined) ?? '#6b7280'
         return (
           <EventPopover
             key={stop.id}

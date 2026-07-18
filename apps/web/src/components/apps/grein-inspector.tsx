@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { FjallTrailView } from '@/lib/data-types'
+import type { FjallGreinView } from '@/lib/data-types'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { Input } from '@/components/core/ui/input'
 import {
@@ -15,8 +15,8 @@ import {
   type GreinPageId,
 } from '@/lib/grein-visibility'
 
-export function TrailInspector({
-  trail,
+export function GreinInspector({
+  grein,
   isNew,
   title,
   onBack,
@@ -24,7 +24,7 @@ export function TrailInspector({
   onDelete,
   isSaving,
 }: {
-  trail: FjallTrailView | null
+  grein: FjallGreinView | null
   isNew: boolean
   title?: string
   onBack: () => void
@@ -33,9 +33,9 @@ export function TrailInspector({
   isSaving: boolean
 }) {
   const terms = useTerms()
-  const [name, setName] = useState(trail?.name ?? '')
+  const [name, setName] = useState(grein?.name ?? '')
   const [hiddenPages, setHiddenPages] = useState<GreinPageId[]>(() =>
-    trail ? resolveGreinHiddenPages(trail) : [],
+    grein ? resolveGreinHiddenPages(grein) : [],
   )
   const [deleteOpen, setDeleteOpen] = useState(false)
   const headerTitle = title ?? (isNew ? `New ${terms.greinSingular}` : `Edit ${terms.greinSingular}`)
@@ -92,7 +92,7 @@ export function TrailInspector({
       <ConfirmDialog
         open={deleteOpen}
         title={`Delete ${terms.greinSingular.toLowerCase()}`}
-        description={`Delete "${trail?.name}"? Laufar in this grein will be unassigned.`}
+        description={`Delete "${grein?.name}"? Laufar in this grein will be unassigned.`}
         confirmLabel="Delete"
         confirmVariant="destructive"
         onConfirm={() => {

@@ -33,7 +33,7 @@ export function idunnSk(id: string): string {
   return `${IDUNN_PREFIX}${id}`
 }
 
-/** Composite sort key: SKATT#{runId}#{month}#{year} (mirrors Cairn's CACHE#{markerId}#{month}#{year}). */
+/** Composite sort key: SKATT#{runId}#{month}#{year} (mirrors Cairn's CACHE#{runId}#{month}#{year}). */
 export function skattSk(runId: string, month: number | string, year: number | string): string {
   return `${SKATT_PREFIX}${runId}#${month}#${year}`
 }

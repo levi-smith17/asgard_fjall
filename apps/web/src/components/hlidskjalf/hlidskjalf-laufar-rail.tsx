@@ -1,9 +1,9 @@
 import { Bookmark, Settings, SlidersHorizontal } from 'lucide-react'
-import type { FjallMarkerView, FjallTrailView, FjallWaypointView } from '@/lib/data-types'
+import type { FjallRunView, FjallGreinView, FjallLaufView } from '@/lib/data-types'
 import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
 import { FilterInput } from '@/components/core/ui/filter-input'
-import { MarkerPicker } from '@/components/apps/marker-picker'
-import { MarkerColorSwatch } from '@/components/apps/markers-list'
+import { RunPicker } from '@/components/apps/run-picker'
+import { RunColorSwatch } from '@/components/apps/runir-list'
 import { ToolbarDropdown } from '@/components/core/ui/toolbar-dropdown'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { useTerms } from '@/hooks/use-terminology'
@@ -39,15 +39,15 @@ export function HlidskjalfLaufarRail({
   onGreinFilterChange,
   runirFilterId,
   onRunirFilterChange,
-  trails,
-  markers,
+  greinar,
+  runir,
   onInspect,
   onOpenUrl,
   onOpenCatalog,
   isLoading,
   unavailableMessage,
 }: {
-  groups: Array<{ label: string; waypoints: FjallWaypointView[] }>
+  groups: Array<{ label: string; laufar: FjallLaufView[] }>
   selectedId: string | null
   filterQuery: string
   onFilterQueryChange: (value: string) => void
@@ -55,8 +55,8 @@ export function HlidskjalfLaufarRail({
   onGreinFilterChange: (id: string) => void
   runirFilterId: string
   onRunirFilterChange: (id: string) => void
-  trails: FjallTrailView[]
-  markers: FjallMarkerView[]
+  greinar: FjallGreinView[]
+  runir: FjallRunView[]
   onInspect: (id: string) => void
   onOpenUrl: (url: string) => void
   onOpenCatalog: () => void
@@ -67,14 +67,14 @@ export function HlidskjalfLaufarRail({
   const greinOptions = [
     { id: LAUFAR_FILTER_ALL, label: terms.greinar },
     { id: LAUFAR_UNASSIGNED_GREIN, label: terms.unassigned },
-    ...trails.map((trail) => ({ id: trail.id, label: trail.name })),
+    ...greinar.map((grein) => ({ id: grein.id, label: grein.name })),
   ]
 
-  const rawMarkers = markers.map((marker) => ({
-    id: marker.id,
-    name: marker.name,
-    color: marker.color,
-    icon: marker.icon,
+  const rawRunir = runir.map((run) => ({
+    id: run.id,
+    name: run.name,
+    color: run.color,
+    icon: run.icon,
   }))
 
   return (
@@ -108,8 +108,8 @@ export function HlidskjalfLaufarRail({
             ariaLabel={terms.greinar}
           />
           <div className="min-w-0 flex-1">
-            <MarkerPicker
-              markers={rawMarkers}
+            <RunPicker
+              runir={rawRunir}
               selected={runirFilterId !== LAUFAR_FILTER_ALL ? [runirFilterId] : []}
               onChange={(ids) => onRunirFilterChange(ids[0] ?? LAUFAR_FILTER_ALL)}
               placeholder={terms.runir}
@@ -137,24 +137,24 @@ export function HlidskjalfLaufarRail({
                 {group.label}
               </h3>
               <ul className="space-y-1.5 p-2">
-                {group.waypoints.map((waypoint) => (
-                  <li key={waypoint.id}>
+                {group.laufar.map((lauf) => (
+                  <li key={lauf.id}>
                     <div
                       className={cn(
                         'group flex w-full items-start gap-2 rounded-lg border bg-card p-2 text-left text-xs transition-colors',
-                        selectedId === waypoint.id
+                        selectedId === lauf.id
                           ? 'border-primary/40 bg-primary/10'
                           : 'border-border hover:border-primary/50',
                       )}
                     >
                       <button
                         type="button"
-                        onClick={() => onOpenUrl(waypoint.url)}
+                        onClick={() => onOpenUrl(lauf.url)}
                         className="flex min-w-0 flex-1 items-start gap-2 text-left"
                       >
-                        {waypoint.favicon ? (
+                        {lauf.favicon ? (
                           <img
-                            src={secureRemoteAssetUrl(waypoint.favicon)}
+                            src={secureRemoteAssetUrl(lauf.favicon)}
                             alt=""
                             className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded-sm"
                           />
@@ -163,17 +163,17 @@ export function HlidskjalfLaufarRail({
                         )}
                         <span className="min-w-0 flex-1">
                           <span className="block truncate font-medium">
-                            {waypoint.title || waypoint.url}
+                            {lauf.title || lauf.url}
                           </span>
-                          {waypoint.markers.length > 0 ? (
+                          {lauf.runir.length > 0 ? (
                             <span className="mt-0.5 flex flex-wrap gap-0.5">
-                              {waypoint.markers.slice(0, 2).map((marker) => (
+                              {lauf.runir.slice(0, 2).map((run) => (
                                 <span
-                                  key={marker.id}
+                                  key={run.id}
                                   className="inline-flex items-center gap-0.5 rounded-full bg-muted px-1 py-0.5 text-[9px]"
                                 >
-                                  <MarkerColorSwatch color={marker.color} />
-                                  {marker.name.split('/').pop()}
+                                  <RunColorSwatch color={run.color} />
+                                  {run.name.split('/').pop()}
                                 </span>
                               ))}
                             </span>
@@ -183,7 +183,7 @@ export function HlidskjalfLaufarRail({
                       <ToolbarTooltip label={`Edit ${terms.laufarSingular.toLowerCase()}`}>
                         <button
                           type="button"
-                          onClick={() => onInspect(waypoint.id)}
+                          onClick={() => onInspect(lauf.id)}
                           className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                           aria-label={`Edit ${terms.laufarSingular.toLowerCase()}`}
                         >

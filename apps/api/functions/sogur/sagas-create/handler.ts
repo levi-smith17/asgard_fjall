@@ -22,18 +22,18 @@ export const handler = async (
     const sk = sagaSk(id)
     const now = new Date().toISOString()
 
-    const markerMap = await resolveRunirById(pk, Array.isArray(body.markerIds) ? body.markerIds : [])
-    const markers = [...markerMap.values()]
+    const runMap = await resolveRunirById(pk, Array.isArray(body.runIds) ? body.runIds : [])
+    const runir = [...runMap.values()]
 
-    const trailId =
-      typeof body.trailId === 'string' && body.trailId.length > 0 ? body.trailId : null
+    const greinId =
+      typeof body.greinId === 'string' && body.greinId.length > 0 ? body.greinId : null
 
     const saga = {
       pk,
       sk,
       name: body.name.trim(),
-      trailId,
-      markers,
+      greinId,
+      runir,
       orderedThattrIds: Array.isArray(body.orderedThattrIds)
         ? body.orderedThattrIds.filter((id: unknown) => typeof id === 'string')
         : [],

@@ -1,4 +1,4 @@
-import { isAudrRootName } from '@/lib/audr-marker-root'
+import { isAudrRootName } from '@/lib/audr-run-root'
 import type { Terms } from '@/lib/terminology'
 
 /** Pages that support Greinar and expose a visibility toggle. */
@@ -7,7 +7,7 @@ export const GREIN_PAGE_IDS = ['hlidskjalf', 'sogur', 'audr'] as const
 export type GreinPageId = (typeof GREIN_PAGE_IDS)[number]
 
 /** Minimal Grein shape needed to resolve visibility. */
-type VisibilityTrail = { name: string; hiddenPages?: string[] | null }
+type VisibilityGrein = { name: string; hiddenPages?: string[] | null }
 
 /** Toggle rows for the inspector, labelled with the same terms as the nav. */
 export function greinPageOptions(terms: Terms): { id: GreinPageId; label: string }[] {
@@ -26,13 +26,13 @@ function isKnownPage(value: string): value is GreinPageId {
  * Pages a Grein is hidden from. When `hiddenPages` is unset we fall back to the
  * legacy behavior: the Audr finance Grein is managed on Audr only.
  */
-export function resolveGreinHiddenPages(trail: VisibilityTrail): GreinPageId[] {
-  if (Array.isArray(trail.hiddenPages)) {
-    return trail.hiddenPages.filter(isKnownPage)
+export function resolveGreinHiddenPages(grein: VisibilityGrein): GreinPageId[] {
+  if (Array.isArray(grein.hiddenPages)) {
+    return grein.hiddenPages.filter(isKnownPage)
   }
-  return isAudrRootName(trail.name) ? ['hlidskjalf', 'sogur'] : []
+  return isAudrRootName(grein.name) ? ['hlidskjalf', 'sogur'] : []
 }
 
-export function isGreinVisibleOnPage(trail: VisibilityTrail, page: GreinPageId): boolean {
-  return !resolveGreinHiddenPages(trail).includes(page)
+export function isGreinVisibleOnPage(grein: VisibilityGrein, page: GreinPageId): boolean {
+  return !resolveGreinHiddenPages(grein).includes(page)
 }

@@ -8,6 +8,7 @@ import {
   appendThattrToSagaOrder,
   getSaga,
   removeThattrFromSagaOrder,
+  sagaGreinId,
 } from '../../shared/sagas'
 import { toApiGatewayResponse, ok, badRequest, notFound, serverError } from '../../shared/response'
 
@@ -43,15 +44,15 @@ export const handler = async (
     const prevSagaId =
       typeof existing.sagaId === 'string' && existing.sagaId.length > 0 ? existing.sagaId : null
 
-    const markerMap = await resolveRunirById(pk, Array.isArray(body.markerIds) ? body.markerIds : [])
-    const markers = [...markerMap.values()]
+    const runMap = await resolveRunirById(pk, Array.isArray(body.runIds) ? body.runIds : [])
+    const runir = [...runMap.values()]
 
-    const setExprs: string[] = ['#content = :content', 'markers = :markers', 'updatedAt = :updatedAt']
+    const setExprs: string[] = ['#content = :content', 'runir = :runir', 'updatedAt = :updatedAt']
     const removeExprs: string[] = []
     const exprNames: Record<string, string> = { '#content': 'content' }
     const exprValues: Record<string, unknown> = {
       ':content': body.content,
-      ':markers': markers,
+      ':runir': runir,
       ':updatedAt': new Date().toISOString(),
     }
 
@@ -64,7 +65,7 @@ export const handler = async (
     }
 
     let nextSagaId = prevSagaId
-    let inheritedTrailId: string | null | undefined
+    let inheritedGreinId: string | null | undefined
 
     if ('sagaId' in body) {
       nextSagaId =
@@ -73,8 +74,7 @@ export const handler = async (
       if (nextSagaId) {
         const saga = await getSaga(pk, nextSagaId)
         if (!saga) return toApiGatewayResponse(notFound('Saga not found'))
-        inheritedTrailId =
-          typeof saga.trailId === 'string' && saga.trailId.length > 0 ? saga.trailId : null
+        inheritedGreinId = sagaGreinId(saga)
         setExprs.push('sagaId = :sagaId')
         exprValues[':sagaId'] = nextSagaId
       } else {
@@ -82,26 +82,26 @@ export const handler = async (
       }
     }
 
-    // When attaching/changing sagaId, inherit saga.trailId. Otherwise honor body.trailId.
-    if (inheritedTrailId !== undefined) {
-      if (inheritedTrailId) {
-        setExprs.push('trailId = :trailId')
-        exprValues[':trailId'] = inheritedTrailId
+    // When attaching/changing sagaId, inherit saga.greinId. Otherwise honor body.greinId.
+    if (inheritedGreinId !== undefined) {
+      if (inheritedGreinId) {
+        setExprs.push('greinId = :greinId')
+        exprValues[':greinId'] = inheritedGreinId
       } else {
-        removeExprs.push('trailId')
+        removeExprs.push('greinId')
       }
-    } else if (body.trailId) {
-      setExprs.push('trailId = :trailId')
-      exprValues[':trailId'] = body.trailId
+    } else if (body.greinId) {
+      setExprs.push('greinId = :greinId')
+      exprValues[':greinId'] = body.greinId
     } else {
-      removeExprs.push('trailId')
+      removeExprs.push('greinId')
     }
 
-    if (body.waypointId) {
-      setExprs.push('waypointId = :waypointId')
-      exprValues[':waypointId'] = body.waypointId
+    if (body.laufId) {
+      setExprs.push('laufId = :laufId')
+      exprValues[':laufId'] = body.laufId
     } else {
-      removeExprs.push('waypointId')
+      removeExprs.push('laufId')
     }
 
     let UpdateExpression = `SET ${setExprs.join(', ')}`

@@ -1,43 +1,43 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeFjallLogMarkers } from './data-api'
+import { normalizeFjallLogRunir } from './data-api'
 
-describe('normalizeFjallLogMarkers', () => {
+describe('normalizeFjallLogRunir', () => {
   it('normalizes flat embedded Run snapshots', () => {
     expect(
-      normalizeFjallLogMarkers([
+      normalizeFjallLogRunir([
         { id: 'r1', name: 'Alpha', color: '#111', icon: 'star' },
         { id: 'r2', name: 'Beta', color: '#222' },
       ]),
     ).toEqual([
       {
-        markerId: 'r1',
-        marker: { id: 'r1', name: 'Alpha', color: '#111', icon: 'star' },
+        runId: 'r1',
+        run: { id: 'r1', name: 'Alpha', color: '#111', icon: 'star' },
       },
       {
-        markerId: 'r2',
-        marker: { id: 'r2', name: 'Beta', color: '#222', icon: null },
+        runId: 'r2',
+        run: { id: 'r2', name: 'Beta', color: '#222', icon: null },
       },
     ])
   })
 
   it('normalizes legacy junction shapes', () => {
     expect(
-      normalizeFjallLogMarkers([
+      normalizeFjallLogRunir([
         {
-          markerId: 'r1',
-          marker: { id: 'r1', name: 'Alpha', color: '#111', icon: null },
+          runId: 'r1',
+          run: { id: 'r1', name: 'Alpha', color: '#111', icon: null },
         },
       ]),
     ).toEqual([
       {
-        markerId: 'r1',
-        marker: { id: 'r1', name: 'Alpha', color: '#111', icon: null },
+        runId: 'r1',
+        run: { id: 'r1', name: 'Alpha', color: '#111', icon: null },
       },
     ])
   })
 
   it('skips invalid entries', () => {
-    expect(normalizeFjallLogMarkers([null, 'x', { name: 'no-id' }, { id: 'only-id' }])).toEqual([])
-    expect(normalizeFjallLogMarkers(undefined)).toEqual([])
+    expect(normalizeFjallLogRunir([null, 'x', { name: 'no-id' }, { id: 'only-id' }])).toEqual([])
+    expect(normalizeFjallLogRunir(undefined)).toEqual([])
   })
 })

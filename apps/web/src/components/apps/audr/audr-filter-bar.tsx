@@ -9,7 +9,7 @@ import { STUDIO_CONTEXT_BAR_CLASS } from '@/components/core/layout/studio-data-t
 import { Select } from '@/components/core/ui/select'
 import { StudioPagination } from '@/components/core/ui/studio-pagination'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
-import { MarkerPicker } from '@/components/apps/marker-picker'
+import { RunPicker } from '@/components/apps/run-picker'
 import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import {
   AUDR_UNASSIGNED_SJODR,
@@ -18,7 +18,7 @@ import {
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
 import type { FjallSjodrView } from '@/lib/data-types'
-import type { AudrMarker } from './audr-types'
+import type { AudrRun } from './audr-types'
 import { resolveSjodrColor } from '@/lib/sjodr-color'
 
 export function AudrFilterBar({
@@ -27,13 +27,13 @@ export function AudrFilterBar({
   onNextMonth,
   search,
   onSearchChange,
-  markerFilter,
-  onMarkerFilterChange,
+  runFilter,
+  onRunFilterChange,
   sjodrFilter,
   onSjodrFilterChange,
   groupBy,
   onGroupByChange,
-  markers,
+  runir,
   funds,
   filtersActive,
   onClearFilters,
@@ -46,13 +46,13 @@ export function AudrFilterBar({
   onNextMonth: () => void
   search: string
   onSearchChange: (value: string) => void
-  markerFilter: string
-  onMarkerFilterChange: (value: string) => void
+  runFilter: string
+  onRunFilterChange: (value: string) => void
   sjodrFilter: string
   onSjodrFilterChange: (value: string) => void
   groupBy: AudrCanvasGroupBy
   onGroupByChange: (value: AudrCanvasGroupBy) => void
-  markers: AudrMarker[]
+  runir: AudrRun[]
   funds: FjallSjodrView[]
   filtersActive: boolean
   onClearFilters: () => void
@@ -65,7 +65,7 @@ export function AudrFilterBar({
   const SjodrIcon = ASGARD_ENTITY_ICONS.sjodr
   const [searchExpanded, setSearchExpanded] = useState(
     () =>
-      search.trim().length > 0 || markerFilter !== 'all' || sjodrFilter !== 'all' || groupBy !== 'run',
+      search.trim().length > 0 || runFilter !== 'all' || sjodrFilter !== 'all' || groupBy !== 'run',
   )
 
   const sjodrOptions = [
@@ -107,12 +107,12 @@ export function AudrFilterBar({
             onClearAll={onClearFilters}
             expandedPanel={
               <FilterPaletteStack>
-                {markers.length > 0 ? (
+                {runir.length > 0 ? (
                   <FilterPaletteField label={terms.runSingular}>
-                    <MarkerPicker
-                      markers={markers}
-                      selected={markerFilter !== 'all' ? [markerFilter] : []}
-                      onChange={(ids) => onMarkerFilterChange(ids[0] ?? 'all')}
+                    <RunPicker
+                      runir={runir}
+                      selected={runFilter !== 'all' ? [runFilter] : []}
+                      onChange={(ids) => onRunFilterChange(ids[0] ?? 'all')}
                       singleSelect
                       toolbar
                       placeholder={`All ${terms.runir}`}

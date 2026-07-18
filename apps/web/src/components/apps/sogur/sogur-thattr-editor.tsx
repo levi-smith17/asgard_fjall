@@ -60,9 +60,9 @@ export function SogurThattrEditor({
         title: current.title,
         content: nextContent,
         sagaId: current.sagaId,
-        trailId: current.trailId,
-        waypointId: current.waypointId,
-        markerIds: current.markers.map((marker) => marker.markerId),
+        greinId: current.greinId,
+        laufId: current.laufId,
+        runIds: current.runir.map((run) => run.runId),
       })
       setSavedContent(saved.content)
       savedContentRef.current = saved.content
