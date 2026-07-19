@@ -1,4 +1,4 @@
-/** DynamoDB sort-key prefixes — Asgard greenfield (remap from Cairn on data cutover). */
+/** DynamoDB sort-key prefixes — Asgard greenfield (remapped from the legacy source schema). */
 export const LAUF_PREFIX = 'LAUF#'
 export const GREIN_PREFIX = 'GREIN#'
 export const RUN_PREFIX = 'RUN#'
@@ -33,7 +33,7 @@ export function idunnSk(id: string): string {
   return `${IDUNN_PREFIX}${id}`
 }
 
-/** Composite sort key: SKATT#{runId}#{month}#{year} (mirrors Cairn's CACHE#{runId}#{month}#{year}). */
+/** Composite sort key: SKATT#{runId}#{month}#{year} (mirrors legacy CACHE#{runId}#{month}#{year}). */
 export function skattSk(runId: string, month: number | string, year: number | string): string {
   return `${SKATT_PREFIX}${runId}#${month}#${year}`
 }
@@ -46,7 +46,7 @@ export function sendibodSk(id: string): string {
   return `${SENDIBOD_PREFIX}${id}`
 }
 
-/** Composite sort key: SENDIBOD#{signalId}#REPLY#{replyId} (mirrors Cairn's SIGNAL#{id}#REPLY#{replyId}). */
+/** Composite sort key: SENDIBOD#{signalId}#REPLY#{replyId} (mirrors legacy SIGNAL#{id}#REPLY#{replyId}). */
 export function sendibodReplySk(signalId: string, replyId: string): string {
   return `${SENDIBOD_PREFIX}${signalId}#REPLY#${replyId}`
 }

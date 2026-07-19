@@ -23,7 +23,7 @@ export interface CreateContactSignalResult {
 
 /**
  * Creates an inbound Ordstirr contact message as a Sendibod thread (SENDIBOD# — mirrors
- * Cairn's SIGNAL#). Feeds directly into the existing Sendibod inbox handlers.
+ * legacy SIGNAL#). Feeds directly into the existing Sendibod inbox handlers.
  */
 export async function createContactSignal(
   input: CreateContactSignalInput,

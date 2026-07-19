@@ -63,7 +63,7 @@ async function davRequest(
     const headers: Record<string, string> = {
         Authorization: auth,
         Accept: 'application/xml,text/xml',
-        'User-Agent': 'Cairn-CalDAV/1.0',
+        'User-Agent': 'Fjall-CalDAV/1.0',
     }
     if (body) headers['Content-Type'] = 'application/xml; charset=utf-8'
     if (depth) headers.Depth = depth

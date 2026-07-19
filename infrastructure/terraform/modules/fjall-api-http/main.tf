@@ -51,7 +51,7 @@ locals {
       policy    = "write"
     }
 
-    # Ordstirr (Cairn's manifest) public routes — résumé + companion journey pages, contact form.
+    # Ordstirr public routes — résumé + companion journey pages, contact form.
     ordstirr-public-get = {
       route_key = "GET /public/ordstirr/{username}"
       memory    = 256
@@ -182,7 +182,7 @@ locals {
       policy    = "write"
     }
 
-    # Audr (Cairn's burn/supplylines/cache/sjodr) — Asgard naming.
+    # Audr — Surtr, Idunn, Skatt, and Sjodr routes.
     surtr-get = {
       route_key = "GET /surtr"
       memory    = 256
@@ -292,7 +292,7 @@ locals {
       policy    = "write"
     }
 
-    # Sendibod (Cairn's signals) — Asgard naming. Public thread routes live in public_routes.
+    # Sendibod messaging. Public thread routes live in public_routes.
     sendibod-get = {
       route_key = "GET /sendibod"
       memory    = 256
@@ -314,7 +314,7 @@ locals {
       policy    = "write"
     }
 
-    # Ordstirr (Cairn's manifest) — Asgard naming. Résumé/CV builder. Public routes live in public_routes.
+    # Ordstirr résumé/CV builder. Public routes live in public_routes.
     ordstirr-get = {
       route_key = "GET /ordstirr"
       memory    = 256
@@ -443,7 +443,7 @@ locals {
       s3_access = true
     }
 
-    # Sögur (Cairn's logs) — Asgard naming.
+    # Sögur journal routes.
     # Saga routes are registered before /sogur/{id} so the static "sagas"
     # segment cannot be captured as a Thattr id.
     sogur-get = {
@@ -498,7 +498,7 @@ locals {
       s3_access = true
     }
 
-    # Nidjatal (Cairn's headwaters) — Asgard naming.
+    # Nidjatal knowledge graph.
     nidjatal-kin-get = {
       route_key = "GET /nidjatal/kin"
       memory    = 256
@@ -527,7 +527,7 @@ locals {
       policy    = "read"
     }
 
-    # Dagatal (Cairn's itinerary) — Asgard naming. CalDAV/ICS calendar sync.
+    # Dagatal CalDAV/ICS calendar sync.
     dagatal-events-get = {
       route_key  = "GET /dagatal/events"
       memory     = 512
@@ -569,7 +569,7 @@ locals {
       policy    = "write"
     }
 
-    # Stjornur (Cairn's starfield) — supply-chain network planner. Outposts stay on facility keys per product plan.
+    # Stjornur supply-chain network planner. Outposts stay on facility keys per product plan.
     stjornur-networks-get = {
       route_key = "GET /stjornur/networks"
       memory    = 128
@@ -681,7 +681,7 @@ locals {
       policy    = "write"
     }
 
-    # Hlidskjalf (Cairn's basecamp) — dashboard aggregate reads.
+    # Hlidskjalf dashboard aggregate reads.
     hlidskjalf-get = {
       route_key = "GET /hlidskjalf"
       memory    = 256

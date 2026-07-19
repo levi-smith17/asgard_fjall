@@ -9,7 +9,7 @@ export interface ResolvedRun {
   icon?: string
 }
 
-/** Port of Cairn `shared/runir.ts#resolveRunirById`, remapped to `RUN#` keys. */
+/** Port of the legacy `shared/runir.ts#resolveRunirById`, remapped to `RUN#` keys. */
 export async function resolveRunirById(
   pk: string,
   runIds: string[],
