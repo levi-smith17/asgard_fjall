@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { X, Search, Plus, Pencil, Trash2 } from 'lucide-react'
+import { X, Search, Plus, Pencil } from 'lucide-react'
 import { Button } from '@/components/core/ui/button'
 import { Input } from '@/components/core/ui/input'
 import {
@@ -102,6 +102,7 @@ export function ResourcesPanel({ resources, onClose: _onClose, onRefresh }: Reso
     return (
       <div className="flex h-full flex-col">
         <InspectorFormHeader
+          eyebrow="Inspector"
           title={subMode.resource?.id ? 'Edit Resource' : 'Add Resource'}
           onBack={() => setSubMode({ mode: 'list' })}
         />
@@ -131,31 +132,26 @@ export function ResourcesPanel({ resources, onClose: _onClose, onRefresh }: Reso
     return (
       <div className="flex h-full flex-col">
         <InspectorFormHeader
-          title={resource.name}
+          eyebrow="Inspector"
+          title="View Resource"
           onBack={() => setSubMode({ mode: 'list' })}
           actions={
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={SF_ICON_CONTROL}
-                onClick={() => setSubMode({ mode: 'form', resource })}
-              >
-                <Pencil className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={SF_ICON_CONTROL}
-                onClick={() => setDeleteTarget({ id: resource.id, name: resource.name })}
-              >
-                <Trash2 className="h-3.5 w-3.5 text-destructive" />
-              </Button>
-            </>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={SF_ICON_CONTROL}
+              onClick={() => setSubMode({ mode: 'form', resource })}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
           }
         />
 
-        <div className="flex-1 overflow-y-auto px-5 py-4">
+        <div className="shrink-0 border-b border-border px-5 py-3">
+          <p className="truncate text-sm font-medium text-foreground">{resource.name}</p>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
           <div className="mb-3 flex items-center gap-2">
             <Badge variant="outline" className="text-xs">{resource.abbreviation}</Badge>
             <span className="text-xs text-muted-foreground">{resource.type}</span>
@@ -177,19 +173,33 @@ export function ResourcesPanel({ resources, onClose: _onClose, onRefresh }: Reso
           )}
         </div>
 
+        <div className="shrink-0 border-t border-border px-5 py-4">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="w-full border-destructive/40 text-destructive hover:bg-destructive/10"
+            onClick={() => setDeleteTarget({ id: resource.id, name: resource.name })}
+          >
+            Delete Resource
+          </Button>
+        </div>
+
         {deleteDialog}
       </div>
     )
   }
 
   const displayCount = isSearching ? filteredResources.length : resources.length
+  const countLabel = `${displayCount} resource${displayCount !== 1 ? 's' : ''}${
+    isSearching && filteredResources.length < resources.length ? ' (filtered)' : ''
+  }`
 
   return (
     <div className="flex h-full flex-col">
       <InspectorFormHeader
-        title={`${displayCount} resource${displayCount !== 1 ? 's' : ''}${
-          isSearching && filteredResources.length < resources.length ? ' (filtered)' : ''
-        }`}
+        eyebrow="Inspector"
+        title="Manage Resources"
         showBack={false}
         actions={
           <Tooltip>
@@ -207,6 +217,10 @@ export function ResourcesPanel({ resources, onClose: _onClose, onRefresh }: Reso
           </Tooltip>
         }
       />
+
+      <div className="shrink-0 border-b border-border px-5 py-3">
+        <p className="truncate text-sm font-medium text-foreground">{countLabel}</p>
+      </div>
 
       <div className="shrink-0 border-b border-border/50 px-3 py-2">
         <div className="relative">

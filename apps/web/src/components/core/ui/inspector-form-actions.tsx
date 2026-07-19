@@ -45,12 +45,15 @@ export function InspectorFormActions({
 
 export function InspectorFormHeader({
   title,
+  eyebrow,
   icon: Icon,
   onBack,
   showBack = true,
   actions,
 }: {
   title: string
+  /** When set, renders the standard 2-row inspector chrome (eyebrow + title). */
+  eyebrow?: string
   icon?: LucideIcon
   onBack?: () => void
   showBack?: boolean
@@ -64,7 +67,16 @@ export function InspectorFormHeader({
         </Button>
       ) : null}
       {Icon ? <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /> : null}
-      <span className="min-w-0 flex-1 truncate text-sm font-medium">{title}</span>
+      {eyebrow ? (
+        <div className="min-w-0 flex-1 leading-tight">
+          <p className="truncate text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {eyebrow}
+          </p>
+          <p className="truncate text-sm font-semibold text-foreground">{title}</p>
+        </div>
+      ) : (
+        <span className="min-w-0 flex-1 truncate text-sm font-medium">{title}</span>
+      )}
       {actions}
     </div>
   )

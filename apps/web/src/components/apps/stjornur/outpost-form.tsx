@@ -118,6 +118,7 @@ export function OutpostForm({ outpost, networkId, outposts, systems, systemCrudC
     <>
       <div className="flex h-full flex-col">
         <InspectorFormHeader
+          eyebrow="Inspector"
           title={outpost ? 'Edit Outpost' : 'Add Outpost'}
           showBack={false}
         />

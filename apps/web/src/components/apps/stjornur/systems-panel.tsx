@@ -175,7 +175,8 @@ export function SystemsPanel({
       <>
         <div className="flex h-full flex-col">
           <InspectorFormHeader
-            title={activeSystem.name}
+            eyebrow="Inspector"
+            title="Manage Planets"
             onBack={goBack}
             actions={
               <Tooltip>
@@ -193,6 +194,10 @@ export function SystemsPanel({
               </Tooltip>
             }
           />
+
+          <div className="shrink-0 border-b border-border px-5 py-3">
+            <p className="truncate text-sm font-medium text-foreground">{activeSystem.name}</p>
+          </div>
 
           <div className="flex-1 overflow-y-auto">
             {addingPlanet && (
@@ -267,7 +272,8 @@ export function SystemsPanel({
     <>
       <div className="flex h-full flex-col">
         <InspectorFormHeader
-          title={`${sortedSystems.length} system${sortedSystems.length !== 1 ? 's' : ''}`}
+          eyebrow="Inspector"
+          title="Manage Systems"
           showBack={false}
           actions={
             <Tooltip>
@@ -285,6 +291,12 @@ export function SystemsPanel({
             </Tooltip>
           }
         />
+
+        <div className="shrink-0 border-b border-border px-5 py-3">
+          <p className="truncate text-sm font-medium text-foreground">
+            {`${sortedSystems.length} system${sortedSystems.length !== 1 ? 's' : ''}`}
+          </p>
+        </div>
 
         <div className="flex-1 overflow-y-auto">
           {sortedSystems.length === 0 && !addingSystem && (

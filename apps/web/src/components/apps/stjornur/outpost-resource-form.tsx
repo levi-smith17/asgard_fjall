@@ -302,6 +302,7 @@ export function OutpostResourceForm({
     <>
       <div className="flex h-full flex-col">
         <InspectorFormHeader
+          eyebrow="Inspector"
           title={isEditing ? 'Edit Resource' : 'Add Resource'}
           showBack={false}
         />

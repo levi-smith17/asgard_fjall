@@ -59,7 +59,11 @@ export function NetworkInspector({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <InspectorFormHeader title={isNew ? 'New Network' : network.name} showBack={false} />
+      <InspectorFormHeader
+        eyebrow="Inspector"
+        title={isNew ? 'Add Network' : 'Edit Network'}
+        showBack={false}
+      />
       <Form {...form}>
         <form
           className="flex min-h-0 flex-1 flex-col"
