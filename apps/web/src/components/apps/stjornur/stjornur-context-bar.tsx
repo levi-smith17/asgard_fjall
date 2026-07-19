@@ -21,7 +21,7 @@ export function StjornurContextBar({
   return (
     <StudioContextBar
       aria-label="Stjornur header"
-      title={terms.starfield}
+      title={terms.stjornur}
       subtitle="Outpost networks and resource planning"
       metadata={
         outpostCount != null ? (

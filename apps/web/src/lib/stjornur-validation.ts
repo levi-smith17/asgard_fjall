@@ -1,10 +1,10 @@
-import type { SfOutpost, SfOutpostResource, SfOutpostSupply, SfResource } from '@/lib/starfield-types'
+import type { StjornurOutpost, StjornurOutpostResource, StjornurOutpostSupply, StjornurResource } from '@/lib/stjornur-types'
 import {
   type OutpostWithId,
   getIncomingSupplyLines,
   normalizeOutpostResource,
   resolveSourceOutpostId,
-} from './starfield-utils'
+} from './stjornur-utils'
 
 export type ValidationStatus = 'satisfied' | 'partial' | 'missing'
 
@@ -29,8 +29,8 @@ function worstStatus(a: ValidationStatus, b: ValidationStatus): ValidationStatus
 function validateResourceAtOutpost(
   resourceId: string,
   outpostId: string,
-  outpostResourceMaps: Map<string, Map<string, SfOutpostResource>>,
-  resourceDefMap: Map<string, SfResource>,
+  outpostResourceMaps: Map<string, Map<string, StjornurOutpostResource>>,
+  resourceDefMap: Map<string, StjornurResource>,
   outposts: OutpostWithId[],
   visited: Set<string>
 ): ResourceValidation {
@@ -111,9 +111,9 @@ function validateResourceAtOutpost(
 
 function validateIncomingSupplyLine(
   resourceId: string,
-  supply: SfOutpostSupply,
-  outpostResourceMaps: Map<string, Map<string, SfOutpostResource>>,
-  resourceDefMap: Map<string, SfResource>,
+  supply: StjornurOutpostSupply,
+  outpostResourceMaps: Map<string, Map<string, StjornurOutpostResource>>,
+  resourceDefMap: Map<string, StjornurResource>,
   outposts: OutpostWithId[],
   visited: Set<string>
 ): ResourceValidation {
@@ -132,10 +132,10 @@ function validateIncomingSupplyLine(
 }
 
 export function validateNetwork(
-  outposts: (SfOutpost & { id: string })[],
-  resources: SfResource[]
+  outposts: (StjornurOutpost & { id: string })[],
+  resources: StjornurResource[]
 ): Map<string, OutpostValidation> {
-  const resourceDefMap = new Map<string, SfResource>()
+  const resourceDefMap = new Map<string, StjornurResource>()
   for (const r of resources) {
     const id = r.sk.replace(/^RESOURCE#/, '')
     resourceDefMap.set(id, r)
@@ -143,9 +143,9 @@ export function validateNetwork(
 
   const outpostsWithId = outposts as OutpostWithId[]
 
-  const outpostResourceMaps = new Map<string, Map<string, SfOutpostResource>>()
+  const outpostResourceMaps = new Map<string, Map<string, StjornurOutpostResource>>()
   for (const outpost of outpostsWithId) {
-    const map = new Map<string, SfOutpostResource>()
+    const map = new Map<string, StjornurOutpostResource>()
     for (const fr of outpost.resources) {
       map.set(fr.resourceId, normalizeOutpostResource(fr))
     }

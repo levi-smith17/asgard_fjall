@@ -14,7 +14,7 @@ export type Terms = {
   /** Sogur content units: Thaettir/Thattr or Notes/Note. */
   thaettir: string
   thattrSingular: string
-  starfield: string
+  stjornur: string
   /** Nidjatal — genealogy app (Asgard: Nidjatal). */
   nidjatal: string
   nidjatalPerson: string
@@ -93,7 +93,7 @@ const ASGARD: Terms = {
   notesSingular: 'Saga',
   thaettir: 'Thaettir',
   thattrSingular: 'Thattr',
-  starfield: 'Stjörnur',
+  stjornur: 'Stjörnur',
   nidjatal: 'Nidjatal',
   nidjatalPerson: 'Ættingi',
   nidjatalPersonPlural: 'Ættingjar',
@@ -157,7 +157,7 @@ const STANDARD: Terms = {
   notesSingular: 'Notebook',
   thaettir: 'Notes',
   thattrSingular: 'Note',
-  starfield: 'Starfield',
+  stjornur: 'Starfield',
   nidjatal: 'Genealogy',
   nidjatalPerson: 'Person',
   nidjatalPersonPlural: 'People',

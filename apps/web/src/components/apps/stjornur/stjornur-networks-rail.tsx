@@ -1,5 +1,5 @@
 import { Network, Plus, Settings } from 'lucide-react'
-import type { SfNetwork } from '@/lib/starfield-types'
+import type { StjornurNetwork } from '@/lib/stjornur-types'
 import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
 import { Button } from '@/components/core/ui/button'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
@@ -16,7 +16,7 @@ export function StjornurNetworksRail({
   onInspect,
   onNew,
 }: {
-  networks: SfNetwork[]
+  networks: StjornurNetwork[]
   selectedId: string | null
   onSelect: (id: string) => void
   onInspect: (id: string) => void

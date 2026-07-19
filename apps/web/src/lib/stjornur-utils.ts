@@ -1,9 +1,9 @@
-import type { SfOutpost, SfOutpostResource, SfOutpostSupply } from '@/lib/starfield-types'
+import type { StjornurOutpost, StjornurOutpostResource, StjornurOutpostSupply } from '@/lib/stjornur-types'
 
-export type OutpostWithId = SfOutpost & { id: string }
+export type OutpostWithId = StjornurOutpost & { id: string }
 
 /** Normalize legacy flat fromPlanet/relay into supplies[]. */
-export function normalizeOutpostResource(fr: SfOutpostResource): SfOutpostResource {
+export function normalizeOutpostResource(fr: StjornurOutpostResource): StjornurOutpostResource {
   if (fr.supplies?.length) return fr
   if (fr.fromPlanet || fr.fromOutpostId) {
     return {
@@ -19,16 +19,16 @@ export function normalizeOutpostResource(fr: SfOutpostResource): SfOutpostResour
   return { ...fr, supplies: [] }
 }
 
-export function getSupplyLines(fr: SfOutpostResource): SfOutpostSupply[] {
+export function getSupplyLines(fr: StjornurOutpostResource): StjornurOutpostSupply[] {
   const normalized = normalizeOutpostResource(fr)
   return normalized.supplies ?? []
 }
 
 /** Fill fromPlanet/fromSystem from fromOutpostId when only the id was persisted. */
 export function enrichSupplyLine(
-  supply: SfOutpostSupply,
+  supply: StjornurOutpostSupply,
   outposts: OutpostWithId[]
-): SfOutpostSupply {
+): StjornurOutpostSupply {
   if (supply.fromPlanet && supply.fromSystem) return supply
   if (supply.fromOutpostId) {
     const src = outposts.find(o => o.id === supply.fromOutpostId)
@@ -44,9 +44,9 @@ export function enrichSupplyLine(
 }
 
 export function getEnrichedSupplyLines(
-  fr: SfOutpostResource,
+  fr: StjornurOutpostResource,
   outposts: OutpostWithId[]
-): SfOutpostSupply[] {
+): StjornurOutpostSupply[] {
   return getSupplyLines(fr).map(s => enrichSupplyLine(s, outposts))
 }
 
@@ -55,16 +55,16 @@ function norm(s: string | null | undefined): string {
 }
 
 export function getIncomingSupplyLines(
-  fr: SfOutpostResource,
+  fr: StjornurOutpostResource,
   outposts: OutpostWithId[]
-): SfOutpostSupply[] {
+): StjornurOutpostSupply[] {
   return getSupplyLines(fr)
     .map(s => enrichSupplyLine(s, outposts))
     .filter(isIncomingSupplyLine)
 }
 
 export function resolveSourceOutpostId(
-  supply: SfOutpostSupply,
+  supply: StjornurOutpostSupply,
   outposts: OutpostWithId[]
 ): string | null {
   const s = enrichSupplyLine(supply, outposts)
@@ -92,7 +92,7 @@ export function resolveSourceOutpostId(
 
 /** Resolve the on-diagram relay hop for transfer outbound / export arrows. */
 export function resolveRelayOutpostId(
-  supply: SfOutpostSupply,
+  supply: StjornurOutpostSupply,
   outposts: OutpostWithId[]
 ): string | null {
   const relay = supply.relay
@@ -117,7 +117,7 @@ export function resolveRelayOutpostId(
 
 /** Outpost that consumes a transfer station for export (relay hop when set, else source). */
 export function resolveTransferOutpostId(
-  supply: SfOutpostSupply,
+  supply: StjornurOutpostSupply,
   outposts: OutpostWithId[]
 ): string | null {
   const relayId = resolveRelayOutpostId(supply, outposts)
@@ -125,7 +125,7 @@ export function resolveTransferOutpostId(
   return resolveSourceOutpostId(supply, outposts)
 }
 
-export function isIncomingSupplyLine(supply: SfOutpostSupply): boolean {
+export function isIncomingSupplyLine(supply: StjornurOutpostSupply): boolean {
   return !!(supply.fromOutpostId || supply.fromPlanet)
 }
 

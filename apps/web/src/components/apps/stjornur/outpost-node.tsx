@@ -1,8 +1,8 @@
 import { memo, useMemo } from 'react'
 import { Handle, Position, type NodeProps } from 'reactflow'
 import { Pencil, Plus, House, Factory, Cuboid, Droplet, Wind, Component, MoveLeft, MoveRight, CornerLeftUp, type LucideIcon } from 'lucide-react'
-import type { SfOutpost, SfOutpostResource, SfResource } from '@/lib/starfield-types'
-import type { OutpostValidation, ValidationStatus } from '@/lib/starfield-validation'
+import type { StjornurOutpost, StjornurOutpostResource, StjornurResource } from '@/lib/stjornur-types'
+import type { OutpostValidation, ValidationStatus } from '@/lib/stjornur-validation'
 import {
   countTransferStations,
   getShippedOutResourceIds,
@@ -10,14 +10,14 @@ import {
   getSupplyLines,
   normalizeOutpostResource,
   type OutpostWithId,
-} from '@/lib/starfield-utils'
+} from '@/lib/stjornur-utils'
 import { cn } from '@/lib/utils'
 import { SF_ICON_CONTROL } from './constants'
 
 export interface OutpostNodeData {
-  outpost: SfOutpost & { id: string }
-  outposts: (SfOutpost & { id: string })[]
-  resources: SfResource[]
+  outpost: StjornurOutpost & { id: string }
+  outposts: (StjornurOutpost & { id: string })[]
+  resources: StjornurResource[]
   validation: OutpostValidation | undefined
   filterActive?: boolean
   filterMatched?: boolean
@@ -45,7 +45,7 @@ const RESOURCE_TYPE_ICON: Record<string, LucideIcon> = {
   manufactured: Component,
 }
 
-function getSourceLabel(fr: SfOutpostResource, status: ValidationStatus | undefined): string {
+function getSourceLabel(fr: StjornurOutpostResource, status: ValidationStatus | undefined): string {
   if (fr.onsite) return '[onsite]'
   if (fr.origin) return '[origin]'
   const supplies = getSupplyLines(fr)

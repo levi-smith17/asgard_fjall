@@ -68,7 +68,7 @@ export function getFjallNavGroups(terms: Terms): FjallNavGroup[] {
       icon: Bolt,
       items: [
         { key: 'nidjatal', label: terms.nidjatal, href: '/nidjatal', icon: TreePine },
-        { key: 'stjornur', label: terms.starfield, href: '/stjornur', icon: Rocket },
+        { key: 'stjornur', label: terms.stjornur, href: '/stjornur', icon: Rocket },
         {
           key: 'volundr',
           label: terms.forge,

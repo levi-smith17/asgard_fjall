@@ -2,20 +2,20 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { StarfieldSkeleton } from '@/components/core/ui/studio-skeletons'
+import { StudioCanvasSkeleton } from '@/components/core/ui/studio-skeletons'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import {
-  StarfieldClient,
-  type StarfieldInspectorMode,
-} from '@/components/apps/stjornur/starfield-client'
-import { StarfieldControlBar } from '@/components/apps/stjornur/starfield-control-bar'
+  StjornurClient,
+  type StjornurInspectorMode,
+} from '@/components/apps/stjornur/stjornur-client'
+import { StjornurControlBar } from '@/components/apps/stjornur/stjornur-control-bar'
 import { StjornurContextBar } from '@/components/apps/stjornur/stjornur-context-bar'
 import { StjornurNetworksRail } from '@/components/apps/stjornur/stjornur-networks-rail'
 import { TooltipProvider } from '@/components/core/ui/tooltip'
 import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
 import { fetchFjallStatus } from '@/lib/data-api'
-import { fetchStarfieldData } from '@/lib/stjornur-api'
+import { fetchStjornurData } from '@/lib/stjornur-api'
 
 function networkIdFromSk(sk: string): string {
   return sk.replace(/^SF#NETWORK#/, '')
@@ -25,7 +25,7 @@ export function StjornurPage() {
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const [inspectorPinned, setInspectorPinned] = useInspectorPinned()
-  const [inspectorMode, setInspectorMode] = useState<StarfieldInspectorMode>({ mode: 'closed' })
+  const [inspectorMode, setInspectorMode] = useState<StjornurInspectorMode>({ mode: 'closed' })
   const [inspectorContent, setInspectorContent] = useState<React.ReactNode>(null)
   const [filterQuery, setFilterQuery] = useState('')
 
@@ -38,15 +38,15 @@ export function StjornurPage() {
     staleTime: 60_000,
   })
 
-  const starfieldQuery = useQuery({
-    queryKey: ['starfield'],
-    queryFn: fetchStarfieldData,
+  const stjornurQuery = useQuery({
+    queryKey: ['stjornur'],
+    queryFn: fetchStjornurData,
     enabled: statusQuery.data?.configured === true,
   })
 
   const configured = statusQuery.data?.configured === true
-  const loading = statusQuery.isLoading || (configured && starfieldQuery.isLoading)
-  const data = starfieldQuery.data
+  const loading = statusQuery.isLoading || (configured && stjornurQuery.isLoading)
+  const data = stjornurQuery.data
 
   const networks = data?.networks ?? []
   const outposts = data?.outposts ?? []
@@ -79,7 +79,7 @@ export function StjornurPage() {
   )
 
   const refresh = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ['starfield'] })
+    await queryClient.invalidateQueries({ queryKey: ['stjornur'] })
   }, [queryClient])
 
   const inspectorOpen = inspectorPinned || inspectorMode.mode !== 'closed'
@@ -98,7 +98,7 @@ export function StjornurPage() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [dismissInspector])
 
-  function openMode(next: StarfieldInspectorMode) {
+  function openMode(next: StjornurInspectorMode) {
     setInspectorMode((current) => {
       if (
         current.mode === next.mode &&
@@ -151,13 +151,13 @@ export function StjornurPage() {
         }
         canvas={
           loading ? (
-            <StarfieldSkeleton />
+            <StudioCanvasSkeleton />
           ) : !configured ? (
             <DataNotConfiguredNotice />
           ) : (
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <div data-inspector-dismiss-ignore>
-                <StarfieldControlBar
+                <StjornurControlBar
                   search={filterQuery}
                   onSearchChange={setFilterQuery}
                   onManageResources={() => openMode({ mode: 'resources' })}
@@ -167,7 +167,7 @@ export function StjornurPage() {
                 />
               </div>
               <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                <StarfieldClient
+                <StjornurClient
                   networks={networks}
                   outposts={outposts}
                   resources={data?.resources ?? []}

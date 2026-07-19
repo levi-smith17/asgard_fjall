@@ -15,6 +15,8 @@ describe('mapFjallApiPathToAsgard', () => {
     expect(mapFjallApiPathToAsgard('/idunn/summary')).toBe('/idunn/summary')
     expect(mapFjallApiPathToAsgard('/skatt')).toBe('/skatt')
     expect(mapFjallApiPathToAsgard('/starfield/networks')).toBe('/stjornur/networks')
+    expect(mapFjallApiPathToAsgard('/stjornur/networks')).toBe('/stjornur/networks')
+    expect(mapFjallApiPathToAsgard('/headwaters/kin')).toBe('/nidjatal/kin')
     expect(mapFjallApiPathToAsgard('/settings/waypoints')).toBe('/thing/laufar')
     expect(mapFjallApiPathToAsgard('/settings/laufar')).toBe('/thing/laufar')
     expect(mapFjallApiPathToAsgard('/dagatal/events')).toBe('/dagatal/events')

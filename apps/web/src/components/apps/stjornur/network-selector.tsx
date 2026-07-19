@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { ChevronDown, Check, Pencil, Trash2, Plus, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/core/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/core/ui/popover'
-import type { SfNetwork } from '@/lib/starfield-types'
+import type { StjornurNetwork } from '@/lib/stjornur-types'
 import { NetworkForm } from './network-form'
 import { SF_CONTROL, SF_ICON_CONTROL } from './constants'
 
 interface NetworkSelectorProps {
-  networks: SfNetwork[]
+  networks: StjornurNetwork[]
   selectedNetworkId: string | null
   onSelect: (id: string) => void
   onCreateNetwork: (name: string, abbreviation: string) => Promise<void>

@@ -15,7 +15,7 @@ function pageLabelForPath(pathname: string, terms: ReturnType<typeof useTerminol
   }
   if (pathname.startsWith('/sogur')) return terms.notes
   if (pathname.startsWith('/nidjatal')) return terms.nidjatal
-  if (pathname.startsWith('/stjornur')) return terms.starfield
+  if (pathname.startsWith('/stjornur') || pathname.startsWith('/starfield')) return terms.stjornur
   if (pathname.startsWith('/sendibod')) return terms.messages
   if (pathname.startsWith('/thing') || pathname.startsWith('/settings')) return terms.settings
   if (pathname.startsWith('/hlidskjalf') || pathname === '/' || pathname.startsWith('/basecamp')) {

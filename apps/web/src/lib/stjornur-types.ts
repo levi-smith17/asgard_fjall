@@ -1,4 +1,4 @@
-export type SfResource = {
+export type StjornurResource = {
   pk: 'SF#RESOURCE'
   sk: string
   name: string
@@ -9,7 +9,7 @@ export type SfResource = {
   ingredients: string[]
 }
 
-export type SfNetwork = {
+export type StjornurNetwork = {
   pk: string
   sk: string
   name: string
@@ -18,7 +18,7 @@ export type SfNetwork = {
   createdAt: string
 }
 
-export type SfOutpostSupply = {
+export type StjornurOutpostSupply = {
   fromOutpostId?: string | null
   fromPlanet?: string | null
   fromSystem?: string | null
@@ -28,13 +28,13 @@ export type SfOutpostSupply = {
   } | null
 }
 
-export type SfOutpostResource = {
+export type StjornurOutpostResource = {
   resourceId: string
   name: string
   abbreviation: string
   onsite: boolean
   origin?: boolean
-  supplies?: SfOutpostSupply[]
+  supplies?: StjornurOutpostSupply[]
   fromOutpostId?: string | null
   fromPlanet?: string | null
   fromSystem?: string | null
@@ -44,7 +44,7 @@ export type SfOutpostResource = {
   } | null
 }
 
-export type SfOutpost = {
+export type StjornurOutpost = {
   pk: string
   sk: string
   networkId: string
@@ -53,6 +53,6 @@ export type SfOutpost = {
   parentId?: string
   depth: number
   position: { x: number; y: number }
-  resources: SfOutpostResource[]
+  resources: StjornurOutpostResource[]
   transferStationLimit: number
 }

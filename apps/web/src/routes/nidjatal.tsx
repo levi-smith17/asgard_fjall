@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { TooltipProvider } from '@/components/core/ui/tooltip'
-import { StarfieldSkeleton } from '@/components/core/ui/studio-skeletons'
+import { StudioCanvasSkeleton } from '@/components/core/ui/studio-skeletons'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import { NidjatalClient, type NidjatalPanelState } from '@/components/apps/nidjatal/nidjatal-client'
 import { useAuth } from '@/hooks/use-auth'
@@ -82,7 +82,7 @@ export function NidjatalPage() {
   return (
     <TooltipProvider>
       {loading ? (
-        <StarfieldSkeleton />
+        <StudioCanvasSkeleton />
       ) : !configured ? (
         <DataNotConfiguredNotice />
       ) : (

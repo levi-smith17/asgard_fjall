@@ -13,14 +13,14 @@ import ReactFlow, {
   type NodeDragHandler,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
-import type { SfOutpost, SfResource } from '@/lib/starfield-types'
-import type { OutpostValidation } from '@/lib/starfield-validation'
+import type { StjornurOutpost, StjornurResource } from '@/lib/stjornur-types'
+import type { OutpostValidation } from '@/lib/stjornur-validation'
 import { updateOutpostPosition } from '@/lib/stjornur-api'
 import { OutpostNode, type OutpostNodeData } from './outpost-node'
 
-interface StarfieldCanvasProps {
-  outposts: (SfOutpost & { id: string })[]
-  resources: SfResource[]
+interface StjornurCanvasProps {
+  outposts: (StjornurOutpost & { id: string })[]
+  resources: StjornurResource[]
   validations: Map<string, OutpostValidation>
   selectedOutpostId: string | null
   filterQuery?: string
@@ -43,8 +43,8 @@ function ZoomDisplay() {
 }
 
 function outpostMatchesFilter(
-  outpost: SfOutpost & { id: string },
-  resources: SfResource[],
+  outpost: StjornurOutpost & { id: string },
+  resources: StjornurResource[],
   query: string,
 ): boolean {
   const q = query.trim().toLowerCase()
@@ -66,7 +66,7 @@ function outpostMatchesFilter(
   return false
 }
 
-export function StarfieldCanvas({
+export function StjornurCanvas({
   outposts,
   resources,
   validations,
@@ -75,11 +75,11 @@ export function StarfieldCanvas({
   onOutpostClick,
   onAddOutpostResource,
   onEditOutpostResource,
-}: StarfieldCanvasProps) {
+}: StjornurCanvasProps) {
   const filterActive = filterQuery.trim().length > 0
 
   const buildNode = useCallback(
-    (outpost: SfOutpost & { id: string }, position: { x: number; y: number }): Node<OutpostNodeData> => ({
+    (outpost: StjornurOutpost & { id: string }, position: { x: number; y: number }): Node<OutpostNodeData> => ({
       id: outpost.id,
       type: 'outpost',
       position,
@@ -166,7 +166,7 @@ export function StarfieldCanvas({
   }
 
   return (
-    <div className="starfield-flow h-full w-full">
+    <div className="stjornur-flow h-full w-full">
       <ReactFlow
         nodes={nodes}
         edges={edges}

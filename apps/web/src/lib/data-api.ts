@@ -251,15 +251,15 @@ export async function deleteFjallCalendarSubscription(id: string): Promise<void>
   await fjallFetch<void>(`/dagatal-subscriptions/${id}`, { method: 'DELETE' })
 }
 
-export type FjallStarfieldNetwork = {
+export type FjallStjornurNetwork = {
   id: string
   name: string
   description?: string | null
   color?: string | null
 }
 
-export async function fetchFjallStarfieldNetworks(): Promise<FjallStarfieldNetwork[]> {
-  const raw = await fjallFetch<Array<FjallStarfieldNetwork & { sk?: string }>>('/stjornur/networks')
+export async function fetchFjallStjornurNetworks(): Promise<FjallStjornurNetwork[]> {
+  const raw = await fjallFetch<Array<FjallStjornurNetwork & { sk?: string }>>('/stjornur/networks')
   return raw.map((network) => ({
     id: network.id || (network.sk ? extractEntityId(network.sk) : ''),
     name: network.name,

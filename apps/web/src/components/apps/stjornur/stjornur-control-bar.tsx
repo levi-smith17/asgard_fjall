@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 const iconButtonClass =
   'flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted-hover hover:text-foreground'
 
-export function StarfieldControlBar({
+export function StjornurControlBar({
   search,
   onSearchChange,
   onManageResources,
@@ -35,7 +35,7 @@ export function StarfieldControlBar({
             query={search}
             onQueryChange={onSearchChange}
             placeholder="Filter outposts…"
-            tooltipLabel="Filter starfield"
+            tooltipLabel="Filter network"
             triggerIcon="filter"
             active={search.trim().length > 0}
           />

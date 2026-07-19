@@ -1,15 +1,15 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { ReactFlowProvider } from 'reactflow'
 import { toast } from 'sonner'
-import type { SfOutpost, SfNetwork, SfResource } from '@/lib/starfield-types'
-import { validateNetwork } from '@/lib/starfield-validation'
+import type { StjornurOutpost, StjornurNetwork, StjornurResource } from '@/lib/stjornur-types'
+import { validateNetwork } from '@/lib/stjornur-validation'
 import {
   createNetwork, updateNetwork, deleteNetwork,
   createSystem, updateSystem, deleteSystem,
   addPlanet, updatePlanet, deletePlanet,
 } from '@/lib/stjornur-api'
-import { starfieldSlug } from '@/lib/starfield-slug'
-import { StarfieldCanvas } from './starfield-canvas'
+import { stjornurSlug } from '@/lib/stjornur-slug'
+import { StjornurCanvas } from './stjornur-canvas'
 import { ResourcesPanel } from './resources-panel'
 import { SystemsPanel } from './systems-panel'
 import { OutpostForm } from './outpost-form'
@@ -24,7 +24,7 @@ type RightPanelState =
   | { mode: 'outpost-form'; outpostId: string | null }
   | { mode: 'outpost-resource'; outpostId: string; resourceId: string | null }
 
-export type StarfieldInspectorMode = RightPanelState
+export type StjornurInspectorMode = RightPanelState
 
 interface SystemEntry {
   id: string
@@ -37,16 +37,16 @@ function mapSystemFromApi(s: { sk?: string; id?: string; name?: string; planets?
     id: s.sk?.replace(/^SYSTEM#/, '') ?? s.id ?? '',
     name: (s.name ?? '').trim() || 'Unnamed system',
     planets: (s.planets ?? []).map(p => ({
-      id: p.id ?? starfieldSlug((p.name ?? '').trim() || 'planet'),
+      id: p.id ?? stjornurSlug((p.name ?? '').trim() || 'planet'),
       name: (p.name ?? '').trim() || 'Unnamed planet',
     })),
   }
 }
 
-interface StarfieldClientProps {
-  networks: SfNetwork[]
-  outposts: (SfOutpost & { id: string })[]
-  resources: SfResource[]
+interface StjornurClientProps {
+  networks: StjornurNetwork[]
+  outposts: (StjornurOutpost & { id: string })[]
+  resources: StjornurResource[]
   resourceTypes: any[]
   systems: any[]
   onRefresh: () => void
@@ -59,7 +59,7 @@ interface StarfieldClientProps {
   onRegisterInspector?: (inspector: React.ReactNode) => void
 }
 
-export function StarfieldClient({
+export function StjornurClient({
   networks,
   outposts,
   resources,
@@ -72,7 +72,7 @@ export function StarfieldClient({
   filterQuery = '',
   canvasOnly = false,
   onRegisterInspector,
-}: StarfieldClientProps) {
+}: StjornurClientProps) {
   const rightPanel = inspectorMode
   const setRightPanel = onInspectorModeChange
 
@@ -141,7 +141,7 @@ export function StarfieldClient({
   // ── System CRUD (optimistic local update + background API) ───────────────────
 
   const handleSystemCreate = useCallback((name: string) => {
-    const id = starfieldSlug(name)
+    const id = stjornurSlug(name)
     setLocalSystems(prev => {
       if (prev.some(s => s.id === id || s.name.toLowerCase() === name.toLowerCase())) return prev
       return [...prev, { id, name, planets: [] }]
@@ -163,7 +163,7 @@ export function StarfieldClient({
   }, [])
 
   const handlePlanetCreate = useCallback((systemId: string, name: string) => {
-    const id = starfieldSlug(name)
+    const id = stjornurSlug(name)
     setLocalSystems(prev => prev.map(s => {
       if (s.id !== systemId) return s
       if (s.planets.some(p => p.id === id || p.name.toLowerCase() === name.toLowerCase())) return s
@@ -176,7 +176,7 @@ export function StarfieldClient({
   const handlePlanetRename = useCallback((systemId: string, planetId: string, newName: string) => {
     setLocalSystems(prev => prev.map(s =>
       s.id === systemId
-        ? { ...s, planets: s.planets.map(p => p.id === planetId ? { id: starfieldSlug(newName), name: newName } : p) }
+        ? { ...s, planets: s.planets.map(p => p.id === planetId ? { id: stjornurSlug(newName), name: newName } : p) }
         : s
     ))
     toast.success('Planet renamed.')
@@ -207,7 +207,7 @@ export function StarfieldClient({
 
   const inspectorPanels = useMemo(
     () => (
-      <StarfieldInspectorPanels
+      <StjornurInspectorPanels
         rightPanel={rightPanel}
         closePanel={closePanel}
         resources={resources}
@@ -257,7 +257,7 @@ export function StarfieldClient({
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <div className="flex min-h-0 flex-1 overflow-hidden">
-            <StarfieldCanvas
+            <StjornurCanvas
               outposts={networkOutposts}
               resources={resources}
               validations={validations}
@@ -284,7 +284,7 @@ export function StarfieldClient({
   )
 }
 
-export function StarfieldInspectorPanels({
+export function StjornurInspectorPanels({
   rightPanel,
   closePanel,
   resources,
@@ -306,10 +306,10 @@ export function StarfieldInspectorPanels({
 }: {
   rightPanel: RightPanelState
   closePanel: () => void
-  resources: SfResource[]
+  resources: StjornurResource[]
   localSystems: SystemEntry[]
-  networkOutposts: (SfOutpost & { id: string })[]
-  networks: SfNetwork[]
+  networkOutposts: (StjornurOutpost & { id: string })[]
+  networks: StjornurNetwork[]
   selectedNetworkId: string | null
   systemCrudCallbacks: {
     onSystemCreate: (name: string) => void
@@ -419,13 +419,13 @@ export function StarfieldInspectorPanels({
   )
 }
 
-export function useStarfieldNetworkHandlers({
+export function useStjornurNetworkHandlers({
   networks,
   selectedNetworkId,
   onSelectedNetworkIdChange,
   onRefresh,
 }: {
-  networks: SfNetwork[]
+  networks: StjornurNetwork[]
   selectedNetworkId: string | null
   onSelectedNetworkIdChange: (id: string | null) => void
   onRefresh: () => void

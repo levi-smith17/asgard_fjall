@@ -43,7 +43,7 @@ import {
   fetchFjallRunir,
   fetchAudrSummary,
   fetchFjallSendibod,
-  fetchFjallStarfieldNetworks,
+  fetchFjallStjornurNetworks,
   fetchFjallStatus,
   fetchFjallGreinar,
   fetchFjallLaufar,
@@ -511,8 +511,8 @@ function HlidskjalfCanvas() {
   })
 
   const networksQuery = useQuery({
-    queryKey: ['fjall-starfield-networks'],
-    queryFn: fetchFjallStarfieldNetworks,
+    queryKey: ['fjall-stjornur-networks'],
+    queryFn: fetchFjallStjornurNetworks,
     enabled,
     retry: false,
   })
@@ -576,7 +576,7 @@ function HlidskjalfCanvas() {
       />
 
       <CardRow
-        title={terms.starfield}
+        title={terms.stjornur}
         to="/stjornur"
         icon={Rocket}
         items={networks}
@@ -584,10 +584,10 @@ function HlidskjalfCanvas() {
           networksQuery.isLoading
             ? 'Loading networks…'
             : networksQuery.isError
-              ? 'Could not load starfield networks.'
+              ? `Could not load ${terms.stjornur} networks.`
               : enabled
-                ? 'No starfield networks yet.'
-                : 'Sign in with your passkey to load starfield networks.'
+                ? `No ${terms.stjornur} networks yet.`
+                : `Sign in with your passkey to load ${terms.stjornur} networks.`
         }
       />
     </div>

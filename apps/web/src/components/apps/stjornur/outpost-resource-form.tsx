@@ -30,7 +30,7 @@ import {
   normalizeOutpostResource,
   resolveSourceOutpostId,
   type OutpostWithId,
-} from '@/lib/starfield-utils'
+} from '@/lib/stjornur-utils'
 import { SF_CONTROL, SF_ICON_CONTROL } from './constants'
 
 const supplySchema = z.object({

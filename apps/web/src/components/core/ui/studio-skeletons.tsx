@@ -312,7 +312,7 @@ export function DataToolbarSkeleton({
   )
 }
 
-export function StarfieldSkeleton() {
+export function StudioCanvasSkeleton() {
   return (
     <div className="flex min-h-0 flex-1 overflow-hidden">
       <div className="hidden w-[260px] shrink-0 flex-col border-r border-border lg:flex">

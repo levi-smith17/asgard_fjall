@@ -95,6 +95,7 @@ function AppShellRoutes() {
           />
           <Route path="/sogur" element={<SogurPage />} />
           <Route path="/stjornur" element={<StjornurPage />} />
+          <Route path="/starfield" element={<Navigate to="/stjornur" replace />} />
           <Route path="/sendibod" element={<SendibodPage />} />
           <Route path="/thing" element={<ThingPage />} />
           <Route path="/settings" element={<Navigate to="/thing" replace />} />
