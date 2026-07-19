@@ -190,7 +190,7 @@ export async function saveFjallLaufSettings(data: Record<string, unknown>): Prom
 }
 
 export async function saveFjallLogSettings(data: Record<string, unknown>): Promise<void> {
-  await fjallFetch('/settings/logs', {
+  await fjallFetch('/settings/sogur', {
     method: 'PUT',
     body: JSON.stringify(data),
   })
@@ -259,7 +259,7 @@ export type FjallStarfieldNetwork = {
 }
 
 export async function fetchFjallStarfieldNetworks(): Promise<FjallStarfieldNetwork[]> {
-  const raw = await fjallFetch<Array<FjallStarfieldNetwork & { sk?: string }>>('/starfield/networks')
+  const raw = await fjallFetch<Array<FjallStarfieldNetwork & { sk?: string }>>('/stjornur/networks')
   return raw.map((network) => ({
     id: network.id || (network.sk ? extractEntityId(network.sk) : ''),
     name: network.name,
@@ -288,16 +288,31 @@ export function mapLegacySearchUrlToFjall(url: string): string {
     const path = parsed.pathname
     const search = parsed.search
 
-    if (path.startsWith('/logs')) return `/sogur${search}`
+    if (path.startsWith('/logs') || path.startsWith('/sogur')) return `/sogur${search}`
     if (path.startsWith('/provisions')) return `/audr${search}`
-    if (path.startsWith('/dagatal')) return `/dagatal${search}`
-    if (path.startsWith('/laufar') || path.startsWith('/greinar') || path.startsWith('/runir')) {
+    if (path.startsWith('/dagatal') || path.startsWith('/itinerary')) return `/dagatal${search}`
+    if (
+      path.startsWith('/laufar') ||
+      path.startsWith('/greinar') ||
+      path.startsWith('/runir') ||
+      path.startsWith('/waypoints') ||
+      path.startsWith('/trails') ||
+      path.startsWith('/markers')
+    ) {
       return `/hlidskjalf${search}`
     }
     if (path.startsWith('/manifest') || path.startsWith('/ordstirr')) return `/ordstirr${search}`
-    if (path.startsWith('/signals') || path.startsWith('/messages')) return `/sendibod${search}`
-    if (path.startsWith('/starfield')) return `/stjornur${search}`
-    if (path === '/' || path.startsWith('/basecamp')) return '/hlidskjalf'
+    if (
+      path.startsWith('/signals') ||
+      path.startsWith('/messages') ||
+      path.startsWith('/sendibod')
+    ) {
+      return `/sendibod${search}`
+    }
+    if (path.startsWith('/starfield') || path.startsWith('/stjornur')) return `/stjornur${search}`
+    if (path === '/' || path.startsWith('/basecamp') || path.startsWith('/hlidskjalf')) {
+      return '/hlidskjalf'
+    }
     return `${path}${search}` || '/hlidskjalf'
   } catch {
     return '/hlidskjalf'
@@ -314,7 +329,7 @@ export async function searchFjall(query: string, deep = true): Promise<FjallSear
 }
 
 export async function saveFjallSignalSettings(data: FjallSignalSettings): Promise<void> {
-  await fjallFetch('/settings/signals', { method: 'PUT', body: JSON.stringify(data) })
+  await fjallFetch('/settings/sendibod', { method: 'PUT', body: JSON.stringify(data) })
 }
 
 // ─── Sendibóð (signals) ────────────────────────────────────────────────────
@@ -339,19 +354,19 @@ export type FjallSignal = {
 }
 
 export async function fetchFjallSignals(): Promise<FjallSignal[]> {
-  return fjallFetch<FjallSignal[]>('/signals')
+  return fjallFetch<FjallSignal[]>('/sendibod')
 }
 
 export async function replyToFjallSignal(id: string, body: string): Promise<FjallSignalReply> {
-  return fjallFetch<FjallSignalReply>(`/signals/${id}/reply`, { method: 'POST', body: JSON.stringify({ body }) })
+  return fjallFetch<FjallSignalReply>(`/sendibod/${id}/reply`, { method: 'POST', body: JSON.stringify({ body }) })
 }
 
 export async function markFjallSignalRead(id: string): Promise<void> {
-  await fjallFetch<void>(`/signals/${id}/read`, { method: 'PUT' })
+  await fjallFetch<void>(`/sendibod/${id}/read`, { method: 'PUT' })
 }
 
 export async function deleteFjallSignal(id: string): Promise<void> {
-  await fjallFetch<void>(`/signals/${id}`, { method: 'DELETE' })
+  await fjallFetch<void>(`/sendibod/${id}`, { method: 'DELETE' })
 }
 
 // ─── Sjodr (funds) ─────────────────────────────────────────────────────────
@@ -568,7 +583,7 @@ function toFjallLogView(raw: FjallLogRaw, greinarById: Map<string, string>): Fja
 }
 
 export async function fetchFjallLogs(): Promise<FjallLogView[]> {
-  const [logs, greinar] = await Promise.all([fjallFetch<FjallLogRaw[]>('/logs'), fetchFjallGreinar()])
+  const [logs, greinar] = await Promise.all([fjallFetch<FjallLogRaw[]>('/sogur'), fetchFjallGreinar()])
   const greinarById = new Map(greinar.map((grein) => [extractEntityId(grein.sk), grein.name]))
   return logs.map((log) => toFjallLogView(log, greinarById))
 }
@@ -586,24 +601,24 @@ export type SaveFjallLogRequest = {
 export async function saveFjallLog(data: SaveFjallLogRequest): Promise<FjallLogView> {
   const { id, ...rest } = data
   const raw = id
-    ? await fjallFetch<FjallLogRaw>(`/logs/${id}`, { method: 'PUT', body: JSON.stringify(rest) })
-    : await fjallFetch<FjallLogRaw>('/logs', { method: 'POST', body: JSON.stringify(rest) })
+    ? await fjallFetch<FjallLogRaw>(`/sogur/${id}`, { method: 'PUT', body: JSON.stringify(rest) })
+    : await fjallFetch<FjallLogRaw>('/sogur', { method: 'POST', body: JSON.stringify(rest) })
   const greinar = await fetchFjallGreinar()
   const greinarById = new Map(greinar.map((grein) => [extractEntityId(grein.sk), grein.name]))
   return toFjallLogView(raw, greinarById)
 }
 
 export async function deleteFjallLog(id: string): Promise<void> {
-  await fjallFetch<void>(`/logs/${id}`, { method: 'DELETE' })
+  await fjallFetch<void>(`/sogur/${id}`, { method: 'DELETE' })
 }
 
 export async function reorderFjallLogs(orderedIds: string[]): Promise<void> {
-  await fjallFetch('/logs/reorder', { method: 'PUT', body: JSON.stringify({ orderedIds }) })
+  await fjallFetch('/sogur/reorder', { method: 'PUT', body: JSON.stringify({ orderedIds }) })
 }
 
 export async function uploadFjallLogImage(file: File, logId: string): Promise<string> {
   const data = await fjallFetch<{ url: string; key: string; cloudFrontUrl?: string }>(
-    '/logs/upload-url',
+    '/sogur/upload-url',
     { method: 'POST', body: JSON.stringify({ contentType: file.type, fileSize: file.size, logId }) },
   )
   await fetch(data.url, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file })
@@ -654,7 +669,7 @@ function toFjallSagaView(raw: FjallSagaRaw, greinarById: Map<string, string>): F
 
 export async function fetchFjallSagas(): Promise<FjallSagaView[]> {
   const [sagas, greinar] = await Promise.all([
-    fjallFetch<FjallSagaRaw[]>('/logs/sagas'),
+    fjallFetch<FjallSagaRaw[]>('/sogur/sagas'),
     fetchFjallGreinar(),
   ])
   const greinarById = new Map(greinar.map((grein) => [extractEntityId(grein.sk), grein.name]))
@@ -671,11 +686,11 @@ export type SaveFjallSagaRequest = {
 export async function saveFjallSaga(data: SaveFjallSagaRequest): Promise<FjallSagaView> {
   const { id, ...rest } = data
   const raw = id
-    ? await fjallFetch<FjallSagaRaw>(`/logs/sagas/${id}`, {
+    ? await fjallFetch<FjallSagaRaw>(`/sogur/sagas/${id}`, {
         method: 'PUT',
         body: JSON.stringify(rest),
       })
-    : await fjallFetch<FjallSagaRaw>('/logs/sagas', {
+    : await fjallFetch<FjallSagaRaw>('/sogur/sagas', {
         method: 'POST',
         body: JSON.stringify(rest),
       })
@@ -685,14 +700,14 @@ export async function saveFjallSaga(data: SaveFjallSagaRequest): Promise<FjallSa
 }
 
 export async function deleteFjallSaga(id: string): Promise<void> {
-  await fjallFetch<void>(`/logs/sagas/${id}`, { method: 'DELETE' })
+  await fjallFetch<void>(`/sogur/sagas/${id}`, { method: 'DELETE' })
 }
 
 export async function reorderFjallSaga(
   sagaId: string,
   orderedThattrIds: string[],
 ): Promise<FjallSagaView> {
-  const raw = await fjallFetch<FjallSagaRaw>(`/logs/sagas/${sagaId}/reorder`, {
+  const raw = await fjallFetch<FjallSagaRaw>(`/sogur/sagas/${sagaId}/reorder`, {
     method: 'PUT',
     body: JSON.stringify({ orderedThattrIds }),
   })
@@ -734,7 +749,7 @@ function normalizeFjallSupplyline(supplyline: FjallSupplyline): FjallSupplyline 
 }
 
 export async function fetchProvisionsSummary(month: number, year: number): Promise<AudrSummary> {
-  return fjallFetch<AudrSummary>(`/supplylines/summary?month=${month}&year=${year}`)
+  return fjallFetch<AudrSummary>(`/idunn/summary?month=${month}&year=${year}`)
 }
 
 export type FjallBurnQueryParams = {
@@ -751,7 +766,7 @@ export async function fetchFjallBurnPage(params: FjallBurnQueryParams): Promise<
   if (params.search) qs.set('search', params.search)
   if (params.runId) qs.set('runId', params.runId)
   if (params.fundId) qs.set('fundId', params.fundId)
-  const page = await fjallFetch<FjallBurnPage>(`/burn?${qs}`)
+  const page = await fjallFetch<FjallBurnPage>(`/surtr?${qs}`)
   return {
     ...page,
     burn: (page.burn ?? []).map(normalizeFjallBurn),
@@ -770,13 +785,13 @@ export async function fetchFjallSupplylinesFiltered(params: FjallSupplylineQuery
   if (params.runId) qs.set('runId', params.runId)
   if (params.active) qs.set('active', params.active)
   const query = qs.toString()
-  const rows = await fjallFetch<FjallSupplyline[]>(`/supplylines${query ? `?${query}` : ''}`)
+  const rows = await fjallFetch<FjallSupplyline[]>(`/idunn${query ? `?${query}` : ''}`)
   return rows.map(normalizeFjallSupplyline)
 }
 
 export async function saveFjallSupplyline(data: Record<string, unknown>): Promise<unknown> {
   const { id, nextRenewal, url, notes, active, ...rest } = data
-  const path = id ? `/supplylines/${encodeURIComponent(String(id))}` : '/supplylines'
+  const path = id ? `/idunn/${encodeURIComponent(String(id))}` : '/idunn'
   return fjallFetch(path, {
     method: id ? 'PUT' : 'POST',
     body: JSON.stringify({ ...rest, active: active ?? true, nextRenewal, url: typeof url === 'string' && url.trim() ? url.trim() : null, notes: typeof notes === 'string' && notes.trim() ? notes.trim() : null }),
@@ -784,31 +799,31 @@ export async function saveFjallSupplyline(data: Record<string, unknown>): Promis
 }
 
 export async function deleteFjallSupplyline(id: string): Promise<void> {
-  await fjallFetch<void>(`/supplylines/${id}`, { method: 'DELETE' })
+  await fjallFetch<void>(`/idunn/${id}`, { method: 'DELETE' })
 }
 
 export async function toggleFjallSupplylineActive(id: string, active: boolean): Promise<unknown> {
-  return fjallFetch(`/supplylines/${id}`, { method: 'PUT', body: JSON.stringify({ active }) })
+  return fjallFetch(`/idunn/${id}`, { method: 'PUT', body: JSON.stringify({ active }) })
 }
 
 export async function saveFjallBurn(data: Record<string, unknown>): Promise<unknown> {
   const { id, ...rest } = data
-  const path = id ? `/burn/${id}` : '/burn'
+  const path = id ? `/surtr/${id}` : '/surtr'
   return fjallFetch(path, { method: id ? 'PUT' : 'POST', body: JSON.stringify(rest) })
 }
 
 export async function deleteFjallBurn(id: string): Promise<void> {
-  await fjallFetch<void>(`/burn/${id}`, { method: 'DELETE' })
+  await fjallFetch<void>(`/surtr/${id}`, { method: 'DELETE' })
 }
 
 export async function fetchFjallBurnReceiptUrl(key: string): Promise<string> {
-  const data = await fjallFetch<{ url: string }>(`/burn/receipt-url?key=${encodeURIComponent(key)}`)
+  const data = await fjallFetch<{ url: string }>(`/surtr/receipt-url?key=${encodeURIComponent(key)}`)
   return data.url
 }
 
 export async function uploadFjallBurnReceipt(file: File): Promise<string> {
   const data = await fjallFetch<{ url: string; key: string; cloudFrontUrl?: string }>(
-    '/burn/receipt-upload-url',
+    '/surtr/receipt-upload-url',
     { method: 'POST', body: JSON.stringify({ contentType: file.type, fileSize: file.size }) },
   )
   await fetch(data.url, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file })
@@ -817,12 +832,12 @@ export async function uploadFjallBurnReceipt(file: File): Promise<string> {
 
 export async function saveFjallCache(data: Record<string, unknown>): Promise<unknown> {
   const { id, ...rest } = data
-  const path = id ? `/cache/${encodeURIComponent(String(id))}` : '/cache'
+  const path = id ? `/skatt/${encodeURIComponent(String(id))}` : '/skatt'
   return fjallFetch(path, { method: id ? 'PUT' : 'POST', body: JSON.stringify(rest) })
 }
 
 export async function deleteFjallCache(id: string): Promise<void> {
-  await fjallFetch<void>(`/cache/${id}`, { method: 'DELETE' })
+  await fjallFetch<void>(`/skatt/${id}`, { method: 'DELETE' })
 }
 
 // ─── Dagatal (dagatal) ───────────────────────────────────────────────────

@@ -2,6 +2,7 @@ import { GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb'
 import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda'
 import { dynamo, TABLE_NAME } from '../../shared/db'
 import { getPk } from '../../shared/auth'
+import { SENDIBOD_PREFIX } from '../../shared/keys'
 import { notFound, ok, serverError, toApiGatewayResponse } from '../../shared/response'
 
 export const handler = async (
@@ -10,7 +11,7 @@ export const handler = async (
   try {
     const pk = getPk(event)
 
-    const [profileResult, signalResult] = await Promise.all([
+    const [profileResult, sendibodResult] = await Promise.all([
       dynamo.send(
         new GetCommand({
           TableName: TABLE_NAME,
@@ -23,7 +24,7 @@ export const handler = async (
           KeyConditionExpression: 'pk = :pk AND begins_with(sk, :prefix)',
           ExpressionAttributeValues: {
             ':pk': pk,
-            ':prefix': 'SIGNAL#',
+            ':prefix': SENDIBOD_PREFIX,
           },
         }),
       ),
@@ -32,10 +33,10 @@ export const handler = async (
     if (!profileResult.Item) return toApiGatewayResponse(notFound('Profile not found'))
 
     const profile = profileResult.Item
-    const signals = (signalResult.Items ?? []).filter(
+    const sendibod = (sendibodResult.Items ?? []).filter(
       (s) => !String(s.sk ?? '').includes('#REPLY#'),
     )
-    const unreadSignals = signals.filter((s) => !s.read).length
+    const unreadSendibod = sendibod.filter((s) => !s.read).length
 
     return toApiGatewayResponse(
       ok({
@@ -44,7 +45,8 @@ export const handler = async (
         email: profile.email ?? null,
         image: profile.image ?? null,
         isAdmin: profile.isAdmin ?? false,
-        signals: unreadSignals,
+        // Wire field kept as `signals` for existing clients; counts SENDIBOD# threads.
+        signals: unreadSendibod,
         dagatal: 0,
       }),
     )

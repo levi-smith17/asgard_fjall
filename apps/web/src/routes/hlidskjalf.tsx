@@ -452,8 +452,8 @@ function OrdstirrSection({
         <div className="rounded-lg border border-dashed border-border px-4 py-8 text-sm text-muted-foreground">
           {enabled
             ? isError
-              ? 'Could not load manifest sections.'
-              : 'Manifest sections unavailable.'
+              ? 'Could not load Ordstirr sections.'
+              : 'Ordstirr sections unavailable.'
             : 'Sign in with your passkey to load manifest cards.'}
         </div>
       ) : (
@@ -549,7 +549,7 @@ function HlidskjalfCanvas() {
   const networks = (networksQuery.data ?? []).map((network) => ({
     id: network.id,
     title: network.name,
-    subtitle: network.description?.trim() || 'Starfield network',
+    subtitle: network.description?.trim() || 'Stjörnur network',
     href: `/stjornur?network=${encodeURIComponent(network.id)}`,
   }))
 

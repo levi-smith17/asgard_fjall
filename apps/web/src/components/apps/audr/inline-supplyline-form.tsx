@@ -69,7 +69,7 @@ export function InlineSupplylineForm({
   const [fundId, setFundId] = useState<string | null>(
     () => supplyline?.fundId ?? (supplyline ? null : getDefaultSjodrId()),
   )
-  const [tagIds, setTagIds] = useState(
+  const [runIds, setRunIds] = useState(
     (supplyline?.runir?.map((t) => toRunId(t)).filter(Boolean) as string[]) ?? [],
   )
 
@@ -85,7 +85,7 @@ export function InlineSupplylineForm({
     setUrl(supplyline?.url ?? '')
     setNotes(supplyline?.notes ?? '')
     setFundId(supplyline?.fundId ?? (supplyline ? null : getDefaultSjodrId()))
-    setTagIds(
+    setRunIds(
       (supplyline?.runir?.map((t) => toRunId(t)).filter(Boolean) as string[]) ?? [],
     )
   }, [supplyline?.id])
@@ -115,7 +115,7 @@ export function InlineSupplylineForm({
           nextRenewal,
           url: normalizedUrl,
           notes: notes.trim() || null,
-          runIds: tagIds,
+          runIds,
           fundId,
           active: supplyline?.active ?? true,
         })
@@ -172,8 +172,8 @@ export function InlineSupplylineForm({
         <span className="text-xs font-medium text-muted-foreground">{terms.runSingular}</span>
         <RunPicker
           runir={tags}
-          selected={tagIds}
-          onChange={setTagIds}
+          selected={runIds}
+          onChange={setRunIds}
           placeholder={`Select ${terms.runSingular.toLowerCase()}…`}
           singleSelect
           initialPath={['Audr']}

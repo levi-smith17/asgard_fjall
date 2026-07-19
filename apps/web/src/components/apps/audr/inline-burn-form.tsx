@@ -53,7 +53,7 @@ export function InlineBurnForm({
   const [fundId, setFundId] = useState<string | null>(
     () => burn?.fundId ?? (burn ? null : getDefaultSjodrId()),
   )
-  const [tagIds, setTagIds] = useState(
+  const [runIds, setRunIds] = useState(
   () =>
     (burn?.runir?.map((t) => toRunId(t)).filter(Boolean) as string[]) ??
     (defaultRunId ? [defaultRunId] : []),
@@ -71,7 +71,7 @@ export function InlineBurnForm({
     setDate(burn?.date ? toDateInputValue(burn.date) : todayDateInputValue())
     setNotes(burn?.notes ?? '')
     setFundId(burn?.fundId ?? (burn ? null : getDefaultSjodrId()))
-    setTagIds(
+    setRunIds(
       (burn?.runir?.map((t) => toRunId(t)).filter(Boolean) as string[]) ??
         (defaultRunId ? [defaultRunId] : []),
     )
@@ -120,7 +120,7 @@ export function InlineBurnForm({
         amount: parseFloat(amount) || 0,
         date,
         notes: notes || null,
-        runIds: tagIds,
+        runIds,
         receiptUrl: receiptKey,
         fundId,
       })
@@ -168,8 +168,8 @@ export function InlineBurnForm({
         <span className="text-xs font-medium text-muted-foreground">{terms.runSingular}</span>
         <RunPicker
           runir={tags}
-          selected={tagIds}
-          onChange={setTagIds}
+          selected={runIds}
+          onChange={setRunIds}
           placeholder={`Select ${terms.runSingular.toLowerCase()}…`}
           singleSelect
           initialPath={['Audr']}

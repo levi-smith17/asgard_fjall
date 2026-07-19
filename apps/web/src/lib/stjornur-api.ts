@@ -14,11 +14,11 @@ async function starfieldFetch<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export async function getNetworks(): Promise<SfNetwork[]> {
-  return (await starfieldFetch<SfNetwork[]>('/starfield/networks')) ?? []
+  return (await starfieldFetch<SfNetwork[]>('/stjornur/networks')) ?? []
 }
 
 export async function createNetwork(data: { name: string; abbreviation: string }): Promise<unknown> {
-  return starfieldFetch('/starfield/networks', {
+  return starfieldFetch('/stjornur/networks', {
     method: 'POST',
     body: JSON.stringify(data),
   })
@@ -28,18 +28,18 @@ export async function updateNetwork(
   id: string,
   data: { name: string; abbreviation: string },
 ): Promise<unknown> {
-  return starfieldFetch(`/starfield/networks/${id}`, {
+  return starfieldFetch(`/stjornur/networks/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   })
 }
 
 export async function deleteNetwork(id: string): Promise<void> {
-  await fjallFetch<void>(`/starfield/networks/${id}`, { method: 'DELETE' })
+  await fjallFetch<void>(`/stjornur/networks/${id}`, { method: 'DELETE' })
 }
 
 export async function getAllOutposts(): Promise<SfOutpost[]> {
-  return (await starfieldFetch<SfOutpost[]>('/starfield/outposts')) ?? []
+  return (await starfieldFetch<SfOutpost[]>('/stjornur/outposts')) ?? []
 }
 
 export async function createOutpost(data: {
@@ -49,28 +49,28 @@ export async function createOutpost(data: {
   parentId?: string
   transferStationLimit?: number
 }): Promise<unknown> {
-  return starfieldFetch('/starfield/outposts', {
+  return starfieldFetch('/stjornur/outposts', {
     method: 'POST',
     body: JSON.stringify(data),
   })
 }
 
 export async function updateOutpost(id: string, data: Record<string, unknown>): Promise<unknown> {
-  return starfieldFetch(`/starfield/outposts/${id}`, {
+  return starfieldFetch(`/stjornur/outposts/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   })
 }
 
 export async function deleteOutpost(id: string): Promise<void> {
-  await fjallFetch<void>(`/starfield/outposts/${id}`, { method: 'DELETE' })
+  await fjallFetch<void>(`/stjornur/outposts/${id}`, { method: 'DELETE' })
 }
 
 export async function updateOutpostPosition(
   id: string,
   position: { x: number; y: number },
 ): Promise<void> {
-  await starfieldFetch(`/starfield/outposts/${id}/position`, {
+  await starfieldFetch(`/stjornur/outposts/${id}/position`, {
     method: 'PATCH',
     body: JSON.stringify(position),
   })
@@ -90,62 +90,62 @@ export async function upsertOutpostResource(
     }[]
   },
 ): Promise<void> {
-  await starfieldFetch(`/starfield/outposts/${outpostId}/resources/${resourceId}`, {
+  await starfieldFetch(`/stjornur/outposts/${outpostId}/resources/${resourceId}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   })
 }
 
 export async function removeOutpostResource(outpostId: string, resourceId: string): Promise<void> {
-  await fjallFetch<void>(`/starfield/outposts/${outpostId}/resources/${resourceId}`, {
+  await fjallFetch<void>(`/stjornur/outposts/${outpostId}/resources/${resourceId}`, {
     method: 'DELETE',
   })
 }
 
 export async function getSystems(): Promise<unknown[]> {
-  return (await starfieldFetch<unknown[]>('/starfield/systems')) ?? []
+  return (await starfieldFetch<unknown[]>('/stjornur/systems')) ?? []
 }
 
 export async function createSystem(name: string): Promise<unknown> {
-  return starfieldFetch('/starfield/systems', {
+  return starfieldFetch('/stjornur/systems', {
     method: 'POST',
     body: JSON.stringify({ name }),
   })
 }
 
 export async function updateSystem(id: string, name: string): Promise<void> {
-  await starfieldFetch(`/starfield/systems/${id}`, {
+  await starfieldFetch(`/stjornur/systems/${id}`, {
     method: 'PUT',
     body: JSON.stringify({ name }),
   })
 }
 
 export async function deleteSystem(id: string): Promise<void> {
-  await fjallFetch<void>(`/starfield/systems/${id}`, { method: 'DELETE' })
+  await fjallFetch<void>(`/stjornur/systems/${id}`, { method: 'DELETE' })
 }
 
 export async function addPlanet(systemId: string, name: string): Promise<unknown> {
-  return starfieldFetch(`/starfield/systems/${systemId}/planets`, {
+  return starfieldFetch(`/stjornur/systems/${systemId}/planets`, {
     method: 'POST',
     body: JSON.stringify({ name }),
   })
 }
 
 export async function updatePlanet(systemId: string, planetId: string, name: string): Promise<void> {
-  await starfieldFetch(`/starfield/systems/${systemId}/planets/${planetId}`, {
+  await starfieldFetch(`/stjornur/systems/${systemId}/planets/${planetId}`, {
     method: 'PUT',
     body: JSON.stringify({ name }),
   })
 }
 
 export async function deletePlanet(systemId: string, planetId: string): Promise<void> {
-  await fjallFetch<void>(`/starfield/systems/${systemId}/planets/${planetId}`, {
+  await fjallFetch<void>(`/stjornur/systems/${systemId}/planets/${planetId}`, {
     method: 'DELETE',
   })
 }
 
 export async function getResources(): Promise<SfResource[]> {
-  return (await starfieldFetch<SfResource[]>('/starfield/resources')) ?? []
+  return (await starfieldFetch<SfResource[]>('/stjornur/resources')) ?? []
 }
 
 export async function saveResource(data: {
@@ -159,19 +159,19 @@ export async function saveResource(data: {
 }): Promise<unknown> {
   const { id, ...body } = data
   if (id) {
-    return starfieldFetch(`/starfield/resources/${id}`, {
+    return starfieldFetch(`/stjornur/resources/${id}`, {
       method: 'PUT',
       body: JSON.stringify(body),
     })
   }
-  return starfieldFetch('/starfield/resources', {
+  return starfieldFetch('/stjornur/resources', {
     method: 'POST',
     body: JSON.stringify(body),
   })
 }
 
 export async function deleteResource(id: string): Promise<void> {
-  await fjallFetch<void>(`/starfield/resources/${id}`, { method: 'DELETE' })
+  await fjallFetch<void>(`/stjornur/resources/${id}`, { method: 'DELETE' })
 }
 
 export async function fetchStarfieldData() {
