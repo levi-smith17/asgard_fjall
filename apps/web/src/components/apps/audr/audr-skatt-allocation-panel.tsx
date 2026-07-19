@@ -38,7 +38,7 @@ export function AudrSkattAllocationPanel({
     (line) =>
       line.active &&
       supplylineCountsAgainstSkatt(line.billingCycle) &&
-      line.runir.some((entry) => toRunId(entry) === cache.runId),
+      (line.runir ?? line.markers ?? []).some((entry) => toRunId(entry) === cache.runId),
   )
   const surtrSpend = cache.spent
   const idunnSpend = idunnSpendForRun(supplylines, cache.runId)
@@ -127,7 +127,7 @@ export function AudrSkattAllocationPanel({
                 <div className="min-w-0">
                   <p className="truncate font-medium text-foreground">{line.name}</p>
                   <div className="mt-0.5 flex flex-wrap gap-1">
-                    {line.runir.map((entry, index) => {
+                    {(line.runir ?? []).map((entry, index) => {
                       const run = toDisplayRun(entry, liveById)
                       if (!run) return null
                       return <RunBadge key={run.id ?? index} run={run} />

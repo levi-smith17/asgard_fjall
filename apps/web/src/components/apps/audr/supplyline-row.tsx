@@ -71,7 +71,7 @@ export function SupplylineRow({ supplyline, tags, onSaved, onDeleted }: Props) {
             {renewingSoon ? (
               <Badge className="border-amber-500/30 bg-amber-500/10 px-1.5 py-0 text-xs text-amber-700 dark:text-amber-400">{daysUntil}d</Badge>
             ) : null}
-            {supplyline.runir.map((entry, i) => {
+            {(supplyline.runir ?? []).map((entry, i) => {
               const run = toDisplayRun(entry)
               if (!run) return null
               return <RunBadge key={run.id ?? i} run={run} />

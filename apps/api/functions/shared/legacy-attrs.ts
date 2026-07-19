@@ -23,3 +23,22 @@ export function readEmbeddedRunir<T>(item: Record<string, unknown>): T[] {
   const value = item.runir ?? item.markers
   return Array.isArray(value) ? (value as T[]) : []
 }
+
+/**
+ * Project dual-read fields onto the canonical Norse attribute names so API
+ * clients always see `greinId` / `laufId` / `runir` even before Dynamo migrate.
+ */
+export function withCanonicalDomainAttrs<T extends Record<string, unknown>>(
+  item: T,
+): T & { greinId?: string; laufId?: string; runId?: string; runir: unknown[] } {
+  const greinId = readGreinId(item)
+  const laufId = readLaufId(item)
+  const runId = readRunId(item)
+  return {
+    ...item,
+    ...(greinId != null ? { greinId } : {}),
+    ...(laufId != null ? { laufId } : {}),
+    ...(runId != null ? { runId } : {}),
+    runir: readEmbeddedRunir(item),
+  }
+}

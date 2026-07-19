@@ -63,7 +63,7 @@ export function AudrSupplylineRow({
               aria-label={fundName}
             />
           ) : null}
-          {supplyline.runir.map((entry, i) => {
+          {(supplyline.runir ?? []).map((entry, i) => {
             const run = toDisplayRun(entry, liveById)
             if (!run) return null
             return <RunBadge key={run.id ?? i} run={run} />

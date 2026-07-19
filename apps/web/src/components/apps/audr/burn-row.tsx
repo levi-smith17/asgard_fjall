@@ -44,7 +44,7 @@ export function BurnRow({ burn, tags, onSaved, onDeleted }: Props) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="truncate text-sm font-medium">{burn.name}</span>
-            {burn.runir.map((entry, i) => {
+            {(burn.runir ?? []).map((entry, i) => {
               const run = toDisplayRun(entry)
               if (!run) return null
               return <RunBadge key={run.id ?? i} run={run} />

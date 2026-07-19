@@ -3,6 +3,7 @@ import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 }
 import { dynamo, TABLE_NAME } from '../../shared/db'
 import { getPk } from '../../shared/auth'
 import { IDUNN_PREFIX, idFromSk } from '../../shared/keys'
+import { withCanonicalDomainAttrs } from '../../shared/legacy-attrs'
 import { toApiGatewayResponse, ok, serverError } from '../../shared/response'
 
 export const handler = async (
@@ -42,7 +43,7 @@ export const handler = async (
     }
 
     const idunn = items.map((p) => ({
-      ...p,
+      ...withCanonicalDomainAttrs(p),
       id: idFromSk(String(p.sk), IDUNN_PREFIX),
     }))
 

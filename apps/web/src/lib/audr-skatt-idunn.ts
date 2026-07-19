@@ -24,7 +24,8 @@ export function idunnLinesForRun(
   year?: number,
 ): FjallSupplyline[] {
   return supplylines.filter((line) => {
-    if (!line.runir.some((run) => toRunId(run) === runId)) return false
+    const runir = line.runir ?? line.markers ?? []
+    if (!runir.some((run) => toRunId(run) === runId)) return false
     if (month == null || year == null) return true
     return getRenewalInMonth(line.nextRenewal, line.billingCycle, month, year) != null
   })

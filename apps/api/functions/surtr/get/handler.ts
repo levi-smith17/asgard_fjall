@@ -3,6 +3,7 @@ import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 }
 import { dynamo, TABLE_NAME } from '../../shared/db'
 import { getPk } from '../../shared/auth'
 import { SURTR_PREFIX, idFromSk } from '../../shared/keys'
+import { withCanonicalDomainAttrs } from '../../shared/legacy-attrs'
 import { toApiGatewayResponse, ok, badRequest, serverError } from '../../shared/response'
 
 export const handler = async (
@@ -67,7 +68,7 @@ export const handler = async (
     const paged = items.slice(start, start + pageSize)
 
     const surtr = paged.map((e) => ({
-      ...e,
+      ...withCanonicalDomainAttrs(e),
       id: idFromSk(String(e.sk), SURTR_PREFIX),
     }))
 

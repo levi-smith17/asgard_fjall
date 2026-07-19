@@ -33,7 +33,7 @@ export function toLaufView(
   lauf: FjallLauf,
   greinarById: Map<string, FjallGreinView>,
 ): FjallLaufView {
-  const greinId = lauf.greinId ?? null
+  const greinId = lauf.greinId ?? lauf.trailId ?? null
   return {
     id: extractEntityId(lauf.sk),
     url: lauf.url,
@@ -45,7 +45,7 @@ export function toLaufView(
     readLater: lauf.readLater,
     greinId,
     greinName: greinId ? greinarById.get(greinId)?.name ?? null : null,
-    runir: lauf.runir ?? [],
+    runir: lauf.runir ?? lauf.markers ?? [],
     createdAt: lauf.createdAt,
   }
 }

@@ -212,7 +212,7 @@ function AudrIdunnRailCard({
           ) : null}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-1">
-          {supplyline.runir.map((entry, i) => {
+          {(supplyline.runir ?? []).map((entry, i) => {
             const run = toDisplayRun(entry, liveById)
             if (!run) return null
             return <RunBadge key={run.id ?? i} run={run} />

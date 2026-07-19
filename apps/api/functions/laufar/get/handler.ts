@@ -3,6 +3,7 @@ import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 }
 import { dynamo, TABLE_NAME } from '../../shared/db'
 import { getPk } from '../../shared/auth'
 import { LAUF_PREFIX } from '../../shared/keys'
+import { withCanonicalDomainAttrs } from '../../shared/legacy-attrs'
 import { ok, serverError, toApiGatewayResponse } from '../../shared/response'
 
 export const handler = async (
@@ -20,7 +21,8 @@ export const handler = async (
         },
       }),
     )
-    return toApiGatewayResponse(ok(result.Items ?? []))
+    const items = (result.Items ?? []).map((item) => withCanonicalDomainAttrs(item))
+    return toApiGatewayResponse(ok(items))
   } catch (err) {
     console.error(err)
     return toApiGatewayResponse(serverError())

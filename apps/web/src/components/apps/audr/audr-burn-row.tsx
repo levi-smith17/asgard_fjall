@@ -53,7 +53,7 @@ export function AudrBurnRow({
               aria-label={fundName}
             />
           ) : null}
-          {burn.runir.map((entry, i) => {
+          {(burn.runir ?? []).map((entry, i) => {
             const run = toDisplayRun(entry, liveById)
             if (!run) return null
             return <RunBadge key={run.id ?? i} run={run} />
