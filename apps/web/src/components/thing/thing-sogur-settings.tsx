@@ -5,10 +5,10 @@ import { Button } from '@/components/core/ui/button'
 import { Select } from '@/components/core/ui/select'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import { ThingSettingRow } from '@/components/thing/thing-setting-row'
-import { fetchFjallFullSettings, fetchFjallStatus, saveFjallLogSettings } from '@/lib/data-api'
+import { fetchFjallFullSettings, fetchFjallStatus, saveFjallSogurSettings } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 
-export function ThingLogSettings() {
+export function ThingSogurSettings() {
   const terms = useTerms()
   const queryClient = useQueryClient()
   const statusQuery = useQuery({ queryKey: ['fjall-status'], queryFn: fetchFjallStatus, retry: false })
@@ -18,18 +18,18 @@ export function ThingLogSettings() {
     enabled: statusQuery.data?.configured === true,
   })
 
-  const logs = settingsQuery.data?.logs
-  const [logsPerPage, setLogsPerPage] = useState(25)
+  const sogur = settingsQuery.data?.sogur
+  const [sogurPerPage, setSogurPerPage] = useState(25)
   const [defaultSort, setDefaultSort] = useState<'NEWEST' | 'OLDEST'>('NEWEST')
 
   useEffect(() => {
-    if (!logs) return
-    setLogsPerPage(logs.logsPerPage)
-    setDefaultSort(logs.defaultSort)
-  }, [logs])
+    if (!sogur) return
+    setSogurPerPage(sogur.sogurPerPage)
+    setDefaultSort(sogur.defaultSort)
+  }, [sogur])
 
   const saveMutation = useMutation({
-    mutationFn: () => saveFjallLogSettings({ logsPerPage, defaultSort }),
+    mutationFn: () => saveFjallSogurSettings({ sogurPerPage, defaultSort }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['fjall-full-settings'] })
     },
@@ -37,7 +37,7 @@ export function ThingLogSettings() {
 
   if (statusQuery.isLoading) return <FormFieldsSkeleton fields={2} />
   if (!statusQuery.data?.configured) return <DataNotConfiguredNotice />
-  if (settingsQuery.isLoading || !logs) return <FormFieldsSkeleton fields={2} />
+  if (settingsQuery.isLoading || !sogur) return <FormFieldsSkeleton fields={2} />
 
   return (
     <form className="space-y-8" onSubmit={(event) => { event.preventDefault(); saveMutation.mutate() }}>
@@ -46,7 +46,7 @@ export function ThingLogSettings() {
         <ThingSettingRow
           label={`${terms.notes} per page`}
           description={`How many ${terms.notes.toLowerCase()} to show in the list at once`}
-          control={<Select value={String(logsPerPage)} onChange={(value) => setLogsPerPage(Number(value))} options={[10,25,50,100].map((n) => ({ value: String(n), label: String(n) }))} className="w-20" />}
+          control={<Select value={String(sogurPerPage)} onChange={(value) => setSogurPerPage(Number(value))} options={[10,25,50,100].map((n) => ({ value: String(n), label: String(n) }))} className="w-20" />}
         />
       </div>
       <div className="space-y-5 border-t border-border pt-8">

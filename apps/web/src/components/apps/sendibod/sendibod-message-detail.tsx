@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/core/ui/button'
-import { markFjallSignalRead, replyToFjallSignal, type FjallSignal } from '@/lib/data-api'
+import { markFjallSendibodRead, replyToFjallSendibod, type FjallSendibod } from '@/lib/data-api'
 
 function formatWhen(iso: string) {
   return new Date(iso).toLocaleString(undefined, {
@@ -12,11 +12,11 @@ function formatWhen(iso: string) {
   })
 }
 
-export function SendibodSignalDetail({
-  signal,
+export function SendibodMessageDetail({
+  message,
   autoMarkRead,
 }: {
-  signal: FjallSignal
+  message: FjallSendibod
   autoMarkRead: boolean
 }) {
   const queryClient = useQueryClient()
@@ -24,20 +24,20 @@ export function SendibodSignalDetail({
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (!autoMarkRead || signal.read) return
-    void markFjallSignalRead(signal.id)
-      .then(() => queryClient.invalidateQueries({ queryKey: ['fjall-signals'] }))
+    if (!autoMarkRead || message.read) return
+    void markFjallSendibodRead(message.id)
+      .then(() => queryClient.invalidateQueries({ queryKey: ['fjall-sendibod'] }))
       .catch(() => {})
-  }, [signal.id, signal.read, autoMarkRead, queryClient])
+  }, [message.id, message.read, autoMarkRead, queryClient])
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault()
     if (!reply.trim()) return
     setSaving(true)
     try {
-      await replyToFjallSignal(signal.id, reply.trim())
+      await replyToFjallSendibod(message.id, reply.trim())
       setReply('')
-      await queryClient.invalidateQueries({ queryKey: ['fjall-signals'] })
+      await queryClient.invalidateQueries({ queryKey: ['fjall-sendibod'] })
     } finally {
       setSaving(false)
     }
@@ -46,19 +46,19 @@ export function SendibodSignalDetail({
   const thread = [
     {
       id: 'initial',
-      body: signal.body,
+      body: message.body,
       direction: 'INBOUND' as const,
-      senderName: signal.senderName,
-      createdAt: signal.createdAt,
+      senderName: message.senderName,
+      createdAt: message.createdAt,
     },
-    ...signal.replies,
+    ...message.replies,
   ]
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <div className="shrink-0 border-b border-border px-4 py-3">
-        <h2 className="text-sm font-medium">{signal.senderName}</h2>
-        <p className="text-xs text-muted-foreground">{signal.senderEmail}</p>
+        <h2 className="text-sm font-medium">{message.senderName}</h2>
+        <p className="text-xs text-muted-foreground">{message.senderEmail}</p>
       </div>
 
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">

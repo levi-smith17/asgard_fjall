@@ -6,7 +6,7 @@ import { ThingAccountSettings } from '@/components/thing/thing-account-settings'
 import { ThingContextBar } from '@/components/thing/thing-context-bar'
 import { ThingIntegrationsSettings } from '@/components/thing/thing-integrations-settings'
 import { ThingDagatalSettings } from '@/components/thing/thing-dagatal-settings'
-import { ThingLogSettings } from '@/components/thing/thing-log-settings'
+import { ThingSogurSettings } from '@/components/thing/thing-sogur-settings'
 import { ThingSectionsRail } from '@/components/thing/thing-sections-rail'
 import { ThingLaufSettings } from '@/components/thing/thing-lauf-settings'
 import { useTerms } from '@/hooks/use-terminology'
@@ -116,7 +116,7 @@ export function ThingPage() {
               title={terms.notes}
               description={`${terms.notes} display and sorting preferences.`}
             >
-              <ThingLogSettings />
+              <ThingSogurSettings />
             </ThingSectionShell>
           ) : activeSection === 'hlidskjalf' ? (
             <ThingSectionShell

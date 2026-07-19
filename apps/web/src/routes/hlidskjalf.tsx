@@ -39,10 +39,10 @@ import { fetchDagatalEvents } from '@/lib/dagatal-api'
 import {
   createFjallLauf,
   deleteFjallLauf,
-  fetchFjallLogs,
+  fetchFjallThaettir,
   fetchFjallRunir,
   fetchProvisionsSummary,
-  fetchFjallSignals,
+  fetchFjallSendibod,
   fetchFjallStarfieldNetworks,
   fetchFjallStatus,
   fetchFjallGreinar,
@@ -205,9 +205,9 @@ function HlidskjalfSnapshots() {
     staleTime: 60_000,
   })
 
-  const signalsQuery = useQuery({
-    queryKey: ['fjall-snapshot-signals'],
-    queryFn: fetchFjallSignals,
+  const sendibodQuery = useQuery({
+    queryKey: ['fjall-snapshot-sendibod'],
+    queryFn: fetchFjallSendibod,
     enabled: configured,
     staleTime: 60_000,
   })
@@ -234,9 +234,9 @@ function HlidskjalfSnapshots() {
     .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
     .slice(0, 3)
 
-  const signals = signalsQuery.data ?? []
-  const unreadCount = signals.filter((signal) => !signal.read).length
-  const latestMessages = [...signals]
+  const messages = sendibodQuery.data ?? []
+  const unreadCount = messages.filter((message) => !message.read).length
+  const latestMessages = [...messages]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 2)
 
@@ -385,7 +385,7 @@ function HlidskjalfSnapshots() {
             </PanelShell>
 
             <PanelShell href="/sendibod" label={terms.messages} icon={Mail}>
-              {signalsQuery.isLoading ? (
+              {sendibodQuery.isLoading ? (
                 <div className="space-y-1.5">
                   <div className="h-3 w-full animate-pulse rounded bg-muted" />
                   <div className="h-3 w-4/5 animate-pulse rounded bg-muted" />
@@ -489,9 +489,9 @@ function HlidskjalfCanvas() {
   const auth = useAuth()
   const enabled = Boolean(auth.dataUser)
 
-  const logsQuery = useQuery({
-    queryKey: ['fjall-logs-hlidskjalf'],
-    queryFn: fetchFjallLogs,
+  const thaettirQuery = useQuery({
+    queryKey: ['fjall-sogur-hlidskjalf'],
+    queryFn: fetchFjallThaettir,
     enabled,
     retry: false,
   })
@@ -519,21 +519,21 @@ function HlidskjalfCanvas() {
 
   const greinar = greinarQuery.data ?? []
   const greinarById = new Map(greinar.map((grein) => [extractEntityId(grein.sk), grein.name]))
-  const logs = logsQuery.data ?? []
+  const thaettir = thaettirQuery.data ?? []
 
   const logbooks = (() => {
     const byGrein = new Map<string, { id: string; title: string; subtitle: string; stamp: string }>()
-    for (const log of logs) {
-      const key = log.greinId ?? '__unfiled__'
-      const stamp = String(log.createdAt ?? '')
+    for (const thattr of thaettir) {
+      const key = thattr.greinId ?? '__unfiled__'
+      const stamp = String(thattr.createdAt ?? '')
       const existing = byGrein.get(key)
       if (existing && stamp <= existing.stamp) continue
-      const plain = stripHtml(log.content ?? '')
+      const plain = stripHtml(thattr.content ?? '')
       byGrein.set(key, {
         id: key,
-        title: log.greinName ?? (log.greinId ? greinarById.get(log.greinId) : null) ?? 'Unfiled',
+        title: thattr.greinName ?? (thattr.greinId ? greinarById.get(thattr.greinId) : null) ?? 'Unfiled',
         subtitle:
-          (log.title ? `${log.title} — ` : '') +
+          (thattr.title ? `${thattr.title} — ` : '') +
           (plain.length > 100 ? `${plain.slice(0, 100)}…` : plain || 'No excerpt'),
         stamp,
       })

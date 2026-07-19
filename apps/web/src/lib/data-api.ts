@@ -44,7 +44,7 @@ export async function fetchFjallStatus(): Promise<FjallStatusResponse> {
 
 // ─── Settings ──────────────────────────────────────────────────────────────
 
-export type FjallSignalSettings = {
+export type FjallSendibodSettings = {
   messagesPerPage: number
   autoMarkRead: boolean
   autoRefreshInterval: number
@@ -101,13 +101,13 @@ export type FjallFullSettings = {
     openInNewTab: boolean
     laufarPerPage: number
   }
-  logs: {
-    logsPerPage: number
+  sogur: {
+    sogurPerPage: number
     defaultSort: 'NEWEST' | 'OLDEST'
   }
   calendars: FjallCalendarEntry[]
   calendarSubscriptions: FjallSubscriptionEntry[]
-  signals: FjallSignalSettings
+  sendibod: FjallSendibodSettings
 }
 
 export async function fetchFjallFullSettings(): Promise<FjallFullSettings> {
@@ -125,13 +125,13 @@ export async function fetchFjallFullSettings(): Promise<FjallFullSettings> {
       openInNewTab: raw.laufar?.openInNewTab,
       laufarPerPage: raw.laufar?.laufarPerPage ?? raw.laufar?.laufarPerPage,
     },
-    logs: raw.logs ?? {
-      logsPerPage: raw.sogur?.sogurPerPage ?? raw.sogur?.logsPerPage,
-      defaultSort: raw.sogur?.defaultSort,
+    sogur: raw.sogur ?? {
+      sogurPerPage: raw.logs?.logsPerPage,
+      defaultSort: raw.logs?.defaultSort,
     },
     calendars: raw.calendars,
     calendarSubscriptions: raw.calendarSubscriptions,
-    signals: raw.signals ?? raw.sendibod,
+    sendibod: raw.sendibod ?? raw.signals,
   } as FjallFullSettings
 }
 
@@ -189,7 +189,7 @@ export async function saveFjallLaufSettings(data: Record<string, unknown>): Prom
   })
 }
 
-export async function saveFjallLogSettings(data: Record<string, unknown>): Promise<void> {
+export async function saveFjallSogurSettings(data: Record<string, unknown>): Promise<void> {
   await fjallFetch('/settings/sogur', {
     method: 'PUT',
     body: JSON.stringify(data),
@@ -328,13 +328,13 @@ export async function searchFjall(query: string, deep = true): Promise<FjallSear
   }))
 }
 
-export async function saveFjallSignalSettings(data: FjallSignalSettings): Promise<void> {
+export async function saveFjallSendibodSettings(data: FjallSendibodSettings): Promise<void> {
   await fjallFetch('/settings/sendibod', { method: 'PUT', body: JSON.stringify(data) })
 }
 
 // ─── Sendibóð (signals) ────────────────────────────────────────────────────
 
-export type FjallSignalReply = {
+export type FjallSendibodReply = {
   id: string
   body: string
   direction: 'INBOUND' | 'OUTBOUND'
@@ -343,29 +343,29 @@ export type FjallSignalReply = {
   createdAt: string
 }
 
-export type FjallSignal = {
+export type FjallSendibod = {
   id: string
   senderName: string
   senderEmail: string
   body: string
   read: boolean
   createdAt: string
-  replies: FjallSignalReply[]
+  replies: FjallSendibodReply[]
 }
 
-export async function fetchFjallSignals(): Promise<FjallSignal[]> {
-  return fjallFetch<FjallSignal[]>('/sendibod')
+export async function fetchFjallSendibod(): Promise<FjallSendibod[]> {
+  return fjallFetch<FjallSendibod[]>('/sendibod')
 }
 
-export async function replyToFjallSignal(id: string, body: string): Promise<FjallSignalReply> {
-  return fjallFetch<FjallSignalReply>(`/sendibod/${id}/reply`, { method: 'POST', body: JSON.stringify({ body }) })
+export async function replyToFjallSendibod(id: string, body: string): Promise<FjallSendibodReply> {
+  return fjallFetch<FjallSendibodReply>(`/sendibod/${id}/reply`, { method: 'POST', body: JSON.stringify({ body }) })
 }
 
-export async function markFjallSignalRead(id: string): Promise<void> {
+export async function markFjallSendibodRead(id: string): Promise<void> {
   await fjallFetch<void>(`/sendibod/${id}/read`, { method: 'PUT' })
 }
 
-export async function deleteFjallSignal(id: string): Promise<void> {
+export async function deleteFjallSendibod(id: string): Promise<void> {
   await fjallFetch<void>(`/sendibod/${id}`, { method: 'DELETE' })
 }
 
@@ -505,15 +505,15 @@ export async function fetchFjallLaufMeta(url: string): Promise<FjallLaufMeta> {
 
 // ─── Logs / Thattr (Sögur) ─────────────────────────────────────────────────
 
-export type FjallLogRun = {
+export type FjallThattrRun = {
   runId: string
   run: { id: string; name: string; color: string; icon: string | null }
 }
 
 /** Normalize flat embedded Run snapshots and legacy `{ runId, run }` junctions. */
-export function normalizeFjallLogRunir(rawRunir: unknown): FjallLogRun[] {
+export function normalizeFjallRunir(rawRunir: unknown): FjallThattrRun[] {
   if (!Array.isArray(rawRunir)) return []
-  const out: FjallLogRun[] = []
+  const out: FjallThattrRun[] = []
   for (const entry of rawRunir) {
     const runId = toRunId(entry)
     const display = toDisplayRun(entry)
@@ -531,7 +531,7 @@ export function normalizeFjallLogRunir(rawRunir: unknown): FjallLogRun[] {
   return out
 }
 
-export type FjallLogView = {
+export type FjallThattrView = {
   id: string
   title: string | null
   content: string
@@ -542,10 +542,10 @@ export type FjallLogView = {
   greinId: string | null
   laufId: string | null
   greinName: string | null
-  runir: FjallLogRun[]
+  runir: FjallThattrRun[]
 }
 
-type FjallLogRaw = {
+type FjallThattrRaw = {
   id?: string
   sk?: string
   title?: string | null
@@ -560,7 +560,7 @@ type FjallLogRaw = {
   runir?: unknown
 }
 
-function toFjallLogView(raw: FjallLogRaw, greinarById: Map<string, string>): FjallLogView {
+function toFjallThattrView(raw: FjallThattrRaw, greinarById: Map<string, string>): FjallThattrView {
   const id = raw.id ?? (raw.sk ? extractEntityId(raw.sk) : '')
   const greinId = raw.greinId ?? null
   const laufId = raw.laufId ?? null
@@ -575,17 +575,17 @@ function toFjallLogView(raw: FjallLogRaw, greinarById: Map<string, string>): Fja
     greinId,
     laufId,
     greinName: raw.grein?.name ?? (greinId ? greinarById.get(greinId) ?? null : null),
-    runir: normalizeFjallLogRunir(raw.runir),
+    runir: normalizeFjallRunir(raw.runir),
   }
 }
 
-export async function fetchFjallLogs(): Promise<FjallLogView[]> {
-  const [logs, greinar] = await Promise.all([fjallFetch<FjallLogRaw[]>('/sogur'), fetchFjallGreinar()])
+export async function fetchFjallThaettir(): Promise<FjallThattrView[]> {
+  const [thaettir, greinar] = await Promise.all([fjallFetch<FjallThattrRaw[]>('/sogur'), fetchFjallGreinar()])
   const greinarById = new Map(greinar.map((grein) => [extractEntityId(grein.sk), grein.name]))
-  return logs.map((log) => toFjallLogView(log, greinarById))
+  return thaettir.map((thattr) => toFjallThattrView(thattr, greinarById))
 }
 
-export type SaveFjallLogRequest = {
+export type SaveFjallThattrRequest = {
   id?: string
   title: string | null
   content: string
@@ -595,25 +595,25 @@ export type SaveFjallLogRequest = {
   runIds?: string[]
 }
 
-export async function saveFjallLog(data: SaveFjallLogRequest): Promise<FjallLogView> {
+export async function saveFjallThattr(data: SaveFjallThattrRequest): Promise<FjallThattrView> {
   const { id, ...rest } = data
   const raw = id
-    ? await fjallFetch<FjallLogRaw>(`/sogur/${id}`, { method: 'PUT', body: JSON.stringify(rest) })
-    : await fjallFetch<FjallLogRaw>('/sogur', { method: 'POST', body: JSON.stringify(rest) })
+    ? await fjallFetch<FjallThattrRaw>(`/sogur/${id}`, { method: 'PUT', body: JSON.stringify(rest) })
+    : await fjallFetch<FjallThattrRaw>('/sogur', { method: 'POST', body: JSON.stringify(rest) })
   const greinar = await fetchFjallGreinar()
   const greinarById = new Map(greinar.map((grein) => [extractEntityId(grein.sk), grein.name]))
-  return toFjallLogView(raw, greinarById)
+  return toFjallThattrView(raw, greinarById)
 }
 
-export async function deleteFjallLog(id: string): Promise<void> {
+export async function deleteFjallThattr(id: string): Promise<void> {
   await fjallFetch<void>(`/sogur/${id}`, { method: 'DELETE' })
 }
 
-export async function reorderFjallLogs(orderedIds: string[]): Promise<void> {
+export async function reorderFjallThaettir(orderedIds: string[]): Promise<void> {
   await fjallFetch('/sogur/reorder', { method: 'PUT', body: JSON.stringify({ orderedIds }) })
 }
 
-export async function uploadFjallLogImage(file: File, logId: string): Promise<string> {
+export async function uploadFjallThattrImage(file: File, logId: string): Promise<string> {
   const data = await fjallFetch<{ url: string; key: string; cloudFrontUrl?: string }>(
     '/sogur/upload-url',
     { method: 'POST', body: JSON.stringify({ contentType: file.type, fileSize: file.size, logId }) },
@@ -631,7 +631,7 @@ export type FjallSagaView = {
   greinId: string | null
   greinName: string | null
   orderedThattrIds: string[]
-  runir: FjallLogRun[]
+  runir: FjallThattrRun[]
   createdAt: string
   updatedAt: string | null
 }
@@ -656,7 +656,7 @@ function toFjallSagaView(raw: FjallSagaRaw, greinarById: Map<string, string>): F
     greinId,
     greinName: greinId ? greinarById.get(greinId) ?? null : null,
     orderedThattrIds: Array.isArray(raw.orderedThattrIds) ? raw.orderedThattrIds : [],
-    runir: normalizeFjallLogRunir(raw.runir),
+    runir: normalizeFjallRunir(raw.runir),
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt ?? null,
   }
@@ -716,7 +716,7 @@ export async function reorderFjallSaga(
 function normalizeFjallBurn(burn: FjallBurn): FjallBurn {
   return {
     ...burn,
-    runir: normalizeFjallLogRunir(burn.runir).map((entry) => ({
+    runir: normalizeFjallRunir(burn.runir).map((entry) => ({
       runId: entry.runId,
       run: {
         id: entry.run.id,
@@ -731,7 +731,7 @@ function normalizeFjallBurn(burn: FjallBurn): FjallBurn {
 function normalizeFjallSupplyline(supplyline: FjallSupplyline): FjallSupplyline {
   return {
     ...supplyline,
-    runir: normalizeFjallLogRunir(supplyline.runir).map((entry) => ({
+    runir: normalizeFjallRunir(supplyline.runir).map((entry) => ({
       runId: entry.runId,
       run: {
         id: entry.run.id,

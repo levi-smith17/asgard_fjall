@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import {
-  saveFjallLog,
-  uploadFjallLogImage,
-  type FjallLogView,
+  saveFjallThattr,
+  uploadFjallThattrImage,
+  type FjallThattrView,
 } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
 import { SogurBlockEditor } from './editor'
@@ -22,8 +22,8 @@ export function SogurThattrEditor({
   onSaved,
   onStateChange,
 }: {
-  thattr: FjallLogView
-  onSaved: (log: FjallLogView) => void
+  thattr: FjallThattrView
+  onSaved: (thattr: FjallThattrView) => void
   onStateChange?: (state: { dirty: boolean; saving: boolean }) => void
 }) {
   const terms = useTerms()
@@ -55,7 +55,7 @@ export function SogurThattrEditor({
     if (nextContent === savedContentRef.current) return true
     setSaving(true)
     try {
-      const saved = await saveFjallLog({
+      const saved = await saveFjallThattr({
         id: current.id,
         title: current.title,
         content: nextContent,
@@ -104,7 +104,7 @@ export function SogurThattrEditor({
       <SogurBlockEditor
         value={content}
         onChange={setContent}
-        onImageUpload={async (file) => uploadFjallLogImage(file, thattr.id)}
+        onImageUpload={async (file) => uploadFjallThattrImage(file, thattr.id)}
         className="min-h-0 flex-1"
       />
     </div>

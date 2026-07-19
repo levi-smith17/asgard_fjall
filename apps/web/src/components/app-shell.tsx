@@ -26,7 +26,7 @@ import { usePalette } from '@/hooks/use-palette'
 import { useSidebarCollapsed } from '@/hooks/use-sidebar-collapsed'
 import { useTerminology } from '@/hooks/use-terminology'
 import { useTheme } from '@/hooks/use-theme'
-import { fetchFjallProfile, fetchFjallSignals, fetchFjallStatus } from '@/lib/data-api'
+import { fetchFjallProfile, fetchFjallSendibod, fetchFjallStatus } from '@/lib/data-api'
 import { getFjallNavGroups } from '@/lib/fjall-nav'
 import { parsePublicManifestPath, publicManifestPath } from '@/lib/public-manifest-path'
 import { cn } from '@/lib/utils'
@@ -71,16 +71,16 @@ export function AppShell() {
     staleTime: 60_000,
   })
 
-  const signalsQuery = useQuery({
-    queryKey: ['fjall-signals'],
-    queryFn: fetchFjallSignals,
+  const sendibodQuery = useQuery({
+    queryKey: ['fjall-sendibod'],
+    queryFn: fetchFjallSendibod,
     enabled: statusQuery.data?.configured === true,
     retry: false,
     staleTime: 60_000,
     refetchInterval: 60_000,
   })
 
-  const unreadMessageCount = (signalsQuery.data ?? []).filter((signal) => !signal.read).length
+  const unreadMessageCount = (sendibodQuery.data ?? []).filter((message) => !message.read).length
   const sendibodActive = pathname.startsWith('/sendibod')
 
   const displayName =

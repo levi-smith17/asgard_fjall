@@ -7,14 +7,14 @@ import { StudioLayout } from '@/components/core/layout/studio-layout'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import { SendibodContextBar } from '@/components/apps/sendibod/sendibod-context-bar'
 import { SendibodFilterBar } from '@/components/apps/sendibod/sendibod-filter-bar'
-import { SendibodSignalDetail } from '@/components/apps/sendibod/sendibod-signal-detail'
-import { SendibodSignalList } from '@/components/apps/sendibod/sendibod-signal-list'
+import { SendibodMessageDetail } from '@/components/apps/sendibod/sendibod-message-detail'
+import { SendibodMessageList } from '@/components/apps/sendibod/sendibod-message-list'
 import { SendibodSettingsForm } from '@/components/apps/sendibod/sendibod-settings-form'
 import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
 import {
-  deleteFjallSignal,
+  deleteFjallSendibod,
   fetchFjallFullSettings,
-  fetchFjallSignals,
+  fetchFjallSendibod,
   fetchFjallStatus,
 } from '@/lib/data-api'
 
@@ -43,35 +43,35 @@ export function SendibodPage() {
 
   const configured = statusQuery.data?.configured === true
 
-  const signalsQuery = useQuery({
-    queryKey: ['fjall-signals'],
-    queryFn: fetchFjallSignals,
+  const sendibodQuery = useQuery({
+    queryKey: ['fjall-sendibod'],
+    queryFn: fetchFjallSendibod,
     enabled: configured,
   })
 
   const settingsQuery = useQuery({
-    queryKey: ['fjall-settings-signals'],
+    queryKey: ['fjall-settings-sendibod'],
     queryFn: fetchFjallFullSettings,
     enabled: configured,
     staleTime: 60_000,
   })
 
-  const signals = signalsQuery.data ?? []
-  const showSnippets = settingsQuery.data?.signals.showSnippets ?? true
-  const autoMarkRead = settingsQuery.data?.signals.autoMarkRead ?? true
-  const unreadCount = signals.filter((signal) => !signal.read).length
+  const messages = sendibodQuery.data ?? []
+  const showSnippets = settingsQuery.data?.sendibod.showSnippets ?? true
+  const autoMarkRead = settingsQuery.data?.sendibod.autoMarkRead ?? true
+  const unreadCount = messages.filter((message) => !message.read).length
 
   const filtered = useMemo(() => {
-    return signals.filter((signal) => {
+    return messages.filter((message) => {
       if (!search.trim()) return true
       const query = search.toLowerCase()
       return (
-        signal.senderName.toLowerCase().includes(query) ||
-        signal.senderEmail.toLowerCase().includes(query) ||
-        signal.body.toLowerCase().includes(query)
+        message.senderName.toLowerCase().includes(query) ||
+        message.senderEmail.toLowerCase().includes(query) ||
+        message.body.toLowerCase().includes(query)
       )
     })
-  }, [signals, search])
+  }, [messages, search])
 
   const sorted = useMemo(
     () =>
@@ -82,9 +82,9 @@ export function SendibodPage() {
   )
 
   const selectedId = searchParams.get('id')
-  const selectedSignal =
-    sorted.find((signal) => signal.id === selectedId) ??
-    signals.find((signal) => signal.id === selectedId) ??
+  const selectedMessage =
+    sorted.find((message) => message.id === selectedId) ??
+    messages.find((message) => message.id === selectedId) ??
     null
 
   const inspectorOpen = inspectorPinned || selectedId != null
@@ -113,8 +113,8 @@ export function SendibodPage() {
 
   async function confirmDelete() {
     if (!deleteTarget) return
-    await deleteFjallSignal(deleteTarget.id)
-    await queryClient.invalidateQueries({ queryKey: ['fjall-signals'] })
+    await deleteFjallSendibod(deleteTarget.id)
+    await queryClient.invalidateQueries({ queryKey: ['fjall-sendibod'] })
     if (selectedId === deleteTarget.id) clearSelection()
     setDeleteTarget(null)
   }
@@ -124,8 +124,8 @@ export function SendibodPage() {
       <StudioLayout
         contextBar={
           <SendibodContextBar
-            messageCount={signalsQuery.data ? signals.length : undefined}
-            unreadCount={signalsQuery.data ? unreadCount : undefined}
+            messageCount={sendibodQuery.data ? messages.length : undefined}
+            unreadCount={sendibodQuery.data ? unreadCount : undefined}
             inspectorPinned={inspectorPinned}
             onInspectorPinnedChange={setInspectorPinned}
             onOpenSettings={() => setShowSettings(true)}
@@ -141,14 +141,14 @@ export function SendibodPage() {
               <SendibodFilterBar
                 search={search}
                 onSearchChange={setSearch}
-                onRefresh={() => void signalsQuery.refetch()}
-                isRefreshing={signalsQuery.isFetching}
+                onRefresh={() => void sendibodQuery.refetch()}
+                isRefreshing={sendibodQuery.isFetching}
               />
-              {signalsQuery.isLoading ? (
+              {sendibodQuery.isLoading ? (
                 <RailListSkeleton rows={10} />
               ) : (
-                <SendibodSignalList
-                  signals={sorted}
+                <SendibodMessageList
+                  messages={sorted}
                   selectedId={selectedId}
                   showSnippets={showSnippets}
                   onSelect={selectSignal}
@@ -162,7 +162,7 @@ export function SendibodPage() {
         inspectorHint="Select a message"
         onDismissInspector={dismissInspector}
         inspector={
-          showSettings && settingsQuery.data?.signals ? (
+          showSettings && settingsQuery.data?.sendibod ? (
             <div className="flex h-full flex-col">
               <div className="border-b border-border px-5 py-4">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -171,13 +171,13 @@ export function SendibodPage() {
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
                 <SendibodSettingsForm
-                  initialSettings={settingsQuery.data.signals}
+                  initialSettings={settingsQuery.data.sendibod}
                   onDone={() => setShowSettings(false)}
                 />
               </div>
             </div>
-          ) : selectedSignal ? (
-            <SendibodSignalDetail signal={selectedSignal} autoMarkRead={autoMarkRead} />
+          ) : selectedMessage ? (
+            <SendibodMessageDetail message={selectedMessage} autoMarkRead={autoMarkRead} />
           ) : inspectorPinned ? (
             <div className="flex h-full flex-col">
               <div className="border-b border-border px-5 py-4">

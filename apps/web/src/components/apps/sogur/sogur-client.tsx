@@ -11,18 +11,18 @@ import {
 } from '@/components/apps/catalog-inspector'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import {
-  deleteFjallLog,
+  deleteFjallThattr,
   deleteFjallSaga,
-  fetchFjallLogs,
+  fetchFjallThaettir,
   fetchFjallRunir,
   fetchFjallSagas,
   fetchFjallStatus,
   fetchFjallGreinar,
   fetchFjallLaufar,
   reorderFjallSaga,
-  saveFjallLog,
+  saveFjallThattr,
   saveFjallSaga,
-  type FjallLogView,
+  type FjallThattrView,
   type FjallSagaView,
 } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
@@ -100,9 +100,9 @@ export function SogurWorkspace() {
     staleTime: 60_000,
   })
 
-  const logsQuery = useQuery({
-    queryKey: ['fjall-logs'],
-    queryFn: fetchFjallLogs,
+  const thaettirQuery = useQuery({
+    queryKey: ['fjall-sogur'],
+    queryFn: fetchFjallThaettir,
     enabled: statusQuery.data?.configured === true,
   })
 
@@ -131,9 +131,9 @@ export function SogurWorkspace() {
   })
 
   const configured = statusQuery.data?.configured === true
-  const logs = logsQuery.data ?? []
+  const thaettir = thaettirQuery.data ?? []
   const apiSagas = sagasQuery.data ?? []
-  const workspace = useMemo(() => buildSogurWorkspace(apiSagas, logs), [apiSagas, logs])
+  const workspace = useMemo(() => buildSogurWorkspace(apiSagas, thaettir), [apiSagas, thaettir])
   const greinar = useMemo(
     () => (greinarQuery.data ?? []).map(toGreinView).sort((a, b) => a.name.localeCompare(b.name)),
     [greinarQuery.data],
@@ -182,22 +182,22 @@ export function SogurWorkspace() {
     ? workspace.sagas.find((saga) => saga.id === selectedSagaId) ?? null
     : null
   const selectedSagaThaettir = selectedSaga
-    ? workspace.logsBySagaId.get(selectedSaga.id) ?? []
+    ? workspace.thaettirBySagaId.get(selectedSaga.id) ?? []
     : []
   const selectedThattr = selectedThattrId
-    ? logs.find((log) => log.id === selectedThattrId) ?? null
+    ? thaettir.find((thattr) => thattr.id === selectedThattrId) ?? null
     : null
   const selectedThattrSaga = selectedThattr?.sagaId
     ? workspace.sagas.find((saga) => saga.id === selectedThattr.sagaId) ?? null
-    : selectedThattr && selectedSaga && selectedSagaThaettir.some((log) => log.id === selectedThattr.id)
+    : selectedThattr && selectedSaga && selectedSagaThaettir.some((thattr) => thattr.id === selectedThattr.id)
       ? selectedSaga
       : null
 
   const contextSaga = selectedThattrSaga ?? selectedSaga
   const contextThaettir = contextSaga
-    ? (workspace.logsBySagaId.get(contextSaga.id) ?? []).map((log) => ({
-        id: log.id,
-        title: log.title?.trim() || '(no title)',
+    ? (workspace.thaettirBySagaId.get(contextSaga.id) ?? []).map((thattr) => ({
+        id: thattr.id,
+        title: thattr.title?.trim() || '(no title)',
       }))
     : []
 
@@ -205,7 +205,7 @@ export function SogurWorkspace() {
     const sagaItems: SogurRailItem[] = workspace.sagas
       .filter((saga) => !saga.greinId || !hiddenSogurGreinIds.has(saga.greinId))
       .map((saga) => {
-        const sagaLogs = workspace.logsBySagaId.get(saga.id) ?? []
+        const sagaThaettir = workspace.thaettirBySagaId.get(saga.id) ?? []
         return {
           id: saga.id,
           kind: 'saga',
@@ -213,20 +213,20 @@ export function SogurWorkspace() {
           greinId: saga.greinId,
           greinName: saga.greinName,
           runir: toRailRunir(saga.runir),
-          thattrCount: sagaLogs.length,
-          firstThattrId: sagaLogs[0]?.id ?? null,
+          thattrCount: sagaThaettir.length,
+          firstThattrId: sagaThaettir[0]?.id ?? null,
         }
       })
     const standalone: SogurRailItem[] = workspace.standaloneThaettir
-      .filter((log) => !log.greinId || !hiddenSogurGreinIds.has(log.greinId))
-      .map((log) => ({
-        id: log.id,
+      .filter((thattr) => !thattr.greinId || !hiddenSogurGreinIds.has(thattr.greinId))
+      .map((thattr) => ({
+        id: thattr.id,
         kind: 'thattr',
-        name: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
-        greinId: log.greinId,
-        greinName: log.greinName,
-        runir: toRailRunir(log.runir),
-        preview: thattrSnippet(log),
+        name: thattrPreview(thattr, `Untitled ${terms.thattrSingular}`),
+        greinId: thattr.greinId,
+        greinName: thattr.greinName,
+        runir: toRailRunir(thattr.runir),
+        preview: thattrSnippet(thattr),
       }))
     return [...sagaItems, ...standalone]
   }, [terms.thattrSingular, workspace, hiddenSogurGreinIds])
@@ -235,15 +235,15 @@ export function SogurWorkspace() {
     const items: SogurRailItem[] = []
     for (const saga of workspace.sagas) {
       if (saga.greinId && hiddenSogurGreinIds.has(saga.greinId)) continue
-      for (const log of workspace.logsBySagaId.get(saga.id) ?? []) {
+      for (const thattr of workspace.thaettirBySagaId.get(saga.id) ?? []) {
         items.push({
-          id: log.id,
+          id: thattr.id,
           kind: 'thattr',
-          name: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
-          greinId: log.greinId ?? saga.greinId,
-          greinName: log.greinName ?? saga.greinName,
-          runir: toRailRunir(log.runir),
-          preview: thattrSnippet(log),
+          name: thattrPreview(thattr, `Untitled ${terms.thattrSingular}`),
+          greinId: thattr.greinId ?? saga.greinId,
+          greinName: thattr.greinName ?? saga.greinName,
+          runir: toRailRunir(thattr.runir),
+          preview: thattrSnippet(thattr),
           sagaName: saga.name,
         })
       }
@@ -293,25 +293,25 @@ export function SogurWorkspace() {
 
   async function invalidateSogur() {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['fjall-logs'] }),
+      queryClient.invalidateQueries({ queryKey: ['fjall-sogur'] }),
       queryClient.invalidateQueries({ queryKey: ['fjall-sagas'] }),
     ])
   }
 
-  function patchLogCache(log: FjallLogView) {
-    queryClient.setQueryData(['fjall-logs'], (prev: FjallLogView[] | undefined) => {
+  function patchThattrCache(thattr: FjallThattrView) {
+    queryClient.setQueryData(['fjall-sogur'], (prev: FjallThattrView[] | undefined) => {
       const list = prev ?? []
-      const index = list.findIndex((entry) => entry.id === log.id)
-      if (index < 0) return [...list, log]
+      const index = list.findIndex((entry) => entry.id === thattr.id)
+      if (index < 0) return [...list, thattr]
       const next = [...list]
-      next[index] = log
+      next[index] = thattr
       return next
     })
   }
 
   function removeLogCache(id: string) {
-    queryClient.setQueryData(['fjall-logs'], (prev: FjallLogView[] | undefined) =>
-      (prev ?? []).filter((log) => log.id !== id),
+    queryClient.setQueryData(['fjall-sogur'], (prev: FjallThattrView[] | undefined) =>
+      (prev ?? []).filter((thattr) => thattr.id !== id),
     )
   }
 
@@ -347,23 +347,23 @@ export function SogurWorkspace() {
       greinId: saga.greinId,
       runIds: saga.runir.map((run) => run.runId),
     })
-    const sagaLogs = workspace.logsBySagaId.get(saga.id) ?? []
-    for (const log of sagaLogs) {
-      const saved = await saveFjallLog({
-        id: log.id,
-        title: log.title,
-        content: log.content,
+    const sagaThaettir = workspace.thaettirBySagaId.get(saga.id) ?? []
+    for (const thattr of sagaThaettir) {
+      const saved = await saveFjallThattr({
+        id: thattr.id,
+        title: thattr.title,
+        content: thattr.content,
         sagaId: created.id,
         greinId: created.greinId,
-        laufId: log.laufId,
-        runIds: log.runir.map((run) => run.runId),
+        laufId: thattr.laufId,
+        runIds: thattr.runir.map((run) => run.runId),
       })
-      patchLogCache(saved)
+      patchThattrCache(saved)
     }
-    if (sagaLogs.length) {
+    if (sagaThaettir.length) {
       const reordered = await reorderFjallSaga(
         created.id,
-        sagaLogs.map((log) => log.id),
+        sagaThaettir.map((thattr) => thattr.id),
       )
       patchSagaCache(reordered)
       await invalidateSogur()
@@ -504,7 +504,7 @@ export function SogurWorkspace() {
         greinId = saga?.greinId ?? greinId
       }
 
-      const created = await saveFjallLog({
+      const created = await saveFjallThattr({
         title: input.name,
         content: emptyThattrContent(),
         sagaId,
@@ -512,7 +512,7 @@ export function SogurWorkspace() {
         laufId: null,
         runIds: input.runIds,
       })
-      patchLogCache(created)
+      patchThattrCache(created)
       await invalidateSogur()
       setCreateDraft(null)
       setSelection({ sagaId: created.sagaId, thattrId: created.id })
@@ -559,17 +559,17 @@ export function SogurWorkspace() {
         await deleteFjallSaga(selectedSaga.id)
       } else {
         // Synthetic Grein buckets: detach by clearing greinId on Thattr.
-        for (const log of workspace.logsBySagaId.get(selectedSaga.id) ?? []) {
-          const saved = await saveFjallLog({
-            id: log.id,
-            title: log.title,
-            content: log.content,
+        for (const thattr of workspace.thaettirBySagaId.get(selectedSaga.id) ?? []) {
+          const saved = await saveFjallThattr({
+            id: thattr.id,
+            title: thattr.title,
+            content: thattr.content,
             sagaId: null,
             greinId: null,
-            laufId: log.laufId,
-            runIds: log.runir.map((run) => run.runId),
+            laufId: thattr.laufId,
+            runIds: thattr.runir.map((run) => run.runId),
           })
-          patchLogCache(saved)
+          patchThattrCache(saved)
         }
       }
       await invalidateSogur()
@@ -612,7 +612,7 @@ export function SogurWorkspace() {
           greinId = real.greinId
         }
       }
-      const saved = await saveFjallLog({
+      const saved = await saveFjallThattr({
         id: selectedThattr.id,
         title: input.title,
         content: selectedThattr.content,
@@ -621,7 +621,7 @@ export function SogurWorkspace() {
         laufId: input.laufId,
         runIds: input.runIds,
       })
-      patchLogCache(saved)
+      patchThattrCache(saved)
       await invalidateSogur()
       setSelection({ sagaId: saved.sagaId, thattrId: saved.id })
       toast.success(`${terms.thattrSingular} saved`)
@@ -636,7 +636,7 @@ export function SogurWorkspace() {
     if (!selectedThattr) return
     setSavingMeta(true)
     try {
-      await deleteFjallLog(selectedThattr.id)
+      await deleteFjallThattr(selectedThattr.id)
       removeLogCache(selectedThattr.id)
       await invalidateSogur()
       if (selectedThattr.sagaId || selectedSagaId) {
@@ -697,7 +697,7 @@ export function SogurWorkspace() {
   const loading =
     statusQuery.isLoading ||
     (configured &&
-      (logsQuery.isLoading ||
+      (thaettirQuery.isLoading ||
         sagasQuery.isLoading ||
         greinarQuery.isLoading ||
         runirQuery.isLoading ||
@@ -761,7 +761,7 @@ export function SogurWorkspace() {
               }
               const sagaId =
                 workspace.sagas.find((saga) =>
-                  (workspace.logsBySagaId.get(saga.id) ?? []).some((log) => log.id === item.id),
+                  (workspace.thaettirBySagaId.get(saga.id) ?? []).some((thattr) => thattr.id === item.id),
                 )?.id ?? null
               openThattr(sagaId, item.id)
             }}
@@ -828,16 +828,16 @@ export function SogurWorkspace() {
             {showingEditor && selectedThattr ? (
               <SogurThattrEditor
                 thattr={selectedThattr}
-                onSaved={patchLogCache}
+                onSaved={patchThattrCache}
                 onStateChange={setEditorState}
               />
             ) : showingSagaOverview && selectedSaga ? (
               <SogurSagaCanvas
-                thaettir={selectedSagaThaettir.map((log) => ({
-                  id: log.id,
-                  title: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
-                  preview: thattrSnippet(log),
-                  runir: toRailRunir(log.runir),
+                thaettir={selectedSagaThaettir.map((thattr) => ({
+                  id: thattr.id,
+                  title: thattrPreview(thattr, `Untitled ${terms.thattrSingular}`),
+                  preview: thattrSnippet(thattr),
+                  runir: toRailRunir(thattr.runir),
                 }))}
                 draftThattr={draftThattrForCanvas}
                 onOpenThattr={(id) => setSelection({ sagaId: selectedSaga.id, thattrId: id })}
@@ -913,9 +913,9 @@ export function SogurWorkspace() {
               greinId: selectedSaga.greinId,
               runIds: selectedSaga.runir.map((run) => run.runId),
             }}
-            thaettir={selectedSagaThaettir.map((log) => ({
-              id: log.id,
-              title: thattrPreview(log, `Untitled ${terms.thattrSingular}`),
+            thaettir={selectedSagaThaettir.map((thattr) => ({
+              id: thattr.id,
+              title: thattrPreview(thattr, `Untitled ${terms.thattrSingular}`),
             }))}
             greinar={greinar.map((grein) => ({ id: grein.id, name: grein.name }))}
             runir={railRunir}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { FjallLogView, FjallSagaView } from '@/lib/data-api'
+import type { FjallThattrView, FjallSagaView } from '@/lib/data-api'
 import {
   buildSogurWorkspace,
   isLegacySagaId,
@@ -7,7 +7,7 @@ import {
   thattrPreview,
 } from '@/lib/sogur-format'
 
-function log(partial: Partial<FjallLogView> & Pick<FjallLogView, 'id'>): FjallLogView {
+function thattr(partial: Partial<FjallThattrView> & Pick<FjallThattrView, 'id'>): FjallThattrView {
   return {
     title: null,
     content: '<p>Hello</p>',
@@ -37,27 +37,27 @@ describe('buildSogurWorkspace', () => {
         updatedAt: null,
       },
     ]
-    const logs = [
-      log({ id: 'a', sagaId: 'saga-1', title: 'A' }),
-      log({ id: 'b', sagaId: 'saga-1', title: 'B' }),
-      log({ id: 'c', title: 'Standalone' }),
+    const thaettir = [
+      thattr({ id: 'a', sagaId: 'saga-1', title: 'A' }),
+      thattr({ id: 'b', sagaId: 'saga-1', title: 'B' }),
+      thattr({ id: 'c', title: 'Standalone' }),
     ]
-    const workspace = buildSogurWorkspace(sagas, logs)
+    const workspace = buildSogurWorkspace(sagas, thaettir)
     expect(workspace.sagas).toHaveLength(1)
-    expect(workspace.logsBySagaId.get('saga-1')?.map((entry) => entry.id)).toEqual(['b', 'a'])
+    expect(workspace.thaettirBySagaId.get('saga-1')?.map((entry) => entry.id)).toEqual(['b', 'a'])
     expect(workspace.standaloneThaettir.map((entry) => entry.id)).toEqual(['c'])
   })
 
   it('synthesizes legacy Grein buckets for greinId-only Thattr', () => {
-    const logs = [
-      log({
+    const thaettir = [
+      thattr({
         id: 'old-1',
         greinId: 'grein-9',
         greinName: 'Legacy Grein',
         title: 'Page one',
         createdAt: '2026-01-02T00:00:00.000Z',
       }),
-      log({
+      thattr({
         id: 'old-2',
         greinId: 'grein-9',
         greinName: 'Legacy Grein',
@@ -65,14 +65,14 @@ describe('buildSogurWorkspace', () => {
         createdAt: '2026-01-01T00:00:00.000Z',
       }),
     ]
-    const workspace = buildSogurWorkspace([], logs)
+    const workspace = buildSogurWorkspace([], thaettir)
     expect(workspace.sagas).toHaveLength(1)
     const saga = workspace.sagas[0]!
     expect(saga.synthetic).toBe(true)
     expect(isLegacySagaId(saga.id)).toBe(true)
     expect(saga.id).toBe(legacySagaId('grein-9'))
     expect(saga.name).toBe('Legacy Grein')
-    expect(workspace.logsBySagaId.get(saga.id)?.map((entry) => entry.id)).toEqual([
+    expect(workspace.thaettirBySagaId.get(saga.id)?.map((entry) => entry.id)).toEqual([
       'old-2',
       'old-1',
     ])
@@ -92,11 +92,11 @@ describe('buildSogurWorkspace', () => {
         updatedAt: null,
       },
     ]
-    const logs = [
-      log({ id: 'attached', sagaId: 'saga-1', greinId: 'grein-1' }),
-      log({ id: 'orphan', greinId: 'grein-1', title: 'Orphan' }),
+    const thaettir = [
+      thattr({ id: 'attached', sagaId: 'saga-1', greinId: 'grein-1' }),
+      thattr({ id: 'orphan', greinId: 'grein-1', title: 'Orphan' }),
     ]
-    const workspace = buildSogurWorkspace(sagas, logs)
+    const workspace = buildSogurWorkspace(sagas, thaettir)
     expect(workspace.sagas).toHaveLength(1)
     expect(workspace.standaloneThaettir.map((entry) => entry.id)).toEqual(['orphan'])
   })
@@ -104,10 +104,10 @@ describe('buildSogurWorkspace', () => {
 
 describe('thattrPreview', () => {
   it('prefers title, then plain text from blocks or legacy HTML', () => {
-    expect(thattrPreview(log({ id: '1', title: 'Named' }))).toBe('Named')
+    expect(thattrPreview(thattr({ id: '1', title: 'Named' }))).toBe('Named')
     expect(
       thattrPreview(
-        log({
+        thattr({
           id: '2',
           content: JSON.stringify({
             version: 1,
@@ -116,6 +116,6 @@ describe('thattrPreview', () => {
         }),
       ),
     ).toBe('Block text')
-    expect(thattrPreview(log({ id: '3', content: '<p>Legacy</p>' }))).toBe('Legacy')
+    expect(thattrPreview(thattr({ id: '3', content: '<p>Legacy</p>' }))).toBe('Legacy')
   })
 })
