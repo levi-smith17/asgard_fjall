@@ -48,7 +48,7 @@ export function dataQueryErrorProps(error: unknown, fallback: string) {
     detail: isConfigError
       ? 'The data API is unreachable or not configured.'
       : isTokenError
-        ? 'Sign in with your passkey to access live data.'
+        ? 'Sign out from the account menu at the bottom of the sidebar, then sign in with your passkey again.'
         : undefined,
     isConfigError,
     isTokenError,

@@ -2,22 +2,15 @@ import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   BookOpen,
-  BookType,
   ExternalLink,
   MessageSquare,
-  Moon,
-  MoreHorizontal,
-  Palette,
-  Settings,
-  Sun,
   type LucideIcon,
 } from 'lucide-react'
 import { AsgardSidebarBrand } from '@/components/core/brand/asgard-sidebar-brand'
 import { CommandPaletteDialog } from '@/components/core/command-palette/command-palette-dialog'
 import { ValknutWatermark } from '@/components/core/icons/valknut-watermark'
-import { SidebarFooterFlyout } from '@/components/core/shell/sidebar-footer-flyout'
 import { SidebarNavGroupFlyout } from '@/components/core/shell/sidebar-nav-group-flyout'
-import { Avatar } from '@/components/core/ui/avatar'
+import { UserAccountMenu } from '@/components/core/shell/user-account-menu'
 import { Button } from '@/components/core/ui/button'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { useAuth } from '@/hooks/use-auth'
@@ -266,172 +259,81 @@ export function AppShell() {
               isNarrow ? 'px-1.5 pt-2' : 'px-3 py-3',
             )}
           >
-            {isNarrow ? (
-              <div className="flex w-full flex-col items-center">
-                <div className="w-full pb-2">
-                  <SidebarFooterFlyout
-                    triggerLabel="More"
-                    trigger={
-                      <span className="relative">
-                        <MoreHorizontal className="h-4 w-4" aria-hidden />
-                        {unreadMessageCount > 0 ? (
-                          <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
-                            {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
-                          </span>
-                        ) : null}
+            {unreadMessageCount > 0 ? (
+              <div className={cn(isNarrow ? 'w-full pb-2' : 'mb-2')}>
+                <ToolbarTooltip
+                  label={`${terms.messages} — ${unreadMessageCount} unread`}
+                  placement={isNarrow ? 'right' : 'above'}
+                  className="w-full"
+                >
+                  <Button
+                    asChild
+                    variant="secondary"
+                    size="icon"
+                    className={cn(
+                      'relative h-8 w-full',
+                      sendibodActive &&
+                        'bg-sidebar-accent text-sidebar-foreground-active hover:bg-sidebar-accent',
+                    )}
+                  >
+                    <Link
+                      to="/sendibod"
+                      aria-label={`${terms.messages} — ${unreadMessageCount} unread`}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                        {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
                       </span>
-                    }
-                    items={[
-                      {
-                        key: 'sendibod',
-                        label: terms.messages,
-                        to: '/sendibod',
-                        active: sendibodActive,
-                        icon: <MessageSquare className="h-4 w-4" />,
-                        badge:
-                          unreadMessageCount > 0 ? (
-                            <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground tabular-nums">
-                              {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
-                            </span>
-                          ) : null,
-                      },
-                      {
-                        key: 'terminology',
-                        label: toggleTooltip,
-                        icon: <BookType className="h-4 w-4" />,
-                        onSelect: cycleTerminology,
-                      },
-                      {
-                        key: 'palette',
-                        label: paletteTooltip,
-                        icon: <Palette className="h-4 w-4" />,
-                        onSelect: cyclePalette,
-                      },
-                      {
-                        key: 'theme',
-                        label: themeLabel,
-                        icon:
-                          theme === 'dark' ? (
-                            <Sun className="h-4 w-4" />
-                          ) : (
-                            <Moon className="h-4 w-4" />
-                          ),
-                        onSelect: toggleTheme,
-                      },
-                      {
-                        key: 'settings',
-                        label: terms.settings,
-                        to: '/thing',
-                        active: pathname.startsWith('/thing'),
-                        icon: <Settings className="h-4 w-4" />,
-                      },
-                    ]}
-                  />
-                </div>
-                <div className="-mx-1.5 w-[calc(100%+0.75rem)] border-t border-sidebar-border">
-                  <ToolbarTooltip label={displayName} placement="right" className="w-full">
-                    <div className="flex w-full items-center justify-center px-0 py-2.5">
-                      <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
-                    </div>
-                  </ToolbarTooltip>
-                </div>
+                    </Link>
+                  </Button>
+                </ToolbarTooltip>
+              </div>
+            ) : null}
+            {isNarrow ? (
+              <div className="-mx-1.5 w-[calc(100%+0.75rem)] border-t border-sidebar-border">
+                <UserAccountMenu
+                  collapsed
+                  displayName={displayName}
+                  displayEmail={displayEmail}
+                  avatarUrl={avatarUrl}
+                  avatarFallback={avatarFallback}
+                  messagesLabel={terms.messages}
+                  messagesTo="/sendibod"
+                  messagesActive={sendibodActive}
+                  unreadMessageCount={unreadMessageCount}
+                  settingsLabel={terms.settings}
+                  settingsTo="/thing"
+                  settingsActive={pathname.startsWith('/thing')}
+                  terminologyLabel={toggleTooltip}
+                  onCycleTerminology={cycleTerminology}
+                  paletteLabel={paletteTooltip}
+                  onCyclePalette={cyclePalette}
+                  themeLabel={themeLabel}
+                  theme={theme}
+                  onToggleTheme={toggleTheme}
+                />
               </div>
             ) : (
-              <>
-                <div className="grid w-full grid-cols-5 gap-1">
-                  <ToolbarTooltip label={terms.messages} className="w-full">
-                    <Button
-                      asChild
-                      variant="secondary"
-                      size="icon"
-                      className={cn(
-                        'relative h-8 w-full',
-                        sendibodActive &&
-                          'bg-sidebar-accent text-sidebar-foreground-active hover:bg-sidebar-accent',
-                      )}
-                    >
-                      <Link
-                        to="/sendibod"
-                        aria-label={
-                          unreadMessageCount > 0
-                            ? `${terms.messages} — ${unreadMessageCount} unread`
-                            : terms.messages
-                        }
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                        {unreadMessageCount > 0 ? (
-                          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
-                            {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
-                          </span>
-                        ) : null}
-                      </Link>
-                    </Button>
-                  </ToolbarTooltip>
-                  <ToolbarTooltip label={toggleTooltip} className="w-full">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="icon"
-                      className="h-8 w-full"
-                      onClick={cycleTerminology}
-                      aria-label={toggleTooltip}
-                    >
-                      <BookType className="h-4 w-4" />
-                    </Button>
-                  </ToolbarTooltip>
-                  <ToolbarTooltip label={paletteTooltip} className="w-full">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="icon"
-                      className="h-8 w-full"
-                      onClick={cyclePalette}
-                      aria-label={paletteTooltip}
-                    >
-                      <Palette className="h-4 w-4" />
-                    </Button>
-                  </ToolbarTooltip>
-                  <ToolbarTooltip label={themeLabel} className="w-full">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="icon"
-                      className="h-8 w-full"
-                      onClick={toggleTheme}
-                      aria-label={themeLabel}
-                    >
-                      {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                    </Button>
-                  </ToolbarTooltip>
-                  <ToolbarTooltip label={terms.settings} className="w-full">
-                    <Button
-                      asChild
-                      variant="secondary"
-                      size="icon"
-                      className={cn(
-                        'h-8 w-full',
-                        pathname.startsWith('/thing') &&
-                          'bg-sidebar-accent text-sidebar-foreground-active hover:bg-sidebar-accent',
-                      )}
-                    >
-                      <Link to="/thing" aria-label={terms.settings}>
-                        <Settings className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </ToolbarTooltip>
-                </div>
-                <div className="mt-3 -mx-3 border-t border-sidebar-border pt-3">
-                  <div className="flex items-center gap-2 px-3">
-                    <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
-                    <div className="min-w-0 flex-1 text-left text-sm leading-tight">
-                      <p className="truncate font-medium text-foreground">{displayName}</p>
-                      {displayEmail ? (
-                        <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              </>
+              <UserAccountMenu
+                displayName={displayName}
+                displayEmail={displayEmail}
+                avatarUrl={avatarUrl}
+                avatarFallback={avatarFallback}
+                messagesLabel={terms.messages}
+                messagesTo="/sendibod"
+                messagesActive={sendibodActive}
+                unreadMessageCount={unreadMessageCount}
+                settingsLabel={terms.settings}
+                settingsTo="/thing"
+                settingsActive={pathname.startsWith('/thing')}
+                terminologyLabel={toggleTooltip}
+                onCycleTerminology={cycleTerminology}
+                paletteLabel={paletteTooltip}
+                onCyclePalette={cyclePalette}
+                themeLabel={themeLabel}
+                theme={theme}
+                onToggleTheme={toggleTheme}
+              />
             )}
           </div>
 
