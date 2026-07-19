@@ -97,9 +97,9 @@ export const handler = async (
       id: idFromSk(String(item.sk), DAGATAL_SUB_PREFIX),
     }))
 
-    const laufarStored = settings.laufar ?? settings.waypoints ?? {}
+    const laufarStored = settings.laufar ?? {}
     const sogurStored = settings.sogur ?? settings.logs ?? {}
-    const dagatalStored = settings.dagatal ?? settings.itinerary ?? {}
+    const dagatalStored = settings.dagatal ?? {}
 
     return toApiGatewayResponse(
       ok({
@@ -124,10 +124,7 @@ export const handler = async (
         laufar: {
           ...DEFAULT_SETTINGS.laufar,
           ...laufarStored,
-          laufarPerPage:
-            laufarStored.laufarPerPage ??
-            laufarStored.waypointsPerPage ??
-            DEFAULT_SETTINGS.laufar.laufarPerPage,
+          laufarPerPage: laufarStored.laufarPerPage ?? DEFAULT_SETTINGS.laufar.laufarPerPage,
         },
         sogur: {
           ...DEFAULT_SETTINGS.sogur,

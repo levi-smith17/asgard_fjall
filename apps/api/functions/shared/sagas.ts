@@ -7,11 +7,7 @@ export type SagaRecord = {
   sk: string
   name: string
   greinId?: string | null
-  /** @deprecated Legacy English attribute — dual-read until migrate-domain-attrs.py runs. */
-  trailId?: string | null
   runir?: unknown[]
-  /** @deprecated Legacy English attribute — dual-read until migrate-domain-attrs.py runs. */
-  markers?: unknown[]
   orderedThattrIds?: string[]
   createdAt?: string
   updatedAt?: string
@@ -31,9 +27,8 @@ export function sagaIdFromRecord(saga: SagaRecord): string {
   return idFromSk(saga.sk, SAGA_PREFIX)
 }
 
-/** Prefer greinId; fall back to legacy trailId until migrate-domain-attrs.py runs. */
-export function sagaGreinId(saga: Pick<SagaRecord, 'greinId' | 'trailId'>): string | null {
-  const value = saga.greinId ?? saga.trailId
+export function sagaGreinId(saga: Pick<SagaRecord, 'greinId'>): string | null {
+  const value = saga.greinId
   return typeof value === 'string' && value.length > 0 ? value : null
 }
 
@@ -140,7 +135,7 @@ export async function propagateSagaGreinId(
         new UpdateCommand({
           TableName: TABLE_NAME,
           Key: { pk, sk: sogurSk(thattrId) },
-          UpdateExpression: 'REMOVE greinId, trailId SET updatedAt = :updatedAt',
+          UpdateExpression: 'REMOVE greinId SET updatedAt = :updatedAt',
           ExpressionAttributeValues: { ':updatedAt': now },
         }),
       )

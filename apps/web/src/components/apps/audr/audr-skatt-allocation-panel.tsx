@@ -38,7 +38,7 @@ export function AudrSkattAllocationPanel({
     (line) =>
       line.active &&
       supplylineCountsAgainstSkatt(line.billingCycle) &&
-      (line.runir ?? line.markers ?? []).some((entry) => toRunId(entry) === cache.runId),
+      (line.runir ?? []).some((entry) => toRunId(entry) === cache.runId),
   )
   const surtrSpend = cache.spent
   const idunnSpend = idunnSpendForRun(supplylines, cache.runId)

@@ -49,7 +49,7 @@ export const handler = async (
 
     if (params.runId) {
       items = items.filter((e) =>
-        (e.runir ?? e.markers ?? []).some((m: { id?: string }) => m.id === params.runId),
+        (e.runir ?? []).some((m: { id?: string }) => m.id === params.runId),
       )
     }
 

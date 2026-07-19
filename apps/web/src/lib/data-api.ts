@@ -555,18 +555,15 @@ type FjallLogRaw = {
   updatedAt?: string | null
   sagaId?: string | null
   greinId?: string | null
-  trailId?: string | null
   laufId?: string | null
-  waypointId?: string | null
   grein?: { id: string; name: string } | null
   runir?: unknown
-  markers?: unknown
 }
 
 function toFjallLogView(raw: FjallLogRaw, greinarById: Map<string, string>): FjallLogView {
   const id = raw.id ?? (raw.sk ? extractEntityId(raw.sk) : '')
-  const greinId = raw.greinId ?? raw.trailId ?? null
-  const laufId = raw.laufId ?? raw.waypointId ?? null
+  const greinId = raw.greinId ?? null
+  const laufId = raw.laufId ?? null
   return {
     id,
     title: raw.title ?? null,
@@ -578,7 +575,7 @@ function toFjallLogView(raw: FjallLogRaw, greinarById: Map<string, string>): Fja
     greinId,
     laufId,
     greinName: raw.grein?.name ?? (greinId ? greinarById.get(greinId) ?? null : null),
-    runir: normalizeFjallLogRunir(raw.runir ?? raw.markers),
+    runir: normalizeFjallLogRunir(raw.runir),
   }
 }
 
@@ -644,24 +641,22 @@ type FjallSagaRaw = {
   sk?: string
   name: string
   greinId?: string | null
-  trailId?: string | null
   orderedThattrIds?: string[]
   runir?: unknown
-  markers?: unknown
   createdAt: string
   updatedAt?: string | null
 }
 
 function toFjallSagaView(raw: FjallSagaRaw, greinarById: Map<string, string>): FjallSagaView {
   const id = raw.id ?? (raw.sk ? extractEntityId(raw.sk) : '')
-  const greinId = raw.greinId ?? raw.trailId ?? null
+  const greinId = raw.greinId ?? null
   return {
     id,
     name: raw.name,
     greinId,
     greinName: greinId ? greinarById.get(greinId) ?? null : null,
     orderedThattrIds: Array.isArray(raw.orderedThattrIds) ? raw.orderedThattrIds : [],
-    runir: normalizeFjallLogRunir(raw.runir ?? raw.markers),
+    runir: normalizeFjallLogRunir(raw.runir),
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt ?? null,
   }
@@ -721,7 +716,7 @@ export async function reorderFjallSaga(
 function normalizeFjallBurn(burn: FjallBurn): FjallBurn {
   return {
     ...burn,
-    runir: normalizeFjallLogRunir(burn.runir ?? burn.markers).map((entry) => ({
+    runir: normalizeFjallLogRunir(burn.runir).map((entry) => ({
       runId: entry.runId,
       run: {
         id: entry.run.id,
@@ -736,7 +731,7 @@ function normalizeFjallBurn(burn: FjallBurn): FjallBurn {
 function normalizeFjallSupplyline(supplyline: FjallSupplyline): FjallSupplyline {
   return {
     ...supplyline,
-    runir: normalizeFjallLogRunir(supplyline.runir ?? supplyline.markers).map((entry) => ({
+    runir: normalizeFjallLogRunir(supplyline.runir).map((entry) => ({
       runId: entry.runId,
       run: {
         id: entry.run.id,

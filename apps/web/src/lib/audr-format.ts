@@ -14,8 +14,7 @@ export function skattUtilizationColor(pct: number) {
 }
 
 export function burnRunKey(burn: FjallBurn): string {
-  const runir = burn.runir ?? burn.markers ?? []
-  return toRunId(runir[0]) ?? 'uncategorized'
+  return toRunId((burn.runir ?? [])[0]) ?? 'uncategorized'
 }
 
 export function runShortLabel(

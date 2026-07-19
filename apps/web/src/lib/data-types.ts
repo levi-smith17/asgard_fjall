@@ -25,11 +25,7 @@ export type FjallLauf = {
   read: boolean
   readLater: boolean
   greinId?: string
-  /** Legacy attribute name; prefer `greinId`. */
-  trailId?: string
   runir?: FjallEmbeddedRun[]
-  /** Legacy attribute name; prefer `runir`. */
-  markers?: FjallEmbeddedRun[]
   createdAt: string
 }
 
@@ -124,8 +120,6 @@ export type FjallBurn = {
   receiptUrl?: string | null
   fundId?: string | null
   runir: FjallRunJunction[]
-  /** Legacy attribute name; prefer `runir`. */
-  markers?: FjallRunJunction[] | FjallEmbeddedRun[]
 }
 
 export type FjallSupplyline = {
@@ -139,8 +133,6 @@ export type FjallSupplyline = {
   active: boolean
   fundId?: string | null
   runir: FjallRunJunction[]
-  /** Legacy attribute name; prefer `runir`. */
-  markers?: FjallRunJunction[] | FjallEmbeddedRun[]
 }
 
 export type FjallCacheUtilization = {

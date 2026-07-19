@@ -113,7 +113,7 @@ export const handler = async (
       const runId = parts[1]
       const resolved = runMap.get(runId as string)
       const spent = monthSurtr
-        .filter((b) => (b.runir ?? b.markers ?? []).some((m: { id?: string }) => m.id === runId))
+        .filter((b) => (b.runir ?? []).some((m: { id?: string }) => m.id === runId))
         .reduce((sum, b) => sum + (b.amount as number), 0)
       const limit = c.limit as number
       const utilization = limit > 0 ? (spent / limit) * 100 : 0

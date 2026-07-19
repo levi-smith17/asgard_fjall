@@ -142,7 +142,7 @@ export const handler = async (
         sum +
         monthBurns
           .filter((b) =>
-            (((b.runir ?? b.markers) as { id: string }[] | undefined) ?? []).some((m) => m.id === runId),
+            ((b.runir ?? []) as { id: string }[]).some((m) => m.id === runId),
           )
           .reduce((s, b) => s + Number(b.amount), 0)
       )
@@ -184,7 +184,7 @@ export const handler = async (
         endDate: s.endDate ?? null,
         allDay: s.allDay ?? false,
         color:
-          ((s.runir ?? s.markers) as { color?: string }[] | undefined)?.[0]?.color ?? '#007AFF',
+          ((s.runir ?? []) as { color?: string }[])[0]?.color ?? '#007AFF',
       }))
 
     return toApiGatewayResponse(

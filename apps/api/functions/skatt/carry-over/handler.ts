@@ -73,7 +73,7 @@ export const handler = async (
         sk: skattSk(runId, month, year),
         id: randomUUID(),
         runId,
-        runName: b.runName ?? b.markerName,
+        runName: b.runName,
         limit: b.limit,
         month,
         year,
