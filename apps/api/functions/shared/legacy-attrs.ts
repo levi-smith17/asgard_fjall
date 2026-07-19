@@ -1,5 +1,5 @@
 /**
- * Canonical domain attribute readers (post migrate-domain-attrs.py).
+ * Canonical domain attribute readers for Fjall Dynamo items.
  */
 
 export function readGreinId(item: Record<string, unknown>): string | null {

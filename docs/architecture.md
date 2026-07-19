@@ -13,7 +13,6 @@ Repo: `levi-smith17/asgard_fjall`
 | Apex | `levismith.us` / `www` → public Ordstirr (Standard terms) |
 | API (Phase C) | Lambda + HTTP API Gateway via Terragrunt → `api.asgard.levismith.us` |
 | Media (Phase C) | `media.asgard.levismith.us` (public companions via CloudFront OAC) |
-| Dynamo cutover | `scripts/migrate-dynamo.py` — see `docs/dynamo-cutover.md` |
 | API data | Clients → `api.asgard.levismith.us` (path remaps at fetch boundary) |
 | Gate auth | Passkeys; `fjall_session`; RP ID `levismith.us` (shared across `asgard` + `fjall` hosts) |
 | Data API auth | Passkey session Bearer (`v1.*`) or RealmOps API token (`csk_*`) |
