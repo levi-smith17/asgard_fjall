@@ -52,14 +52,14 @@ export function AudrLaufarInspector({
   })
 
   const greinarById = useMemo(() => new Map(greinar.map((grein) => [grein.id, grein])), [greinar])
-  const provisionsGrein = useMemo(
+  const audrGrein = useMemo(
     () =>
       greinar.find((grein) => grein.name === rootRunName) ??
       greinar.find((grein) => isAudrRootName(grein.name)) ??
       null,
     [greinar, rootRunName],
   )
-  const provisionsRunIds = useMemo(() => {
+  const audrRunIds = useMemo(() => {
     return new Set(
       runir
         .filter(
@@ -83,12 +83,12 @@ export function AudrLaufarInspector({
     const all = (laufarQuery.data ?? []).map((lauf) => toLaufView(lauf, greinarById))
     return all
       .filter((lauf) =>
-        lauf.runir.some((run) => provisionsRunIds.has(run.id)),
+        lauf.runir.some((run) => audrRunIds.has(run.id)),
       )
       .sort((left, right) =>
         left.title.localeCompare(right.title, undefined, { sensitivity: 'base' }),
       )
-  }, [laufarQuery.data, greinarById, provisionsRunIds])
+  }, [laufarQuery.data, greinarById, audrRunIds])
 
   const filtered = useMemo(() => {
     if (!search.trim()) return laufar
@@ -119,14 +119,14 @@ export function AudrLaufarInspector({
 
   const saveMutation = useMutation({
     mutationFn: async (draft: LaufDraft) => {
-      if (!provisionsGrein) {
+      if (!audrGrein) {
         throw new Error(`Create a "${rootRunName}" ${terms.greinSingular.toLowerCase()} first`)
       }
       const payload = {
         title: draft.title.trim() || draft.url.trim(),
         url: draft.url.trim(),
         notes: draft.notes.trim() || undefined,
-        greinId: provisionsGrein.id,
+        greinId: audrGrein.id,
         runIds: draft.runIds,
       }
       if (isNew) return createFjallLauf(payload)
@@ -166,7 +166,7 @@ export function AudrLaufarInspector({
         )}
         runPickerInitialPath={[rootRunName]}
         defaultRunIds={isNew && rootRun ? [rootRun.id] : undefined}
-        lockedGreinId={provisionsGrein?.id}
+        lockedGreinId={audrGrein?.id}
         showBack
         onClose={() => onSelectId(null)}
         onSave={async (draft) => {

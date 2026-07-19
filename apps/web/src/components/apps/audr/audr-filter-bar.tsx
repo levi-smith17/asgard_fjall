@@ -81,7 +81,7 @@ export function AudrFilterBar({
   return (
     <div className={cn(STUDIO_CONTEXT_BAR_CLASS, 'z-30')}>
       <div className="flex w-full min-w-0 items-center gap-2">
-        <span className="shrink-0 text-sm font-semibold text-foreground">{terms.expenses}</span>
+        <span className="shrink-0 text-sm font-semibold text-foreground">{terms.surtr}</span>
         <StudioPagination
           className="shrink-0"
           aria-label="Month"
@@ -100,8 +100,8 @@ export function AudrFilterBar({
             onExpandedChange={setSearchExpanded}
             query={search}
             onQueryChange={onSearchChange}
-            placeholder={`Filter ${terms.expenses}…`}
-            tooltipLabel={`Filter ${terms.expenses}`}
+            placeholder={`Filter ${terms.surtr}…`}
+            tooltipLabel={`Filter ${terms.surtr}`}
             triggerIcon="filter"
             active={filtersActive}
             onClearAll={onClearFilters}
@@ -160,12 +160,12 @@ export function AudrFilterBar({
               <SjodrIcon className="h-4 w-4" />
             </button>
           </ToolbarTooltip>
-          <ToolbarTooltip label={`Bring ${terms.budgets} Forward`}>
+          <ToolbarTooltip label={`Bring ${terms.skatt} Forward`}>
             <button
               type="button"
               onClick={onBringSkatt}
               className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted-hover hover:text-foreground"
-              aria-label={`Bring ${terms.budgets} forward`}
+              aria-label={`Bring ${terms.skatt} forward`}
             >
               <Copy className="h-4 w-4" />
             </button>

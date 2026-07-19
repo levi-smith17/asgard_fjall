@@ -5,14 +5,14 @@ import { Button } from '@/components/core/ui/button'
 import { DatePicker } from '@/components/core/ui/date-picker'
 import { Select } from '@/components/core/ui/select'
 import { RunPicker } from '@/components/apps/run-picker'
-import { saveFjallSupplyline } from '@/lib/data-api'
+import { saveFjallIdunn } from '@/lib/data-api'
 import { useFormStatus } from '@/hooks/use-form-status'
 import { toRunId } from '@/lib/embedded-runir'
-import type { FjallSupplyline } from '@/lib/data-types'
+import type { FjallIdunn } from '@/lib/data-types'
 import { toDateInputValue, todayDateInputValue } from '@/lib/date-input'
 import { getDefaultSjodrId } from '@/lib/audr-default-sjodr'
 import { useTerms } from '@/hooks/use-terminology'
-import type { AudrSaveActionRef } from './inline-burn-form'
+import type { AudrSaveActionRef } from './inline-surtr-form'
 import { FundPicker } from './fund-picker'
 
 const BILLING_CYCLES = ['WEEKLY', 'BIWEEKLY', 'MONTHLY', 'QUARTERLY', 'ANNUALLY'] as const
@@ -36,7 +36,7 @@ function normalizeOptionalUrl(value: string): string | null {
 }
 
 interface Props {
-  supplyline?: FjallSupplyline
+  idunn?: FjallIdunn
   tags: { id: string; name: string; color: string; icon?: string | null }[]
   formId?: string
   saveActionRef?: AudrSaveActionRef
@@ -44,8 +44,8 @@ interface Props {
   onCancel?: () => void
 }
 
-export function InlineSupplylineForm({
-  supplyline,
+export function InlineIdunnForm({
+  idunn,
   tags,
   formId: formIdProp,
   saveActionRef,
@@ -56,39 +56,39 @@ export function InlineSupplylineForm({
   const generatedId = useId()
   const formId = formIdProp ?? generatedId
   const { saving, handleSubmit } = useFormStatus()
-  const [name, setName] = useState(supplyline?.name ?? '')
-  const [amount, setAmount] = useState(String(supplyline?.amount ?? 0))
-  const [billingCycle, setBillingCycle] = useState(supplyline?.billingCycle ?? 'MONTHLY')
+  const [name, setName] = useState(idunn?.name ?? '')
+  const [amount, setAmount] = useState(String(idunn?.amount ?? 0))
+  const [billingCycle, setBillingCycle] = useState(idunn?.billingCycle ?? 'MONTHLY')
   const [nextRenewal, setNextRenewal] = useState(() =>
-    supplyline?.nextRenewal
-      ? toDateInputValue(supplyline.nextRenewal)
+    idunn?.nextRenewal
+      ? toDateInputValue(idunn.nextRenewal)
       : todayDateInputValue(),
   )
-  const [url, setUrl] = useState(supplyline?.url ?? '')
-  const [notes, setNotes] = useState(supplyline?.notes ?? '')
+  const [url, setUrl] = useState(idunn?.url ?? '')
+  const [notes, setNotes] = useState(idunn?.notes ?? '')
   const [fundId, setFundId] = useState<string | null>(
-    () => supplyline?.fundId ?? (supplyline ? null : getDefaultSjodrId()),
+    () => idunn?.fundId ?? (idunn ? null : getDefaultSjodrId()),
   )
   const [runIds, setRunIds] = useState(
-    (supplyline?.runir?.map((t) => toRunId(t)).filter(Boolean) as string[]) ?? [],
+    (idunn?.runir?.map((t) => toRunId(t)).filter(Boolean) as string[]) ?? [],
   )
 
   useEffect(() => {
-    setName(supplyline?.name ?? '')
-    setAmount(String(supplyline?.amount ?? 0))
-    setBillingCycle(supplyline?.billingCycle ?? 'MONTHLY')
+    setName(idunn?.name ?? '')
+    setAmount(String(idunn?.amount ?? 0))
+    setBillingCycle(idunn?.billingCycle ?? 'MONTHLY')
     setNextRenewal(
-      supplyline?.nextRenewal
-        ? toDateInputValue(supplyline.nextRenewal)
+      idunn?.nextRenewal
+        ? toDateInputValue(idunn.nextRenewal)
         : todayDateInputValue(),
     )
-    setUrl(supplyline?.url ?? '')
-    setNotes(supplyline?.notes ?? '')
-    setFundId(supplyline?.fundId ?? (supplyline ? null : getDefaultSjodrId()))
+    setUrl(idunn?.url ?? '')
+    setNotes(idunn?.notes ?? '')
+    setFundId(idunn?.fundId ?? (idunn ? null : getDefaultSjodrId()))
     setRunIds(
-      (supplyline?.runir?.map((t) => toRunId(t)).filter(Boolean) as string[]) ?? [],
+      (idunn?.runir?.map((t) => toRunId(t)).filter(Boolean) as string[]) ?? [],
     )
-  }, [supplyline?.id])
+  }, [idunn?.id])
 
   async function save() {
     if (!name.trim()) {
@@ -107,8 +107,8 @@ export function InlineSupplylineForm({
 
     try {
       await handleSubmit(async () => {
-        await saveFjallSupplyline({
-          id: supplyline?.id,
+        await saveFjallIdunn({
+          id: idunn?.id,
           name: name.trim(),
           amount: parseFloat(amount) || 0,
           billingCycle,
@@ -117,7 +117,7 @@ export function InlineSupplylineForm({
           notes: notes.trim() || null,
           runIds,
           fundId,
-          active: supplyline?.active ?? true,
+          active: idunn?.active ?? true,
         })
         onSaved()
       })

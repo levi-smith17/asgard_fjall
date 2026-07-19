@@ -56,7 +56,7 @@ export function getFjallNavGroups(terms: Terms): FjallNavGroup[] {
       label: terms.fjallPersonalGroup,
       icon: UserRound,
       items: [
-        { key: 'audr', label: terms.provisions, href: '/audr', icon: Wallet },
+        { key: 'audr', label: terms.audr, href: '/audr', icon: Wallet },
         { key: 'dagatal', label: terms.calendar, href: '/dagatal', icon: CalendarDays },
         { key: 'ordstirr', label: terms.resume, href: '/ordstirr', icon: ScrollText },
         { key: 'sogur', label: terms.notes, href: '/sogur', icon: NotebookPen },

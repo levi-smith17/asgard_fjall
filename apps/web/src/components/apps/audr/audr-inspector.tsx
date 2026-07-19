@@ -3,33 +3,33 @@ import { Loader2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/core/ui/button'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { InspectorFormActions } from '@/components/core/ui/inspector-form-actions'
-import { deleteFjallBurn, deleteFjallCache, deleteFjallSupplyline } from '@/lib/data-api'
+import { deleteFjallSurtr, deleteFjallSkatt, deleteFjallIdunn } from '@/lib/data-api'
 import { runShortLabel } from '@/lib/audr-format'
 import { useTerms } from '@/hooks/use-terminology'
 import type { Terms } from '@/lib/terminology'
-import type { FjallBurn, FjallCacheUtilization, FjallSupplyline } from '@/lib/data-types'
+import type { FjallSurtr, FjallSkattUtilization, FjallIdunn } from '@/lib/data-types'
 import type { AudrRun, AudrSelection } from './audr-types'
-import { InlineBurnForm, type AudrSaveActionRef } from './inline-burn-form'
-import { InlineSupplylineForm } from './inline-supplyline-form'
-import { InlineCacheForm } from './inline-cache-form'
+import { InlineSurtrForm, type AudrSaveActionRef } from './inline-surtr-form'
+import { InlineIdunnForm } from './inline-idunn-form'
+import { InlineSkattForm } from './inline-skatt-form'
 import { AudrSkattCarryInspector } from './audr-skatt-carry-inspector'
 import { InspectorChrome, InspectorChromeTitle } from '@/components/core/ui/inspector-chrome'
 import { AudrSkattAllocationPanel } from './audr-skatt-allocation-panel'
 
-const BURN_FORM_ID = 'audr-burn-form'
-const SUPPLYLINE_FORM_ID = 'audr-supplyline-form'
-const CACHE_FORM_ID = 'audr-cache-form'
+const BURN_FORM_ID = 'audr-surtr-form'
+const SUPPLYLINE_FORM_ID = 'audr-idunn-form'
+const CACHE_FORM_ID = 'audr-skatt-form'
 
 export function AudrInspector({
   selection,
   runir,
   month,
   year,
-  burn,
-  supplyline,
-  cache,
-  skattSupplylines,
-  skattRunBurns = [],
+  surtr,
+  idunn,
+  skatt,
+  skattIdunn,
+  skattRunSurtr = [],
   targetRunIds,
   onSaved,
   onDeleted,
@@ -39,11 +39,11 @@ export function AudrInspector({
   runir: AudrRun[]
   month: number
   year: number
-  burn?: FjallBurn
-  supplyline?: FjallSupplyline
-  cache?: FjallCacheUtilization
-  skattSupplylines: FjallSupplyline[]
-  skattRunBurns?: FjallBurn[]
+  surtr?: FjallSurtr
+  idunn?: FjallIdunn
+  skatt?: FjallSkattUtilization
+  skattIdunn: FjallIdunn[]
+  skattRunSurtr?: FjallSurtr[]
   targetRunIds: Set<string>
   onSaved: () => void
   onDeleted: () => void
@@ -69,33 +69,33 @@ export function AudrInspector({
     )
   }
 
-  const title = inspectorTitle(selection, runir, terms, burn, supplyline, cache)
-  const showBurnForm = selection.kind === 'new-burn' || selection.kind === 'burn'
-  const showSupplylineForm = selection.kind === 'new-supplyline' || selection.kind === 'supplyline'
-  const showCacheForm =
-    selection.kind === 'new-cache' ||
-    selection.kind === 'cache' ||
-    selection.kind === 'cache-run'
+  const title = inspectorTitle(selection, runir, terms, surtr, idunn, skatt)
+  const showSurtrForm = selection.kind === 'new-surtr' || selection.kind === 'surtr'
+  const showIdunnForm = selection.kind === 'new-idunn' || selection.kind === 'idunn'
+  const showSkattForm =
+    selection.kind === 'new-skatt' ||
+    selection.kind === 'skatt' ||
+    selection.kind === 'skatt-run'
 
-  const showSave = showBurnForm || showSupplylineForm || showCacheForm
+  const showSave = showSurtrForm || showIdunnForm || showSkattForm
   const isNew =
-    selection.kind === 'new-burn' ||
-    selection.kind === 'new-supplyline' ||
-    selection.kind === 'new-cache' ||
-    selection.kind === 'cache-run'
+    selection.kind === 'new-surtr' ||
+    selection.kind === 'new-idunn' ||
+    selection.kind === 'new-skatt' ||
+    selection.kind === 'skatt-run'
 
   const saveLabel =
-    selection.kind === 'burn'
+    selection.kind === 'surtr'
       ? 'Save changes'
-      : selection.kind === 'supplyline'
+      : selection.kind === 'idunn'
         ? 'Save changes'
-        : selection.kind === 'cache'
+        : selection.kind === 'skatt'
           ? 'Save changes'
-          : selection.kind === 'new-burn'
-            ? `Add ${terms.expenseSingular}`
-            : selection.kind === 'new-supplyline'
-              ? `Add ${terms.subscriptionSingular}`
-              : `Add ${terms.budgetSingular}`
+          : selection.kind === 'new-surtr'
+            ? `Add ${terms.surtrSingular}`
+            : selection.kind === 'new-idunn'
+              ? `Add ${terms.idunnSingular}`
+              : `Add ${terms.skattSingular}`
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
@@ -104,15 +104,15 @@ export function AudrInspector({
       </InspectorChrome>
 
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
-        {showBurnForm ? (
-          <InlineBurnForm
+        {showSurtrForm ? (
+          <InlineSurtrForm
             key={
-              selection.kind === 'burn'
+              selection.kind === 'surtr'
                 ? selection.id
-                : `new-burn:${selection.kind === 'new-burn' ? (selection.runId ?? '') : ''}`
+                : `new-surtr:${selection.kind === 'new-surtr' ? (selection.runId ?? '') : ''}`
             }
-            burn={burn}
-            defaultRunId={selection.kind === 'new-burn' ? selection.runId : undefined}
+            surtr={surtr}
+            defaultRunId={selection.kind === 'new-surtr' ? selection.runId : undefined}
             tags={runir}
             formId={BURN_FORM_ID}
             saveActionRef={saveActionRef}
@@ -120,14 +120,14 @@ export function AudrInspector({
           />
         ) : null}
 
-        {showSupplylineForm ? (
-          <InlineSupplylineForm
+        {showIdunnForm ? (
+          <InlineIdunnForm
             key={
-              selection.kind === 'supplyline'
+              selection.kind === 'idunn'
                 ? selection.id
-                : 'new-supplyline'
+                : 'new-idunn'
             }
-            supplyline={supplyline}
+            idunn={idunn}
             tags={runir}
             formId={SUPPLYLINE_FORM_ID}
             saveActionRef={saveActionRef}
@@ -135,21 +135,21 @@ export function AudrInspector({
           />
         ) : null}
 
-        {showCacheForm ? (
+        {showSkattForm ? (
           <>
-            <InlineCacheForm
+            <InlineSkattForm
               key={
-                selection.kind === 'cache'
+                selection.kind === 'skatt'
                   ? selection.id
-                  : selection.kind === 'cache-run'
-                    ? `cache-run:${selection.runId}`
-                    : `new-cache:${selection.kind === 'new-cache' ? (selection.runId ?? '') : ''}`
+                  : selection.kind === 'skatt-run'
+                    ? `skatt-run:${selection.runId}`
+                    : `new-skatt:${selection.kind === 'new-skatt' ? (selection.runId ?? '') : ''}`
               }
-              cache={cache}
+              skatt={skatt}
               defaultRunId={
-                selection.kind === 'cache-run'
+                selection.kind === 'skatt-run'
                   ? selection.runId
-                  : selection.kind === 'new-cache'
+                  : selection.kind === 'new-skatt'
                     ? selection.runId
                     : undefined
               }
@@ -160,13 +160,13 @@ export function AudrInspector({
               saveActionRef={saveActionRef}
               onSaved={onSaved}
             />
-            {selection.kind === 'cache' && cache ? (
+            {selection.kind === 'skatt' && skatt ? (
               <>
                 <div className="border-t border-border" />
                 <AudrSkattAllocationPanel
-                  cache={cache}
-                  burns={skattRunBurns}
-                  supplylines={skattSupplylines}
+                  skatt={skatt}
+                  surtrItems={skattRunSurtr}
+                  idunnItems={skattIdunn}
                   runir={runir}
                 />
               </>
@@ -186,7 +186,7 @@ export function AudrInspector({
         />
       ) : null}
 
-      {selection.kind === 'burn' && burn ? (
+      {selection.kind === 'surtr' && surtr ? (
         <>
           <div className="shrink-0 border-t border-border px-5 py-4">
             <Button
@@ -204,22 +204,22 @@ export function AudrInspector({
               ) : (
                 <>
                   <Trash2 className="h-4 w-4" />
-                  Remove {terms.expenseSingular.toLowerCase()}
+                  Remove {terms.surtrSingular.toLowerCase()}
                 </>
               )}
             </Button>
           </div>
           <ConfirmDialog
             open={confirmDelete}
-            title={`Remove ${terms.expenseSingular.toLowerCase()}?`}
-            description={<>This will permanently remove &ldquo;{burn.name}&rdquo; and any attached receipt.</>}
+            title={`Remove ${terms.surtrSingular.toLowerCase()}?`}
+            description={<>This will permanently remove &ldquo;{surtr.name}&rdquo; and any attached receipt.</>}
             confirmLabel="Remove"
             confirmVariant="destructive"
             onCancel={() => setConfirmDelete(false)}
             onConfirm={async () => {
               setDeleting(true)
               try {
-                await deleteFjallBurn(burn.id)
+                await deleteFjallSurtr(surtr.id)
                 setConfirmDelete(false)
                 onDeleted()
               } finally {
@@ -230,7 +230,7 @@ export function AudrInspector({
         </>
       ) : null}
 
-      {selection.kind === 'supplyline' && supplyline ? (
+      {selection.kind === 'idunn' && idunn ? (
         <>
           <div className="shrink-0 border-t border-border px-5 py-4">
             <Button
@@ -248,22 +248,22 @@ export function AudrInspector({
               ) : (
                 <>
                   <Trash2 className="h-4 w-4" />
-                  Remove {terms.subscriptionSingular.toLowerCase()}
+                  Remove {terms.idunnSingular.toLowerCase()}
                 </>
               )}
             </Button>
           </div>
           <ConfirmDialog
             open={confirmDelete}
-            title={`Remove ${terms.subscriptionSingular.toLowerCase()}?`}
-            description={<>This will permanently remove &ldquo;{supplyline.name}&rdquo;.</>}
+            title={`Remove ${terms.idunnSingular.toLowerCase()}?`}
+            description={<>This will permanently remove &ldquo;{idunn.name}&rdquo;.</>}
             confirmLabel="Remove"
             confirmVariant="destructive"
             onCancel={() => setConfirmDelete(false)}
             onConfirm={async () => {
               setDeleting(true)
               try {
-                await deleteFjallSupplyline(supplyline.id)
+                await deleteFjallIdunn(idunn.id)
                 setConfirmDelete(false)
                 onDeleted()
               } finally {
@@ -274,7 +274,7 @@ export function AudrInspector({
         </>
       ) : null}
 
-      {selection.kind === 'cache' && cache ? (
+      {selection.kind === 'skatt' && skatt ? (
         <>
           <div className="shrink-0 border-t border-border px-5 py-4">
             <Button
@@ -292,18 +292,18 @@ export function AudrInspector({
               ) : (
                 <>
                   <Trash2 className="h-4 w-4" />
-                  Remove {terms.budgetSingular.toLowerCase()}
+                  Remove {terms.skattSingular.toLowerCase()}
                 </>
               )}
             </Button>
           </div>
           <ConfirmDialog
             open={confirmDelete}
-            title={`Remove ${terms.budgetSingular.toLowerCase()}?`}
+            title={`Remove ${terms.skattSingular.toLowerCase()}?`}
             description={
               <>
-                Remove the {terms.budgetSingular.toLowerCase()} limit for{' '}
-                {runShortLabel(cache.runId, runir, cache)} this month?
+                Remove the {terms.skattSingular.toLowerCase()} limit for{' '}
+                {runShortLabel(skatt.runId, runir, skatt)} this month?
               </>
             }
             confirmLabel="Remove"
@@ -312,7 +312,7 @@ export function AudrInspector({
             onConfirm={async () => {
               setDeleting(true)
               try {
-                await deleteFjallCache(cache.id)
+                await deleteFjallSkatt(skatt.id)
                 setConfirmDelete(false)
                 onDeleted()
               } finally {
@@ -330,26 +330,26 @@ function inspectorTitle(
   selection: AudrSelection,
   runir: AudrRun[],
   terms: Terms,
-  burn?: FjallBurn,
-  supplyline?: FjallSupplyline,
-  cache?: FjallCacheUtilization,
+  surtr?: FjallSurtr,
+  idunn?: FjallIdunn,
+  skatt?: FjallSkattUtilization,
 ): string {
   switch (selection.kind) {
-    case 'new-burn':
-      return `Add ${terms.expenseSingular}`
-    case 'burn':
-      return burn?.name ?? terms.expenseSingular
-    case 'new-supplyline':
-      return `Add ${terms.subscriptionSingular}`
-    case 'supplyline':
-      return supplyline?.name ?? terms.subscriptionSingular
-    case 'new-cache':
-      return `Add ${terms.budgetSingular}`
-    case 'cache-run':
-      return `Add ${terms.budgetSingular}`
-    case 'cache':
-      return runShortLabel(cache?.runId ?? '', runir, cache) || terms.budgets
+    case 'new-surtr':
+      return `Add ${terms.surtrSingular}`
+    case 'surtr':
+      return surtr?.name ?? terms.surtrSingular
+    case 'new-idunn':
+      return `Add ${terms.idunnSingular}`
+    case 'idunn':
+      return idunn?.name ?? terms.idunnSingular
+    case 'new-skatt':
+      return `Add ${terms.skattSingular}`
+    case 'skatt-run':
+      return `Add ${terms.skattSingular}`
+    case 'skatt':
+      return runShortLabel(skatt?.runId ?? '', runir, skatt) || terms.skatt
     default:
-      return terms.provisions
+      return terms.audr
   }
 }

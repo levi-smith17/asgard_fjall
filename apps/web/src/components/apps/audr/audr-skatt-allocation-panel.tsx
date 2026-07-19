@@ -5,12 +5,12 @@ import {
   effectiveSkattSpent,
   effectiveSkattUtilization,
   idunnSpendForRun,
-  supplylineCountsAgainstSkatt,
-  supplylineMonthlyAmount,
+  idunnCountsAgainstSkatt,
+  idunnMonthlyAmount,
 } from '@/lib/audr-skatt-idunn'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
-import type { FjallBurn, FjallCacheUtilization, FjallSupplyline } from '@/lib/data-types'
+import type { FjallSurtr, FjallSkattUtilization, FjallIdunn } from '@/lib/data-types'
 import type { AudrRun } from './audr-types'
 
 const CYCLE_LABELS: Record<string, string> = {
@@ -22,28 +22,28 @@ const CYCLE_LABELS: Record<string, string> = {
 }
 
 export function AudrSkattAllocationPanel({
-  cache,
-  burns,
-  supplylines,
+  skatt,
+  surtrItems,
+  idunnItems,
   runir = [],
 }: {
-  cache: FjallCacheUtilization
-  burns: FjallBurn[]
-  supplylines: FjallSupplyline[]
+  skatt: FjallSkattUtilization
+  surtrItems: FjallSurtr[]
+  idunnItems: FjallIdunn[]
   runir?: AudrRun[]
 }) {
   const terms = useTerms()
   const liveById = liveRunirById(runir)
-  const idunnLines = supplylines.filter(
+  const idunnLines = idunnItems.filter(
     (line) =>
       line.active &&
-      supplylineCountsAgainstSkatt(line.billingCycle) &&
-      (line.runir ?? []).some((entry) => toRunId(entry) === cache.runId),
+      idunnCountsAgainstSkatt(line.billingCycle) &&
+      (line.runir ?? []).some((entry) => toRunId(entry) === skatt.runId),
   )
-  const surtrSpend = cache.spent
-  const idunnSpend = idunnSpendForRun(supplylines, cache.runId)
-  const totalSpent = effectiveSkattSpent(cache, supplylines)
-  const utilization = effectiveSkattUtilization(cache, supplylines)
+  const surtrSpend = skatt.spent
+  const idunnSpend = idunnSpendForRun(idunnItems, skatt.runId)
+  const totalSpent = effectiveSkattSpent(skatt, idunnItems)
+  const utilization = effectiveSkattUtilization(skatt, idunnItems)
 
   return (
     <div className="space-y-4 px-5 py-4">
@@ -52,16 +52,16 @@ export function AudrSkattAllocationPanel({
           Allocation
         </p>
         <div className="mt-2 grid grid-cols-2 gap-2 rounded-md bg-muted/50 px-3 py-2 text-xs">
-          <span className="text-muted-foreground">{terms.expenses}</span>
+          <span className="text-muted-foreground">{terms.surtr}</span>
           <span className="text-right tabular-nums text-foreground">{audrFmt(surtrSpend)}</span>
-          <span className="text-muted-foreground">{terms.subscriptions}</span>
+          <span className="text-muted-foreground">{terms.idunn}</span>
           <span className="text-right tabular-nums text-foreground">{audrFmt(idunnSpend)}</span>
           <span className="font-medium text-foreground">Total</span>
           <span className="text-right font-medium tabular-nums text-foreground">
             {audrFmt(totalSpent)}
           </span>
           <span className="text-muted-foreground">Limit</span>
-          <span className="text-right tabular-nums text-foreground">{audrFmt(cache.limit)}</span>
+          <span className="text-right tabular-nums text-foreground">{audrFmt(skatt.limit)}</span>
         </div>
         <div className="mt-2 flex items-center gap-2">
           <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
@@ -78,30 +78,30 @@ export function AudrSkattAllocationPanel({
 
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {terms.expenses}
+          {terms.surtr}
         </p>
-        {burns.length === 0 ? (
+        {surtrItems.length === 0 ? (
           <p className="text-xs text-muted-foreground">
-            No {terms.expenses.toLowerCase()} charged to this {terms.budgets.toLowerCase()}{' '}
+            No {terms.surtr.toLowerCase()} charged to this {terms.skatt.toLowerCase()}{' '}
             this month.
           </p>
         ) : (
           <ul className="space-y-1.5">
-            {burns.map((burn) => (
+            {surtrItems.map((surtr) => (
               <li
-                key={burn.id}
+                key={surtr.id}
                 className="flex items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs"
               >
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-foreground">{burn.name}</p>
+                  <p className="truncate font-medium text-foreground">{surtr.name}</p>
                   <p className="text-muted-foreground">
-                    {new Date(burn.date.slice(0, 10).replace(/-/g, '/')).toLocaleDateString('en-US', {
+                    {new Date(surtr.date.slice(0, 10).replace(/-/g, '/')).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                     })}
                   </p>
                 </div>
-                <span className="shrink-0 tabular-nums font-medium">{audrFmt(burn.amount)}</span>
+                <span className="shrink-0 tabular-nums font-medium">{audrFmt(surtr.amount)}</span>
               </li>
             ))}
           </ul>
@@ -110,12 +110,12 @@ export function AudrSkattAllocationPanel({
 
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {terms.subscriptions}
+          {terms.idunn}
         </p>
         {idunnLines.length === 0 ? (
           <p className="text-xs text-muted-foreground">
-            No active {terms.subscriptions.toLowerCase()} counting toward this{' '}
-            {terms.budgets.toLowerCase()}.
+            No active {terms.idunn.toLowerCase()} counting toward this{' '}
+            {terms.skatt.toLowerCase()}.
           </p>
         ) : (
           <ul className="space-y-1.5">
@@ -134,7 +134,7 @@ export function AudrSkattAllocationPanel({
                     })}
                   </div>
                   <p className="mt-1 text-muted-foreground">
-                    {audrFmt(supplylineMonthlyAmount(line.amount, line.billingCycle))} / mo
+                    {audrFmt(idunnMonthlyAmount(line.amount, line.billingCycle))} / mo
                     <span className="text-muted-foreground/70">
                       {' '}
                       ({CYCLE_LABELS[line.billingCycle] ?? line.billingCycle})

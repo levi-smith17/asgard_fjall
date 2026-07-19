@@ -7,13 +7,13 @@ import { StudioRailTitle } from '@/components/core/layout/studio-rail-title'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { RunBadge } from '@/components/apps/run-badge'
 import { liveRunirById, toDisplayRun } from '@/lib/embedded-runir'
-import { toggleFjallSupplylineActive } from '@/lib/data-api'
+import { toggleFjallIdunnActive } from '@/lib/data-api'
 import { daysUntilRenewal, getEffectiveNextRenewal } from '@/lib/idunn-renewal'
 import { audrFmt } from '@/lib/audr-format'
 import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import { useTerms } from '@/hooks/use-terminology'
 import { cn } from '@/lib/utils'
-import type { FjallSjodrView, FjallSupplyline } from '@/lib/data-types'
+import type { FjallSjodrView, FjallIdunn } from '@/lib/data-types'
 import { resolveSjodrColor } from '@/lib/sjodr-color'
 import type { AudrRun } from './audr-types'
 
@@ -26,7 +26,7 @@ const CYCLE_LABELS: Record<string, string> = {
 }
 
 export function AudrIdunnRail({
-  supplylines,
+  idunnItems,
   funds,
   runir = [],
   selectedId,
@@ -39,7 +39,7 @@ export function AudrIdunnRail({
   onOpenCatalog,
   onRefresh,
 }: {
-  supplylines: FjallSupplyline[]
+  idunnItems: FjallIdunn[]
   funds: FjallSjodrView[]
   runir?: AudrRun[]
   selectedId: string | null
@@ -58,7 +58,7 @@ export function AudrIdunnRail({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="flex h-14 min-h-14 max-h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
-        <StudioRailTitle icon={Repeat}>{terms.subscriptions}</StudioRailTitle>
+        <StudioRailTitle icon={Repeat}>{terms.idunn}</StudioRailTitle>
         <div className="flex items-center gap-1">
           <ToolbarTooltip label={terms.runir}>
             <button
@@ -70,14 +70,14 @@ export function AudrIdunnRail({
               <ASGARD_ENTITY_ICONS.runir className="h-3.5 w-3.5" aria-hidden />
             </button>
           </ToolbarTooltip>
-          <ToolbarTooltip label={`Add ${terms.subscriptionSingular}`}>
+          <ToolbarTooltip label={`Add ${terms.idunnSingular}`}>
             <Button
               type="button"
               size="icon"
               variant="secondary"
               className="h-7 w-7"
               onClick={onAdd}
-              aria-label={`Add ${terms.subscriptionSingular}`}
+              aria-label={`Add ${terms.idunnSingular}`}
             >
               <Plus className="h-3.5 w-3.5" aria-hidden />
             </Button>
@@ -112,32 +112,32 @@ export function AudrIdunnRail({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
-        {supplylines.length === 0 ? (
+        {idunnItems.length === 0 ? (
           <p className="px-1 py-4 text-xs text-muted-foreground">
-            No {terms.subscriptions.toLowerCase()} match this filter.
+            No {terms.idunn.toLowerCase()} match this filter.
           </p>
         ) : (
           <ul className="space-y-1.5">
-            {supplylines.map((supplyline) => (
-              <li key={supplyline.id}>
+            {idunnItems.map((idunn) => (
+              <li key={idunn.id}>
                 <AudrIdunnRailCard
-                  supplyline={supplyline}
+                  idunn={idunn}
                   liveById={liveById}
                   fundColor={
-                    supplyline.fundId
+                    idunn.fundId
                       ? resolveSjodrColor(
-                          supplyline.fundId,
-                          fundById.get(supplyline.fundId)?.color,
+                          idunn.fundId,
+                          fundById.get(idunn.fundId)?.color,
                         )
                       : null
                   }
                   fundName={
-                    supplyline.fundId
-                      ? (fundById.get(supplyline.fundId)?.name ?? undefined)
+                    idunn.fundId
+                      ? (fundById.get(idunn.fundId)?.name ?? undefined)
                       : undefined
                   }
-                  selected={selectedId === supplyline.id}
-                  onSelect={() => onSelect(supplyline.id)}
+                  selected={selectedId === idunn.id}
+                  onSelect={() => onSelect(idunn.id)}
                   onToggleActive={onRefresh}
                 />
               </li>
@@ -150,7 +150,7 @@ export function AudrIdunnRail({
 }
 
 function AudrIdunnRailCard({
-  supplyline,
+  idunn,
   liveById,
   fundColor,
   fundName,
@@ -158,7 +158,7 @@ function AudrIdunnRailCard({
   onSelect,
   onToggleActive,
 }: {
-  supplyline: FjallSupplyline
+  idunn: FjallIdunn
   liveById: ReturnType<typeof liveRunirById>
   fundColor?: string | null
   fundName?: string
@@ -166,14 +166,14 @@ function AudrIdunnRailCard({
   onSelect: () => void
   onToggleActive: () => void
 }) {
-  const effectiveRenewal = getEffectiveNextRenewal(supplyline.nextRenewal, supplyline.billingCycle)
-  const daysUntil = daysUntilRenewal(supplyline.nextRenewal, supplyline.billingCycle)
-  const renewingSoon = daysUntil <= 7 && supplyline.active
+  const effectiveRenewal = getEffectiveNextRenewal(idunn.nextRenewal, idunn.billingCycle)
+  const daysUntil = daysUntilRenewal(idunn.nextRenewal, idunn.billingCycle)
+  const renewingSoon = daysUntil <= 7 && idunn.active
 
-  const href = supplyline.url?.trim()
-    ? supplyline.url.includes('://')
-      ? supplyline.url
-      : `https://${supplyline.url}`
+  const href = idunn.url?.trim()
+    ? idunn.url.includes('://')
+      ? idunn.url
+      : `https://${idunn.url}`
     : null
 
   return (
@@ -182,13 +182,13 @@ function AudrIdunnRailCard({
       className={cn(
         'relative flex w-full items-start gap-2 rounded-lg border bg-card p-2 text-left text-xs transition-colors',
         selected ? 'border-primary/40 bg-primary/10' : 'border-border hover:border-primary/50',
-        !supplyline.active && 'opacity-50',
+        !idunn.active && 'opacity-50',
       )}
     >
       <Switch
-        checked={supplyline.active}
+        checked={idunn.active}
         onCheckedChange={async (checked) => {
-          await toggleFjallSupplylineActive(supplyline.id, checked)
+          await toggleFjallIdunnActive(idunn.id, checked)
           onToggleActive()
         }}
         className="mt-0.5 shrink-0 scale-75"
@@ -196,7 +196,7 @@ function AudrIdunnRailCard({
       />
       <button type="button" onClick={onSelect} className="min-w-0 flex-1 text-left">
         <div className={cn('flex items-center gap-1.5', href && 'pr-6')}>
-          <span className="truncate text-sm font-medium text-foreground">{supplyline.name}</span>
+          <span className="truncate text-sm font-medium text-foreground">{idunn.name}</span>
           {fundColor ? (
             <span
               className="inline-block h-2 w-2 shrink-0 rounded-full"
@@ -212,7 +212,7 @@ function AudrIdunnRailCard({
           ) : null}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-1">
-          {(supplyline.runir ?? []).map((entry, i) => {
+          {(idunn.runir ?? []).map((entry, i) => {
             const run = toDisplayRun(entry, liveById)
             if (!run) return null
             return <RunBadge key={run.id ?? i} run={run} />
@@ -223,10 +223,10 @@ function AudrIdunnRailCard({
             {effectiveRenewal.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
           <span className="font-medium tabular-nums text-foreground">
-            {audrFmt(supplyline.amount)}
+            {audrFmt(idunn.amount)}
             <span className="font-normal text-muted-foreground">
               {' '}
-              / {CYCLE_LABELS[supplyline.billingCycle] ?? supplyline.billingCycle}
+              / {CYCLE_LABELS[idunn.billingCycle] ?? idunn.billingCycle}
             </span>
           </span>
         </div>
@@ -236,7 +236,7 @@ function AudrIdunnRailCard({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={`Open ${supplyline.name} link`}
+          aria-label={`Open ${idunn.name} link`}
           title="Open link"
           className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           onClick={(e) => e.stopPropagation()}

@@ -41,7 +41,7 @@ import {
   deleteFjallLauf,
   fetchFjallThaettir,
   fetchFjallRunir,
-  fetchProvisionsSummary,
+  fetchAudrSummary,
   fetchFjallSendibod,
   fetchFjallStarfieldNetworks,
   fetchFjallStatus,
@@ -191,8 +191,8 @@ function HlidskjalfSnapshots() {
   const configured = statusQuery.data?.configured === true
 
   const provisionsQuery = useQuery({
-    queryKey: ['fjall-snapshot-provisions', month, year],
-    queryFn: () => fetchProvisionsSummary(month, year),
+    queryKey: ['fjall-snapshot-audr', month, year],
+    queryFn: () => fetchAudrSummary(month, year),
     enabled: configured,
     staleTime: 60_000,
   })
@@ -222,9 +222,9 @@ function HlidskjalfSnapshots() {
   const isLoading = statusQuery.isLoading
   const summary = provisionsQuery.data?.summary
   const upcomingRenewals = provisionsQuery.data?.upcomingRenewals ?? []
-  const cacheUtilization = provisionsQuery.data?.cacheUtilization ?? []
-  const cacheTotalLimit = cacheUtilization.reduce((sum, item) => sum + item.limit, 0)
-  const cacheTotalSpent = cacheUtilization.reduce((sum, item) => sum + item.spent, 0)
+  const skattUtilization = provisionsQuery.data?.skattUtilization ?? []
+  const cacheTotalLimit = skattUtilization.reduce((sum, item) => sum + item.limit, 0)
+  const cacheTotalSpent = skattUtilization.reduce((sum, item) => sum + item.spent, 0)
 
   const upcomingEvents = (dagatalQuery.data?.events ?? [])
     .filter((event) => {
@@ -267,7 +267,7 @@ function HlidskjalfSnapshots() {
         {isLoading ? (
           Array.from({ length: 4 }).map((_, index) => <SnapshotSkeleton key={index} />)
         ) : !configured ? (
-          [terms.resume, terms.provisions, terms.calendar, terms.messages].map((label) => (
+          [terms.resume, terms.audr, terms.calendar, terms.messages].map((label) => (
             <div
               key={label}
               className="flex h-[8rem] flex-col rounded-xl border border-border bg-card p-3"
@@ -302,7 +302,7 @@ function HlidskjalfSnapshots() {
               )}
             </PanelShell>
 
-            <PanelShell href="/audr" label={terms.provisions} icon={Wallet}>
+            <PanelShell href="/audr" label={terms.audr} icon={Wallet}>
               {provisionsQuery.isLoading ? (
                 <div className="space-y-1.5">
                   <div className="h-3 w-full animate-pulse rounded bg-muted" />
@@ -313,23 +313,23 @@ function HlidskjalfSnapshots() {
                   <div className="flex items-center justify-between gap-2">
                     <span className="flex items-center gap-1 text-muted-foreground">
                       <CreditCard className="h-3 w-3" />
-                      {terms.subscriptions}
+                      {terms.idunn}
                     </span>
                     <span className="truncate font-medium tabular-nums">
-                      {fmt(summary?.monthlySupplylineCost ?? 0)}
+                      {fmt(summary?.monthlyIdunnCost ?? 0)}
                       <span className="font-normal text-muted-foreground">
                         {' '}
-                        · {summary?.activeSupplylines ?? 0} active
+                        · {summary?.activeIdunn ?? 0} active
                       </span>
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-muted-foreground">{terms.expenses}</span>
-                    <span className="font-medium tabular-nums">{fmt(summary?.totalBurn ?? 0)}</span>
+                    <span className="text-muted-foreground">{terms.surtr}</span>
+                    <span className="font-medium tabular-nums">{fmt(summary?.totalSurtr ?? 0)}</span>
                   </div>
                   {cacheTotalLimit > 0 ? (
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-muted-foreground">{terms.budgets}</span>
+                      <span className="text-muted-foreground">{terms.skatt}</span>
                       <span className="truncate font-medium tabular-nums">
                         {fmt(cacheTotalSpent)}
                         <span className="font-normal text-muted-foreground">

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
-import type { FjallCacheUtilization, FjallSjodrView, FjallSupplyline } from '@/lib/data-types'
+import type { FjallSkattUtilization, FjallSjodrView, FjallIdunn } from '@/lib/data-types'
 import { Button } from '@/components/core/ui/button'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { Input } from '@/components/core/ui/input'
@@ -36,15 +36,15 @@ import { resolveSjodrColor } from '@/lib/sjodr-color'
 export function AudrSjodrInspector({
   month,
   year,
-  cacheUtilization,
-  supplylines,
+  skattUtilization,
+  idunnItems,
   selectedId,
   onSelectId,
 }: {
   month: number
   year: number
-  cacheUtilization: FjallCacheUtilization[]
-  supplylines: FjallSupplyline[]
+  skattUtilization: FjallSkattUtilization[]
+  idunnItems: FjallIdunn[]
   selectedId: string | null
   onSelectId: (id: string | null) => void
 }) {
@@ -153,7 +153,7 @@ export function AudrSjodrInspector({
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
         <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
           <p className="text-xs leading-relaxed text-muted-foreground">
-            Group {terms.budgets}, {terms.subscriptions}, and {terms.expenses} under named{' '}
+            Group {terms.skatt}, {terms.idunn}, and {terms.surtr} under named{' '}
             {terms.sjodr.toLowerCase()}.
           </p>
           <ToolbarTooltip label={`New ${terms.sjodrSingular}`}>
@@ -192,8 +192,8 @@ export function AudrSjodrInspector({
                 month={month}
                 year={year}
                 isDefault={defaultFundId === fund.id}
-                caches={cacheUtilization.filter((cache) => cache.fundId === fund.id)}
-                supplylines={supplylines.filter((line) => line.fundId === fund.id)}
+                skattItems={skattUtilization.filter((skatt) => skatt.fundId === fund.id)}
+                idunnItems={idunnItems.filter((line) => line.fundId === fund.id)}
                 onEdit={() => onSelectId(fund.id)}
               />
             ))
@@ -222,34 +222,34 @@ function SjodrCard({
   month,
   year,
   isDefault,
-  caches,
-  supplylines,
+  skattItems,
+  idunnItems,
   onEdit,
 }: {
   fund: FjallSjodrView
   month: number
   year: number
   isDefault: boolean
-  caches: FjallCacheUtilization[]
-  supplylines: FjallSupplyline[]
+  skattItems: FjallSkattUtilization[]
+  idunnItems: FjallIdunn[]
   onEdit: () => void
 }) {
   const terms = useTerms()
   const totals = useMemo(() => {
-    const limit = caches.reduce((sum, cache) => sum + cache.limit, 0)
-    const spent = caches.reduce(
-      (sum, cache) => sum + effectiveSkattSpent(cache, supplylines),
+    const limit = skattItems.reduce((sum, skatt) => sum + skatt.limit, 0)
+    const spent = skattItems.reduce(
+      (sum, skatt) => sum + effectiveSkattSpent(skatt, idunnItems),
       0,
     )
     const utilization =
       limit > 0
         ? (spent / limit) * 100
-        : caches.length > 0
-          ? caches.reduce((sum, cache) => sum + effectiveSkattUtilization(cache, supplylines), 0) /
-            caches.length
+        : skattItems.length > 0
+          ? skattItems.reduce((sum, skatt) => sum + effectiveSkattUtilization(skatt, idunnItems), 0) /
+            skattItems.length
           : 0
     return { limit, spent, utilization }
-  }, [caches, supplylines])
+  }, [skattItems, idunnItems])
 
   return (
     <button
@@ -277,12 +277,12 @@ function SjodrCard({
           ) : null}
         </div>
         <span className="shrink-0 text-[10px] text-muted-foreground">
-          {caches.length} {terms.budgets.toLowerCase()}
+          {skattItems.length} {terms.skatt.toLowerCase()}
         </span>
       </div>
       <div className="mt-3 space-y-1.5">
         <div className="flex items-baseline justify-between gap-2 text-xs">
-          <span className="text-muted-foreground">{terms.budgets}</span>
+          <span className="text-muted-foreground">{terms.skatt}</span>
           <span className="tabular-nums text-foreground">
             {audrFmt(totals.spent)}
             <span className="text-muted-foreground"> / {audrFmt(totals.limit)}</span>
@@ -361,7 +361,7 @@ function SjodrForm({
           checked={isDefault}
           onCheckedChange={setIsDefault}
           label={`Default ${terms.sjodrSingular.toLowerCase()}`}
-          description={`Pre-select on new ${terms.expenses.toLowerCase()}, ${terms.subscriptions.toLowerCase()}, and ${terms.budgets.toLowerCase()}.`}
+          description={`Pre-select on new ${terms.surtr.toLowerCase()}, ${terms.idunn.toLowerCase()}, and ${terms.skatt.toLowerCase()}.`}
         />
       </div>
       <InspectorFormActions
@@ -379,7 +379,7 @@ function SjodrForm({
       <ConfirmDialog
         open={deleteOpen}
         title={`Delete ${terms.sjodrSingular}`}
-        description={`Delete "${fund?.name}"? Associated ${terms.budgets.toLowerCase()}, ${terms.subscriptions.toLowerCase()}, and ${terms.expenses.toLowerCase()} will be unassigned.`}
+        description={`Delete "${fund?.name}"? Associated ${terms.skatt.toLowerCase()}, ${terms.idunn.toLowerCase()}, and ${terms.surtr.toLowerCase()} will be unassigned.`}
         confirmLabel="Delete"
         confirmVariant="destructive"
         onConfirm={() => {

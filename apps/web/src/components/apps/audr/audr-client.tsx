@@ -9,11 +9,11 @@ import { RailCatalogSkeleton, TableSkeleton } from '@/components/core/ui/studio-
 import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
 import { useDebounce } from '@/hooks/use-debounce'
 import {
-  fetchFjallBurnPage,
+  fetchFjallSurtrPage,
   fetchFjallRunir,
-  fetchProvisionsSummary,
+  fetchAudrSummary,
   fetchFjallSjodr,
-  fetchFjallSupplylinesFiltered,
+  fetchFjallIdunnFiltered,
   fetchFjallGreinar,
 } from '@/lib/data-api'
 import { daysUntilRenewal } from '@/lib/idunn-renewal'
@@ -51,7 +51,7 @@ export function AudrPageSkeleton() {
   const terms = useTerms()
   return (
     <StudioLayout
-      railLabel={terms.subscriptions}
+      railLabel={terms.idunn}
       contextBar={
         <div className="shrink-0 border-b border-border px-4 py-3 sm:px-6">
           <div className="h-5 w-24 animate-pulse rounded bg-muted" />
@@ -61,7 +61,7 @@ export function AudrPageSkeleton() {
       rail={<RailCatalogSkeleton rows={7} titleWidth="w-16" />}
       canvas={<TableSkeleton rows={10} columns={4} />}
       inspectorState="hint"
-      inspectorHint={`Select ${terms.expenses.toLowerCase()}, ${terms.subscriptions.toLowerCase()}, or ${terms.budgets.toLowerCase()} to inspect`}
+      inspectorHint={`Select ${terms.surtr.toLowerCase()}, ${terms.idunn.toLowerCase()}, or ${terms.skatt.toLowerCase()} to inspect`}
     />
   )
 }
@@ -89,7 +89,7 @@ export function AudrClient() {
   const [catalog, setCatalog] = useState<CatalogState | null>(null)
   const [laufarManage, setLaufarManage] = useState<PanelManageState | null>(null)
   const [sjodrManage, setSjodrManage] = useState<PanelManageState | null>(null)
-  const [burnPage, setBurnPage] = useState(1)
+  const [surtrPage, setSurtrPage] = useState(1)
 
   const runirQuery = useQuery({
     queryKey: ['fjall-runir'],
@@ -103,17 +103,17 @@ export function AudrClient() {
 
   const summaryQuery = useQuery({
     queryKey: ['audr', 'summary', month, year],
-    queryFn: () => fetchProvisionsSummary(month, year),
+    queryFn: () => fetchAudrSummary(month, year),
     placeholderData: keepPreviousData,
   })
 
-  const burnQuery = useQuery({
-    queryKey: ['audr', 'burn', month, year, burnPage, debouncedSearch, runFilter, sjodrFilter],
+  const surtrQuery = useQuery({
+    queryKey: ['audr', 'surtr', month, year, surtrPage, debouncedSearch, runFilter, sjodrFilter],
     queryFn: () =>
-      fetchFjallBurnPage({
+      fetchFjallSurtrPage({
         month,
         year,
-        page: burnPage,
+        page: surtrPage,
         search: debouncedSearch || undefined,
         runId: runFilter !== 'all' ? runFilter : undefined,
         fundId: sjodrFilter !== 'all' ? sjodrFilter : undefined,
@@ -126,23 +126,23 @@ export function AudrClient() {
     queryFn: fetchFjallSjodr,
   })
 
-  const supplylinesQuery = useQuery({
-    queryKey: ['audr', 'supplylines', idunnActiveFilter],
+  const idunnQuery = useQuery({
+    queryKey: ['audr', 'idunn', idunnActiveFilter],
     queryFn: () =>
-      fetchFjallSupplylinesFiltered({
+      fetchFjallIdunnFiltered({
         active: idunnActiveFilter !== 'all' ? idunnActiveFilter : undefined,
       }),
     placeholderData: keepPreviousData,
   })
 
-  const skattSupplylinesQuery = useQuery({
-    queryKey: ['audr', 'supplylines-skatt'],
-    queryFn: () => fetchFjallSupplylinesFiltered({ active: 'true' }),
+  const skattIdunnQuery = useQuery({
+    queryKey: ['audr', 'idunn-for-skatt'],
+    queryFn: () => fetchFjallIdunnFiltered({ active: 'true' }),
     placeholderData: keepPreviousData,
   })
 
   useEffect(() => {
-    setBurnPage(1)
+    setSurtrPage(1)
   }, [month, year, debouncedSearch, runFilter, sjodrFilter])
 
   const runir = useMemo(
@@ -169,43 +169,43 @@ export function AudrClient() {
   )
 
   const summary = summaryQuery.data?.summary
-  const cacheUtilization = summaryQuery.data?.cacheUtilization ?? []
-  const burnItems = burnQuery.data?.burn ?? []
-  const burnTotal = burnQuery.data?.total ?? 0
-  const burnPageSize = burnQuery.data?.pageSize ?? 20
-  const supplylines = useMemo(
+  const skattUtilization = summaryQuery.data?.skattUtilization ?? []
+  const surtrItems = surtrQuery.data?.surtr ?? []
+  const surtrTotal = surtrQuery.data?.total ?? 0
+  const surtrPageSize = surtrQuery.data?.pageSize ?? 20
+  const idunnItems = useMemo(
     () =>
-      [...(supplylinesQuery.data ?? [])].sort((left, right) =>
+      [...(idunnQuery.data ?? [])].sort((left, right) =>
         left.name.localeCompare(right.name, undefined, { sensitivity: 'base' }),
       ),
-    [supplylinesQuery.data],
+    [idunnQuery.data],
   )
-  const skattSupplylines = skattSupplylinesQuery.data ?? []
+  const skattIdunn = skattIdunnQuery.data ?? []
 
-  const cacheByRunId = useMemo(
-    () => new Map(cacheUtilization.map((c) => [c.runId, c])),
-    [cacheUtilization],
+  const skattByRunId = useMemo(
+    () => new Map(skattUtilization.map((c) => [c.runId, c])),
+    [skattUtilization],
   )
 
   const targetRunIds = useMemo(
-    () => new Set(cacheUtilization.map((c) => c.runId)),
-    [cacheUtilization],
+    () => new Set(skattUtilization.map((c) => c.runId)),
+    [skattUtilization],
   )
 
   const upcomingRenewals = useMemo(
     () =>
-      supplylines
+      idunnItems
         .filter((s) => s.active)
         .filter((s) => {
           const days = daysUntilRenewal(s.nextRenewal, s.billingCycle)
           return days >= 0 && days <= 7
         }).length,
-    [supplylines],
+    [idunnItems],
   )
 
   const skattUtilizationPct = useMemo(
-    () => totalEffectiveSkattUtilization(cacheUtilization, skattSupplylines),
-    [cacheUtilization, skattSupplylines],
+    () => totalEffectiveSkattUtilization(skattUtilization, skattIdunn),
+    [skattUtilization, skattIdunn],
   )
 
   const monthName = monthYearLabel(month, year)
@@ -240,7 +240,7 @@ export function AudrClient() {
     clearSjodrManage,
   ])
 
-  const provisionsRootPath = useMemo(
+  const audrRootPath = useMemo(
     () => resolveAudrRunRootPath(runir),
     [runir],
   )
@@ -252,10 +252,10 @@ export function AudrClient() {
     setCatalog({
       tab: 'runir',
       selectedId: null,
-      runPath: provisionsRootPath,
+      runPath: audrRootPath,
       runParent: null,
     })
-  }, [provisionsRootPath])
+  }, [audrRootPath])
 
   const openLaufarManage = useCallback(() => {
     setSelection(null)
@@ -286,25 +286,25 @@ export function AudrClient() {
     sjodrManage != null
   const inspectorState = inspectorOpen ? 'open' : 'hint'
 
-  const selectedBurn =
-    selection?.kind === 'burn' ? burnItems.find((b) => b.id === selection.id) : undefined
-  const selectedSupplyline =
-    selection?.kind === 'supplyline'
-      ? supplylines.find((s) => s.id === selection.id)
+  const selectedSurtr =
+    selection?.kind === 'surtr' ? surtrItems.find((b) => b.id === selection.id) : undefined
+  const selectedIdunn =
+    selection?.kind === 'idunn'
+      ? idunnItems.find((s) => s.id === selection.id)
       : undefined
-  const selectedCache =
-    selection?.kind === 'cache'
-      ? cacheUtilization.find((c) => c.id === selection.id)
-      : selection?.kind === 'cache-run'
-        ? cacheByRunId.get(selection.runId)
+  const selectedSkatt =
+    selection?.kind === 'skatt'
+      ? skattUtilization.find((c) => c.id === selection.id)
+      : selection?.kind === 'skatt-run'
+        ? skattByRunId.get(selection.runId)
         : undefined
 
-  const selectedSkattRunId = selectedCache?.runId ?? null
+  const selectedSkattRunId = selectedSkatt?.runId ?? null
 
-  const skattBurnsQuery = useQuery({
-    queryKey: ['audr', 'burn', month, year, 'skatt-inspector', selectedSkattRunId],
+  const skattSurtrQuery = useQuery({
+    queryKey: ['audr', 'surtr', month, year, 'skatt-inspector', selectedSkattRunId],
     queryFn: () =>
-      fetchFjallBurnPage({
+      fetchFjallSurtrPage({
         month,
         year,
         page: 1,
@@ -314,12 +314,12 @@ export function AudrClient() {
     placeholderData: keepPreviousData,
   })
 
-  const skattRunBurns = useMemo(
+  const skattRunSurtr = useMemo(
     () =>
-      [...(skattBurnsQuery.data?.burn ?? [])].sort(
+      [...(skattSurtrQuery.data?.surtr ?? [])].sort(
         (left, right) => new Date(right.date).getTime() - new Date(left.date).getTime(),
       ),
-    [skattBurnsQuery.data?.burn],
+    [skattSurtrQuery.data?.surtr],
   )
 
   useEffect(() => {
@@ -339,19 +339,19 @@ export function AudrClient() {
   const isLoading =
     runirQuery.isLoading ||
     summaryQuery.isLoading ||
-    burnQuery.isLoading ||
-    supplylinesQuery.isLoading
+    surtrQuery.isLoading ||
+    idunnQuery.isLoading
 
   if (isLoading && !summaryQuery.data) {
     return <AudrPageSkeleton />
   }
 
-  const selectedBurnId = selection?.kind === 'burn' ? selection.id : null
-  const selectedSupplylineId = selection?.kind === 'supplyline' ? selection.id : null
+  const selectedSurtrId = selection?.kind === 'surtr' ? selection.id : null
+  const selectedIdunnId = selection?.kind === 'idunn' ? selection.id : null
 
   return (
     <StudioLayout
-      railLabel={terms.subscriptions}
+      railLabel={terms.idunn}
       contextBar={
         <AudrContextBar
           monthName={monthName}
@@ -360,9 +360,9 @@ export function AudrClient() {
           skattUtilizationPct={skattUtilizationPct}
           inspectorPinned={inspectorPinned}
           onInspectorPinnedChange={setInspectorPinned}
-          onAddBurn={() => selectEntity({ kind: 'new-burn' })}
-          onAddSupplyline={() => selectEntity({ kind: 'new-supplyline' })}
-          onAddCache={() => selectEntity({ kind: 'new-cache' })}
+          onAddSurtr={() => selectEntity({ kind: 'new-surtr' })}
+          onAddIdunn={() => selectEntity({ kind: 'new-idunn' })}
+          onAddSkatt={() => selectEntity({ kind: 'new-skatt' })}
           onManageSjodr={() => {
             setSelection(null)
             setCatalog(null)
@@ -378,20 +378,20 @@ export function AudrClient() {
         />
       }
       rail={
-        supplylinesQuery.isFetching && supplylines.length === 0 ? (
+        idunnQuery.isFetching && idunnItems.length === 0 ? (
           <RailCatalogSkeleton rows={7} titleWidth="w-16" />
         ) : (
           <AudrIdunnRail
-            supplylines={supplylines}
+            idunnItems={idunnItems}
             funds={sjodrQuery.data ?? []}
             runir={audrRunir}
-            selectedId={selectedSupplylineId}
+            selectedId={selectedIdunnId}
             activeFilter={idunnActiveFilter}
             onActiveFilterChange={setIdunnActiveFilter}
             filtersActive={idunnFiltersActive}
             onClearFilters={() => setIdunnActiveFilter('true')}
-            onSelect={(id) => selectEntity({ kind: 'supplyline', id })}
-            onAdd={() => selectEntity({ kind: 'new-supplyline' })}
+            onSelect={(id) => selectEntity({ kind: 'idunn', id })}
+            onAdd={() => selectEntity({ kind: 'new-idunn' })}
             onOpenCatalog={openCatalog}
             onRefresh={refresh}
           />
@@ -427,28 +427,28 @@ export function AudrClient() {
             onBringSkatt={() => selectEntity({ kind: 'skatt-carry' })}
             onManageLaufar={openLaufarManage}
             onManageSjodr={openSjodrManage}
-            burns={burnItems}
-            cacheUtilization={cacheUtilization}
-            supplylines={skattSupplylines}
-            burnsLoading={burnQuery.isFetching}
-            selectedBurnId={selectedBurnId}
-            onSelectBurn={(id) => selectEntity({ kind: 'burn', id })}
-            selectedSupplylineId={selectedSupplylineId}
-            onSelectSupplyline={(id) => selectEntity({ kind: 'supplyline', id })}
-            onSelectCache={(id) => selectEntity({ kind: 'cache', id })}
-            onSelectCacheRun={(runId) =>
+            surtrItems={surtrItems}
+            skattUtilization={skattUtilization}
+            idunnItems={skattIdunn}
+            surtrLoading={surtrQuery.isFetching}
+            selectedSurtrId={selectedSurtrId}
+            onSelectSurtr={(id) => selectEntity({ kind: 'surtr', id })}
+            selectedIdunnId={selectedIdunnId}
+            onSelectIdunn={(id) => selectEntity({ kind: 'idunn', id })}
+            onSelectSkatt={(id) => selectEntity({ kind: 'skatt', id })}
+            onSelectSkattRun={(runId) =>
               selectEntity(
-                cacheByRunId.has(runId)
-                  ? { kind: 'cache', id: cacheByRunId.get(runId)!.id }
-                  : { kind: 'cache-run', runId },
+                skattByRunId.has(runId)
+                  ? { kind: 'skatt', id: skattByRunId.get(runId)!.id }
+                  : { kind: 'skatt-run', runId },
               )
             }
-            onAddBurn={(runId) => selectEntity({ kind: 'new-burn', runId })}
-            burnPage={burnPage}
-            burnTotal={burnTotal}
-            burnPageSize={burnPageSize}
-            onBurnPageChange={setBurnPage}
-            burnPageLoading={burnQuery.isFetching}
+            onAddSurtr={(runId) => selectEntity({ kind: 'new-surtr', runId })}
+            surtrPage={surtrPage}
+            surtrTotal={surtrTotal}
+            surtrPageSize={surtrPageSize}
+            onSurtrPageChange={setSurtrPage}
+            surtrPageLoading={surtrQuery.isFetching}
           />
         </div>
       }
@@ -460,7 +460,7 @@ export function AudrClient() {
             ? `Audr ${terms.laufar}`
             : sjodrManage
               ? terms.sjodr
-              : `Select ${terms.expenses.toLowerCase()}, ${terms.subscriptions.toLowerCase()}, or ${terms.budgets.toLowerCase()} to inspect`
+              : `Select ${terms.surtr.toLowerCase()}, ${terms.idunn.toLowerCase()}, or ${terms.skatt.toLowerCase()} to inspect`
       }
       onDismissInspector={dismissInspector}
       inspector={
@@ -471,7 +471,7 @@ export function AudrClient() {
               setCatalog({
                 tab,
                 selectedId: null,
-                runPath: provisionsRootPath,
+                runPath: audrRootPath,
                 runParent: null,
               })
             }
@@ -495,13 +495,13 @@ export function AudrClient() {
               )
             }
             lockedTab="runir"
-            rootRunPath={provisionsRootPath}
+            rootRunPath={audrRootPath}
           />
         ) : laufarManage ? (
           <AudrLaufarInspector
             greinar={greinar}
             runir={runir}
-            rootRunName={provisionsRootPath[0] ?? terms.provisionsGroup}
+            rootRunName={audrRootPath[0] ?? terms.audrGroup}
             selectedId={laufarManage.selectedId}
             onSelectId={(id) =>
               setLaufarManage((current) => (current ? { ...current, selectedId: id } : current))
@@ -511,8 +511,8 @@ export function AudrClient() {
           <AudrSjodrInspector
             month={month}
             year={year}
-            cacheUtilization={cacheUtilization}
-            supplylines={skattSupplylines}
+            skattUtilization={skattUtilization}
+            idunnItems={skattIdunn}
             selectedId={sjodrManage.selectedId}
             onSelectId={(id) =>
               setSjodrManage((current) => (current ? { ...current, selectedId: id } : current))
@@ -524,11 +524,11 @@ export function AudrClient() {
             runir={audrRunir}
             month={month}
             year={year}
-            burn={selectedBurn}
-            supplyline={selectedSupplyline}
-            cache={selectedCache}
-            skattSupplylines={skattSupplylines}
-            skattRunBurns={skattRunBurns}
+            surtr={selectedSurtr}
+            idunn={selectedIdunn}
+            skatt={selectedSkatt}
+            skattIdunn={skattIdunn}
+            skattRunSurtr={skattRunSurtr}
             targetRunIds={targetRunIds}
             onSaved={() => {
               refresh()

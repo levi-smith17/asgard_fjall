@@ -7,7 +7,7 @@ import { parsePublicManifestPath } from '@/lib/public-manifest-path'
 const BASE_TITLE = 'Asgard Fjall'
 
 function pageLabelForPath(pathname: string, terms: ReturnType<typeof useTerminology>['terms']): string | null {
-  if (pathname.startsWith('/audr')) return terms.provisions
+  if (pathname.startsWith('/audr')) return terms.audr
   if (pathname.startsWith('/dagatal')) return terms.calendar
   if (pathname === '/ordstirr' || pathname.startsWith('/ordstirr/')) {
     if (parsePublicManifestPath(pathname)) return terms.publicViewGroup

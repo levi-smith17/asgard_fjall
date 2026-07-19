@@ -1,14 +1,14 @@
-import type { FjallCacheUtilization, FjallSupplyline } from '@/lib/data-types'
+import type { FjallSkattUtilization, FjallIdunn } from '@/lib/data-types'
 import { toRunId } from '@/lib/embedded-runir'
 import { getRenewalInMonth } from '@/lib/idunn-renewal'
 
 const MONTHLY_OR_LESS = new Set(['WEEKLY', 'BIWEEKLY', 'MONTHLY'])
 
-export function supplylineCountsAgainstSkatt(billingCycle: string): boolean {
+export function idunnCountsAgainstSkatt(billingCycle: string): boolean {
   return MONTHLY_OR_LESS.has(billingCycle)
 }
 
-export function supplylineMonthlyAmount(amount: number, billingCycle: string): number {
+export function idunnMonthlyAmount(amount: number, billingCycle: string): number {
   switch (billingCycle) {
     case 'WEEKLY': return (amount * 52) / 12
     case 'BIWEEKLY': return (amount * 26) / 12
@@ -18,12 +18,12 @@ export function supplylineMonthlyAmount(amount: number, billingCycle: string): n
 }
 
 export function idunnLinesForRun(
-  supplylines: FjallSupplyline[],
+  idunnItems: FjallIdunn[],
   runId: string,
   month?: number,
   year?: number,
-): FjallSupplyline[] {
-  return supplylines.filter((line) => {
+): FjallIdunn[] {
+  return idunnItems.filter((line) => {
     const runir = line.runir ?? []
     if (!runir.some((run) => toRunId(run) === runId)) return false
     if (month == null || year == null) return true
@@ -31,36 +31,36 @@ export function idunnLinesForRun(
   })
 }
 
-export function idunnSpendForRun(supplylines: FjallSupplyline[], runId: string): number {
-  return idunnLinesForRun(supplylines, runId)
+export function idunnSpendForRun(idunnItems: FjallIdunn[], runId: string): number {
+  return idunnLinesForRun(idunnItems, runId)
     .filter((line) => line.active)
-    .filter((line) => supplylineCountsAgainstSkatt(line.billingCycle))
-    .reduce((sum, line) => sum + supplylineMonthlyAmount(line.amount, line.billingCycle), 0)
+    .filter((line) => idunnCountsAgainstSkatt(line.billingCycle))
+    .reduce((sum, line) => sum + idunnMonthlyAmount(line.amount, line.billingCycle), 0)
 }
 
 export function effectiveSkattSpent(
-  cache: FjallCacheUtilization,
-  supplylines: FjallSupplyline[],
+  skatt: FjallSkattUtilization,
+  idunnItems: FjallIdunn[],
 ): number {
-  return cache.spent + idunnSpendForRun(supplylines, cache.runId)
+  return skatt.spent + idunnSpendForRun(idunnItems, skatt.runId)
 }
 
 export function effectiveSkattUtilization(
-  cache: FjallCacheUtilization,
-  supplylines: FjallSupplyline[],
+  skatt: FjallSkattUtilization,
+  idunnItems: FjallIdunn[],
 ): number {
-  const spent = effectiveSkattSpent(cache, supplylines)
-  return cache.limit > 0 ? (spent / cache.limit) * 100 : 0
+  const spent = effectiveSkattSpent(skatt, idunnItems)
+  return skatt.limit > 0 ? (spent / skatt.limit) * 100 : 0
 }
 
 export function totalEffectiveSkattUtilization(
-  cacheUtilization: FjallCacheUtilization[],
-  supplylines: FjallSupplyline[],
+  skattUtilization: FjallSkattUtilization[],
+  idunnItems: FjallIdunn[],
 ): number | null {
-  const totalSpent = cacheUtilization.reduce(
-    (sum, cache) => sum + effectiveSkattSpent(cache, supplylines),
+  const totalSpent = skattUtilization.reduce(
+    (sum, skatt) => sum + effectiveSkattSpent(skatt, idunnItems),
     0,
   )
-  const totalLimit = cacheUtilization.reduce((sum, cache) => sum + cache.limit, 0)
+  const totalLimit = skattUtilization.reduce((sum, skatt) => sum + skatt.limit, 0)
   return totalLimit > 0 ? (totalSpent / totalLimit) * 100 : null
 }

@@ -3,16 +3,16 @@ import { toast } from 'sonner'
 import { Input } from '@/components/core/ui/input'
 import { Button } from '@/components/core/ui/button'
 import { RunPicker } from '@/components/apps/run-picker'
-import { saveFjallCache } from '@/lib/data-api'
+import { saveFjallSkatt } from '@/lib/data-api'
 import { useFormStatus } from '@/hooks/use-form-status'
-import type { FjallCacheUtilization } from '@/lib/data-types'
+import type { FjallSkattUtilization } from '@/lib/data-types'
 import { getDefaultSjodrId } from '@/lib/audr-default-sjodr'
 import { useTerms } from '@/hooks/use-terminology'
-import type { AudrSaveActionRef } from './inline-burn-form'
+import type { AudrSaveActionRef } from './inline-surtr-form'
 import { FundPicker } from './fund-picker'
 
 interface Props {
-  cache?: FjallCacheUtilization
+  skatt?: FjallSkattUtilization
   defaultRunId?: string
   runir: { id: string; name: string; color: string; icon?: string | null }[]
   month: number
@@ -23,8 +23,8 @@ interface Props {
   onCancel?: () => void
 }
 
-export function InlineCacheForm({
-  cache,
+export function InlineSkattForm({
+  skatt,
   defaultRunId,
   runir,
   month,
@@ -38,17 +38,17 @@ export function InlineCacheForm({
   const generatedId = useId()
   const formId = formIdProp ?? generatedId
   const { saving, handleSubmit } = useFormStatus()
-  const [runId, setRunId] = useState(cache?.runId ?? defaultRunId ?? '')
-  const [limit, setLimit] = useState(cache?.limit != null ? String(cache.limit) : '')
+  const [runId, setRunId] = useState(skatt?.runId ?? defaultRunId ?? '')
+  const [limit, setLimit] = useState(skatt?.limit != null ? String(skatt.limit) : '')
   const [fundId, setFundId] = useState<string | null>(
-    () => cache?.fundId ?? (cache ? null : getDefaultSjodrId()),
+    () => skatt?.fundId ?? (skatt ? null : getDefaultSjodrId()),
   )
 
   useEffect(() => {
-    setRunId(cache?.runId ?? defaultRunId ?? '')
-    setLimit(cache?.limit != null ? String(cache.limit) : '')
-    setFundId(cache?.fundId ?? (cache ? null : getDefaultSjodrId()))
-  }, [cache?.id, defaultRunId])
+    setRunId(skatt?.runId ?? defaultRunId ?? '')
+    setLimit(skatt?.limit != null ? String(skatt.limit) : '')
+    setFundId(skatt?.fundId ?? (skatt ? null : getDefaultSjodrId()))
+  }, [skatt?.id, defaultRunId])
 
   async function save() {
     if (!runId || !limit) {
@@ -56,8 +56,8 @@ export function InlineCacheForm({
       return
     }
     await handleSubmit(async () => {
-      await saveFjallCache({
-        id: cache?.id,
+      await saveFjallSkatt({
+        id: skatt?.id,
         runId,
         limit: parseFloat(limit),
         month,

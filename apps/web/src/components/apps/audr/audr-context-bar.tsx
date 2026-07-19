@@ -17,26 +17,26 @@ export function AudrContextBar({
   skattUtilizationPct,
   inspectorPinned,
   onInspectorPinnedChange,
-  onAddBurn,
-  onAddSupplyline,
-  onAddCache,
+  onAddSurtr,
+  onAddIdunn,
+  onAddSkatt,
   onManageSjodr,
   onManageLaufar,
 }: {
   monthName: string
   summary?: {
-    monthlySupplylineCost: number
-    totalBurn: number
+    monthlyIdunnCost: number
+    totalSurtr: number
     totalMonthSpend: number
-    activeSupplylines: number
+    activeIdunn: number
   }
   upcomingRenewals: number
   skattUtilizationPct: number | null
   inspectorPinned: boolean
   onInspectorPinnedChange: (pinned: boolean) => void
-  onAddBurn: () => void
-  onAddSupplyline: () => void
-  onAddCache: () => void
+  onAddSurtr: () => void
+  onAddIdunn: () => void
+  onAddSkatt: () => void
   onManageSjodr: () => void
   onManageLaufar: () => void
 }) {
@@ -46,9 +46,9 @@ export function AudrContextBar({
     [
       {
         id: 'idunn',
-        label: `Add ${terms.subscriptionSingular}`,
+        label: `Add ${terms.idunnSingular}`,
         icon: ASGARD_ENTITY_ICONS.idunn,
-        onSelect: onAddSupplyline,
+        onSelect: onAddIdunn,
       },
       {
         id: 'laufar',
@@ -64,9 +64,9 @@ export function AudrContextBar({
       },
       {
         id: 'skatt',
-        label: `Add ${terms.budgetSingular}`,
+        label: `Add ${terms.skattSingular}`,
         icon: ASGARD_ENTITY_ICONS.skatt,
-        onSelect: onAddCache,
+        onSelect: onAddSkatt,
       },
     ] satisfies ContextBarSplitAddItem[]
   ).sort((left, right) =>
@@ -76,16 +76,16 @@ export function AudrContextBar({
   return (
     <StudioContextBar
       aria-label="Audr context"
-      title={terms.provisions}
-      subtitle={`${monthName} · ${terms.expenses}, ${terms.subscriptions}, & ${terms.budgets}`}
+      title={terms.audr}
+      subtitle={`${monthName} · ${terms.surtr}, ${terms.idunn}, & ${terms.skatt}`}
       metadata={
         summary ? (
           <div className="hidden min-w-0 flex-wrap items-center gap-1.5 md:flex">
             <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-xs text-primary">
-              {audrFmt(summary.totalBurn)} {terms.expenses.toLowerCase()}
+              {audrFmt(summary.totalSurtr)} {terms.surtr.toLowerCase()}
             </span>
             <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-              {audrFmt(summary.monthlySupplylineCost)} {terms.subscriptions.toLowerCase()}
+              {audrFmt(summary.monthlyIdunnCost)} {terms.idunn.toLowerCase()}
             </span>
             {skattUtilizationPct != null ? (
               <span
@@ -98,7 +98,7 @@ export function AudrContextBar({
                       : 'bg-muted text-muted-foreground',
                 )}
               >
-                {Math.round(skattUtilizationPct)}% {terms.budgets.toLowerCase()}
+                {Math.round(skattUtilizationPct)}% {terms.skatt.toLowerCase()}
               </span>
             ) : null}
             {upcomingRenewals > 0 ? (
@@ -117,8 +117,8 @@ export function AudrContextBar({
             onPinnedChange={onInspectorPinnedChange}
           />
           <ContextBarSplitAddButton
-            label={`Add ${terms.expenseSingular}`}
-            onClick={onAddBurn}
+            label={`Add ${terms.surtrSingular}`}
+            onClick={onAddSurtr}
             menuLabel="More Audr create options"
             items={splitItems}
           />

@@ -4,7 +4,7 @@ export type Terms = {
   productName: string
   productSubtitle: string
   dashboard: string
-  provisions: string
+  audr: string
   calendar: string
   messages: string
   resume: string
@@ -24,7 +24,7 @@ export type Terms = {
   settings: string
   account: string
   privacy: string
-  /** Fjall catalog write-through cache (not Audr budgets, not Dagatal). */
+  /** Fjall catalog write-through cache (not Audr skatt, not Dagatal). */
   cache: string
   /** Sidebar group: Platform / Pallr. */
   platformGroup: string
@@ -40,15 +40,15 @@ export type Terms = {
   paletteGreen: string
   /** Color palette: Gold / Gull. */
   paletteGold: string
-  // Audr (provisions) item types
-  expenses: string
-  expenseSingular: string
-  subscriptions: string
-  subscriptionSingular: string
-  budgets: string
-  budgetSingular: string
+  // Audr (audr) item types
+  surtr: string
+  surtrSingular: string
+  idunn: string
+  idunnSingular: string
+  skatt: string
+  skattSingular: string
   /** Root Run/Run name for Audr scoping (data root path). */
-  provisionsGroup: string
+  audrGroup: string
   /** Audr funds (Asgard: Sjodr). */
   sjodr: string
   sjodrSingular: string
@@ -85,7 +85,7 @@ const ASGARD: Terms = {
   productName: 'Asgard',
   productSubtitle: 'Fjall',
   dashboard: 'Hlidskjalf',
-  provisions: 'Audr',
+  audr: 'Audr',
   calendar: 'Dagatal',
   messages: 'Sendibod',
   resume: 'Ordstirr',
@@ -109,13 +109,13 @@ const ASGARD: Terms = {
   publicViewGroup: 'Almenningr',
   paletteGreen: 'Graenn',
   paletteGold: 'Gull',
-  expenses: 'Surtr',
-  expenseSingular: 'Surtr',
-  subscriptions: 'Idunn',
-  subscriptionSingular: 'Idunn',
-  budgets: 'Skatt',
-  budgetSingular: 'Skatt',
-  provisionsGroup: 'Audr',
+  surtr: 'Surtr',
+  surtrSingular: 'Surtr',
+  idunn: 'Idunn',
+  idunnSingular: 'Idunn',
+  skatt: 'Skatt',
+  skattSingular: 'Skatt',
+  audrGroup: 'Audr',
   sjodr: 'Sjodr',
   sjodrSingular: 'Sjodr',
   laufar: 'Laufar',
@@ -149,7 +149,7 @@ const STANDARD: Terms = {
   productName: 'Asgard',
   productSubtitle: 'Fjall',
   dashboard: 'Dashboard',
-  provisions: 'Finance',
+  audr: 'Finance',
   calendar: 'Calendar',
   messages: 'Messages',
   resume: 'Profile',
@@ -173,13 +173,13 @@ const STANDARD: Terms = {
   publicViewGroup: 'Public View',
   paletteGreen: 'Green',
   paletteGold: 'Gold',
-  expenses: 'Expenses',
-  expenseSingular: 'Expense',
-  subscriptions: 'Subscriptions',
-  subscriptionSingular: 'Subscription',
-  budgets: 'Budgets',
-  budgetSingular: 'Budget',
-  provisionsGroup: 'Audr',
+  surtr: 'Expenses',
+  surtrSingular: 'Expense',
+  idunn: 'Subscriptions',
+  idunnSingular: 'Subscription',
+  skatt: 'Budgets',
+  skattSingular: 'Budget',
+  audrGroup: 'Audr',
   sjodr: 'Funds',
   sjodrSingular: 'Fund',
   laufar: 'Bookmarks',

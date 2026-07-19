@@ -161,7 +161,7 @@ export function LaufInspector({
           <div className="block space-y-1.5">
             <span className="text-xs font-medium text-muted-foreground">{terms.greinar}</span>
             <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-foreground">
-              {lockedGrein?.name ?? terms.provisionsGroup}
+              {lockedGrein?.name ?? terms.audrGroup}
             </p>
           </div>
         ) : (

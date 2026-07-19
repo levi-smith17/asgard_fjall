@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/core/ui/button'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
-import { deleteFjallCache } from '@/lib/data-api'
-import { InlineCacheForm } from './inline-cache-form'
-import type { FjallCacheUtilization } from '@/lib/data-types'
+import { deleteFjallSkatt } from '@/lib/data-api'
+import { InlineSkattForm } from './inline-skatt-form'
+import type { FjallSkattUtilization } from '@/lib/data-types'
 import { useTerms } from '@/hooks/use-terminology'
 
 interface Props {
-  cache: FjallCacheUtilization
+  skatt: FjallSkattUtilization
   runir: { id: string; name: string; color: string; icon?: string | null }[]
   month: number
   year: number
@@ -25,22 +25,22 @@ const utilizationColor = (pct: number) => {
   return 'bg-primary'
 }
 
-function cacheRunLabel(cache: FjallCacheUtilization, runir: Props['runir']): string {
-  const name = runir.find((m) => m.id === cache.runId)?.name ?? cache.run?.name
+function skattRunLabel(skatt: FjallSkattUtilization, runir: Props['runir']): string {
+  const name = runir.find((m) => m.id === skatt.runId)?.name ?? skatt.run?.name
   if (!name || name === 'Uncategorized') return 'Uncategorized'
   return name.split('/').pop() ?? name
 }
 
-export function CacheRow({ cache, runir, month, year, onSaved, onDeleted }: Props) {
+export function SkattRow({ skatt, runir, month, year, onSaved, onDeleted }: Props) {
   const terms = useTerms()
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const runLabel = cacheRunLabel(cache, runir)
+  const runLabel = skattRunLabel(skatt, runir)
 
   if (editing) {
     return (
-      <InlineCacheForm
-        cache={cache}
+      <InlineSkattForm
+        skatt={skatt}
         runir={runir}
         month={month}
         year={year}
@@ -57,35 +57,35 @@ export function CacheRow({ cache, runir, month, year, onSaved, onDeleted }: Prop
           <span className="text-sm font-medium">{runLabel}</span>
           <div className="flex items-center gap-1">
             <span className="text-xs tabular-nums text-muted-foreground">
-              {fmt(cache.spent)} / {fmt(cache.limit)}
+              {fmt(skatt.spent)} / {fmt(skatt.limit)}
             </span>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditing(true)} title={`Edit ${terms.budgetSingular}`}>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditing(true)} title={`Edit ${terms.skattSingular}`}>
               <Pencil className="h-3 w-3" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setConfirmDelete(true)} title={`Remove ${terms.budgetSingular}`}>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setConfirmDelete(true)} title={`Remove ${terms.skattSingular}`}>
               <Trash2 className="h-3 w-3 text-destructive" />
             </Button>
           </div>
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-muted">
           <div
-            className={`h-full rounded-full transition-all ${utilizationColor(cache.utilization)}`}
-            style={{ width: `${Math.min(cache.utilization, 100)}%` }}
+            className={`h-full rounded-full transition-all ${utilizationColor(skatt.utilization)}`}
+            style={{ width: `${Math.min(skatt.utilization, 100)}%` }}
           />
         </div>
         <div className="mt-1 flex justify-between text-xs text-muted-foreground">
-          <span>{Math.round(cache.utilization)}% used</span>
-          <span>{fmt(Math.max(cache.limit - cache.spent, 0))} left</span>
+          <span>{Math.round(skatt.utilization)}% used</span>
+          <span>{fmt(Math.max(skatt.limit - skatt.spent, 0))} left</span>
         </div>
       </div>
       <ConfirmDialog
         open={confirmDelete}
-        title={`Remove ${terms.budgetSingular.toLowerCase()}?`}
-        description={<>This will remove the &ldquo;{runLabel}&rdquo; {terms.budgetSingular.toLowerCase()} limit for this month.</>}
+        title={`Remove ${terms.skattSingular.toLowerCase()}?`}
+        description={<>This will remove the &ldquo;{runLabel}&rdquo; {terms.skattSingular.toLowerCase()} limit for this month.</>}
         confirmLabel="Remove"
         confirmVariant="destructive"
         onCancel={() => setConfirmDelete(false)}
-        onConfirm={async () => { await deleteFjallCache(cache.id); setConfirmDelete(false); onDeleted() }}
+        onConfirm={async () => { await deleteFjallSkatt(skatt.id); setConfirmDelete(false); onDeleted() }}
       />
     </>
   )

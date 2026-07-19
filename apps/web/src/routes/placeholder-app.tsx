@@ -4,7 +4,7 @@ import { FJALL_API_URL } from '@/lib/config'
 export function PlaceholderAppPage({
   nameKey,
 }: {
-  nameKey: 'provisions' | 'calendar' | 'resume' | 'notes' | 'starfield' | 'messages'
+  nameKey: 'audr' | 'calendar' | 'resume' | 'notes' | 'starfield' | 'messages'
 }) {
   const { terms } = useTerminology()
   const name = terms[nameKey]

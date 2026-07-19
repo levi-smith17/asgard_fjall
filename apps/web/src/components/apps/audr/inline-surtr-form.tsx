@@ -6,13 +6,13 @@ import { Button } from '@/components/core/ui/button'
 import { DatePicker } from '@/components/core/ui/date-picker'
 import { RunPicker } from '@/components/apps/run-picker'
 import {
-  fetchFjallBurnReceiptUrl,
-  saveFjallBurn,
-  uploadFjallBurnReceipt,
+  fetchFjallSurtrReceiptUrl,
+  saveFjallSurtr,
+  uploadFjallSurtrReceipt,
 } from '@/lib/data-api'
 import { useFormStatus } from '@/hooks/use-form-status'
 import { toRunId } from '@/lib/embedded-runir'
-import type { FjallBurn } from '@/lib/data-types'
+import type { FjallSurtr } from '@/lib/data-types'
 import { toDateInputValue, todayDateInputValue } from '@/lib/date-input'
 import { getDefaultSjodrId } from '@/lib/audr-default-sjodr'
 import { useTerms } from '@/hooks/use-terminology'
@@ -21,7 +21,7 @@ import { FundPicker } from './fund-picker'
 export type AudrSaveActionRef = MutableRefObject<(() => Promise<void>) | null>
 
 interface Props {
-  burn?: FjallBurn
+  surtr?: FjallSurtr
   defaultRunId?: string
   tags: { id: string; name: string; color: string; icon?: string | null }[]
   formId?: string
@@ -30,8 +30,8 @@ interface Props {
   onCancel?: () => void
 }
 
-export function InlineBurnForm({
-  burn,
+export function InlineSurtrForm({
+  surtr,
   defaultRunId,
   tags,
   formId: formIdProp,
@@ -44,21 +44,21 @@ export function InlineBurnForm({
   const formId = formIdProp ?? generatedId
   const { saving, handleSubmit } = useFormStatus()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [name, setName] = useState(burn?.name ?? '')
-  const [amount, setAmount] = useState(String(burn?.amount ?? 0))
+  const [name, setName] = useState(surtr?.name ?? '')
+  const [amount, setAmount] = useState(String(surtr?.amount ?? 0))
   const [date, setDate] = useState(() =>
-    burn?.date ? toDateInputValue(burn.date) : todayDateInputValue(),
+    surtr?.date ? toDateInputValue(surtr.date) : todayDateInputValue(),
   )
-  const [notes, setNotes] = useState(burn?.notes ?? '')
+  const [notes, setNotes] = useState(surtr?.notes ?? '')
   const [fundId, setFundId] = useState<string | null>(
-    () => burn?.fundId ?? (burn ? null : getDefaultSjodrId()),
+    () => surtr?.fundId ?? (surtr ? null : getDefaultSjodrId()),
   )
   const [runIds, setRunIds] = useState(
   () =>
-    (burn?.runir?.map((t) => toRunId(t)).filter(Boolean) as string[]) ??
+    (surtr?.runir?.map((t) => toRunId(t)).filter(Boolean) as string[]) ??
     (defaultRunId ? [defaultRunId] : []),
   )
-  const [receiptKey, setReceiptKey] = useState<string | null>(burn?.receiptUrl ?? null)
+  const [receiptKey, setReceiptKey] = useState<string | null>(surtr?.receiptUrl ?? null)
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
   const [receiptViewUrl, setReceiptViewUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -66,26 +66,26 @@ export function InlineBurnForm({
 
   // Rehydrate when the selected Surtr arrives/changes (mobile sheet often keeps the form mounted).
   useEffect(() => {
-    setName(burn?.name ?? '')
-    setAmount(String(burn?.amount ?? 0))
-    setDate(burn?.date ? toDateInputValue(burn.date) : todayDateInputValue())
-    setNotes(burn?.notes ?? '')
-    setFundId(burn?.fundId ?? (burn ? null : getDefaultSjodrId()))
+    setName(surtr?.name ?? '')
+    setAmount(String(surtr?.amount ?? 0))
+    setDate(surtr?.date ? toDateInputValue(surtr.date) : todayDateInputValue())
+    setNotes(surtr?.notes ?? '')
+    setFundId(surtr?.fundId ?? (surtr ? null : getDefaultSjodrId()))
     setRunIds(
-      (burn?.runir?.map((t) => toRunId(t)).filter(Boolean) as string[]) ??
+      (surtr?.runir?.map((t) => toRunId(t)).filter(Boolean) as string[]) ??
         (defaultRunId ? [defaultRunId] : []),
     )
-    setReceiptKey(burn?.receiptUrl ?? null)
+    setReceiptKey(surtr?.receiptUrl ?? null)
     setReceiptPreview(null)
     setReceiptViewUrl(null)
     // Intentionally keyed on id so background refetches do not wipe in-progress edits.
-  }, [burn?.id, defaultRunId])
+  }, [surtr?.id, defaultRunId])
 
   useEffect(() => {
-    if (burn?.receiptUrl && !receiptPreview) {
-      fetchFjallBurnReceiptUrl(burn.receiptUrl).then(setReceiptViewUrl).catch(() => {})
+    if (surtr?.receiptUrl && !receiptPreview) {
+      fetchFjallSurtrReceiptUrl(surtr.receiptUrl).then(setReceiptViewUrl).catch(() => {})
     }
-  }, [burn?.receiptUrl, receiptPreview])
+  }, [surtr?.receiptUrl, receiptPreview])
 
   async function uploadFile(file: File) {
     const localUrl = URL.createObjectURL(file)
@@ -93,7 +93,7 @@ export function InlineBurnForm({
     setReceiptViewUrl(null)
     setUploading(true)
     try {
-      const key = await uploadFjallBurnReceipt(file)
+      const key = await uploadFjallSurtrReceipt(file)
       setReceiptKey(key)
     } catch (error) {
       setReceiptPreview(null)
@@ -114,8 +114,8 @@ export function InlineBurnForm({
       return
     }
     await handleSubmit(async () => {
-      await saveFjallBurn({
-        id: burn?.id,
+      await saveFjallSurtr({
+        id: surtr?.id,
         name: name.trim(),
         amount: parseFloat(amount) || 0,
         date,

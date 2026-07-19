@@ -2,8 +2,8 @@ import { fjallFetch, fetchFjallHealth } from '@/lib/data-client'
 import { FJALL_API_URL } from '@/lib/config'
 import { getStoredAccessToken } from '@/lib/webauthn-client'
 import type {
-  FjallBurnPage,
-  FjallBurn,
+  FjallSurtrPage,
+  FjallSurtr,
   FjallCalendarOption,
   FjallExternalCalendarEvent,
   FjallRun,
@@ -11,7 +11,7 @@ import type {
   AudrSummary,
   FjallSjodr,
   FjallSjodrView,
-  FjallSupplyline,
+  FjallIdunn,
   FjallGrein,
   FjallGreinView,
   FjallLauf,
@@ -713,10 +713,10 @@ export async function reorderFjallSaga(
 
 // ─── Audr (provisions) ─────────────────────────────────────────────────────
 
-function normalizeFjallBurn(burn: FjallBurn): FjallBurn {
+function normalizeFjallSurtr(surtr: FjallSurtr): FjallSurtr {
   return {
-    ...burn,
-    runir: normalizeFjallRunir(burn.runir).map((entry) => ({
+    ...surtr,
+    runir: normalizeFjallRunir(surtr.runir).map((entry) => ({
       runId: entry.runId,
       run: {
         id: entry.run.id,
@@ -728,10 +728,10 @@ function normalizeFjallBurn(burn: FjallBurn): FjallBurn {
   }
 }
 
-function normalizeFjallSupplyline(supplyline: FjallSupplyline): FjallSupplyline {
+function normalizeFjallIdunn(idunn: FjallIdunn): FjallIdunn {
   return {
-    ...supplyline,
-    runir: normalizeFjallRunir(supplyline.runir).map((entry) => ({
+    ...idunn,
+    runir: normalizeFjallRunir(idunn.runir).map((entry) => ({
       runId: entry.runId,
       run: {
         id: entry.run.id,
@@ -743,11 +743,30 @@ function normalizeFjallSupplyline(supplyline: FjallSupplyline): FjallSupplyline 
   }
 }
 
-export async function fetchProvisionsSummary(month: number, year: number): Promise<AudrSummary> {
-  return fjallFetch<AudrSummary>(`/idunn/summary?month=${month}&year=${year}`)
+export async function fetchAudrSummary(month: number, year: number): Promise<AudrSummary> {
+  const raw = await fjallFetch<{
+    summary: {
+      monthlySupplylineCost: number
+      totalBurn: number
+      totalMonthSpend: number
+      activeSupplylines: number
+    }
+    upcomingRenewals: AudrSummary['upcomingRenewals']
+    cacheUtilization: AudrSummary['skattUtilization']
+  }>(`/idunn/summary?month=${month}&year=${year}`)
+  return {
+    summary: {
+      monthlyIdunnCost: raw.summary.monthlySupplylineCost,
+      totalSurtr: raw.summary.totalBurn,
+      totalMonthSpend: raw.summary.totalMonthSpend,
+      activeIdunn: raw.summary.activeSupplylines,
+    },
+    upcomingRenewals: raw.upcomingRenewals,
+    skattUtilization: raw.cacheUtilization,
+  }
 }
 
-export type FjallBurnQueryParams = {
+export type FjallSurtrQueryParams = {
   month: number
   year: number
   page?: number
@@ -756,35 +775,36 @@ export type FjallBurnQueryParams = {
   fundId?: string
 }
 
-export async function fetchFjallBurnPage(params: FjallBurnQueryParams): Promise<FjallBurnPage> {
+export async function fetchFjallSurtrPage(params: FjallSurtrQueryParams): Promise<FjallSurtrPage> {
   const qs = new URLSearchParams({ month: String(params.month), year: String(params.year), page: String(params.page ?? 1) })
   if (params.search) qs.set('search', params.search)
   if (params.runId) qs.set('runId', params.runId)
   if (params.fundId) qs.set('fundId', params.fundId)
-  const page = await fjallFetch<FjallBurnPage>(`/surtr?${qs}`)
+  const page = await fjallFetch<Omit<FjallSurtrPage, 'surtr'> & { burn: FjallSurtr[] }>(`/surtr?${qs}`)
   return {
-    ...page,
-    burn: (page.burn ?? []).map(normalizeFjallBurn),
+    total: page.total,
+    pageSize: page.pageSize,
+    surtr: (page.burn ?? []).map(normalizeFjallSurtr),
   }
 }
 
-export type FjallSupplylineQueryParams = {
+export type FjallIdunnQueryParams = {
   search?: string
   runId?: string
   active?: string
 }
 
-export async function fetchFjallSupplylinesFiltered(params: FjallSupplylineQueryParams = {}): Promise<FjallSupplyline[]> {
+export async function fetchFjallIdunnFiltered(params: FjallIdunnQueryParams = {}): Promise<FjallIdunn[]> {
   const qs = new URLSearchParams()
   if (params.search) qs.set('search', params.search)
   if (params.runId) qs.set('runId', params.runId)
   if (params.active) qs.set('active', params.active)
   const query = qs.toString()
-  const rows = await fjallFetch<FjallSupplyline[]>(`/idunn${query ? `?${query}` : ''}`)
-  return rows.map(normalizeFjallSupplyline)
+  const rows = await fjallFetch<FjallIdunn[]>(`/idunn${query ? `?${query}` : ''}`)
+  return rows.map(normalizeFjallIdunn)
 }
 
-export async function saveFjallSupplyline(data: Record<string, unknown>): Promise<unknown> {
+export async function saveFjallIdunn(data: Record<string, unknown>): Promise<unknown> {
   const { id, nextRenewal, url, notes, active, ...rest } = data
   const path = id ? `/idunn/${encodeURIComponent(String(id))}` : '/idunn'
   return fjallFetch(path, {
@@ -793,30 +813,30 @@ export async function saveFjallSupplyline(data: Record<string, unknown>): Promis
   })
 }
 
-export async function deleteFjallSupplyline(id: string): Promise<void> {
+export async function deleteFjallIdunn(id: string): Promise<void> {
   await fjallFetch<void>(`/idunn/${id}`, { method: 'DELETE' })
 }
 
-export async function toggleFjallSupplylineActive(id: string, active: boolean): Promise<unknown> {
+export async function toggleFjallIdunnActive(id: string, active: boolean): Promise<unknown> {
   return fjallFetch(`/idunn/${id}`, { method: 'PUT', body: JSON.stringify({ active }) })
 }
 
-export async function saveFjallBurn(data: Record<string, unknown>): Promise<unknown> {
+export async function saveFjallSurtr(data: Record<string, unknown>): Promise<unknown> {
   const { id, ...rest } = data
   const path = id ? `/surtr/${id}` : '/surtr'
   return fjallFetch(path, { method: id ? 'PUT' : 'POST', body: JSON.stringify(rest) })
 }
 
-export async function deleteFjallBurn(id: string): Promise<void> {
+export async function deleteFjallSurtr(id: string): Promise<void> {
   await fjallFetch<void>(`/surtr/${id}`, { method: 'DELETE' })
 }
 
-export async function fetchFjallBurnReceiptUrl(key: string): Promise<string> {
+export async function fetchFjallSurtrReceiptUrl(key: string): Promise<string> {
   const data = await fjallFetch<{ url: string }>(`/surtr/receipt-url?key=${encodeURIComponent(key)}`)
   return data.url
 }
 
-export async function uploadFjallBurnReceipt(file: File): Promise<string> {
+export async function uploadFjallSurtrReceipt(file: File): Promise<string> {
   const data = await fjallFetch<{ url: string; key: string; cloudFrontUrl?: string }>(
     '/surtr/receipt-upload-url',
     { method: 'POST', body: JSON.stringify({ contentType: file.type, fileSize: file.size }) },
@@ -825,13 +845,13 @@ export async function uploadFjallBurnReceipt(file: File): Promise<string> {
   return data.cloudFrontUrl ?? data.key
 }
 
-export async function saveFjallCache(data: Record<string, unknown>): Promise<unknown> {
+export async function saveFjallSkatt(data: Record<string, unknown>): Promise<unknown> {
   const { id, ...rest } = data
   const path = id ? `/skatt/${encodeURIComponent(String(id))}` : '/skatt'
   return fjallFetch(path, { method: id ? 'PUT' : 'POST', body: JSON.stringify(rest) })
 }
 
-export async function deleteFjallCache(id: string): Promise<void> {
+export async function deleteFjallSkatt(id: string): Promise<void> {
   await fjallFetch<void>(`/skatt/${id}`, { method: 'DELETE' })
 }
 

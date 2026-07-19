@@ -14,7 +14,7 @@ export function greinPageOptions(terms: Terms): { id: GreinPageId; label: string
   return [
     { id: 'hlidskjalf', label: terms.dashboard },
     { id: 'sogur', label: terms.notes },
-    { id: 'audr', label: terms.provisions },
+    { id: 'audr', label: terms.audr },
   ]
 }
 

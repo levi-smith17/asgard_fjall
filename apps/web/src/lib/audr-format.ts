@@ -1,4 +1,4 @@
-import type { FjallBurn, FjallCacheUtilization, FjallSjodrView } from '@/lib/data-types'
+import type { FjallSurtr, FjallSkattUtilization, FjallSjodrView } from '@/lib/data-types'
 import { runDisplayName, toRunId } from '@/lib/embedded-runir'
 
 export const AUDR_UNASSIGNED_SJODR = 'unassigned'
@@ -13,30 +13,30 @@ export function skattUtilizationColor(pct: number) {
   return 'bg-primary'
 }
 
-export function burnRunKey(burn: FjallBurn): string {
-  return toRunId((burn.runir ?? [])[0]) ?? 'uncategorized'
+export function surtrRunKey(surtr: FjallSurtr): string {
+  return toRunId((surtr.runir ?? [])[0]) ?? 'uncategorized'
 }
 
 export function runShortLabel(
   runId: string,
   runir: { id: string; name: string }[],
-  cache?: FjallCacheUtilization,
+  skatt?: FjallSkattUtilization,
 ): string {
   if (runId === 'uncategorized') return 'Uncategorized'
   const name =
     runir.find((m) => m.id === runId)?.name ??
-    cache?.run?.name ??
-    runDisplayName(cache?.run)
+    skatt?.run?.name ??
+    runDisplayName(skatt?.run)
   if (!name) return 'Uncategorized'
   return name.split('/').pop() ?? name
 }
 
-export function groupBurnsByRun(burns: FjallBurn[]) {
-  const groups = new Map<string, FjallBurn[]>()
-  for (const burn of burns) {
-    const key = burnRunKey(burn)
+export function groupSurtrByRun(surtrItems: FjallSurtr[]) {
+  const groups = new Map<string, FjallSurtr[]>()
+  for (const surtr of surtrItems) {
+    const key = surtrRunKey(surtr)
     const list = groups.get(key) ?? []
-    list.push(burn)
+    list.push(surtr)
     groups.set(key, list)
   }
   return groups
@@ -44,18 +44,18 @@ export function groupBurnsByRun(burns: FjallBurn[]) {
 
 export type SurtrCanvasGroup = {
   runId: string
-  burns: FjallBurn[]
-  cache?: FjallCacheUtilization
+  surtrItems: FjallSurtr[]
+  skatt?: FjallSkattUtilization
 }
 
 export function buildSurtrCanvasGroups(
-  burns: FjallBurn[],
-  cacheUtilization: FjallCacheUtilization[],
+  surtrItems: FjallSurtr[],
+  skattUtilization: FjallSkattUtilization[],
   runir: { id: string; name: string }[] = [],
 ): SurtrCanvasGroup[] {
-  const burnGroups = groupBurnsByRun(burns)
+  const burnGroups = groupSurtrByRun(surtrItems)
   const runIds = new Set<string>()
-  for (const cache of cacheUtilization) runIds.add(cache.runId)
+  for (const skatt of skattUtilization) runIds.add(skatt.runId)
   for (const runId of burnGroups.keys()) runIds.add(runId)
 
   return [...runIds]
@@ -63,12 +63,12 @@ export function buildSurtrCanvasGroups(
       runShortLabel(
         a,
         runir,
-        cacheUtilization.find((entry) => entry.runId === a),
+        skattUtilization.find((entry) => entry.runId === a),
       ).localeCompare(
         runShortLabel(
           b,
           runir,
-          cacheUtilization.find((entry) => entry.runId === b),
+          skattUtilization.find((entry) => entry.runId === b),
         ),
         undefined,
         { sensitivity: 'base' },
@@ -76,10 +76,10 @@ export function buildSurtrCanvasGroups(
     )
     .map((runId) => ({
       runId,
-      burns: [...(burnGroups.get(runId) ?? [])].sort(
+      surtrItems: [...(burnGroups.get(runId) ?? [])].sort(
         (left, right) => new Date(right.date).getTime() - new Date(left.date).getTime(),
       ),
-      cache: cacheUtilization.find((entry) => entry.runId === runId),
+      skatt: skattUtilization.find((entry) => entry.runId === runId),
     }))
 }
 
@@ -101,15 +101,15 @@ export type SurtrSjodrSection = {
 }
 
 export function buildSurtrSjodrSections(
-  burns: FjallBurn[],
-  cacheUtilization: FjallCacheUtilization[],
+  surtrItems: FjallSurtr[],
+  skattUtilization: FjallSkattUtilization[],
   funds: FjallSjodrView[],
   runir: { id: string; name: string }[] = [],
 ): SurtrSjodrSection[] {
   const fundNameById = new Map(funds.map((fund) => [fund.id, fund.name]))
   const keys = new Set<string>()
-  for (const cache of cacheUtilization) keys.add(cache.fundId ?? AUDR_UNASSIGNED_SJODR)
-  for (const burn of burns) keys.add(burn.fundId ?? AUDR_UNASSIGNED_SJODR)
+  for (const skatt of skattUtilization) keys.add(skatt.fundId ?? AUDR_UNASSIGNED_SJODR)
+  for (const surtr of surtrItems) keys.add(surtr.fundId ?? AUDR_UNASSIGNED_SJODR)
 
   const ordered = [...keys].sort((left, right) => {
     if (left === AUDR_UNASSIGNED_SJODR) return 1
@@ -121,8 +121,8 @@ export function buildSurtrSjodrSections(
 
   return ordered.map((key) => {
     const fundId = key === AUDR_UNASSIGNED_SJODR ? null : key
-    const sectionBurns = burns.filter((burn) => (burn.fundId ?? null) === fundId)
-    const sectionCaches = cacheUtilization.filter((cache) => (cache.fundId ?? null) === fundId)
+    const sectionBurns = surtrItems.filter((surtr) => (surtr.fundId ?? null) === fundId)
+    const sectionCaches = skattUtilization.filter((skatt) => (skatt.fundId ?? null) === fundId)
     return {
       fundId,
       fundName:

@@ -111,7 +111,7 @@ export type FjallRunJunction = {
   run: FjallEmbeddedRun
 }
 
-export type FjallBurn = {
+export type FjallSurtr = {
   id: string
   name: string
   amount: number
@@ -122,7 +122,7 @@ export type FjallBurn = {
   runir: FjallRunJunction[]
 }
 
-export type FjallSupplyline = {
+export type FjallIdunn = {
   id: string
   name: string
   amount: number
@@ -135,7 +135,7 @@ export type FjallSupplyline = {
   runir: FjallRunJunction[]
 }
 
-export type FjallCacheUtilization = {
+export type FjallSkattUtilization = {
   id: string
   runId: string
   run: FjallEmbeddedRun
@@ -178,17 +178,17 @@ export type FjallUpcomingRenewal = {
 
 export type AudrSummary = {
   summary: {
-    monthlySupplylineCost: number
-    totalBurn: number
+    monthlyIdunnCost: number
+    totalSurtr: number
     totalMonthSpend: number
-    activeSupplylines: number
+    activeIdunn: number
   }
   upcomingRenewals: FjallUpcomingRenewal[]
-  cacheUtilization: FjallCacheUtilization[]
+  skattUtilization: FjallSkattUtilization[]
 }
 
-export type FjallBurnPage = {
-  burn: FjallBurn[]
+export type FjallSurtrPage = {
+  surtr: FjallSurtr[]
   total: number
   pageSize: number
 }

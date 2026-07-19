@@ -1,4 +1,4 @@
-import { fetchProvisionsSummary, saveFjallCache } from '@/lib/data-api'
+import { fetchAudrSummary, saveFjallSkatt } from '@/lib/data-api'
 
 export type FjallCacheCarryOverResult = {
   count: number
@@ -24,8 +24,8 @@ export async function carrySelectedFjallCacheToMonth(
 ): Promise<{ created: number; skipped: number }> {
   if (items.length === 0) return { created: 0, skipped: 0 }
 
-  const targetSummary = await fetchProvisionsSummary(targetMonth, targetYear)
-  const existingRunIds = new Set(targetSummary.cacheUtilization.map((b) => b.runId))
+  const targetSummary = await fetchAudrSummary(targetMonth, targetYear)
+  const existingRunIds = new Set(targetSummary.skattUtilization.map((b) => b.runId))
 
   let created = 0
   let skipped = 0
@@ -35,7 +35,7 @@ export async function carrySelectedFjallCacheToMonth(
       skipped++
       continue
     }
-    await saveFjallCache({
+    await saveFjallSkatt({
       runId: item.runId,
       limit: item.limit,
       month: targetMonth,
@@ -56,14 +56,14 @@ export async function carryOverFjallCacheToMonth(
 ): Promise<FjallCacheCarryOverResult | null> {
   const maxMonthsBack = options?.maxMonthsBack ?? 24
 
-  const targetSummary = await fetchProvisionsSummary(targetMonth, targetYear)
-  const existingRunIds = new Set(targetSummary.cacheUtilization.map((b) => b.runId))
+  const targetSummary = await fetchAudrSummary(targetMonth, targetYear)
+  const existingRunIds = new Set(targetSummary.skattUtilization.map((b) => b.runId))
 
   let { month, year } = previousMonth(targetMonth, targetYear)
 
   for (let i = 0; i < maxMonthsBack; i++) {
-    const summary = await fetchProvisionsSummary(month, year)
-    const toCreate = summary.cacheUtilization.filter((b) => !existingRunIds.has(b.runId))
+    const summary = await fetchAudrSummary(month, year)
+    const toCreate = summary.skattUtilization.filter((b) => !existingRunIds.has(b.runId))
 
     if (toCreate.length > 0) {
       const result = await carrySelectedFjallCacheToMonth(

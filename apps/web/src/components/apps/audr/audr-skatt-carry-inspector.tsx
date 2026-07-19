@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/core/ui/button'
 import { StudioPagination } from '@/components/core/ui/studio-pagination'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
-import { fetchProvisionsSummary } from '@/lib/data-api'
+import { fetchAudrSummary } from '@/lib/data-api'
 import {
   carryOverFjallCacheToMonth,
   carrySelectedFjallCacheToMonth,
@@ -38,10 +38,10 @@ export function AudrSkattCarryInspector({
 
   const sourceQuery = useQuery({
     queryKey: ['audr', 'skatt-carry-source', sourceMonth, sourceYear],
-    queryFn: () => fetchProvisionsSummary(sourceMonth, sourceYear),
+    queryFn: () => fetchAudrSummary(sourceMonth, sourceYear),
   })
 
-  const sourceItems = sourceQuery.data?.cacheUtilization ?? []
+  const sourceItems = sourceQuery.data?.skattUtilization ?? []
 
   const selectableItems = useMemo(
     () => sourceItems.filter((item) => !targetRunIds.has(item.runId)),
@@ -73,12 +73,12 @@ export function AudrSkattCarryInspector({
       const sourceName = monthYearLabel(sourceMonth, sourceYear)
       if (result.created > 0) {
         toast.success(
-          `Brought ${result.created} ${terms.budgets.toLowerCase()} from ${sourceName}${
+          `Brought ${result.created} ${terms.skatt.toLowerCase()} from ${sourceName}${
             result.skipped > 0 ? ` (${result.skipped} skipped)` : ''
           }`,
         )
       } else {
-        toast.message(`No new ${terms.budgets.toLowerCase()} to bring forward`)
+        toast.message(`No new ${terms.skatt.toLowerCase()} to bring forward`)
       }
       onComplete()
     } catch (error) {
@@ -93,11 +93,11 @@ export function AudrSkattCarryInspector({
     try {
       const result = await carryOverFjallCacheToMonth(targetMonth, targetYear)
       if (!result) {
-        toast.message(`No previous ${terms.budgets.toLowerCase()} available`)
+        toast.message(`No previous ${terms.skatt.toLowerCase()} available`)
         return
       }
       const sourceName = monthYearLabel(result.sourceMonth, result.sourceYear)
-      toast.success(`Copied ${result.count} ${terms.budgets.toLowerCase()} from ${sourceName}`)
+      toast.success(`Copied ${result.count} ${terms.skatt.toLowerCase()} from ${sourceName}`)
       onComplete()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to copy Skatt')
@@ -118,7 +118,7 @@ export function AudrSkattCarryInspector({
       <InspectorChrome>
         <InspectorChromeTitle
           eyebrow="Audr"
-          title={`Bring ${terms.budgetSingular} Forward`}
+          title={`Bring ${terms.skattSingular} Forward`}
         />
       </InspectorChrome>
 
@@ -175,7 +175,7 @@ export function AudrSkattCarryInspector({
           </div>
         ) : sourceItems.length === 0 ? (
           <p className="px-5 py-8 text-center text-sm text-muted-foreground">
-            No {terms.budgets.toLowerCase()} in {sourceName}.
+            No {terms.skatt.toLowerCase()} in {sourceName}.
           </p>
         ) : (
           <ul className="divide-y divide-border">
