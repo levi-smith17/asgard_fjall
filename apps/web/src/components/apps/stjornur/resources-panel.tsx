@@ -201,25 +201,23 @@ export function ResourcesPanel({ resources, onClose: _onClose, onRefresh }: Reso
         eyebrow="Inspector"
         title="Manage Resources"
         showBack={false}
-        actions={
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={SF_ICON_CONTROL}
-                onClick={() => setSubMode({ mode: 'form', resource: null })}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Add resource</TooltipContent>
-          </Tooltip>
-        }
       />
 
-      <div className="shrink-0 border-b border-border px-5 py-3">
-        <p className="truncate text-sm font-medium text-foreground">{countLabel}</p>
+      <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-3">
+        <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{countLabel}</p>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={SF_ICON_CONTROL}
+              onClick={() => setSubMode({ mode: 'form', resource: null })}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Add resource</TooltipContent>
+        </Tooltip>
       </div>
 
       <div className="shrink-0 border-b border-border/50 px-3 py-2">

@@ -178,25 +178,23 @@ export function SystemsPanel({
             eyebrow="Inspector"
             title="Manage Planets"
             onBack={goBack}
-            actions={
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9"
-                    onClick={() => { setAddingPlanet(true); setEditingPlanetId(null); setPlanetInput('') }}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Add planet</TooltipContent>
-              </Tooltip>
-            }
           />
 
-          <div className="shrink-0 border-b border-border px-5 py-3">
-            <p className="truncate text-sm font-medium text-foreground">{activeSystem.name}</p>
+          <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-3">
+            <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{activeSystem.name}</p>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={() => { setAddingPlanet(true); setEditingPlanetId(null); setPlanetInput('') }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Add planet</TooltipContent>
+            </Tooltip>
           </div>
 
           <div className="flex-1 overflow-y-auto">
@@ -275,27 +273,25 @@ export function SystemsPanel({
           eyebrow="Inspector"
           title="Manage Systems"
           showBack={false}
-          actions={
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => { setAddingSystem(true); setEditingSystemId(null); setSystemInput('') }}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Add system</TooltipContent>
-            </Tooltip>
-          }
         />
 
-        <div className="shrink-0 border-b border-border px-5 py-3">
-          <p className="truncate text-sm font-medium text-foreground">
+        <div className="flex shrink-0 items-center gap-2 border-b border-border px-5 py-3">
+          <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
             {`${sortedSystems.length} system${sortedSystems.length !== 1 ? 's' : ''}`}
           </p>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => { setAddingSystem(true); setEditingSystemId(null); setSystemInput('') }}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Add system</TooltipContent>
+          </Tooltip>
         </div>
 
         <div className="flex-1 overflow-y-auto">
