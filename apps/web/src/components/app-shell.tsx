@@ -311,6 +311,8 @@ export function AppShell() {
                   themeLabel={themeLabel}
                   theme={theme}
                   onToggleTheme={toggleTheme}
+                  appearanceGroupLabel={terms.appearanceGroup}
+                  affairsGroupLabel={terms.affairsGroup}
                 />
               </div>
             ) : (
@@ -333,6 +335,8 @@ export function AppShell() {
                 themeLabel={themeLabel}
                 theme={theme}
                 onToggleTheme={toggleTheme}
+                appearanceGroupLabel={terms.appearanceGroup}
+                affairsGroupLabel={terms.affairsGroup}
               />
             )}
           </div>

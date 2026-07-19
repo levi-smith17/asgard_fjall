@@ -35,6 +35,8 @@ export type UserAccountMenuProps = {
   themeLabel: string
   theme: string
   onToggleTheme: () => void
+  appearanceGroupLabel: string
+  affairsGroupLabel: string
 }
 
 function menuItemClass(options?: { active?: boolean; destructive?: boolean }) {
@@ -75,6 +77,14 @@ function MenuButton({
   )
 }
 
+function GroupHeader({ label }: { label: string }) {
+  return (
+    <p className="px-3 pb-1 pt-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+      {label}
+    </p>
+  )
+}
+
 export function UserAccountMenu({
   collapsed = false,
   displayName,
@@ -95,6 +105,8 @@ export function UserAccountMenu({
   themeLabel,
   theme,
   onToggleTheme,
+  appearanceGroupLabel,
+  affairsGroupLabel,
 }: UserAccountMenuProps) {
   const { signOut } = useAuth()
   const navigate = useNavigate()
@@ -184,28 +196,7 @@ export function UserAccountMenu({
       </div>
 
       <div className="py-1">
-        <Link
-          to={messagesTo}
-          role="menuitem"
-          className={menuItemClass({ active: messagesActive })}
-          onClick={() => setOpen(false)}
-        >
-          <MessageSquare className="h-4 w-4 shrink-0" aria-hidden />
-          <span className="min-w-0 flex-1 truncate">{messagesLabel}</span>
-          {unreadBadge}
-        </Link>
-        <Link
-          to={settingsTo}
-          role="menuitem"
-          className={menuItemClass({ active: settingsActive })}
-          onClick={() => setOpen(false)}
-        >
-          <Settings className="h-4 w-4 shrink-0" aria-hidden />
-          <span className="min-w-0 flex-1 truncate">{settingsLabel}</span>
-        </Link>
-      </div>
-
-      <div className="border-t border-border py-1">
+        <GroupHeader label={appearanceGroupLabel} />
         <MenuButton
           icon={<BookType className="h-4 w-4" aria-hidden />}
           label={terminologyLabel}
@@ -236,6 +227,29 @@ export function UserAccountMenu({
             setOpen(false)
           }}
         />
+      </div>
+
+      <div className="border-t border-border py-1">
+        <GroupHeader label={affairsGroupLabel} />
+        <Link
+          to={messagesTo}
+          role="menuitem"
+          className={menuItemClass({ active: messagesActive })}
+          onClick={() => setOpen(false)}
+        >
+          <MessageSquare className="h-4 w-4 shrink-0" aria-hidden />
+          <span className="min-w-0 flex-1 truncate">{messagesLabel}</span>
+          {unreadBadge}
+        </Link>
+        <Link
+          to={settingsTo}
+          role="menuitem"
+          className={menuItemClass({ active: settingsActive })}
+          onClick={() => setOpen(false)}
+        >
+          <Settings className="h-4 w-4 shrink-0" aria-hidden />
+          <span className="min-w-0 flex-1 truncate">{settingsLabel}</span>
+        </Link>
       </div>
 
       <div className="border-t border-border py-1">

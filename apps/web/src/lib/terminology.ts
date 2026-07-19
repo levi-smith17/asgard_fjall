@@ -40,6 +40,10 @@ export type Terms = {
   paletteGreen: string
   /** Color palette: Gold / Gull. */
   paletteGold: string
+  /** Profile menu group: appearance toggles (Hamur / Appearance). */
+  appearanceGroup: string
+  /** Profile menu group: Sendibod + Thing (Mál / Affairs). */
+  affairsGroup: string
   // Audr (audr) item types
   surtr: string
   surtrSingular: string
@@ -109,6 +113,8 @@ const ASGARD: Terms = {
   publicViewGroup: 'Almenningr',
   paletteGreen: 'Graenn',
   paletteGold: 'Gull',
+  appearanceGroup: 'Hamur',
+  affairsGroup: 'Mál',
   surtr: 'Surtr',
   surtrSingular: 'Surtr',
   idunn: 'Idunn',
@@ -173,6 +179,8 @@ const STANDARD: Terms = {
   publicViewGroup: 'Public View',
   paletteGreen: 'Green',
   paletteGold: 'Gold',
+  appearanceGroup: 'Appearance',
+  affairsGroup: 'Affairs',
   surtr: 'Expenses',
   surtrSingular: 'Expense',
   idunn: 'Subscriptions',
