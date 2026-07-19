@@ -2,8 +2,13 @@ import { useEffect, useRef } from 'react'
 import { toLuvi, luviWeekDates, LUVI_DAYS, type CalendarMode } from '@/lib/luvi'
 import { contrastColor } from '@/lib/color'
 import { icloudEventsForDay } from '@/lib/dagatal-events'
-import { EventPopover } from './event-popover'
-import type { StopWithRunir, ICloudEventDisplay } from './dagatal-types'
+import {
+  selectionFromICloud,
+  selectionFromStop,
+  type DagatalEventSelection,
+  type ICloudEventDisplay,
+  type StopWithRunir,
+} from './dagatal-types'
 
 const PX_PER_HOUR = 56
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
@@ -15,6 +20,8 @@ interface WeekViewProps {
   anchor: Date
   calendarMode: CalendarMode
   calendarColorMap: Record<string, string>
+  selectedEventId?: string | null
+  onSelectEvent?: (event: DagatalEventSelection) => void
 }
 
 function isSameDay(a: Date, b: Date): boolean {
@@ -55,7 +62,7 @@ function eventPosition(start: Date, end: Date | null): { top: number; height: nu
   }
 }
 
-function GregorianWeekGrid({ stops, icloudEvents, anchor, calendarMode, calendarColorMap }: WeekViewProps) {
+function GregorianWeekGrid({ stops, icloudEvents, anchor, calendarMode, calendarColorMap, selectedEventId, onSelectEvent }: WeekViewProps) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -124,45 +131,39 @@ function GregorianWeekGrid({ stops, icloudEvents, anchor, calendarMode, calendar
                   <div key={i} className="border-r last:border-r-0 p-0.5 flex flex-col gap-0.5 min-h-[28px]">
                     {dayStops.map(stop => {
                       const color = stop.runir[0]?.run.color ?? (stop.icloudCalendarId ? calendarColorMap[stop.icloudCalendarId] : undefined) ?? '#6b7280'
+                      const selection = selectionFromStop(stop, calendarColorMap)
                       return (
-                        <EventPopover
+                        <button
                           key={stop.id}
-                          title={stop.title}
-                          startDate={stop.startDate}
-                          endDate={stop.endDate}
-                          allDay={stop.allDay}
-                          location={stop.location}
-                          notes={stop.notes}
-                          color={color}
+                          type="button"
+                          className={`text-left w-full px-1.5 py-0.5 rounded text-[10px] font-medium truncate hover:opacity-90 ${selectedEventId === selection.id ? 'ring-2 ring-foreground/40' : ''}`}
+                          style={{ backgroundColor: color, color: contrastColor(color) }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onSelectEvent?.(selection)
+                          }}
                         >
-                          <button
-                            className="text-left w-full px-1.5 py-0.5 rounded text-[10px] font-medium truncate hover:opacity-90"
-                            style={{ backgroundColor: color, color: contrastColor(color) }}
-                          >
-                            {stop.title}
-                          </button>
-                        </EventPopover>
+                          {stop.title}
+                        </button>
                       )
                     })}
-                    {dayICloud.map(e => (
-                      <EventPopover
-                        key={e.uid}
-                        title={e.title}
-                        startDate={e.startDate}
-                        endDate={e.endDate}
-                        allDay={e.allDay}
-                        location={e.location}
-                        notes={e.notes}
-                        color={e.color}
-                      >
+                    {dayICloud.map(e => {
+                      const selection = selectionFromICloud(e)
+                      return (
                         <button
-                          className="text-left w-full px-1.5 py-0.5 rounded text-[10px] font-medium flex items-center gap-0.5 overflow-hidden hover:opacity-90"
+                          key={e.uid}
+                          type="button"
+                          className={`text-left w-full px-1.5 py-0.5 rounded text-[10px] font-medium flex items-center gap-0.5 overflow-hidden hover:opacity-90 ${selectedEventId === selection.id ? 'ring-2 ring-foreground/40' : ''}`}
                           style={{ backgroundColor: e.color, color: contrastColor(e.color) }}
+                          onClick={(ev) => {
+                            ev.stopPropagation()
+                            onSelectEvent?.(selection)
+                          }}
                         >
                           <span className="truncate">{e.title}</span>
                         </button>
-                      </EventPopover>
-                    ))}
+                      )
+                    })}
                   </div>
                 )
               })}
@@ -206,51 +207,43 @@ function GregorianWeekGrid({ stops, icloudEvents, anchor, calendarMode, calendar
                 {dayStops.map(stop => {
                   const color = stop.runir[0]?.run.color ?? (stop.icloudCalendarId ? calendarColorMap[stop.icloudCalendarId] : undefined) ?? '#6b7280'
                   const { top, height } = eventPosition(new Date(stop.startDate), stop.endDate ? new Date(stop.endDate) : null)
+                  const selection = selectionFromStop(stop, calendarColorMap)
                   return (
-                    <EventPopover
+                    <button
                       key={stop.id}
-                      title={stop.title}
-                      startDate={stop.startDate}
-                      endDate={stop.endDate}
-                      allDay={stop.allDay}
-                      location={stop.location}
-                      notes={stop.notes}
-                      color={color}
+                      type="button"
+                      className={`absolute inset-x-0.5 rounded px-1.5 text-left overflow-hidden hover:opacity-90 transition-opacity z-10 ${selectedEventId === selection.id ? 'ring-2 ring-foreground/40' : ''}`}
+                      style={{ top, height, backgroundColor: color, color: contrastColor(color) }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onSelectEvent?.(selection)
+                      }}
                     >
-                      <button
-                        className="absolute inset-x-0.5 rounded px-1.5 text-left overflow-hidden hover:opacity-90 transition-opacity z-10"
-                        style={{ top, height, backgroundColor: color, color: contrastColor(color) }}
-                      >
-                        <div className="text-[10px] font-semibold truncate leading-tight">{stop.title}</div>
-                        <div className="text-[9px] opacity-80">{formatTime(new Date(stop.startDate))}</div>
-                      </button>
-                    </EventPopover>
+                      <div className="text-[10px] font-semibold truncate leading-tight">{stop.title}</div>
+                      <div className="text-[9px] opacity-80">{formatTime(new Date(stop.startDate))}</div>
+                    </button>
                   )
                 })}
 
                 {dayICloud.map(e => {
                   const { top, height } = eventPosition(new Date(e.startDate), e.endDate ? new Date(e.endDate) : null)
+                  const selection = selectionFromICloud(e)
                   return (
-                    <EventPopover
+                    <button
                       key={e.uid}
-                      title={e.title}
-                      startDate={e.startDate}
-                      endDate={e.endDate}
-                      allDay={e.allDay}
-                      location={e.location}
-                      notes={e.notes}
-                      color={e.color}
+                      type="button"
+                      className={`absolute inset-x-0.5 rounded px-1.5 text-left overflow-hidden z-10 hover:opacity-90 transition-opacity ${selectedEventId === selection.id ? 'ring-2 ring-foreground/40' : ''}`}
+                      style={{ top, height, backgroundColor: e.color, color: contrastColor(e.color) }}
+                      onClick={(ev) => {
+                        ev.stopPropagation()
+                        onSelectEvent?.(selection)
+                      }}
                     >
-                      <button
-                        className="absolute inset-x-0.5 rounded px-1.5 text-left overflow-hidden z-10 hover:opacity-90 transition-opacity"
-                        style={{ top, height, backgroundColor: e.color, color: contrastColor(e.color) }}
-                      >
-                        <div className="text-[10px] font-semibold truncate leading-tight">
-                          {e.title}
-                        </div>
-                        <div className="text-[9px] opacity-80">{formatTime(new Date(e.startDate))}</div>
-                      </button>
-                    </EventPopover>
+                      <div className="text-[10px] font-semibold truncate leading-tight">
+                        {e.title}
+                      </div>
+                      <div className="text-[9px] opacity-80">{formatTime(new Date(e.startDate))}</div>
+                    </button>
                   )
                 })}
               </div>
@@ -264,54 +257,50 @@ function GregorianWeekGrid({ stops, icloudEvents, anchor, calendarMode, calendar
 }
 
 function SimpleEventColumn({
-  day: _day, stops, icloudEvents, calendarColorMap,
+  day: _day, stops, icloudEvents, calendarColorMap, selectedEventId, onSelectEvent,
 }: {
   day: Date
   stops: StopWithRunir[]
   icloudEvents: ICloudEventDisplay[]
   calendarColorMap: Record<string, string>
+  selectedEventId?: string | null
+  onSelectEvent?: (event: DagatalEventSelection) => void
 }) {
   return (
     <div className="border-r last:border-r-0 p-1 flex flex-col gap-1 min-h-[160px]">
       {stops.map(stop => {
         const color = stop.runir[0]?.run.color ?? (stop.icloudCalendarId ? calendarColorMap[stop.icloudCalendarId] : undefined) ?? '#6b7280'
+        const selection = selectionFromStop(stop, calendarColorMap)
         return (
-          <EventPopover
+          <button
             key={stop.id}
-            title={stop.title}
-            startDate={stop.startDate}
-            endDate={stop.endDate}
-            allDay={stop.allDay}
-            location={stop.location}
-            notes={stop.notes}
-            color={color}
+            type="button"
+            className={`text-left w-full px-1.5 py-1 rounded text-xs hover:opacity-90 transition-opacity ${selectedEventId === selection.id ? 'ring-2 ring-foreground/40' : ''}`}
+            style={{ backgroundColor: color, color: contrastColor(color) }}
+            onClick={(e) => {
+              e.stopPropagation()
+              onSelectEvent?.(selection)
+            }}
           >
-            <button
-              className="text-left w-full px-1.5 py-1 rounded text-xs hover:opacity-90 transition-opacity"
-              style={{ backgroundColor: color, color: contrastColor(color) }}
-            >
-              <div className="font-medium truncate leading-tight">{stop.title}</div>
-              <div className="text-[9px] opacity-80 mt-px">
-                {stop.allDay ? 'All day' : formatTime(new Date(stop.startDate))}
-              </div>
-            </button>
-          </EventPopover>
+            <div className="font-medium truncate leading-tight">{stop.title}</div>
+            <div className="text-[9px] opacity-80 mt-px">
+              {stop.allDay ? 'All day' : formatTime(new Date(stop.startDate))}
+            </div>
+          </button>
         )
       })}
-      {icloudEvents.map(e => (
-        <EventPopover
-          key={e.uid}
-          title={e.title}
-          startDate={e.startDate}
-          endDate={e.endDate}
-          allDay={e.allDay}
-          location={e.location}
-          notes={e.notes}
-          color={e.color}
-        >
+      {icloudEvents.map(e => {
+        const selection = selectionFromICloud(e)
+        return (
           <button
-            className="text-left w-full px-1.5 py-1 rounded text-xs hover:opacity-90 transition-opacity"
+            key={e.uid}
+            type="button"
+            className={`text-left w-full px-1.5 py-1 rounded text-xs hover:opacity-90 transition-opacity ${selectedEventId === selection.id ? 'ring-2 ring-foreground/40' : ''}`}
             style={{ backgroundColor: e.color, color: contrastColor(e.color) }}
+            onClick={(ev) => {
+              ev.stopPropagation()
+              onSelectEvent?.(selection)
+            }}
           >
             <div className="font-medium truncate leading-tight">
               {e.title}
@@ -320,13 +309,13 @@ function SimpleEventColumn({
               {e.allDay ? 'All day' : formatTime(new Date(e.startDate))}
             </div>
           </button>
-        </EventPopover>
-      ))}
+        )
+      })}
     </div>
   )
 }
 
-function LuviFullWeekGrid({ stops, icloudEvents, anchor, calendarColorMap }: WeekViewProps) {
+function LuviFullWeekGrid({ stops, icloudEvents, anchor, calendarColorMap, selectedEventId, onSelectEvent }: WeekViewProps) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -380,6 +369,8 @@ function LuviFullWeekGrid({ stops, icloudEvents, anchor, calendarColorMap }: Wee
               stops={stopsForDay(stops, day)}
               icloudEvents={icloudEventsForDay(icloudEvents, day)}
               calendarColorMap={calendarColorMap}
+              selectedEventId={selectedEventId}
+              onSelectEvent={onSelectEvent}
             />
           ))}
         </div>

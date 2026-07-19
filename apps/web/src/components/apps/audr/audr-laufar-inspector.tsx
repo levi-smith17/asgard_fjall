@@ -183,7 +183,7 @@ export function AudrLaufarInspector({
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <InspectorChrome>
-        <InspectorChromeTitle eyebrow="Audr" title={terms.laufar} />
+        <InspectorChromeTitle eyebrow="Inspector" title={`Manage ${terms.laufar}`} />
       </InspectorChrome>
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
         <div className="border-b border-border px-4 py-3">

@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { RailListSkeleton, TableSkeleton } from '@/components/core/ui/studio-skeletons'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
+import { InspectorEmptyState } from '@/components/core/ui/inspector-chrome'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import { SendibodContextBar } from '@/components/apps/sendibod/sendibod-context-bar'
 import { SendibodFilterBar } from '@/components/apps/sendibod/sendibod-filter-bar'
@@ -87,7 +88,7 @@ export function SendibodPage() {
     messages.find((message) => message.id === selectedId) ??
     null
 
-  const inspectorOpen = inspectorPinned || selectedId != null
+  const inspectorOpen = inspectorPinned || selectedId != null || showSettings
   const inspectorState = inspectorOpen ? 'open' : 'hint'
 
   function selectSignal(id: string) {
@@ -99,9 +100,14 @@ export function SendibodPage() {
   }
 
   const dismissInspector = useCallback(() => {
-    if (inspectorPinned || selectedId == null) return
+    if (inspectorPinned) return
+    if (showSettings) {
+      setShowSettings(false)
+      return
+    }
+    if (selectedId == null) return
     clearSelection()
-  }, [inspectorPinned, selectedId, clearSelection])
+  }, [inspectorPinned, showSettings, selectedId, clearSelection])
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -163,32 +169,14 @@ export function SendibodPage() {
         onDismissInspector={dismissInspector}
         inspector={
           showSettings && settingsQuery.data?.sendibod ? (
-            <div className="flex h-full flex-col">
-              <div className="border-b border-border px-5 py-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Settings
-                </p>
-              </div>
-              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
-                <SendibodSettingsForm
-                  initialSettings={settingsQuery.data.sendibod}
-                  onDone={() => setShowSettings(false)}
-                />
-              </div>
-            </div>
+            <SendibodSettingsForm
+              initialSettings={settingsQuery.data.sendibod}
+              onDone={() => setShowSettings(false)}
+            />
           ) : selectedMessage ? (
             <SendibodMessageDetail message={selectedMessage} autoMarkRead={autoMarkRead} />
           ) : inspectorPinned ? (
-            <div className="flex h-full flex-col">
-              <div className="border-b border-border px-5 py-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Inspector
-                </p>
-              </div>
-              <p className="px-5 py-8 text-sm leading-relaxed text-muted-foreground">
-                Select a message to read and reply.
-              </p>
-            </div>
+            <InspectorEmptyState message="Select a message to read and reply." />
           ) : null
         }
       />

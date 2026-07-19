@@ -9,7 +9,6 @@ import {
 import { RunColorField } from '@/components/apps/run-color-field'
 import { PRESET_COLORS } from '@/components/apps/runir-list'
 import { useTerms } from '@/hooks/use-terminology'
-import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 
 export function RunInspector({
   run,
@@ -44,11 +43,11 @@ export function RunInspector({
   const [deleteOpen, setDeleteOpen] = useState(false)
 
   const fullName = effectiveParent ? `${effectiveParent}/${segment.trim()}` : segment.trim()
-  const headerTitle = title ?? (isNew ? `New ${terms.runSingular}` : `Edit ${terms.runSingular}`)
+  const headerTitle = title ?? (isNew ? `Add ${terms.runSingular}` : `Edit ${terms.runSingular}`)
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <InspectorFormHeader title={headerTitle} icon={ASGARD_ENTITY_ICONS.runir} onBack={onBack} />
+      <InspectorFormHeader eyebrow="Inspector" title={headerTitle} onBack={onBack} />
       <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-4 py-4">
         <label className="block space-y-1.5">
           <span className="text-xs font-medium text-muted-foreground">Name</span>

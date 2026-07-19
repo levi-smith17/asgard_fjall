@@ -321,7 +321,14 @@ export function SogurSagaInspector({
         </ContextTabButton>
       </nav>
       <InspectorChrome>
-        <InspectorChromeTitle eyebrow="Inspector" title={`Edit ${terms.notesSingular}`} />
+        <InspectorChromeTitle
+          eyebrow="Inspector"
+          title={
+            tab === 'order'
+              ? `Order ${terms.notesSingular} ${terms.thaettir}`
+              : `Edit ${terms.notesSingular}`
+          }
+        />
       </InspectorChrome>
       {tab === 'details' ? (
         <>

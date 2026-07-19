@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/core/ui/button'
+import { InspectorChrome, InspectorChromeTitle } from '@/components/core/ui/inspector-chrome'
 import { markFjallSendibodRead, replyToFjallSendibod, type FjallSendibod } from '@/lib/data-api'
 
 function formatWhen(iso: string) {
@@ -56,9 +57,13 @@ export function SendibodMessageDetail({
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="shrink-0 border-b border-border px-4 py-3">
-        <h2 className="text-sm font-medium">{message.senderName}</h2>
-        <p className="text-xs text-muted-foreground">{message.senderEmail}</p>
+      <InspectorChrome>
+        <InspectorChromeTitle eyebrow="Inspector" title="Manage Message" />
+      </InspectorChrome>
+      <div className="shrink-0 border-b border-border px-5 py-3">
+        <p className="truncate text-sm font-medium text-foreground">
+          {message.senderName} · {message.senderEmail}
+        </p>
       </div>
 
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">

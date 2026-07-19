@@ -29,6 +29,7 @@ import {
   type OrdstirrSectionId,
 } from '@/lib/ordstirr-format'
 import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
+import { InspectorEmptyState } from '@/components/core/ui/inspector-chrome'
 import { OrdstirrCanvas } from './ordstirr-canvas'
 import { OrdstirrContextBar } from './ordstirr-context-bar'
 import {
@@ -568,9 +569,7 @@ export function OrdstirrWorkspace() {
 
     if (!selectedEntryId && !creatingEntry) {
       return (
-        <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
-          Select an entry on the canvas to edit, or use + to add one.
-        </div>
+        <InspectorEmptyState message="Select an entry on the canvas to edit, or use + to add one." />
       )
     }
 
@@ -648,9 +647,7 @@ export function OrdstirrWorkspace() {
     }
     if (!selectedEntryId && !creatingEntry) {
       return (
-        <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
-          Select a companion on the canvas to edit, or use + to add one.
-        </div>
+        <InspectorEmptyState message="Select a companion on the canvas to edit, or use + to add one." />
       )
     }
     return (

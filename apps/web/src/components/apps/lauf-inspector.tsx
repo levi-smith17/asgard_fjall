@@ -10,7 +10,6 @@ import { RunPicker } from '@/components/apps/run-picker'
 import { Select } from '@/components/core/ui/select'
 import { fetchFjallLaufMeta } from '@/lib/data-api'
 import { useTerms } from '@/hooks/use-terminology'
-import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 
 export type LaufDraft = {
   title: string
@@ -114,14 +113,14 @@ export function LaufInspector({
   }))
 
   const headerTitle = isNew
-    ? `New ${terms.laufarSingular}`
+    ? `Add ${terms.laufarSingular}`
     : `Edit ${terms.laufarSingular}`
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <InspectorFormHeader
+        eyebrow="Inspector"
         title={headerTitle}
-        icon={ASGARD_ENTITY_ICONS.laufar}
         onBack={onClose}
         showBack={showBack}
       />

@@ -9,7 +9,7 @@ import { MonthView } from './month-view'
 import { WeekView } from './week-view'
 import { DayView } from './day-view'
 import { DagatalToolbar } from './dagatal-toolbar'
-import type { CalendarOption, StopWithRunir } from './dagatal-types'
+import type { CalendarOption, DagatalEventSelection, StopWithRunir } from './dagatal-types'
 
 type CalendarView = 'month' | 'week' | 'day'
 
@@ -18,6 +18,9 @@ interface DagatalClientProps {
   calendars: CalendarOption[]
   onEventsMetaChange?: (meta: { count: number; loading: boolean; error: string | null }) => void
   onReload: () => void
+  selectedEventId?: string | null
+  onSelectEvent?: (event: DagatalEventSelection) => void
+  onClearEvent?: () => void
 }
 
 function addDays(date: Date, n: number): Date {
@@ -55,7 +58,15 @@ function navLabel(view: CalendarView, anchor: Date, mode: CalendarMode): string 
   return anchor.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 }
 
-export function DagatalClient({ stops, calendars, onEventsMetaChange, onReload }: DagatalClientProps) {
+export function DagatalClient({
+  stops,
+  calendars,
+  onEventsMetaChange,
+  onReload,
+  selectedEventId = null,
+  onSelectEvent,
+  onClearEvent,
+}: DagatalClientProps) {
   const [view, setView] = useState<CalendarView>('month')
   const [anchor, setAnchor] = useState(() => {
     const now = new Date()
@@ -137,6 +148,8 @@ export function DagatalClient({ stops, calendars, onEventsMetaChange, onReload }
     anchor,
     calendarMode,
     calendarColorMap,
+    selectedEventId,
+    onSelectEvent,
   }
   const selectedCalendars = calendars.filter((calendar) => selectedCalendarIds.includes(calendar.id))
   const calendarNames = selectedCalendars.map((calendar) => calendar.name).join(', ')
@@ -178,6 +191,9 @@ export function DagatalClient({ stops, calendars, onEventsMetaChange, onReload }
           'relative min-h-0 flex-1 overflow-auto',
           eventsLoading && allEvents.length === 0 && 'opacity-60',
         )}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) onClearEvent?.()
+        }}
       >
         {eventsError ? (
           <div className="border-b border-destructive/30 bg-destructive/10 px-4 py-2 text-sm text-destructive sm:px-6">

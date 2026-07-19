@@ -3,6 +3,7 @@ import { ReactFlowProvider } from 'reactflow'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
 import { StudioDataToolbar } from '@/components/core/layout/studio-data-toolbar'
 import { FilterInput } from '@/components/core/ui/filter-input'
+import { InspectorEmptyState } from '@/components/core/ui/inspector-chrome'
 import { useInspectorPinned } from '@/hooks/use-inspector-pinned'
 import { extractEntityId } from '@/lib/data-format'
 import { updateNidjatalKin } from '@/lib/nidjatal-api'
@@ -135,14 +136,9 @@ export function NidjatalClient({ kins, seedKinId, onRefresh, panel, onSetPanel }
               onRefresh={onRefresh}
             />
           ) : inspectorPinned ? (
-            <div className="flex h-full flex-col">
-              <div className="border-b border-border px-5 py-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Inspector</p>
-              </div>
-              <p className="px-5 py-8 text-sm leading-relaxed text-muted-foreground">
-                Select a {terms.nidjatalPerson.toLowerCase()} to edit, or add a new one from the toolbar.
-              </p>
-            </div>
+            <InspectorEmptyState
+              message={`Select a ${terms.nidjatalPerson.toLowerCase()} to edit, or add a new one from the toolbar.`}
+            />
           ) : null
         }
       />

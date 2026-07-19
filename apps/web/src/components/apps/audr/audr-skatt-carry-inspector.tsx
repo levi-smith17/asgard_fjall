@@ -117,7 +117,7 @@ export function AudrSkattCarryInspector({
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <InspectorChrome>
         <InspectorChromeTitle
-          eyebrow="Audr"
+          eyebrow="Inspector"
           title={`Bring ${terms.skattSingular} Forward`}
         />
       </InspectorChrome>

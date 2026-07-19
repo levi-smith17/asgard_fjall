@@ -2,8 +2,13 @@ import { Repeat } from 'lucide-react'
 import { toLuvi, luviMonthDates, LUVI_DAYS, type CalendarMode } from '@/lib/luvi'
 import { contrastColor } from '@/lib/color'
 import { icloudEventsForDay } from '@/lib/dagatal-events'
-import { EventPopover } from './event-popover'
-import type { StopWithRunir, ICloudEventDisplay } from './dagatal-types'
+import {
+  selectionFromICloud,
+  selectionFromStop,
+  type DagatalEventSelection,
+  type ICloudEventDisplay,
+  type StopWithRunir,
+} from './dagatal-types'
 
 const GREGORIAN_WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -13,6 +18,8 @@ interface MonthViewProps {
   anchor: Date
   calendarMode: CalendarMode
   calendarColorMap: Record<string, string>
+  selectedEventId?: string | null
+  onSelectEvent?: (event: DagatalEventSelection) => void
 }
 
 function isSameDay(a: Date, b: Date): boolean {
@@ -66,10 +73,14 @@ function EventPills({
   stops,
   icloudEvents,
   calendarColorMap,
+  selectedEventId,
+  onSelectEvent,
 }: {
   stops: StopWithRunir[]
   icloudEvents: ICloudEventDisplay[]
   calendarColorMap: Record<string, string>
+  selectedEventId?: string | null
+  onSelectEvent?: (event: DagatalEventSelection) => void
 }) {
   const events = sortedDayEvents(stops, icloudEvents)
   if (!events.length) return null
@@ -80,56 +91,48 @@ function EventPills({
           const { stop } = item
           const color = stop.runir[0]?.run.color ?? (stop.icloudCalendarId ? calendarColorMap[stop.icloudCalendarId] : undefined) ?? '#6b7280'
           const timeStr = stop.allDay ? null : formatPillTime(new Date(stop.startDate))
+          const selection = selectionFromStop(stop, calendarColorMap)
           return (
-            <EventPopover
+            <button
               key={stop.id}
-              title={stop.title}
-              startDate={stop.startDate}
-              endDate={stop.endDate}
-              allDay={stop.allDay}
-              location={stop.location}
-              notes={stop.notes}
-              color={color}
+              type="button"
+              className={`text-left text-xs px-2 py-1 rounded truncate leading-tight font-medium hover:opacity-80 transition-opacity w-full ${selectedEventId === selection.id ? 'ring-2 ring-foreground/40' : ''}`}
+              style={{ backgroundColor: color, color: contrastColor(color) }}
+              onClick={(e) => {
+                e.stopPropagation()
+                onSelectEvent?.(selection)
+              }}
             >
-              <button
-                className="text-left text-xs px-2 py-1 rounded truncate leading-tight font-medium hover:opacity-80 transition-opacity w-full"
-                style={{ backgroundColor: color, color: contrastColor(color) }}
-              >
-                {timeStr ? `${timeStr} ${stop.title}` : stop.title}
-              </button>
-            </EventPopover>
+              {timeStr ? `${timeStr} ${stop.title}` : stop.title}
+            </button>
           )
         }
         const { event } = item
         const timeStr = event.allDay ? null : formatPillTime(new Date(event.startDate))
+        const selection = selectionFromICloud(event)
         return (
-          <EventPopover
+          <button
             key={event.uid}
-            title={event.title}
-            startDate={event.startDate}
-            endDate={event.endDate}
-            allDay={event.allDay}
-            location={event.location}
-            notes={event.notes}
-            color={event.color}
+            type="button"
+            className={`text-left text-xs px-2 py-1 rounded leading-tight font-medium flex items-center gap-1 overflow-hidden w-full hover:opacity-80 transition-opacity ${selectedEventId === selection.id ? 'ring-2 ring-foreground/40' : ''}`}
+            style={{ backgroundColor: event.color, color: contrastColor(event.color) }}
+            onClick={(e) => {
+              e.stopPropagation()
+              onSelectEvent?.(selection)
+            }}
           >
-            <button
-              className="text-left text-xs px-2 py-1 rounded leading-tight font-medium flex items-center gap-1 overflow-hidden w-full hover:opacity-80 transition-opacity"
-              style={{ backgroundColor: event.color, color: contrastColor(event.color) }}
-            >
-              {event.recurrenceRule ? (
-                <Repeat className="h-2.5 w-2.5 shrink-0 opacity-70" />
-              ) : null}
-              <span className="truncate">{timeStr ? `${timeStr} ${event.title}` : event.title}</span>
-            </button>
-          </EventPopover>
+            {event.recurrenceRule ? (
+              <Repeat className="h-2.5 w-2.5 shrink-0 opacity-70" />
+            ) : null}
+            <span className="truncate">{timeStr ? `${timeStr} ${event.title}` : event.title}</span>
+          </button>
         )
       })}
     </div>
   )
 }
 
-function GregorianMonthGrid({ stops, icloudEvents, anchor, calendarMode, calendarColorMap }: MonthViewProps) {
+function GregorianMonthGrid({ stops, icloudEvents, anchor, calendarMode, calendarColorMap, selectedEventId, onSelectEvent }: MonthViewProps) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -196,7 +199,7 @@ function GregorianMonthGrid({ stops, icloudEvents, anchor, calendarMode, calenda
                   </div>
                 )}
               </div>
-              <EventPills stops={dayStops} icloudEvents={dayICloud} calendarColorMap={calendarColorMap} />
+              <EventPills stops={dayStops} icloudEvents={dayICloud} calendarColorMap={calendarColorMap} selectedEventId={selectedEventId} onSelectEvent={onSelectEvent} />
             </div>
           )
         })}
@@ -205,7 +208,7 @@ function GregorianMonthGrid({ stops, icloudEvents, anchor, calendarMode, calenda
   )
 }
 
-function LuviFullMonthGrid({ stops, icloudEvents, anchor, calendarColorMap }: MonthViewProps) {
+function LuviFullMonthGrid({ stops, icloudEvents, anchor, calendarColorMap, selectedEventId, onSelectEvent }: MonthViewProps) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -250,7 +253,7 @@ function LuviFullMonthGrid({ stops, icloudEvents, anchor, calendarColorMap }: Mo
                     {day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 </div>
-                <EventPills stops={dayStops} icloudEvents={dayICloud} calendarColorMap={calendarColorMap} />
+                <EventPills stops={dayStops} icloudEvents={dayICloud} calendarColorMap={calendarColorMap} selectedEventId={selectedEventId} onSelectEvent={onSelectEvent} />
               </div>
             )
           })}
@@ -275,7 +278,7 @@ function LuviFullMonthGrid({ stops, icloudEvents, anchor, calendarColorMap }: Mo
                     {day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 </div>
-                <EventPills stops={dayStops} icloudEvents={dayICloud} calendarColorMap={calendarColorMap} />
+                <EventPills stops={dayStops} icloudEvents={dayICloud} calendarColorMap={calendarColorMap} selectedEventId={selectedEventId} onSelectEvent={onSelectEvent} />
               </div>
             )
           })}

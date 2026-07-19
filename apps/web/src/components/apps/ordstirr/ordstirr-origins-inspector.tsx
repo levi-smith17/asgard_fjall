@@ -21,7 +21,7 @@ export function OrdstirrOriginsInspector({
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <InspectorChrome>
-        <InspectorChromeTitle eyebrow={terms.origins} title="Contact & links" />
+        <InspectorChromeTitle eyebrow="Inspector" title="Edit Contact & Links" />
       </InspectorChrome>
 
       <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-5 py-4">

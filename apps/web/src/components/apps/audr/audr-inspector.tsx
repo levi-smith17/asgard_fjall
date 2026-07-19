@@ -69,7 +69,7 @@ export function AudrInspector({
     )
   }
 
-  const title = inspectorTitle(selection, runir, terms, surtr, idunn, skatt)
+  const title = inspectorTitle(selection, terms)
   const showSurtrForm = selection.kind === 'new-surtr' || selection.kind === 'surtr'
   const showIdunnForm = selection.kind === 'new-idunn' || selection.kind === 'idunn'
   const showSkattForm =
@@ -100,7 +100,7 @@ export function AudrInspector({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <InspectorChrome>
-        <InspectorChromeTitle eyebrow="Audr" title={title} />
+        <InspectorChromeTitle eyebrow="Inspector" title={title} />
       </InspectorChrome>
 
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
@@ -326,29 +326,21 @@ export function AudrInspector({
   )
 }
 
-function inspectorTitle(
-  selection: AudrSelection,
-  runir: AudrRun[],
-  terms: Terms,
-  surtr?: FjallSurtr,
-  idunn?: FjallIdunn,
-  skatt?: FjallSkattUtilization,
-): string {
+function inspectorTitle(selection: AudrSelection, terms: Terms): string {
   switch (selection.kind) {
     case 'new-surtr':
       return `Add ${terms.surtrSingular}`
     case 'surtr':
-      return surtr?.name ?? terms.surtrSingular
+      return `Edit ${terms.surtrSingular}`
     case 'new-idunn':
       return `Add ${terms.idunnSingular}`
     case 'idunn':
-      return idunn?.name ?? terms.idunnSingular
+      return `Edit ${terms.idunnSingular}`
     case 'new-skatt':
-      return `Add ${terms.skattSingular}`
     case 'skatt-run':
       return `Add ${terms.skattSingular}`
     case 'skatt':
-      return runShortLabel(skatt?.runId ?? '', runir, skatt) || terms.skatt
+      return `Edit ${terms.skattSingular}`
     default:
       return terms.audr
   }

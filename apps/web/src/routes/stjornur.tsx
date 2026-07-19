@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { StudioCanvasSkeleton } from '@/components/core/ui/studio-skeletons'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
+import { InspectorEmptyState } from '@/components/core/ui/inspector-chrome'
 import { DataNotConfiguredNotice } from '@/components/apps/data-not-configured'
 import {
   StjornurClient,
@@ -192,21 +193,7 @@ export function StjornurPage() {
         inspector={
           inspectorContent ??
           (inspectorPinned ? (
-            <div className="flex h-full flex-col">
-              <div className="box-border flex h-14 min-h-14 max-h-14 shrink-0 items-center border-b border-border px-4">
-                <div className="min-w-0 flex-1 leading-tight">
-                  <p className="truncate text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Inspector
-                  </p>
-                  <p className="truncate text-sm font-semibold text-foreground">No Selection</p>
-                </div>
-              </div>
-              <div className="flex min-h-0 flex-1 items-center justify-center px-5">
-                <p className="text-center text-sm leading-relaxed text-muted-foreground">
-                  Open Resources, Systems, or Add Outpost from the toolbar.
-                </p>
-              </div>
-            </div>
+            <InspectorEmptyState message="Open Resources, Systems, or Add Outpost from the toolbar." />
           ) : null)
         }
       />

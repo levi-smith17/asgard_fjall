@@ -8,7 +8,6 @@ import {
 } from '@/components/core/ui/inspector-form-actions'
 import { SwitchField } from '@/components/core/ui/switch-field'
 import { useTerms } from '@/hooks/use-terminology'
-import { ASGARD_ENTITY_ICONS } from '@/lib/asgard-entity-icons'
 import {
   greinPageOptions,
   resolveGreinHiddenPages,
@@ -38,7 +37,7 @@ export function GreinInspector({
     grein ? resolveGreinHiddenPages(grein) : [],
   )
   const [deleteOpen, setDeleteOpen] = useState(false)
-  const headerTitle = title ?? (isNew ? `New ${terms.greinSingular}` : `Edit ${terms.greinSingular}`)
+  const headerTitle = title ?? (isNew ? `Add ${terms.greinSingular}` : `Edit ${terms.greinSingular}`)
   const pageOptions = greinPageOptions(terms)
 
   function togglePage(page: GreinPageId, visible: boolean) {
@@ -49,7 +48,7 @@ export function GreinInspector({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <InspectorFormHeader title={headerTitle} icon={ASGARD_ENTITY_ICONS.greinar} onBack={onBack} />
+      <InspectorFormHeader eyebrow="Inspector" title={headerTitle} onBack={onBack} />
       <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-4 py-4">
         <label className="block space-y-1.5">
           <span className="text-xs font-medium text-muted-foreground">Name</span>

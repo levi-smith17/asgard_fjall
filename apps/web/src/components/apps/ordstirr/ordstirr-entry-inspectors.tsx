@@ -28,6 +28,10 @@ import { toast } from 'sonner'
 import { Button } from '@/components/core/ui/button'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 import { ContextTabButton } from '@/components/core/ui/context-tab'
+import {
+  InspectorChrome,
+  InspectorChromeTitle,
+} from '@/components/core/ui/inspector-chrome'
 import { SwitchField } from '@/components/core/ui/switch-field'
 import { useTerminology } from '@/hooks/use-terminology'
 import { getManifestTerms } from '@/lib/manifest-terminology'
@@ -576,8 +580,13 @@ export function OrdstirrCompanionInspector({
             Photos
           </ContextTabButton>
         </nav>
-        <div className="flex min-h-0 flex-1 items-center justify-center px-5 text-center text-sm text-muted-foreground">
-          Select an entry on the canvas to edit.
+        <InspectorChrome>
+          <InspectorChromeTitle eyebrow="Inspector" title="No Selection" />
+        </InspectorChrome>
+        <div className="flex min-h-0 flex-1 items-center justify-center px-5">
+          <p className="text-center text-sm leading-relaxed text-muted-foreground">
+            Select an entry on the canvas to edit.
+          </p>
         </div>
       </div>
     )
@@ -602,19 +611,19 @@ export function OrdstirrCompanionInspector({
         </ContextTabButton>
       </nav>
 
+      <InspectorChrome>
+        <InspectorChromeTitle
+          eyebrow="Inspector"
+          title={creating || isDraft ? `Add ${terms.companions}` : `Edit ${terms.companions}`}
+        />
+      </InspectorChrome>
+
       <div className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-5 py-4">
         {tab === 'details' ? (
           <>
-            <div>
-              <p className="truncate text-sm font-semibold text-foreground">
-                {creating || isDraft
-                  ? `New ${terms.companions}`
-                  : selected.name || `Edit ${terms.companions}`}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Edit descriptions on the canvas. Metadata fields save here.
-              </p>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Edit descriptions on the canvas. Metadata fields save here.
+            </p>
             <ManifestTextField
               label="Name"
               value={selected.name}

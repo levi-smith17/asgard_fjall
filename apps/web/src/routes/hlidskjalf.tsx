@@ -26,6 +26,7 @@ import {
 import { dataQueryErrorProps } from '@/components/apps/data-not-configured'
 import { LaufInspector } from '@/components/apps/lauf-inspector'
 import { StudioLayout } from '@/components/core/layout/studio-layout'
+import { InspectorEmptyState } from '@/components/core/ui/inspector-chrome'
 import { HlidskjalfContextBar } from '@/components/hlidskjalf/hlidskjalf-context-bar'
 import {
   HlidskjalfLaufarRail,
@@ -961,10 +962,14 @@ export function HlidskjalfPage() {
             isSaving={saveLaufMutation.isPending}
           />
         ) : inspectorPinned ? (
-          <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
-            Select a {terms.laufarSingular.toLowerCase()}, or open {terms.greinar.toLowerCase()} &{' '}
-            {terms.runir.toLowerCase()}.
-          </div>
+          <InspectorEmptyState
+            message={
+              <>
+                Select a {terms.laufarSingular.toLowerCase()}, or open {terms.greinar.toLowerCase()} &{' '}
+                {terms.runir.toLowerCase()}.
+              </>
+            }
+          />
         ) : null
       }
     />

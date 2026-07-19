@@ -223,7 +223,7 @@ export function FjallCatalogInspector({
         isNew={isNewGrein}
         title={
           isNewGrein
-            ? `New ${terms.greinSingular}`
+            ? `Add ${terms.greinSingular}`
             : `Edit ${terms.greinSingular}`
         }
         onBack={onClearSelection}
@@ -244,7 +244,7 @@ export function FjallCatalogInspector({
         run={selectedRun}
         isNew={isNewRun}
         parentPrefix={runParent}
-        title={isNewRun ? `New ${terms.runSingular}` : `Edit ${terms.runSingular}`}
+        title={isNewRun ? `Add ${terms.runSingular}` : `Edit ${terms.runSingular}`}
         onBack={onClearSelection}
         onSave={async (values) => {
           await saveRun.mutateAsync(values)
@@ -261,39 +261,37 @@ export function FjallCatalogInspector({
     rootRunPath.length > 0
       ? `Manage ${rootRunPath.join('/')} and its nested ${terms.runir.toLowerCase()}.`
       : `Tag ${terms.laufar.toLowerCase()} with hierarchical ${terms.runir.toLowerCase()}.`
+  const manageTitle =
+    effectiveTab === 'greinar' ? `Manage ${terms.greinar}` : `Manage ${terms.runir}`
+  const helpCopy =
+    effectiveTab === 'greinar'
+      ? `Organize ${terms.laufar.toLowerCase()} and ${terms.spjold.toLowerCase()} into named ${terms.greinar.toLowerCase()}.`
+      : runirCopy
+  const nestedRunIdentity =
+    effectiveTab === 'runir' && rootRunPath.length > 0
+      ? rootRunPath[rootRunPath.length - 1]
+      : null
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      {lockedTab ? (
-        <InspectorChrome>
-          <InspectorChromeTitle
-            eyebrow="Inspector"
-            title={
-              effectiveTab === 'greinar'
-                ? `Manage ${terms.greinar}`
-                : `Manage ${terms.runir}`
-            }
-          />
-        </InspectorChrome>
-      ) : (
-        <CatalogTabBar active={activeTab} onChange={onTabChange} />
-      )}
-      {lockedTab ? null : (
-        <div className="border-b border-border px-4 py-3">
-          <p className="text-sm font-semibold text-foreground">
-            {effectiveTab === 'greinar'
-              ? terms.greinar
-              : rootRunPath.length > 0
-                ? rootRunPath[rootRunPath.length - 1]
-                : terms.runir}
-          </p>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            {effectiveTab === 'greinar'
-              ? `Organize ${terms.laufar.toLowerCase()} and ${terms.spjold.toLowerCase()} into named ${terms.greinar.toLowerCase()}.`
-              : runirCopy}
-          </p>
-        </div>
-      )}
+      {lockedTab ? null : <CatalogTabBar active={activeTab} onChange={onTabChange} />}
+      <InspectorChrome>
+        <InspectorChromeTitle eyebrow="Inspector" title={manageTitle} />
+      </InspectorChrome>
+      <div className="border-b border-border px-4 py-3">
+        {nestedRunIdentity ? (
+          <p className="text-sm font-semibold text-foreground">{nestedRunIdentity}</p>
+        ) : null}
+        <p
+          className={
+            nestedRunIdentity
+              ? 'mt-1 text-xs leading-relaxed text-muted-foreground'
+              : 'text-xs leading-relaxed text-muted-foreground'
+          }
+        >
+          {helpCopy}
+        </p>
+      </div>
       {effectiveTab === 'greinar' ? (
         <GreinarList
           greinar={sortedGreinar}

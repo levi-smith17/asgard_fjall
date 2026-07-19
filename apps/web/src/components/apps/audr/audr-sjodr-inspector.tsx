@@ -148,7 +148,7 @@ export function AudrSjodrInspector({
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <InspectorChrome>
-        <InspectorChromeTitle eyebrow="Audr" title={terms.sjodr} />
+        <InspectorChromeTitle eyebrow="Inspector" title={`Manage ${terms.sjodr}`} />
       </InspectorChrome>
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
         <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
@@ -336,8 +336,8 @@ function SjodrForm({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <InspectorFormHeader
-        title={isNew ? `New ${terms.sjodrSingular}` : `Edit ${terms.sjodrSingular}`}
-        icon={ASGARD_ENTITY_ICONS.sjodr}
+        eyebrow="Inspector"
+        title={isNew ? `Add ${terms.sjodrSingular}` : `Edit ${terms.sjodrSingular}`}
         onBack={onBack}
         showBack
       />

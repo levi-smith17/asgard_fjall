@@ -16,3 +16,17 @@ export function InspectorChromeTitle({ eyebrow, title, meta }: { eyebrow?: React
     </div>
   )
 }
+
+/** Standard empty/idle inspector: Inspector / No Selection + centered help. */
+export function InspectorEmptyState({ message }: { message: React.ReactNode }) {
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <InspectorChrome>
+        <InspectorChromeTitle eyebrow="Inspector" title="No Selection" />
+      </InspectorChrome>
+      <div className="flex min-h-0 flex-1 items-center justify-center px-5">
+        <p className="text-center text-sm leading-relaxed text-muted-foreground">{message}</p>
+      </div>
+    </div>
+  )
+}

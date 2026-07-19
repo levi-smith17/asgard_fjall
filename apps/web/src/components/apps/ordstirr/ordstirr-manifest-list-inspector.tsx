@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/core/ui/button'
-import { InspectorChrome, InspectorChromeTitle } from '@/components/core/ui/inspector-chrome'
+import {
+  InspectorChrome,
+  InspectorChromeTitle,
+  InspectorEmptyState,
+} from '@/components/core/ui/inspector-chrome'
 import { ConfirmDialog } from '@/components/core/ui/confirm-dialog'
 
 export function createDraftId(): string {
@@ -122,24 +126,15 @@ export function OrdstirrManifestListInspector<T extends { id: string }>({
   }
 
   if (!selected) {
-    return (
-      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <InspectorChrome>
-          <InspectorChromeTitle eyebrow={sectionLabel} title="Inspector" />
-        </InspectorChrome>
-        <div className="flex min-h-0 flex-1 items-center justify-center px-5 text-center text-sm text-muted-foreground">
-          Select an entry on the canvas to edit.
-        </div>
-      </div>
-    )
+    return <InspectorEmptyState message="Select an entry on the canvas to edit." />
   }
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <InspectorChrome>
         <InspectorChromeTitle
-          eyebrow={sectionLabel}
-          title={creating ? `New ${sectionLabel}` : `Edit ${sectionLabel}`}
+          eyebrow="Inspector"
+          title={creating ? `Add ${sectionLabel}` : `Edit ${sectionLabel}`}
         />
       </InspectorChrome>
 
