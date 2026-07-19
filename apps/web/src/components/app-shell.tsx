@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import {
   BookOpen,
   ExternalLink,
-  MessageSquare,
   type LucideIcon,
 } from 'lucide-react'
 import { AsgardSidebarBrand } from '@/components/core/brand/asgard-sidebar-brand'
@@ -11,7 +10,6 @@ import { CommandPaletteDialog } from '@/components/core/command-palette/command-
 import { ValknutWatermark } from '@/components/core/icons/valknut-watermark'
 import { SidebarNavGroupFlyout } from '@/components/core/shell/sidebar-nav-group-flyout'
 import { UserAccountMenu } from '@/components/core/shell/user-account-menu'
-import { Button } from '@/components/core/ui/button'
 import { ToolbarTooltip } from '@/components/core/ui/toolbar-tooltip'
 import { useAuth } from '@/hooks/use-auth'
 import { useAppDocumentTitle } from '@/hooks/use-app-document-title'
@@ -259,36 +257,6 @@ export function AppShell() {
               isNarrow ? 'px-1.5 pt-2' : 'px-3 py-3',
             )}
           >
-            {unreadMessageCount > 0 ? (
-              <div className={cn(isNarrow ? 'w-full pb-2' : 'mb-2')}>
-                <ToolbarTooltip
-                  label={`${terms.messages} — ${unreadMessageCount} unread`}
-                  placement={isNarrow ? 'right' : 'above'}
-                  className="w-full"
-                >
-                  <Button
-                    asChild
-                    variant="secondary"
-                    size="icon"
-                    className={cn(
-                      'relative h-8 w-full',
-                      sendibodActive &&
-                        'bg-sidebar-accent text-sidebar-foreground-active hover:bg-sidebar-accent',
-                    )}
-                  >
-                    <Link
-                      to="/sendibod"
-                      aria-label={`${terms.messages} — ${unreadMessageCount} unread`}
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                      <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
-                        {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
-                      </span>
-                    </Link>
-                  </Button>
-                </ToolbarTooltip>
-              </div>
-            ) : null}
             {isNarrow ? (
               <div className="-mx-1.5 w-[calc(100%+0.75rem)] border-t border-sidebar-border">
                 <UserAccountMenu

@@ -150,7 +150,13 @@ export function UserAccountMenu({
       aria-expanded={open}
       aria-haspopup="menu"
       aria-controls={menuId}
-      aria-label={collapsed ? `${displayName}, account menu` : undefined}
+      aria-label={
+        collapsed
+          ? unreadMessageCount > 0
+            ? `${displayName}, account menu, ${unreadMessageCount} unread`
+            : `${displayName}, account menu`
+          : undefined
+      }
       className={cn(
         'flex w-full items-center rounded-lg text-sm transition-colors',
         collapsed ? 'justify-center px-0 py-2.5' : 'gap-2.5 px-3 py-2',
@@ -158,7 +164,14 @@ export function UserAccountMenu({
         open && 'bg-muted-hover text-foreground',
       )}
     >
-      <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
+      <span className="relative shrink-0">
+        <Avatar src={avatarUrl} alt={displayName} fallback={avatarFallback} />
+        {unreadMessageCount > 0 ? (
+          <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground tabular-nums">
+            {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+          </span>
+        ) : null}
+      </span>
       {!collapsed ? (
         <>
           <div className="min-w-0 flex-1 text-left leading-tight">
