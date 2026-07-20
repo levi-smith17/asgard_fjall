@@ -312,6 +312,35 @@ export function DataToolbarSkeleton({
   )
 }
 
+/** Full-bleed canvas pane (toolbar + plane). No left rail — for Nidjatal and similar. */
+export function CanvasPaneSkeleton({
+  trailingFilters = 1,
+}: {
+  trailingFilters?: number
+}) {
+  return (
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <DataToolbarSkeleton
+        leading={<span className="sr-only">Loading</span>}
+        trailing={
+          <>
+            {Array.from({ length: trailingFilters }).map((_, index) => (
+              <Block
+                key={index}
+                className={cn('h-8 rounded-md', index === trailingFilters - 1 ? 'w-44 max-w-xs' : 'w-8')}
+              />
+            ))}
+          </>
+        }
+      />
+      <div className="relative min-h-0 flex-1 bg-background">
+        <Block className="absolute inset-0 rounded-none opacity-40" />
+      </div>
+    </div>
+  )
+}
+
+/** Rail + canvas composition for pages that use StudioLayout with a left rail. */
 export function StudioCanvasSkeleton() {
   return (
     <div className="flex min-h-0 flex-1 overflow-hidden">
@@ -326,21 +355,7 @@ export function StudioCanvasSkeleton() {
           ))}
         </div>
       </div>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <DataToolbarSkeleton
-          leading={<span className="sr-only">Loading</span>}
-          trailing={
-            <>
-              <Block className="h-8 w-8" />
-              <Block className="h-8 w-8" />
-              <Block className="h-8 w-8" />
-            </>
-          }
-        />
-        <div className="relative min-h-0 flex-1 bg-background">
-          <Block className="absolute inset-0 rounded-none opacity-40" />
-        </div>
-      </div>
+      <CanvasPaneSkeleton trailingFilters={3} />
     </div>
   )
 }
