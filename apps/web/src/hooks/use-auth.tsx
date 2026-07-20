@@ -52,8 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
       setGateUser(me)
-      setStatus('authenticated')
 
+      // Mint/reuse the data API Bearer before marking authenticated. New tabs have an
+      // empty sessionStorage even when the HttpOnly gate cookie is valid, and data
+      // queries must not race ahead without a token (they fail 401 with retry:false).
       let token = getStoredAccessToken()
       if (!token) {
         const issued = await fetchAccessToken()
@@ -61,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (issued) {
           storeAccessToken(issued.accessToken)
           setDataUser({ id: issued.sub, email: issued.email })
+          setStatus('authenticated')
           return
         }
       }
@@ -70,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Gate cookie is valid but data Bearer could not be minted (often FJALL_SESSION_SECRET).
         setDataUser(null)
       }
+      setStatus('authenticated')
     } catch {
       clearAccessToken()
       setGateUser(null)

@@ -50,7 +50,7 @@ export function AppShell() {
   const statusQuery = useQuery({
     queryKey: ['fjall-status', auth.dataUser?.id ?? 'anon'],
     queryFn: fetchFjallStatus,
-    enabled: auth.status === 'authenticated',
+    enabled: Boolean(auth.dataUser),
     retry: false,
     staleTime: 60_000,
   })

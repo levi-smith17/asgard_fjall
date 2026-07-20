@@ -177,14 +177,16 @@ function CardRow({
 
 function HlidskjalfSnapshots() {
   const terms = useTerms()
+  const auth = useAuth()
   const { style } = useTerminology()
   const now = new Date()
   const month = now.getMonth() + 1
   const year = now.getFullYear()
 
   const statusQuery = useQuery({
-    queryKey: ['fjall-status'],
+    queryKey: ['fjall-status', auth.dataUser?.id ?? 'anon'],
     queryFn: fetchFjallStatus,
+    enabled: Boolean(auth.dataUser),
     retry: false,
     staleTime: 60_000,
   })
@@ -597,6 +599,7 @@ function HlidskjalfCanvas() {
 
 export function HlidskjalfPage() {
   const terms = useTerms()
+  const auth = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const queryClient = useQueryClient()
   const [laufarFilter, setLaufarFilter] = useState('')
@@ -609,20 +612,24 @@ export function HlidskjalfPage() {
   const catalogId = searchParams.get('catalogId')
   const runPath = parseRunPath(searchParams.get('runPath'))
   const runParent = searchParams.get('runParent')
+  const dataReady = Boolean(auth.dataUser)
 
   const laufarQuery = useQuery({
     queryKey: ['fjall-laufar'],
     queryFn: fetchFjallLaufar,
+    enabled: dataReady,
     retry: false,
   })
   const greinarQuery = useQuery({
     queryKey: ['fjall-greinar'],
     queryFn: fetchFjallGreinar,
+    enabled: dataReady,
     retry: false,
   })
   const runirQuery = useQuery({
     queryKey: ['fjall-runir'],
     queryFn: fetchFjallRunir,
+    enabled: dataReady,
     retry: false,
   })
 
@@ -885,7 +892,7 @@ export function HlidskjalfPage() {
           onInspect={selectLaufar}
           onOpenUrl={(url) => window.open(url, '_blank', 'noopener,noreferrer')}
           onOpenCatalog={() => openCatalog('greinar')}
-          isLoading={laufarQuery.isLoading && !laufarQuery.data}
+          isLoading={(!dataReady || laufarQuery.isLoading) && !laufarQuery.data}
           unavailableMessage={laufarUnavailable}
         />
       }
