@@ -85,7 +85,7 @@ variable "fjall_session_secret" {
 variable "fjall_auth_email" {
   description = "Single-user email embedded in passkey session payload."
   type        = string
-  default     = "levi_smith17@icloud.com"
+  default     = "me@levismith.us"
 }
 
 variable "fjall_auth_sub" {

@@ -20,6 +20,7 @@ import { useTheme } from '@/hooks/use-theme'
 import { fetchFjallProfile, fetchFjallSendibod, fetchFjallStatus } from '@/lib/data-api'
 import { getFjallNavGroups } from '@/lib/fjall-nav'
 import { parsePublicManifestPath, publicManifestPath } from '@/lib/public-manifest-path'
+import { OWNER_ACCOUNT_EMAIL } from '@/lib/owner-account'
 import { cn } from '@/lib/utils'
 
 function themeToggleLabel(style: string, theme: string): string {
@@ -76,7 +77,7 @@ export function AppShell() {
 
   const displayName =
     profileQuery.data?.name ?? auth.gateUser?.email?.split('@')[0] ?? 'Guest'
-  const displayEmail = profileQuery.data?.email ?? auth.gateUser?.email ?? ''
+  const displayEmail = OWNER_ACCOUNT_EMAIL
   const avatarUrl = profileQuery.data?.image ?? null
   const avatarFallback = displayName.slice(0, 2)
   const username = profileQuery.data?.username

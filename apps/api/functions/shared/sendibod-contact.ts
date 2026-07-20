@@ -3,6 +3,7 @@ import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2'
 import { randomUUID } from 'crypto'
 import { dynamo, TABLE_NAME } from './db'
 import { sendibodSk } from './keys'
+import { resolveOwnerAccountEmail } from './owner-email'
 
 const ses = new SESv2Client({})
 const TOKEN_TTL_DAYS = 7
@@ -41,7 +42,9 @@ export async function createContactSignal(
   if (!profile) return null
 
   const userPk = profile.pk as string
-  const wayfarerEmail = profile.email as string | undefined
+  const wayfarerEmail = resolveOwnerAccountEmail(
+    typeof profile.email === 'string' ? profile.email : null,
+  )
   const id = randomUUID()
   const sk = sendibodSk(id)
   const token = randomUUID()

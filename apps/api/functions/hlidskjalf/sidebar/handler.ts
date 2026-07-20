@@ -3,6 +3,7 @@ import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 }
 import { dynamo, TABLE_NAME } from '../../shared/db'
 import { getPk } from '../../shared/auth'
 import { IDUNN_PREFIX, SENDIBOD_PREFIX, SKATT_PREFIX, SURTR_PREFIX } from '../../shared/keys'
+import { resolveOwnerAccountEmail } from '../../shared/owner-email'
 import { toApiGatewayResponse, ok, serverError } from '../../shared/response'
 
 function queryAll(pk: string, prefix: string) {
@@ -191,7 +192,9 @@ export const handler = async (
       ok({
         wayfarer: {
           name: profile.name ?? null,
-          email: profile.email ?? null,
+          email: resolveOwnerAccountEmail(
+            typeof profile.email === 'string' ? profile.email : null,
+          ),
           image: profile.image ?? null,
           username: profile.username ?? null,
           origins: {

@@ -1,4 +1,5 @@
-domain             = "asgard.levismith.us"
+fjall_auth_email       = "me@levismith.us"
+domain                 = "asgard.levismith.us"
 lan_domain         = "fjall.levismith.us"
 apex_domains       = ["levismith.us", "www.levismith.us"]
 webauthn_rp_id     = "levismith.us"
