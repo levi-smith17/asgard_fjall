@@ -1,8 +1,8 @@
+import { MonthYearPicker } from '@/components/core/ui/month-year-picker'
 import { Input } from '@/components/core/ui/input'
 import { RichEditor } from '@/components/core/ui/rich-editor'
 import { Select } from '@/components/core/ui/select'
 import { SwitchField } from '@/components/core/ui/switch-field'
-import { toMonthInputValue } from '@/lib/date-input'
 import type { ManifestGear } from '@/lib/manifest-api'
 
 export function ManifestTextField({
@@ -43,14 +43,7 @@ export function ManifestMonthField({
   return (
     <label className="block min-w-0 space-y-1.5">
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <Input
-        type="month"
-        className="min-w-0 max-w-full"
-        value={toMonthInputValue(value)}
-        onChange={(event) =>
-          onChange(event.target.value ? `${event.target.value}-01` : null)
-        }
-      />
+      <MonthYearPicker value={value} onChange={onChange} />
     </label>
   )
 }
